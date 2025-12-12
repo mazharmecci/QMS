@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QMS - Hospitals</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #0d6efd;
+      color: white;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #0d6efd;
+      margin-bottom: 1rem;
+    }
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    form input, form textarea, form button {
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    form button {
+      grid-column: span 2;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    form button:hover {
+      background: #084298;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table th, table td {
+      padding: 0.8rem;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    table th {
+      background: #f0f4f8;
+      color: #333;
+    }
+    .actions button {
+      margin-right: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .edit-btn {
+      background: #ffc107;
+      color: #000;
+    }
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <header>QMS - Hospitals</header>
+  <div class="container">
+    <h2>Add / Edit Hospital</h2>
+    <form id="hospitalForm">
+      <input type="text" id="name" placeholder="Hospital Name" required>
+      <input type="text" id="location" placeholder="Location" required>
+      <input type="text" id="contact" placeholder="Contact Person" required>
+      <input type="tel" id="phone" placeholder="Phone Number" required>
+      <textarea id="notes" placeholder="Notes"></textarea>
+      <button type="submit">Save Hospital</button>
+    </form>
+
+    <h2>Hospital List</h2>
+    <table id="hospitalTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Location</th>
+          <th>Contact</th>
+          <th>Phone</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows will be injected here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('hospitalForm');
+    const tableBody = document.querySelector('#hospitalTable tbody');
+    let hospitals = [];
+    let editIndex = null;
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const hospital = {
+        name: document.getElementById('name').value,
+        location: document.getElementById('location').value,
+        contact: document.getElementById('contact').value,
+        phone: document.getElementById('phone').value,
+        notes: document.getElementById('notes').value
+      };
+
+      if (editIndex !== null) {
+        hospitals[editIndex] = hospital;
+        editIndex = null;
+      } else {
+        hospitals.push(hospital);
+      }
+
+      form.reset();
+      renderTable();
+    });
+
+    function renderTable() {
+      tableBody.innerHTML = '';
+      hospitals.forEach((h, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${h.name}</td>
+          <td>${h.location}</td>
+          <td>${h.contact}</td>
+          <td>${h.phone}</td>
+          <td>${h.notes}</td>
+          <td class="actions">
+            <button class="edit-btn" onclick="editHospital(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteHospital(${index})">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function editHospital(index) {
+      const h = hospitals[index];
+      document.getElementById('name').value = h.name;
+      document.getElementById('location').value = h.location;
+      document.getElementById('contact').value = h.contact;
+      document.getElementById('phone').value = h.phone;
+      document.getElementById('notes').value = h.notes;
+      editIndex = index;
+    }
+
+    function deleteHospital(index) {
+      hospitals.splice(index, 1);
+      renderTable();
+    }
+  </script>
+</body>
+</html>
