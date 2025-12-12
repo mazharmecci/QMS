@@ -3,925 +3,361 @@
 <head>
   <meta charset="UTF-8">
   <title>QMS - Instruments</title>
-
-  <!-- Font & Quill -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: #0d6efd;
-      color: white;
-      padding: 0.75rem 1.5rem;
-    }
-
-    .header-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .back-btn {
-      border: none;
-      background: rgba(255,255,255,0.12);
-      color: #ffffff;
-      padding: 0.45rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.9rem;
-    }
-
-    .header-title {
-      flex: 1;
-      text-align: center;
-      font-weight: 600;
-      font-size: 1.5rem;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .top-bar h2 {
-      color: #0d6efd;
-      margin: 0;
-    }
-    .top-bar button {
-      background: #0d6efd;
-      color: white;
-      border: none;
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    form {
-      display: none;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      margin-top: 1rem;
-    }
-    form.active {
-      display: grid;
-    }
-    form input,
-    form select,
-    form button {
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 0.95rem;
-    }
-
-    #detailsEditor {
-      grid-column: span 2;
-      height: 150px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    form button[type="submit"] {
-      grid-column: span 2;
-      background: #0d6efd;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 8px;
-      margin-top: 1rem;
-    }
-
-    table thead th {
-      padding: 0.8rem;
-      background: #f0f4f8;
-      color: #333;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    table tbody tr {
-      background: #ffffff;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-
-    table td {
-      padding: 0.8rem;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee;
-      vertical-align: top;
-    }
-
-    table tbody tr td:first-child {
-      border-left: 1px solid #eee;
-      border-radius: 8px 0 0 8px;
-    }
-
-    table tbody tr td:last-child {
-      border-right: 1px solid #eee;
-      border-radius: 0 8px 8px 0;
-    }
-
-    .actions {
-      white-space: nowrap;
-    }
-
-    .actions button {
-      margin-right: 0.5rem;
-      padding: 0.4rem 0.8rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .edit-btn {
-      background: #ffc107;
-      color: #000;
-    }
-    .delete-btn {
-      background: #dc3545;
-      color: white;
-    }
-
-    .pagination {
-      margin-top: 1rem;
-      text-align: center;
-    }
-    .pagination button {
-      margin: 0 0.5rem;
-      padding: 0.4rem 0.8rem;
-      border: none;
-      border-radius: 6px;
-      background: #0d6efd;
-      color: white;
-      cursor: pointer;
-    }
-
-    .collapse-toggle {
-      cursor: pointer;
-      color: #0d6efd;
-      font-weight: 600;
-      font-size: 0.9rem;
-      user-select: none;
-      margin-bottom: 0.25rem;
-    }
-    .details-content {
-      display: none;
-      font-size: 0.9rem;
-    }
-    .optional-content,
-    .config-content {
-      display: none;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    .price-cell {
-      font-weight: 600;
-      color: #333;
-      white-space: nowrap;
-    }
-
-    /* Modal base style (shared) */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      z-index: 1000;
-      width: 600px;
-    }
-    .modal h3 {
-      margin-bottom: 1rem;
-    }
-    .modal-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    .modal input {
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 0.95rem;
-    }
-    .modal-actions {
-      margin-top: 1rem;
-      text-align: right;
-    }
-    .modal-actions button {
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
-    .save-btn {
-      background: #0d6efd;
-      color: white;
-    }
-
-    /* Quote builder */
-    #quoteBuilder {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      background: #f9fafc;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-    }
-    #quoteHeader {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      background: #eef3f9;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-    }
+    body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; }
+    header { background:#0d6efd; color:#fff; padding:0.75rem 1.5rem; }
+    .header-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:12px; }
+    .back-btn { border:none; background:rgba(255,255,255,0.12); color:#fff; padding:0.45rem 0.9rem; border-radius:999px; cursor:pointer; }
+    .header-title { flex:1; text-align:center; font-weight:600; font-size:1.5rem; }
+    .container { max-width:1200px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .top-bar h2 { color:#0d6efd; margin:0; }
+    .top-bar button { background:#0d6efd; color:#fff; border:none; padding:0.6rem 1rem; border-radius:8px; cursor:pointer; }
+    form { display:none; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0 2rem; }
+    form.active { display:grid; }
+    form input, form select, form button { padding:0.8rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
+    #detailsEditor { grid-column:span 2; height:150px; background:#fff; border:1px solid #ccc; border-radius:8px; }
+    form button[type="submit"] { grid-column:span 2; background:#0d6efd; color:#fff; border:none; cursor:pointer; }
+    table { width:100%; border-collapse:separate; border-spacing:0 8px; margin-top:1rem; }
+    thead th { padding:0.8rem; background:#f0f4f8; border-bottom:1px solid #ddd; text-align:left; }
+    tbody tr { background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+    td { padding:0.8rem; border-top:1px solid #eee; border-bottom:1px solid #eee; vertical-align:top; }
+    tbody tr td:first-child { border-left:1px solid #eee; border-radius:8px 0 0 8px; }
+    tbody tr td:last-child { border-right:1px solid #eee; border-radius:0 8px 8px 0; }
+    .actions { white-space:nowrap; }
+    .actions button { margin-right:0.5rem; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; }
+    .edit-btn { background:#ffc107; }
+    .delete-btn { background:#dc3545; color:#fff; }
+    .pagination { margin-top:1rem; text-align:center; }
+    .pagination button { margin:0 0.5rem; padding:0.4rem 0.8rem; border:none; border-radius:6px; background:#0d6efd; color:#fff; cursor:pointer; }
+    .collapse-toggle { cursor:pointer; color:#0d6efd; font-weight:600; font-size:0.9rem; margin-bottom:0.25rem; user-select:none; }
+    .details-content, .optional-content, .config-content { display:none; font-size:0.9rem; margin-top:0.5rem; }
+    .price-cell { font-weight:600; white-space:nowrap; }
+    .modal { display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:600px; }
+    .modal h3 { margin-bottom:1rem; }
+    .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .modal input { padding:0.8rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
+    .modal-actions { margin-top:1rem; text-align:right; }
+    .modal-actions button { padding:0.6rem 1rem; border-radius:8px; border:none; cursor:pointer; }
+    .save-btn { background:#0d6efd; color:#fff; }
   </style>
 </head>
 <body>
-  <!-- Header with Back button -->
-  <header>
-    <div class="header-inner">
-      <button type="button" class="back-btn" onclick="goBack()">
-        ← Back
-      </button>
-      <div class="header-title">QMS - Instruments</div>
-    </div>
-  </header>
+<header>
+  <div class="header-inner">
+    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+    <div class="header-title">QMS - Instruments</div>
+  </div>
+</header>
 
-  <div class="container">
-    <div class="top-bar">
-      <h2>Instrument Master</h2>
-      <button onclick="toggleForm()">Add Instrument</button>
-    </div>
-
-    <form id="instrumentForm">
-      <input type="text" id="description" placeholder="Instrument Description" required>
-
-      <div id="detailsEditor"></div>
-
-      <input type="text" id="origin" placeholder="Country Of Origin">
-      <input type="text" id="catalog" placeholder="Catalog Reference">
-
-      <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
-
-      <select id="additional">
-        <option value="">Includes Additional Item?</option>
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-      </select>
-
-      <select id="configuration">
-        <option value="">Includes Configuration?</option>
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-      </select>
-
-      <input type="text" id="price" placeholder="Basic Price">
-
-      <input type="text" id="gstType" placeholder="GST Type">
-      <input type="number" id="gstPercent" placeholder="GST %">
-
-      <button type="submit">Save Instrument</button>
-    </form>
-
-    <table id="instrumentTable">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th>Details</th>
-          <th>Origin</th>
-          <th>Catalog</th>
-          <th>HSN</th>
-          <th>Additional</th>
-          <th>Config</th>
-          <th>Price</th>
-          <th>GST Type</th>
-          <th>GST %</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <div class="pagination">
-      <button onclick="prevPage()">Prev</button>
-      <span id="pageInfo"></span>
-      <button onclick="nextPage()">Next</button>
-    </div>
-
-    <!-- Quote Header -->
-    <div id="quoteHeader">
-      <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Header</h3>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-        <input type="text" id="quoteNo" placeholder="Quote No. (e.g. EQ/SQ/25-26/00001)">
-        <input type="date" id="quoteDate">
-        <input type="date" id="refDate">
-        <input type="text" id="hospitalName" placeholder="Hospital / Client Name">
-        <input type="text" id="hospitalAddress" placeholder="Hospital Address">
-        <input type="text" id="contactPerson" placeholder="Contact Person">
-        <input type="text" id="contactPhone" placeholder="Contact Phone">
-        <input type="email" id="contactEmail" placeholder="Contact Email">
-      </div>
-    </div>
-
-    <!-- Quote Builder -->
-    <div id="quoteBuilder">
-      <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Builder</h3>
-      
-      <div style="margin-bottom:1rem;">
-        <label><strong>Select Instruments for Quote:</strong></label>
-        <div id="instrumentSelection"></div>
-      </div>
-
-      <div style="margin-bottom:1rem;">
-        <label>Special Discount (₹):</label>
-        <input type="number" id="discount" placeholder="Enter discount">
-      </div>
-
-      <div style="margin-bottom:1rem;">
-        <label>Freight Costs:</label>
-        <input type="text" id="freight" value="Included">
-      </div>
-
-      <button onclick="generateQuote()" style="background:#0d6efd; color:white; padding:0.6rem 1rem; border:none; border-radius:8px;">Generate Quote Summary</button>
-
-      <div id="quoteSummary" style="margin-top:1.5rem;"></div>
-    </div>
+<div class="container">
+  <div class="top-bar">
+    <h2>Instrument Master</h2>
+    <button onclick="toggleForm()">Add Instrument</button>
   </div>
 
-  <!-- Optional Item Modal -->
-  <div id="optionalItemModal" class="modal">
-    <h3>Add Optional Item</h3>
-    <div class="modal-grid">
-      <input type="text" id="optItemId" placeholder="Item ID">
-      <input type="text" id="optItemCode" placeholder="Item Code">
-      <input type="text" id="optItemName" placeholder="Item Name">
-      <input type="text" id="optCatalogRef" placeholder="Catalog Reference Number">
-      <input type="text" id="optHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
-      <input type="text" id="optOrigin" placeholder="Country Of Origin">
-      <input type="text" id="optPrice" placeholder="Unit Price (₹)">
-    </div>
-    <div class="modal-actions">
-      <button class="save-btn" onclick="saveOptionalItem()">Save</button>
-      <button onclick="closeOptionalModal()">Cancel</button>
-    </div>
+  <form id="instrumentForm">
+    <input type="text" id="description" placeholder="Instrument Description" required>
+    <div id="detailsEditor"></div>
+    <input type="text" id="origin" placeholder="Country Of Origin">
+    <input type="text" id="catalog" placeholder="Catalog Reference">
+    <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
+    <select id="additional">
+      <option value="">Includes Additional Item?</option>
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+    <select id="configuration">
+      <option value="">Includes Configuration?</option>
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+    <input type="text" id="price" placeholder="Basic Price">
+    <input type="text" id="gstType" placeholder="GST Type">
+    <input type="number" id="gstPercent" placeholder="GST %">
+    <button type="submit">Save Instrument</button>
+  </form>
+
+  <table id="instrumentTable">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Details</th>
+        <th>Origin</th>
+        <th>Catalog</th>
+        <th>HSN</th>
+        <th>Additional</th>
+        <th>Config</th>
+        <th>Price</th>
+        <th>GST Type</th>
+        <th>GST %</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="pagination">
+    <button onclick="prevPage()">Prev</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()">Next</button>
   </div>
+</div>
 
-  <!-- Configuration Item Modal -->
-  <div id="configItemModal" class="modal">
-    <h3>Add Configuration Item</h3>
-    <div class="modal-grid">
-      <input type="text" id="cfgItemId" placeholder="Item ID">
-      <input type="text" id="cfgItemCode" placeholder="Item Code">
-      <input type="text" id="cfgItemName" placeholder="Item Name">
-      <input type="text" id="cfgCatalogRef" placeholder="Catalog Reference Number">
-      <input type="text" id="cfgHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
-      <input type="text" id="cfgOrigin" placeholder="Country Of Origin">
-      <input type="text" id="cfgPrice" placeholder="Unit Price (₹)">
-    </div>
-    <div class="modal-actions">
-      <button class="save-btn" onclick="saveConfigItem()">Save</button>
-      <button onclick="closeConfigModal()">Cancel</button>
-    </div>
+<!-- Optional Item Modal -->
+<div id="optionalItemModal" class="modal">
+  <h3>Add Optional Item</h3>
+  <div class="modal-grid">
+    <input type="text" id="optItemId" placeholder="Item ID">
+    <input type="text" id="optItemCode" placeholder="Item Code">
+    <input type="text" id="optItemName" placeholder="Item Name">
+    <input type="text" id="optCatalogRef" placeholder="Catalog Reference Number">
+    <input type="text" id="optHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
+    <input type="text" id="optOrigin" placeholder="Country Of Origin">
+    <input type="text" id="optPrice" placeholder="Unit Price (₹)">
   </div>
+  <div class="modal-actions">
+    <button class="save-btn" onclick="saveOptionalItem()">Save</button>
+    <button onclick="closeOptionalModal()">Cancel</button>
+  </div>
+</div>
 
-  <!-- Quill library -->
-  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-  <script>
-    const form = document.getElementById('instrumentForm');
-    const tableBody = document.querySelector('#instrumentTable tbody');
-    const pageInfo = document.getElementById('pageInfo');
-    const hsnInput = document.getElementById('hsn');
-    const priceInput = document.getElementById('price');
-    const additionalSelect = document.getElementById('additional');
-    const configurationSelect = document.getElementById('configuration');
+<!-- Configuration Item Modal -->
+<div id="configItemModal" class="modal">
+  <h3>Add Configuration Item</h3>
+  <div class="modal-grid">
+    <input type="text" id="cfgItemId" placeholder="Item ID">
+    <input type="text" id="cfgItemCode" placeholder="Item Code">
+    <input type="text" id="cfgItemName" placeholder="Item Name">
+    <input type="text" id="cfgCatalogRef" placeholder="Catalog Reference Number">
+    <input type="text" id="cfgHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
+    <input type="text" id="cfgOrigin" placeholder="Country Of Origin">
+    <input type="text" id="cfgPrice" placeholder="Unit Price (₹)">
+  </div>
+  <div class="modal-actions">
+    <button class="save-btn" onclick="saveConfigItem()">Save</button>
+    <button onclick="closeConfigModal()">Cancel</button>
+  </div>
+</div>
 
-    let instruments = [];
-    let currentPage = 1;
-    const pageSize = 10;
-    let editIndex = null;
-    let optionalItems = [];
-    let configurationItems = [];
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+  const form = document.getElementById('instrumentForm');
+  const tableBody = document.querySelector('#instrumentTable tbody');
+  const pageInfo = document.getElementById('pageInfo');
+  const hsnInput = document.getElementById('hsn');
+  const priceInput = document.getElementById('price');
+  const additionalSelect = document.getElementById('additional');
+  const configurationSelect = document.getElementById('configuration');
 
-    // Initialize Quill editor
-    const quill = new Quill('#detailsEditor', {
-      theme: 'snow',
-      placeholder: 'Enter instrument details...',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline'],
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-          [{ 'header': [1, 2, 3, false] }],
-          ['link']
-        ]
-      }
+  let instruments = JSON.parse(localStorage.getItem('instruments') || '[]'); // shared store
+  let currentPage = 1;
+  const pageSize = 10;
+  let editIndex = null;
+  let optionalItems = [];
+  let configurationItems = [];
+
+  const quill = new Quill('#detailsEditor', {
+    theme: 'snow',
+    placeholder: 'Enter instrument details...',
+    modules: { toolbar: [['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],[{header:[1,2,3,false]}],['link']] }
+  });
+
+  function goBack(){ if(window.history.length>1) window.history.back(); }
+
+  function toggleForm(){ form.classList.toggle('active'); }
+
+  hsnInput.addEventListener('input', () => {
+    let digits = hsnInput.value.replace(/\D/g,'').slice(0,8);
+    if(digits.length>4) digits = digits.slice(0,4)+' '+digits.slice(4);
+    hsnInput.value = digits;
+  });
+
+  priceInput.addEventListener('input', () => {
+    let digits = priceInput.value.replace(/[^\d]/g,'');
+    if(!digits){ priceInput.value=''; return; }
+    const num = parseInt(digits,10);
+    priceInput.value = '₹ '+num.toLocaleString('en-IN');
+  });
+
+  function parsePriceValue(v){
+    const digits = (v||'').replace(/[^\d]/g,'');
+    return digits ? parseInt(digits,10) : 0;
+  }
+
+  // Optional modal
+  additionalSelect.addEventListener('change', function(){
+    if(this.value==='Yes') document.getElementById('optionalItemModal').style.display='block';
+  });
+  function closeOptionalModal(){ document.getElementById('optionalItemModal').style.display='none'; }
+  const optHSNInput = document.getElementById('optHSN');
+  optHSNInput.addEventListener('input', ()=>{
+    let d = optHSNInput.value.replace(/\D/g,'').slice(0,8);
+    if(d.length>4) d = d.slice(0,4)+' '+d.slice(4);
+    optHSNInput.value = d;
+  });
+  const optPriceInput = document.getElementById('optPrice');
+  optPriceInput.addEventListener('input', function(){
+    let raw = this.value.replace(/[^\d]/g,'');
+    this.value = raw ? '₹ '+parseFloat(raw).toLocaleString('en-IN') : '';
+  });
+  function saveOptionalItem(){
+    const hsn = optHSNInput.value.trim();
+    if(!/^\d{4}\s\d{4}$/.test(hsn)){ alert('HSN Code must be in format: 1234 5678'); return; }
+    optionalItems.push({
+      id:document.getElementById('optItemId').value,
+      code:document.getElementById('optItemCode').value,
+      name:document.getElementById('optItemName').value,
+      catalog:document.getElementById('optCatalogRef').value,
+      hsn, origin:document.getElementById('optOrigin').value,
+      price:optPriceInput.value
     });
+    closeOptionalModal();
+  }
 
-    function goBack() {
-      if (window.history.length > 1) {
-        window.history.back();
-      }
-    }
-
-    function toggleForm() {
-      form.classList.toggle('active');
-    }
-
-    // HSN: allow digits only, format as 1234 5678
-    hsnInput.addEventListener('input', () => {
-      let digits = hsnInput.value.replace(/\D/g, '').slice(0, 8);
-      if (digits.length > 4) {
-        digits = digits.slice(0, 4) + ' ' + digits.slice(4);
-      }
-      hsnInput.value = digits;
+  // Config modal
+  configurationSelect.addEventListener('change', function(){
+    if(this.value==='Yes') document.getElementById('configItemModal').style.display='block';
+  });
+  function closeConfigModal(){ document.getElementById('configItemModal').style.display='none'; }
+  const cfgHSNInput = document.getElementById('cfgHSN');
+  cfgHSNInput.addEventListener('input', ()=>{
+    let d = cfgHSNInput.value.replace(/\D/g,'').slice(0,8);
+    if(d.length>4) d = d.slice(0,4)+' '+d.slice(4);
+    cfgHSNInput.value = d;
+  });
+  const cfgPriceInput = document.getElementById('cfgPrice');
+  cfgPriceInput.addEventListener('input', function(){
+    let raw = this.value.replace(/[^\d]/g,'');
+    this.value = raw ? '₹ '+parseFloat(raw).toLocaleString('en-IN') : '';
+  });
+  function saveConfigItem(){
+    const hsn = cfgHSNInput.value.trim();
+    if(!/^\d{4}\s\d{4}$/.test(hsn)){ alert('HSN Code must be in format: 1234 5678'); return; }
+    configurationItems.push({
+      id:document.getElementById('cfgItemId').value,
+      code:document.getElementById('cfgItemCode').value,
+      name:document.getElementById('cfgItemName').value,
+      catalog:document.getElementById('cfgCatalogRef').value,
+      hsn, origin:document.getElementById('cfgOrigin').value,
+      price:cfgPriceInput.value
     });
+    closeConfigModal();
+  }
 
-    // Price: live formatting with ₹ and commas
-    priceInput.addEventListener('input', () => {
-      let digits = priceInput.value.replace(/[^\d]/g, '');
-      if (!digits) {
-        priceInput.value = '';
-        return;
-      }
-      const num = parseInt(digits, 10);
-      priceInput.value = '₹ ' + num.toLocaleString('en-IN');
-    });
-
-    function parsePriceValue(displayValue) {
-      const digits = (displayValue || '').replace(/[^\d]/g, '');
-      return digits ? parseInt(digits, 10) : 0;
-    }
-
-    // Optional item modal logic
-    additionalSelect.addEventListener('change', function() {
-      if (this.value === 'Yes') {
-        document.getElementById('optionalItemModal').style.display = 'block';
-      }
-    });
-
-    function closeOptionalModal() {
-      document.getElementById('optionalItemModal').style.display = 'none';
-    }
-
-    const optHSNInput = document.getElementById('optHSN');
-    optHSNInput.addEventListener('input', () => {
-      let digits = optHSNInput.value.replace(/\D/g, '').slice(0, 8);
-      if (digits.length > 4) {
-        digits = digits.slice(0, 4) + ' ' + digits.slice(4);
-      }
-      optHSNInput.value = digits;
-    });
-
-    const optPriceInput = document.getElementById('optPrice');
-    optPriceInput.addEventListener('input', function() {
-      let raw = this.value.replace(/[^\d]/g, '');
-      if (raw) {
-        this.value = '₹ ' + parseFloat(raw).toLocaleString('en-IN');
-      } else {
-        this.value = '';
-      }
-    });
-
-    function saveOptionalItem() {
-      const hsn = optHSNInput.value.trim();
-      if (!/^\d{4}\s\d{4}$/.test(hsn)) {
-        alert('HSN Code must be in format: 1234 5678');
-        return;
-      }
-
-      const item = {
-        id: document.getElementById('optItemId').value,
-        code: document.getElementById('optItemCode').value,
-        name: document.getElementById('optItemName').value,
-        catalog: document.getElementById('optCatalogRef').value,
-        hsn: hsn,
-        origin: document.getElementById('optOrigin').value,
-        price: optPriceInput.value
-      };
-
-      optionalItems.push(item);
-      closeOptionalModal();
-    }
-
-    // Configuration item modal logic
-    configurationSelect.addEventListener('change', function() {
-      if (this.value === 'Yes') {
-        document.getElementById('configItemModal').style.display = 'block';
-      }
-    });
-
-    function closeConfigModal() {
-      document.getElementById('configItemModal').style.display = 'none';
-    }
-
-    const cfgHSNInput = document.getElementById('cfgHSN');
-    cfgHSNInput.addEventListener('input', () => {
-      let digits = cfgHSNInput.value.replace(/\D/g, '').slice(0, 8);
-      if (digits.length > 4) {
-        digits = digits.slice(0, 4) + ' ' + digits.slice(4);
-      }
-      cfgHSNInput.value = digits;
-    });
-
-    const cfgPriceInput = document.getElementById('cfgPrice');
-    cfgPriceInput.addEventListener('input', function() {
-      let raw = this.value.replace(/[^\d]/g, '');
-      if (raw) {
-        this.value = '₹ ' + parseFloat(raw).toLocaleString('en-IN');
-      } else {
-        this.value = '';
-      }
-    });
-
-    function saveConfigItem() {
-      const hsn = cfgHSNInput.value.trim();
-      if (!/^\d{4}\s\d{4}$/.test(hsn)) {
-        alert('HSN Code must be in format: 1234 5678');
-        return;
-      }
-
-      const item = {
-        id: document.getElementById('cfgItemId').value,
-        code: document.getElementById('cfgItemCode').value,
-        name: document.getElementById('cfgItemName').value,
-        catalog: document.getElementById('cfgCatalogRef').value,
-        hsn: hsn,
-        origin: document.getElementById('cfgOrigin').value,
-        price: cfgPriceInput.value
-      };
-
-      configurationItems.push(item);
-      closeConfigModal();
-    }
-
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const instrument = {
-        description: document.getElementById('description').value,
-        details: quill.root.innerHTML,
-        origin: document.getElementById('origin').value,
-        catalog: document.getElementById('catalog').value,
-        hsn: hsnInput.value,
-        additional: document.getElementById('additional').value,
-        configuration: document.getElementById('configuration').value,
-        price: parsePriceValue(priceInput.value),
-        gstType: document.getElementById('gstType').value,
-        gstPercent: document.getElementById('gstPercent').value,
-        optionalItems: [...optionalItems],
-        configurationItems: [...configurationItems]
-      };
-
-      if (editIndex !== null) {
-        instruments[editIndex] = instrument;
-        editIndex = null;
-      } else {
-        instruments.push(instrument);
-      }
-
-      form.reset();
-      quill.setContents([]);
-      optionalItems = [];
-      configurationItems = [];
-      form.classList.remove('active');
-      renderTable();
-      renderInstrumentSelection();
-    });
-
-    function formatPriceDisplay(value) {
-      return '₹ ' + Number(value || 0).toLocaleString('en-IN');
-    }
-
-    function renderTable() {
-      tableBody.innerHTML = '';
-
-      const start = (currentPage - 1) * pageSize;
-      const end = start + pageSize;
-      const pageItems = instruments.slice(start, end);
-
-      pageItems.forEach((inst, index) => {
-        const hasOptional = inst.additional === 'Yes' && inst.optionalItems && inst.optionalItems.length;
-        const hasConfig = inst.configuration === 'Yes' && inst.configurationItems && inst.configurationItems.length;
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${inst.description}</td>
-          <td>
-            <div class="collapse-toggle" onclick="toggleDetails(this)">
-              Details
-            </div>
-            <div class="details-content">
-              ${inst.details}
-            </div>
-          </td>
-          <td>${inst.origin}</td>
-          <td>${inst.catalog}</td>
-          <td>${inst.hsn}</td>
-          <td>
-            ${
-              hasOptional
-                ? `
-                  <div class="collapse-toggle" onclick="toggleOptional(this)">
-                    ▶ Additional Items
-                  </div>
-                  <div class="optional-content">
-                    ${inst.optionalItems
-                      .map(item => `
-                        <div style="margin-bottom:0.3rem;">
-                          <strong>${item.name || 'Item'}</strong>
-                          ${item.code ? ` (${item.code})` : ''} – ${item.price || ''}
-                        </div>
-                      `)
-                      .join('')}
-                  </div>
-                `
-                : inst.additional || ''
-            }
-          </td>
-          <td>
-            ${
-              hasConfig
-                ? `
-                  <div class="collapse-toggle" onclick="toggleConfig(this)">
-                    ▶ Configuration Items
-                  </div>
-                  <div class="config-content">
-                    ${inst.configurationItems
-                      .map(item => `
-                        <div style="margin-bottom:0.3rem;">
-                          <strong>${item.name || 'Item'}</strong>
-                          ${item.code ? ` (${item.code})` : ''} – ${item.price || ''}
-                        </div>
-                      `)
-                      .join('')}
-                  </div>
-                `
-                : inst.configuration || ''
-            }
-          </td>
-          <td class="price-cell">${formatPriceDisplay(inst.price)}</td>
-          <td>${inst.gstType}</td>
-          <td>${inst.gstPercent}</td>
-          <td class="actions">
-            <button class="edit-btn" onclick="editInstrument(${start + index})">Edit</button>
-            <button class="delete-btn" onclick="deleteInstrument(${start + index})">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-
-      pageInfo.textContent =
-        `Page ${currentPage} of ${Math.ceil(instruments.length / pageSize) || 1}`;
-    }
-
-    function toggleDetails(toggleEl) {
-      const details = toggleEl.nextElementSibling;
-      const isVisible = details.style.display === 'block';
-      details.style.display = isVisible ? 'none' : 'block';
-      toggleEl.textContent = isVisible ? 'Details' : 'Hide details';
-    }
-
-    function toggleOptional(toggleEl) {
-      const content = toggleEl.nextElementSibling;
-      const isVisible = content.style.display === 'block';
-      content.style.display = isVisible ? 'none' : 'block';
-      toggleEl.textContent = isVisible ? '▶ Additional Items' : '▼ Additional Items';
-    }
-
-    function toggleConfig(toggleEl) {
-      const content = toggleEl.nextElementSibling;
-      const isVisible = content.style.display === 'block';
-      content.style.display = isVisible ? 'none' : 'block';
-      toggleEl.textContent = isVisible ? '▶ Configuration Items' : '▼ Configuration Items';
-    }
-
-    function editInstrument(index) {
-      const inst = instruments[index];
-
-      document.getElementById('description').value = inst.description;
-      document.getElementById('origin').value = inst.origin;
-      document.getElementById('catalog').value = inst.catalog;
-      hsnInput.value = inst.hsn;
-      document.getElementById('additional').value = inst.additional;
-      document.getElementById('configuration').value = inst.configuration;
-      priceInput.value = formatPriceDisplay(inst.price);
-      document.getElementById('gstType').value = inst.gstType;
-      document.getElementById('gstPercent').value = inst.gstPercent;
-
-      quill.root.innerHTML = inst.details;
-
-      optionalItems = inst.optionalItems ? [...inst.optionalItems] : [];
-      configurationItems = inst.configurationItems ? [...inst.configurationItems] : [];
-      editIndex = index;
-      form.classList.add('active');
-    }
-
-    function deleteInstrument(index) {
-      instruments.splice(index, 1);
-
-      const maxPage = Math.max(1, Math.ceil(instruments.length / pageSize));
-      if (currentPage > maxPage) {
-        currentPage = maxPage;
-      }
-
-      renderTable();
-      renderInstrumentSelection();
-    }
-
-    function nextPage() {
-      if (currentPage * pageSize < instruments.length) {
-        currentPage++;
-        renderTable();
-      }
-    }
-
-    function prevPage() {
-      if (currentPage > 1) {
-        currentPage--;
-        renderTable();
-      }
-    }
-
-    // Quote builder: instrument selection
-    function renderInstrumentSelection() {
-      const container = document.getElementById('instrumentSelection');
-      if (!container) return;
-      container.innerHTML = '';
-      instruments.forEach((inst, idx) => {
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <label>
-            <input type="checkbox" value="${idx}"> ${String(inst.description).replace(/<br>/g, ' ')}
-          </label>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function generateQuote() {
-      const selected = [...document.querySelectorAll('#instrumentSelection input:checked')]
-        .map(cb => parseInt(cb.value, 10));
-
-      let itemsTotal = 0;
-
-      selected.forEach(idx => {
-        const inst = instruments[idx];
-        itemsTotal += inst.price || 0;
-
-        if (inst.optionalItems) {
-          inst.optionalItems.forEach(item => {
-            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
-            itemsTotal += rawPrice;
-          });
-        }
-
-        if (inst.configurationItems) {
-          inst.configurationItems.forEach(item => {
-            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
-            itemsTotal += rawPrice;
-          });
-        }
-      });
-
-      const discount = parseFloat(document.getElementById('discount').value) || 0;
-      const afterDiscount = itemsTotal - discount;
-      const gstPercent = 18;
-      const gstAmount = afterDiscount * gstPercent / 100;
-      const totalValue = afterDiscount + gstAmount;
-      const roundOff = Math.round(totalValue);
-
-      // Header values
-      const header = {
-        quoteNo: document.getElementById('quoteNo').value,
-        quoteDate: document.getElementById('quoteDate').value,
-        refDate: document.getElementById('refDate').value,
-        hospitalName: document.getElementById('hospitalName').value,
-        hospitalAddress: document.getElementById('hospitalAddress').value,
-        contactPerson: document.getElementById('contactPerson').value,
-        contactPhone: document.getElementById('contactPhone').value,
-        contactEmail: document.getElementById('contactEmail').value
-      };
-
-      // Line‑item breakdown table
-      let lineItemsHTML = `
-        <h4>Line‑Item Breakdown</h4>
-        <table style="width:100%; border-collapse:collapse; margin-bottom:1rem;">
-          <thead>
-            <tr style="background:#f0f4f8;">
-              <th style="padding:0.5rem; text-align:left;">Item</th>
-              <th style="padding:0.5rem; text-align:left;">Code</th>
-              <th style="padding:0.5rem; text-align:left;">Type</th>
-              <th style="padding:0.5rem; text-align:right;">Price (INR)</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      selected.forEach(idx => {
-        const inst = instruments[idx];
-
-        // Instrument base row
-        lineItemsHTML += `
-          <tr>
-            <td style="padding:0.5rem;"><strong>${String(inst.description).replace(/<br>/g, ' ')}</strong></td>
-            <td style="padding:0.5rem;">${inst.catalog || ''}</td>
-            <td style="padding:0.5rem;">Instrument</td>
-            <td style="padding:0.5rem; text-align:right;">₹ ${(inst.price || 0).toLocaleString('en-IN')}</td>
-          </tr>
-        `;
-
-        // Optional items
-        if (inst.optionalItems) {
-          inst.optionalItems.forEach(item => {
-            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
-            lineItemsHTML += `
-              <tr>
-                <td style="padding:0.5rem;">${item.name || ''}</td>
-                <td style="padding:0.5rem;">${item.code || ''}</td>
-                <td style="padding:0.5rem;">Optional Item</td>
-                <td style="padding:0.5rem; text-align:right;">₹ ${rawPrice.toLocaleString('en-IN')}</td>
-              </tr>
-            `;
-          });
-        }
-
-        // Configuration items
-        if (inst.configurationItems) {
-          inst.configurationItems.forEach(item => {
-            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
-            lineItemsHTML += `
-              <tr>
-                <td style="padding:0.5rem;">${item.name || ''}</td>
-                <td style="padding:0.5rem;">${item.code || ''}</td>
-                <td style="padding:0.5rem;">Configuration Item</td>
-                <td style="padding:0.5rem; text-align:right;">₹ ${rawPrice.toLocaleString('en-IN')}</td>
-              </tr>
-            `;
-          });
-        }
-      });
-
-      lineItemsHTML += `</tbody></table>`;
-
-      // Final quote summary with header + line items + totals
-      document.getElementById('quoteSummary').innerHTML = `
-        <h4>Sales Quotation</h4>
-        <p><strong>Quote No:</strong> ${header.quoteNo || '-'}</p>
-        <p><strong>Quotation Date:</strong> ${header.quoteDate || '-'}</p>
-        <p><strong>Reference Date:</strong> ${header.refDate || '-'}</p>
-        <p><strong>Hospital / Client:</strong> ${header.hospitalName || '-'}</p>
-        <p><strong>Address:</strong> ${header.hospitalAddress || '-'}</p>
-        <p><strong>Contact Person:</strong> ${header.contactPerson || '-'}</p>
-        <p><strong>Phone:</strong> ${header.contactPhone || '-'}</p>
-        <p><strong>Email:</strong> ${header.contactEmail || '-'}</p>
-        <hr>
-        ${lineItemsHTML}
-        <h4>Quote Summary</h4>
-        <p><strong>Items Value Total INR:</strong> ₹ ${itemsTotal.toLocaleString('en-IN')}</p>
-        <p><strong>Special Discount:</strong> ₹ ${discount.toLocaleString('en-IN')}</p>
-        <p><strong>Price After Discount:</strong> ₹ ${afterDiscount.toLocaleString('en-IN')}</p>
-        <p><strong>Freight Costs:</strong> ${document.getElementById('freight').value}</p>
-        <p><strong>GST @ ${gstPercent}%:</strong> ₹ ${gstAmount.toLocaleString('en-IN')}</p>
-        <p><strong>Total Value INR:</strong> ₹ ${totalValue.toLocaleString('en-IN')}</p>
-        <p><strong>Round Off:</strong> ₹ ${roundOff.toLocaleString('en-IN')}</p>
-      `;
-    }
-
-    // Initial render
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const instrument = {
+      description: document.getElementById('description').value,
+      details: quill.root.innerHTML,
+      origin: document.getElementById('origin').value,
+      catalog: document.getElementById('catalog').value,
+      hsn: hsnInput.value,
+      additional: additionalSelect.value,
+      configuration: configurationSelect.value,
+      price: parsePriceValue(priceInput.value),
+      gstType: document.getElementById('gstType').value,
+      gstPercent: document.getElementById('gstPercent').value,
+      optionalItems:[...optionalItems],
+      configurationItems:[...configurationItems]
+    };
+    if(editIndex!==null){ instruments[editIndex]=instrument; editIndex=null; }
+    else instruments.push(instrument);
+    localStorage.setItem('instruments', JSON.stringify(instruments)); // persist for quotes.html[web:14][web:16]
+    form.reset(); quill.setContents([]); optionalItems=[]; configurationItems=[];
+    form.classList.remove('active');
     renderTable();
-    renderInstrumentSelection();
-  </script>
+  });
+
+  function formatPriceDisplay(v){ return '₹ '+Number(v||0).toLocaleString('en-IN'); }
+
+  function renderTable(){
+    tableBody.innerHTML='';
+    const start=(currentPage-1)*pageSize, end=start+pageSize;
+    instruments.slice(start,end).forEach((inst,i)=>{
+      const idx = start+i;
+      const hasOptional = inst.additional==='Yes' && inst.optionalItems && inst.optionalItems.length;
+      const hasConfig = inst.configuration==='Yes' && inst.configurationItems && inst.configurationItems.length;
+      const row=document.createElement('tr');
+      row.innerHTML=`
+        <td>${inst.description}</td>
+        <td>
+          <div class="collapse-toggle" onclick="toggleDetails(this)">Details</div>
+          <div class="details-content">${inst.details}</div>
+        </td>
+        <td>${inst.origin||''}</td>
+        <td>${inst.catalog||''}</td>
+        <td>${inst.hsn||''}</td>
+        <td>${
+          hasOptional
+            ? `<div class="collapse-toggle" onclick="toggleOptional(this)">▶ Additional Items</div>
+               <div class="optional-content">${
+                 inst.optionalItems.map(it=>`
+                   <div style="margin-bottom:0.3rem;">
+                     <strong>${it.name||'Item'}</strong>${it.code?` (${it.code})`:''} – ${it.price||''}
+                   </div>`).join('')
+               }</div>`
+            : (inst.additional||'')
+        }</td>
+        <td>${
+          hasConfig
+            ? `<div class="collapse-toggle" onclick="toggleConfig(this)">▶ Configuration Items</div>
+               <div class="config-content">${
+                 inst.configurationItems.map(it=>`
+                   <div style="margin-bottom:0.3rem;">
+                     <strong>${it.name||'Item'}</strong>${it.code?` (${it.code})`:''} – ${it.price||''}
+                   </div>`).join('')
+               }</div>`
+            : (inst.configuration||'')
+        }</td>
+        <td class="price-cell">${formatPriceDisplay(inst.price)}</td>
+        <td>${inst.gstType||''}</td>
+        <td>${inst.gstPercent||''}</td>
+        <td class="actions">
+          <button class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
+          <button class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
+        </td>`;
+      tableBody.appendChild(row);
+    });
+    pageInfo.textContent=`Page ${currentPage} of ${Math.ceil(instruments.length/pageSize)||1}`;
+  }
+
+  function toggleDetails(el){ const d=el.nextElementSibling; const v=d.style.display==='block'; d.style.display=v?'none':'block'; el.textContent=v?'Details':'Hide details'; }
+  function toggleOptional(el){ const d=el.nextElementSibling; const v=d.style.display==='block'; d.style.display=v?'none':'block'; el.textContent=v?'▶ Additional Items':'▼ Additional Items'; }
+  function toggleConfig(el){ const d=el.nextElementSibling; const v=d.style.display==='block'; d.style.display=v?'none':'block'; el.textContent=v?'▶ Configuration Items':'▼ Configuration Items'; }
+
+  function editInstrument(i){
+    const inst=instruments[i];
+    document.getElementById('description').value=inst.description;
+    document.getElementById('origin').value=inst.origin||'';
+    document.getElementById('catalog').value=inst.catalog||'';
+    hsnInput.value=inst.hsn||'';
+    additionalSelect.value=inst.additional||'';
+    configurationSelect.value=inst.configuration||'';
+    priceInput.value=formatPriceDisplay(inst.price);
+    document.getElementById('gstType').value=inst.gstType||'';
+    document.getElementById('gstPercent').value=inst.gstPercent||'';
+    quill.root.innerHTML=inst.details||'';
+    optionalItems = inst.optionalItems ? [...inst.optionalItems]:[];
+    configurationItems = inst.configurationItems ? [...inst.configurationItems]:[];
+    editIndex=i;
+    form.classList.add('active');
+  }
+
+  function deleteInstrument(i){
+    instruments.splice(i,1);
+    localStorage.setItem('instruments', JSON.stringify(instruments));
+    const maxPage=Math.max(1,Math.ceil(instruments.length/pageSize));
+    if(currentPage>maxPage) currentPage=maxPage;
+    renderTable();
+  }
+
+  function nextPage(){ if(currentPage*pageSize<instruments.length){ currentPage++; renderTable(); } }
+  function prevPage(){ if(currentPage>1){ currentPage--; renderTable(); } }
+
+  renderTable();
+</script>
 </body>
 </html>
