@@ -90,13 +90,12 @@
       border-radius: 8px;
     }
 
-    .company-box {
-      background: #e9ecef;
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-      line-height: 1.4;
+    .company-box p {
+      font-size: 0.85rem;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .company-box p {
@@ -117,16 +116,24 @@
     }
 
     .quote-right p strong {
-      font-weight: 600;
+      font-weight: 500;
+    }
+    
+    .quote-right p {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin: 0 0 0.35rem;
     }
 
     .quote-right-title {
-      text-align: left;
+      text-align: right;
       font-weight: 700;
-      margin-bottom: 0.75rem;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
       letter-spacing: 0.05em;
     }
-
+    
     /* Header input controls */
 
     .quote-meta-fields {
@@ -251,7 +258,7 @@
     <div class="quote-header-top">
       <div class="logo-box">
         <!-- Adjust path to match your repo -->
-        <img src="images/istos-logo.png" alt="ISTOS Logo">
+        <img src="..images/istos-logo.png" alt="ISTOS Logo">
       </div>
     </div>
 
