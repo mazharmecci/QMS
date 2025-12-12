@@ -40,10 +40,10 @@
     }
 
     .quote-header-body {
-      display:flex;
-      gap:1rem;
-      flex-wrap:wrap;
-      align-items:center; /* aligns grey bars on one line */
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: flex-start; /* aligns top edges */
     }
 
     .quote-left {
@@ -72,25 +72,15 @@
 
      /* SALES QUOTATION: 14pt ≈ 18px */
     .quote-right-title {
-      line-height:1.5;
-      background:#d0d4d9;
-      padding:0.2rem 1rem;   /* matches company-box padding */
-      border-radius:6px;
-      text-align:right;
-      font-weight:800;
-      font-size:14px;
-      margin:0;
-      letter-spacing:0.05em;
+      margin-bottom: 1rem;
     }
-
+    
     /* 4‑column grid: label, value, label, value */
     .quote-meta-grid {
       display:grid;
       grid-template-columns:auto 1fr auto 1fr;
       column-gap:0.75rem;
       row-gap:0.55rem;
-      align-items:start;      /* vertical: top in each cell */
-      justify-items:start;    /* horizontal: left in each cell */
     }
 
     /* "To" + address: 10pt ≈ 13px */
@@ -185,8 +175,8 @@
   </style>
 </head>
 <body>
+  
 <header>QMS - Quotes</header>
-
 <div class="container">
   <!-- QUOTE HEADER BLOCK -->
   <div class="quote-header">
