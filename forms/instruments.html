@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>QMS - Instruments</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
-  <!-- Quill stylesheet -->
+  <!-- Font & Quill -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
   <style>
@@ -39,6 +39,7 @@
     }
     .top-bar h2 {
       color: #0d6efd;
+      margin: 0;
     }
     .top-bar button {
       background: #0d6efd;
@@ -58,7 +59,9 @@
     form.active {
       display: grid;
     }
-    form input, form select, form button {
+    form input,
+    form select,
+    form button {
       padding: 0.8rem;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -71,7 +74,7 @@
       border: 1px solid #ccc;
       border-radius: 8px;
     }
-    form button {
+    form button[type="submit"] {
       grid-column: span 2;
       background: #0d6efd;
       color: white;
@@ -83,14 +86,32 @@
       border-collapse: collapse;
       margin-top: 1rem;
     }
-    table th, table td {
+    table th,
+    table td {
       padding: 0.8rem;
       border-bottom: 1px solid #ddd;
       text-align: left;
+      vertical-align: top;
     }
     table th {
       background: #f0f4f8;
       color: #333;
+    }
+    .actions button {
+      margin-right: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .edit-btn {
+      background: #ffc107;
+      color: #000;
+    }
+    .delete-btn {
+      background: #dc3545;
+      color: white;
     }
     .pagination {
       margin-top: 1rem;
@@ -109,6 +130,7 @@
 </head>
 <body>
   <header>QMS - Instruments</header>
+
   <div class="container">
     <div class="top-bar">
       <h2>Instrument Master</h2>
@@ -118,23 +140,28 @@
     <form id="instrumentForm">
       <input type="text" id="description" placeholder="Instrument Description" required>
       <div id="detailsEditor"></div>
+
       <input type="text" id="origin" placeholder="Country Of Origin">
       <input type="text" id="catalog" placeholder="Catalog Reference">
       <input type="text" id="hsn" placeholder="HSN Code">
+
       <select id="additional">
         <option value="">Includes Additional Item?</option>
         <option value="Yes">Yes</option>
         <option value="No">No</option>
       </select>
+
       <select id="configuration">
         <option value="">Includes Configuration?</option>
         <option value="Yes">Yes</option>
         <option value="No">No</option>
       </select>
+
       <input type="number" id="price" placeholder="Basic Price">
       <input type="text" id="gstType" placeholder="GST Type">
       <input type="number" id="gstPercent" placeholder="GST %">
-      <button type="submit">Create Instrument</button>
+
+      <button type="submit">Save Instrument</button>
     </form>
 
     <table id="instrumentTable">
@@ -150,6 +177,7 @@
           <th>Price</th>
           <th>GST Type</th>
           <th>GST %</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -164,14 +192,15 @@
 
   <!-- Quill library -->
   <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
   <script>
     const form = document.getElementById('instrumentForm');
     const tableBody = document.querySelector('#instrumentTable tbody');
     const pageInfo = document.getElementById('pageInfo');
+
     let instruments = [];
     let currentPage = 1;
     const pageSize = 10;
+    let editIndex = null;
 
     // Initialize Quill editor
     const quill = new Quill('#detailsEditor', {
@@ -180,7 +209,7 @@
       modules: {
         toolbar: [
           ['bold', 'italic', 'underline'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
           [{ 'header': [1, 2, 3, false] }],
           ['link']
         ]
@@ -193,9 +222,10 @@
 
     form.addEventListener('submit', function(e) {
       e.preventDefault();
+
       const instrument = {
         description: document.getElementById('description').value,
-        details: quill.root.innerHTML,   // capture rich text HTML
+        details: quill.root.innerHTML,
         origin: document.getElementById('origin').value,
         catalog: document.getElementById('catalog').value,
         hsn: document.getElementById('hsn').value,
@@ -205,19 +235,28 @@
         gstType: document.getElementById('gstType').value,
         gstPercent: document.getElementById('gstPercent').value
       };
-      instruments.push(instrument);
+
+      if (editIndex !== null) {
+        instruments[editIndex] = instrument;
+        editIndex = null;
+      } else {
+        instruments.push(instrument);
+      }
+
       form.reset();
-      quill.setContents([]); // clear editor
+      quill.setContents([]);
       form.classList.remove('active');
       renderTable();
     });
 
     function renderTable() {
       tableBody.innerHTML = '';
+
       const start = (currentPage - 1) * pageSize;
       const end = start + pageSize;
       const pageItems = instruments.slice(start, end);
-      pageItems.forEach(inst => {
+
+      pageItems.forEach((inst, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${inst.description}</td>
@@ -230,12 +269,17 @@
           <td>${inst.price}</td>
           <td>${inst.gstType}</td>
           <td>${inst.gstPercent}</td>
+          <td class="actions">
+            <button class="edit-btn" onclick="editInstrument(${start + index})">Edit</button>
+            <button class="delete-btn" onclick="deleteInstrument(${start + index})">Delete</button>
+          </td>
         `;
-        // Inject Quill HTML into the details cell
         row.querySelector('.details-cell').innerHTML = inst.details;
         tableBody.appendChild(row);
       });
-      pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(instruments.length / pageSize) || 1}`;
+
+      pageInfo.textContent =
+        `Page ${currentPage} of ${Math.ceil(instruments.length / pageSize) || 1}`;
     }
 
     function nextPage() {
@@ -252,6 +296,39 @@
       }
     }
 
+    function editInstrument(index) {
+      const inst = instruments[index];
+
+      document.getElementById('description').value = inst.description;
+      document.getElementById('origin').value = inst.origin;
+      document.getElementById('catalog').value = inst.catalog;
+      document.getElementById('hsn').value = inst.hsn;
+      document.getElementById('additional').value = inst.additional;
+      document.getElementById('configuration').value = inst.configuration;
+      document.getElementById('price').value = inst.price;
+      document.getElementById('gstType').value = inst.gstType;
+      document.getElementById('gstPercent').value = inst.gstPercent;
+
+      // Load Quill content back into editor
+      quill.root.innerHTML = inst.details;
+
+      editIndex = index;
+      form.classList.add('active');
+    }
+
+    function deleteInstrument(index) {
+      instruments.splice(index, 1);
+
+      // If we delete the last item on the current page, step back a page when needed
+      const maxPage = Math.max(1, Math.ceil(instruments.length / pageSize));
+      if (currentPage > maxPage) {
+        currentPage = maxPage;
+      }
+
+      renderTable();
+    }
+
+    // Initial render
     renderTable();
   </script>
 </body>
