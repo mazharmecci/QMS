@@ -452,9 +452,6 @@
     function goBack() {
       if (window.history.length > 1) {
         window.history.back();
-      } else {
-        // Optional fallback
-        // window.location.href = 'index.html';
       }
     }
 
@@ -837,6 +834,68 @@
         contactEmail: document.getElementById('contactEmail').value
       };
 
+      // Line‑item breakdown table
+      let lineItemsHTML = `
+        <h4>Line‑Item Breakdown</h4>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:1rem;">
+          <thead>
+            <tr style="background:#f0f4f8;">
+              <th style="padding:0.5rem; text-align:left;">Item</th>
+              <th style="padding:0.5rem; text-align:left;">Code</th>
+              <th style="padding:0.5rem; text-align:left;">Type</th>
+              <th style="padding:0.5rem; text-align:right;">Price (INR)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      selected.forEach(idx => {
+        const inst = instruments[idx];
+
+        // Instrument base row
+        lineItemsHTML += `
+          <tr>
+            <td style="padding:0.5rem;"><strong>${String(inst.description).replace(/<br>/g, ' ')}</strong></td>
+            <td style="padding:0.5rem;">${inst.catalog || ''}</td>
+            <td style="padding:0.5rem;">Instrument</td>
+            <td style="padding:0.5rem; text-align:right;">₹ ${(inst.price || 0).toLocaleString('en-IN')}</td>
+          </tr>
+        `;
+
+        // Optional items
+        if (inst.optionalItems) {
+          inst.optionalItems.forEach(item => {
+            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+            lineItemsHTML += `
+              <tr>
+                <td style="padding:0.5rem;">${item.name || ''}</td>
+                <td style="padding:0.5rem;">${item.code || ''}</td>
+                <td style="padding:0.5rem;">Optional Item</td>
+                <td style="padding:0.5rem; text-align:right;">₹ ${rawPrice.toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          });
+        }
+
+        // Configuration items
+        if (inst.configurationItems) {
+          inst.configurationItems.forEach(item => {
+            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+            lineItemsHTML += `
+              <tr>
+                <td style="padding:0.5rem;">${item.name || ''}</td>
+                <td style="padding:0.5rem;">${item.code || ''}</td>
+                <td style="padding:0.5rem;">Configuration Item</td>
+                <td style="padding:0.5rem; text-align:right;">₹ ${rawPrice.toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          });
+        }
+      });
+
+      lineItemsHTML += `</tbody></table>`;
+
+      // Final quote summary with header + line items + totals
       document.getElementById('quoteSummary').innerHTML = `
         <h4>Sales Quotation</h4>
         <p><strong>Quote No:</strong> ${header.quoteNo || '-'}</p>
@@ -848,6 +907,7 @@
         <p><strong>Phone:</strong> ${header.contactPhone || '-'}</p>
         <p><strong>Email:</strong> ${header.contactEmail || '-'}</p>
         <hr>
+        ${lineItemsHTML}
         <h4>Quote Summary</h4>
         <p><strong>Items Value Total INR:</strong> ₹ ${itemsTotal.toLocaleString('en-IN')}</p>
         <p><strong>Special Discount:</strong> ₹ ${discount.toLocaleString('en-IN')}</p>
