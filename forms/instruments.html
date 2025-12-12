@@ -144,7 +144,11 @@
     <input type="text" id="cfgCatalogRef" placeholder="Catalog Reference Number">
     <input type="text" id="cfgHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
     <input type="text" id="cfgOrigin" placeholder="Country Of Origin">
-    <input type="text" id="cfgPrice" placeholder="Unit Price (₹)">
+
+    <!-- New fields -->
+    <input type="text" id="cfgQty" placeholder="Qty" value="Included">
+    <input type="text" id="cfgUP" placeholder="UP-INR" value="Included">
+    <input type="text" id="cfgTP" placeholder="TP-INR" value="Included">
   </div>
   <div class="modal-actions">
     <button class="save-btn" onclick="saveConfigItem()">Save</button>
