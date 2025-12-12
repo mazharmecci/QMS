@@ -117,16 +117,29 @@
       border-collapse:collapse;
       margin-bottom:1rem;
     }
+    
     table.quote-table th,
     table.quote-table td {
       padding:0.6rem;
       border-bottom:1px solid #ddd;
       text-align:left;
     }
+    
     table.quote-table th {
       background:#f0f4f8;
     }
+    
     table.quote-table td:last-child {
+      text-align:right;
+    }
+
+    .attn-box {
+      margin-top:4rem;
+      background:#d0d4d9;
+      padding:0.75rem 1rem;
+      border-radius:8px;
+      font-weight:600;
+      color:#0d6efd;
       text-align:right;
     }
   </style>
@@ -145,12 +158,11 @@
         </div>
         <div class="hospital-box">
           <p><strong>To:</strong><br>
-            <span id="toHospitalName">Hospital / Client Name</span><br>
-            <span id="toHospitalAddress">Hospital Address</span>
+            <span id="toHospitalAddressLine1"></span><br>
+            <span id="toHospitalAddressLine2"></span>
           </p>
         </div>
-        <div class="attn-box"
-             style="margin-top:4rem; background:#d0d4d9; padding:0.75rem 1rem; border-radius:8px; font-weight:600; color:#0d6efd;">
+        <div class="attn-box">
           KIND ATTN: <span id="toAttn">Purchase Department</span>
         </div>
       </div>
@@ -205,6 +217,15 @@
     return `${d}-${m}-${y}`;
   }
 
+  function splitAddress(address) {
+    if (!address) return ['', ''];
+    const parts = address.split(',');
+    if (parts.length < 2) return [address.trim(), ''];
+    const line2 = parts.slice(-1)[0].trim();
+    const line1 = parts.slice(0, -1).join(',').trim();
+    return [line1, line2];
+  }
+
   function populateHeader() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
 
@@ -217,8 +238,11 @@
     document.getElementById('metaEmail').textContent = header.contactEmail || '';
     document.getElementById('metaOffice').textContent = header.officePhone || '';
 
-    document.getElementById('toHospitalName').textContent = header.hospitalName || 'Hospital / Client Name';
-    document.getElementById('toHospitalAddress').textContent = header.hospitalAddress || 'Hospital Address';
+    const fullAddress = header.hospitalAddress || '';
+    const [line1, line2] = splitAddress(fullAddress);
+    document.getElementById('toHospitalAddressLine1').textContent = line1 || 'Hospital / Client Name';
+    document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
+
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
@@ -242,7 +266,142 @@
     });
   }
 
-  // TODO: wire your existing generateQuote() + saveQuote() here
+  function generateQuote() {
+    const selected = [...document.querySelectorAll('#instrumentSelection input:checked')]
+      .map(cb => parseInt(cb.value, 10));
+
+    let itemsTotal = 0;
+    const lineItems = [];
+
+    selected.forEach(idx => {
+      const inst = instruments[idx];
+      if (!inst) return;
+
+      // main instrument
+      itemsTotal += inst.price || 0;
+      lineItems.push({
+        type: 'Instrument',
+        name: String(inst.description || '').replace(/<br>/g, ' '),
+        code: inst.catalog || '',
+        price: inst.price || 0
+      });
+
+      // optional items
+      if (inst.optionalItems) {
+        inst.optionalItems.forEach(item => {
+          const raw = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+          itemsTotal += raw;
+          lineItems.push({
+            type: 'Optional Item',
+            name: item.name || '',
+            code: item.code || '',
+            price: raw
+          });
+        });
+      }
+
+      // configuration items
+      if (inst.configurationItems) {
+        inst.configurationItems.forEach(item => {
+          const raw = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+          itemsTotal += raw;
+          lineItems.push({
+            type: 'Configuration Item',
+            name: item.name || '',
+            code: item.code || '',
+            price: raw
+          });
+        });
+      }
+    });
+
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const afterDiscount = itemsTotal - discount;
+    const gstPercent = 18;
+    const gstAmount = afterDiscount * gstPercent / 100;
+    const totalValue = afterDiscount + gstAmount;
+    const roundOff = Math.round(totalValue);
+
+    let lineItemsHTML = `
+      <h4>Line‑Item Breakdown</h4>
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Code</th>
+            <th>Type</th>
+            <th style="text-align:right;">Price (INR)</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    lineItems.forEach(li => {
+      const isInstrument = li.type === 'Instrument';
+      lineItemsHTML += `
+        <tr>
+          <td style="font-weight:${isInstrument ? '600' : '400'};">${li.name}</td>
+          <td>${li.code}</td>
+          <td>${li.type}</td>
+          <td style="text-align:right;">₹ ${Number(li.price || 0).toLocaleString('en-IN')}</td>
+        </tr>`;
+    });
+    lineItemsHTML += '</tbody></table>';
+
+    const summaryHTML = `
+      <div style="margin-top:1rem; padding:1rem; background:#fff; border:1px solid #ccc; border-radius:8px;">
+        <h4 style="margin-bottom:0.5rem;">Quote Summary</h4>
+        <p><strong>Items Value Total INR:</strong> ₹ ${itemsTotal.toLocaleString('en-IN')}</p>
+        <p><strong>Special Discount:</strong> ₹ ${discount.toLocaleString('en-IN')}</p>
+        <p><strong>Price After Discount:</strong> ₹ ${afterDiscount.toLocaleString('en-IN')}</p>
+        <p><strong>Freight Costs:</strong> ${document.getElementById('freight').value}</p>
+        <p><strong>GST @ ${gstPercent}%:</strong> ₹ ${gstAmount.toLocaleString('en-IN')}</p>
+        <p><strong>Total Value INR:</strong> ₹ ${totalValue.toLocaleString('en-IN')}</p>
+        <p><strong>Round Off:</strong> ₹ ${roundOff.toLocaleString('en-IN')}</p>
+      </div>
+      <div style="margin-top:2rem; text-align:right; font-style:italic; color:#555;">
+        <p>For ISTOS Medical Private Limited</p>
+      </div>
+    `;
+
+    document.getElementById('quoteSummary').innerHTML = lineItemsHTML + summaryHTML;
+
+    // store last quote in memory if needed
+    window.lastGeneratedQuote = {
+      lineItems,
+      summary: {
+        itemsTotal,
+        discount,
+        afterDiscount,
+        freight: document.getElementById('freight').value,
+        gstPercent,
+        gstAmount,
+        totalValue,
+        roundOff
+      },
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  function saveQuote() {
+    if (!window.lastGeneratedQuote) {
+      alert('Please generate the quote before saving.');
+      return;
+    }
+
+    const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+    const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+
+    const quote = {
+      header,
+      lineItems: window.lastGeneratedQuote.lineItems,
+      summary: window.lastGeneratedQuote.summary,
+      createdAt: window.lastGeneratedQuote.createdAt
+    };
+
+    quotes.push(quote);
+    localStorage.setItem('quotes', JSON.stringify(quotes));
+    alert('Quote saved successfully.');
+  }
 
   populateHeader();
   renderInstrumentSelection();
