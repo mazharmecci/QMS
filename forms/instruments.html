@@ -232,36 +232,46 @@
     closeOptionalModal();
   }
 
-  // Configuration modal workflow
-  configurationSelect.addEventListener('change', function(){
-    if(this.value==='Yes') document.getElementById('configItemModal').style.display='block';
+// Configuration modal workflow
+configurationSelect.addEventListener('change', function(){
+  if(this.value==='Yes') document.getElementById('configItemModal').style.display='block';
+});
+function closeConfigModal(){ document.getElementById('configItemModal').style.display='none'; }
+
+const cfgHSNInput = document.getElementById('cfgHSN');
+cfgHSNInput.addEventListener('input', ()=>{
+  let d = cfgHSNInput.value.replace(/\D/g,'').slice(0,8);
+  if(d.length>4) d = d.slice(0,4)+' '+d.slice(4);
+  cfgHSNInput.value = d;
+});
+
+function saveConfigItem(){
+  const hsn = cfgHSNInput.value.trim();
+  if(!/^\d{4}\s\d{4}$/.test(hsn)){ alert('HSN Code must be in format: 1234 5678'); return; }
+
+  const qtyInput = document.getElementById('cfgQty');
+  const upInput  = document.getElementById('cfgUP');
+  const tpInput  = document.getElementById('cfgTP');
+
+  // Default all three as "Included" if empty
+  const qty = qtyInput.value.trim() || 'Included';
+  const up  = upInput.value.trim()  || 'Included';
+  const tp  = tpInput.value.trim()  || 'Included';
+
+  configurationItems.push({
+    id:document.getElementById('cfgItemId').value,
+    code:document.getElementById('cfgItemCode').value,
+    name:document.getElementById('cfgItemName').value,
+    catalog:document.getElementById('cfgCatalogRef').value,
+    hsn,
+    origin:document.getElementById('cfgOrigin').value,
+    qty,
+    upInr: up,
+    tpInr: tp
   });
-  function closeConfigModal(){ document.getElementById('configItemModal').style.display='none'; }
-  const cfgHSNInput = document.getElementById('cfgHSN');
-  cfgHSNInput.addEventListener('input', ()=>{
-    let d = cfgHSNInput.value.replace(/\D/g,'').slice(0,8);
-    if(d.length>4) d = d.slice(0,4)+' '+d.slice(4);
-    cfgHSNInput.value = d;
-  });
-  const cfgPriceInput = document.getElementById('cfgPrice');
-  cfgPriceInput.addEventListener('input', function(){
-    let raw = this.value.replace(/[^\d]/g,'');
-    this.value = raw ? '₹ '+parseFloat(raw).toLocaleString('en-IN') : '';
-  });
-  function saveConfigItem(){
-    const hsn = cfgHSNInput.value.trim();
-    if(!/^\d{4}\s\d{4}$/.test(hsn)){ alert('HSN Code must be in format: 1234 5678'); return; }
-    configurationItems.push({
-      id:document.getElementById('cfgItemId').value,
-      code:document.getElementById('cfgItemCode').value,
-      name:document.getElementById('cfgItemName').value,
-      catalog:document.getElementById('cfgCatalogRef').value,
-      hsn,
-      origin:document.getElementById('cfgOrigin').value,
-      price:cfgPriceInput.value
-    });
-    closeConfigModal();
-  }
+
+  closeConfigModal();
+}
 
   form.addEventListener('submit', e=>{
     e.preventDefault();
