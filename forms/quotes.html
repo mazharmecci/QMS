@@ -5,264 +5,40 @@
   <title>QMS - Quotes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-    }
+    body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; }
+    header { background:#0d6efd; color:#fff; padding:0.75rem 1.5rem; text-align:center; font-size:1.5rem; font-weight:600; }
+    .container { max-width:1200px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
 
-    header {
-      background: #0d6efd;
-      color: #fff;
-      padding: 0.75rem 1.5rem;
-    }
+    .quote-header { margin-bottom:2rem; border:1px solid #ccc; border-radius:12px; background:#fff; padding:1.5rem; }
+    .quote-header-top { display:flex; justify-content:flex-end; margin-bottom:1rem; }
+    .logo-box img { height:60px; object-fit:contain; }
+    .quote-header-body { display:flex; gap:2rem; flex-wrap:wrap; }
+    .quote-left { flex:1; min-width:300px; }
+    .quote-right { flex:1; min-width:300px; background:#f0f0f0; padding:1rem 1.25rem; border-radius:8px; }
+    .company-box { background:#e9ecef; padding:0.6rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .quote-right-title { text-align:right; font-weight:700; font-size:1rem; margin-bottom:0.75rem; letter-spacing:0.05em; }
+    .quote-meta-grid { display:grid; grid-template-columns:1fr auto; gap:0.35rem 1rem; align-items:center; }
+    .quote-meta-grid .label { font-size:0.8rem; font-weight:600; color:#222; }
+    .quote-meta-grid .value { font-size:0.8rem; color:#000; text-align:right; white-space:nowrap; }
 
-    .header-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .back-btn {
-      border: none;
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff;
-      padding: 0.45rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-    }
-
-    .header-title {
-      flex: 1;
-      text-align: center;
-      font-weight: 600;
-      font-size: 1.5rem;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    /* SALES QUOTATION HEADER BLOCK */
-
-    .quote-header {
-      margin-bottom: 2rem;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      background: #fff;
-      padding: 1.5rem;
-    }
-
-    .quote-header-top {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 1rem;
-    }
-
-    .logo-box img {
-      height: 60px;
-      object-fit: contain;
-    }
-
-    .quote-header-body {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .quote-left {
-      flex: 1;
-      min-width: 300px;
-    }
-
-    .company-box p {
-      font-size: 0.8rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin: 0;
-    }
-
-    .hospital-box,
-    .attn-box {
-      margin-bottom: 1rem;
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-
-    .hospital-box p,
-    .attn-box p {
-      margin: 0 0 0.35rem;
-    }
-
-    .quote-right {
-      flex: 1;
-      min-width: 300px;
-      background: #f0f0f0;
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-    }
-
-    .quote-right-title {
-      text-align: right;
-      font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 0.75rem;
-      letter-spacing: 0.05em;
-    }
-
-    .quote-meta-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 0.35rem 1rem;
-      align-items: center;
-    }
-
-    .quote-meta-grid .label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #222;
-    }
-
-    .quote-meta-grid .value {
-      font-size: 0.8rem;
-      color: #000;
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    .quote-meta-fields {
-      margin-top: 1.5rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .quote-meta-fields input,
-    .quote-meta-fields select {
-      padding: 0.5rem 0.6rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 0.9rem;
-    }
-
-    /* QUOTE BUILDER + LINE ITEMS */
-
-    #quoteBuilder {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      background: #f9fafc;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-    }
-
-    #quoteBuilder h3 {
-      color: #0d6efd;
-      margin-top: 0;
-    }
-
-    .quote-section {
-      margin-bottom: 1rem;
-    }
-
-    .quote-section label {
-      display: block;
-      margin-bottom: 0.25rem;
-      font-weight: 500;
-    }
-
-    .quote-section input[type="number"],
-    .quote-section input[type="text"] {
-      padding: 0.5rem 0.6rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 0.9rem;
-      width: 200px;
-      max-width: 100%;
-    }
-
-    #instrumentSelection > div {
-      margin-bottom: 0.25rem;
-      font-size: 0.9rem;
-    }
-
-    .btn-primary {
-      background: #0d6efd;
-      color: #fff;
-      padding: 0.6rem 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .btn-save {
-      background: #198754;
-      color: #fff;
-      padding: 0.6rem 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-left: 0.5rem;
-    }
-
-    .btn-secondary {
-      background: #6c757d;
-      color: #fff;
-      padding: 0.6rem 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-left: 0.5rem;
-    }
-
-    .quote-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1rem;
-    }
-
-    .quote-table th {
-      background: #f0f4f8;
-      font-weight: 600;
-      padding: 0.5rem;
-      text-align: left;
-    }
-
-    .quote-table td {
-      padding: 0.5rem;
-      border-bottom: 1px solid #eee;
-    }
-
-    .quote-table tr:nth-child(even) {
-      background: #fafafa;
-    }
+    #quoteBuilder { margin-top:0; padding:1.5rem; background:#f9fafc; border:1px solid #ddd; border-radius:12px; }
+    table.quote-table { width:100%; border-collapse:collapse; margin-bottom:1rem; }
+    table.quote-table th, table.quote-table td { padding:0.6rem; border-bottom:1px solid #ddd; text-align:left; }
+    table.quote-table th { background:#f0f4f8; }
+    table.quote-table td:last-child { text-align:right; }
   </style>
 </head>
 <body>
-<header>
-  <div class="header-inner">
-    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
-    <div class="header-title">QMS - Quotes</div>
-  </div>
-</header>
+<header>QMS - Quotes</header>
 
 <div class="container">
-
-  <!-- SALES QUOTATION HEADER -->
+  <!-- Branded Quote Header -->
   <div class="quote-header">
     <div class="quote-header-top">
       <div class="logo-box">
-        <img src="../images/istos-logo.png" alt="ISTOS Logo">
+        <img src="images/logo.png" alt="ISTOS Logo">
       </div>
     </div>
-
     <div class="quote-header-body">
       <!-- LEFT SIDE -->
       <div class="quote-left">
@@ -271,9 +47,8 @@
         </div>
         <div class="hospital-box">
           <p><strong>To:</strong><br>
-            <span id="toHospitalName">Hospital / Client Name</span><br>
-            <span id="toHospitalAddress">Hospital Address</span>
-          </p>
+          <span id="toHospitalName">Hospital / Client Name</span><br>
+          <span id="toHospitalAddress">Hospital Address</span></p>
         </div>
         <div class="attn-box">
           <p><strong>Kind Attn:</strong> <span id="toAttn">Contact Person</span></p>
@@ -284,168 +59,63 @@
       <div class="quote-right">
         <div class="quote-right-title">SALES QUOTATION</div>
         <div class="quote-meta-grid">
-          <div class="label">Quote No.</div>
-          <div class="value" id="metaQuoteNo">EQ/SQ/25-26/00001</div>
-
-          <div class="label">Quotation Date</div>
-          <div class="value" id="metaQuoteDate">12-12-2025</div>
-
-          <div class="label">Your Reference</div>
-          <div class="value" id="metaYourRef">Telephonic</div>
-
-          <div class="label">Ref Date</div>
-          <div class="value" id="metaRefDate">12-12-2025</div>
-
-          <div class="label">Your Contact Person</div>
-          <div class="value" id="metaContactPerson">Contact Person</div>
-
-          <div class="label">Handphone</div>
-          <div class="value" id="metaPhone">+91 99001 98668</div>
-
-          <div class="label">Email</div>
-          <div class="value" id="metaEmail">xxxxxxxxxx@gmail.com</div>
-
-          <div class="label">Office</div>
-          <div class="value" id="metaOffice">+91 80 2686 0607</div>
+          <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
+          <div class="label">Quotation Date</div><div class="value" id="metaQuoteDate"></div>
+          <div class="label">Your Reference</div><div class="value" id="metaYourRef"></div>
+          <div class="label">Ref Date</div><div class="value" id="metaRefDate"></div>
+          <div class="label">Your Contact Person</div><div class="value" id="metaContactPerson"></div>
+          <div class="label">Handphone</div><div class="value" id="metaPhone"></div>
+          <div class="label">Email</div><div class="value" id="metaEmail"></div>
+          <div class="label">Office</div><div class="value" id="metaOffice"></div>
         </div>
       </div>
     </div>
-
-    <!-- FORM FIELDS -->
-    <div class="quote-meta-fields">
-      <select id="hospitalSelect" onchange="populateHospitalDetails()">
-        <option value="">Select Hospital</option>
-      </select>
-      <input type="text" id="quoteNo" placeholder="Quote No. (auto)">
-      <input type="date" id="quoteDate">
-      <input type="date" id="refDate">
-      <input type="text" id="yourReference" placeholder="Your Reference">
-      <input type="text" id="officePhone" placeholder="Office Phone">
-      <input type="text" id="hospitalName" placeholder="Hospital / Client Name">
-      <input type="text" id="hospitalAddress" placeholder="Hospital Address">
-      <input type="text" id="contactPerson" placeholder="Contact Person">
-      <input type="text" id="contactPhone" placeholder="Contact Phone">
-      <input type="email" id="contactEmail" placeholder="Contact Email">
-    </div>
   </div>
 
-  <!-- QUOTE BUILDER + LINE-ITEM BREAKDOWN -->
+  <!-- Quote Builder -->
   <div id="quoteBuilder">
-    <h3>Quote Builder</h3>
-
-    <div class="quote-section">
-      <label>Select Instruments for Quote:</label>
+    <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Builder</h3>
+    <div style="margin-bottom:1rem;">
+      <label><strong>Select Instruments for Quote:</strong></label>
       <div id="instrumentSelection"></div>
     </div>
-
-    <div class="quote-section">
+    <div style="margin-bottom:1rem;">
       <label>Special Discount (₹):</label>
       <input type="number" id="discount" placeholder="Enter discount">
     </div>
-
-    <div class="quote-section">
+    <div style="margin-bottom:1rem;">
       <label>Freight Costs:</label>
       <input type="text" id="freight" value="Included">
     </div>
-
-    <button class="btn-primary" onclick="generateQuote()">Generate Quote Summary</button>
-    <button class="btn-save" onclick="saveQuote()">Save Quote</button>
-    <button class="btn-secondary" onclick="window.print()">Download / Print</button>
-
+    <button onclick="generateQuote()" style="background:#0d6efd; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px;">Generate Quote Summary</button>
+    <button onclick="saveQuote()" style="margin-left:0.5rem; background:#198754; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px;">Save Quote</button>
     <div id="quoteSummary" style="margin-top:1.5rem;"></div>
   </div>
-
 </div>
 
 <script>
-  let instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-
-  function goBack() {
-    if (window.history.length > 1) {
-      window.history.back();
-    }
-  }
-
-  function generateQuoteNo() {
-    const lastNo = localStorage.getItem('lastQuoteNo') || 'EQ/SQ/25-26/00000';
-    const parts = lastNo.split('/');
-    const num = parseInt(parts[parts.length - 1], 10) + 1;
-    const newNo = `EQ/SQ/25-26/${String(num).padStart(5, '0')}`;
-    localStorage.setItem('lastQuoteNo', newNo);
-    return newNo;
-  }
-
   function formatISOToDMY(iso) {
-    if (!iso) return 'dd-mm-yyyy';
-    const [y, m, d] = iso.split('-');
+    if (!iso) return '';
+    const [y,m,d] = iso.split('-');
     return `${d}-${m}-${y}`;
   }
 
-  function syncHeaderDisplay() {
-    const getValue = id => document.getElementById(id)?.value?.trim() || '';
-
-    const fields = {
-      metaQuoteNo: getValue('quoteNo') || 'EQ/SQ/25-26/00001',
-      metaQuoteDate: formatISOToDMY(getValue('quoteDate')),
-      metaRefDate: formatISOToDMY(getValue('refDate')),
-      metaYourRef: getValue('yourReference') || 'Telephonic',
-      metaContactPerson: getValue('contactPerson') || 'Contact Person',
-      metaPhone: getValue('contactPhone') || '+91 99001 98668',
-      metaEmail: getValue('contactEmail') || 'xxxxxxxxxx@gmail.com',
-      metaOffice: getValue('officePhone') || '+91 80 2686 0607',
-      toHospitalName: getValue('hospitalName') || 'Hospital / Client Name',
-      toHospitalAddress: getValue('hospitalAddress') || 'Hospital Address',
-      toAttn: getValue('contactPerson') || 'Contact Person'
-    };
-
-    Object.entries(fields).forEach(([id, value]) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    });
+  function populateHeader() {
+    const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+    document.getElementById('metaQuoteNo').textContent = header.quoteNo || 'EQ/SQ/25-26/00001';
+    document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
+    document.getElementById('metaYourRef').textContent = header.yourReference || 'Telephonic';
+    document.getElementById('metaRefDate').textContent = formatISOToDMY(header.refDate);
+    document.getElementById('metaContactPerson').textContent = header.contactPerson || 'Contact Person';
+    document.getElementById('metaPhone').textContent = header.contactPhone || '';
+    document.getElementById('metaEmail').textContent = header.contactEmail || '';
+    document.getElementById('metaOffice').textContent = header.officePhone || '';
+    document.getElementById('toHospitalName').textContent = header.hospitalName || 'Hospital / Client Name';
+    document.getElementById('toHospitalAddress').textContent = header.hospitalAddress || 'Hospital Address';
+    document.getElementById('toAttn').textContent = header.contactPerson || 'Contact Person';
   }
 
-  function initHeaderDefaults() {
-    const setIfEmpty = (id, value) => {
-      const el = document.getElementById(id);
-      if (el && !el.value) el.value = value;
-    };
-
-    setIfEmpty('quoteNo', generateQuoteNo());
-
-    const todayISO = new Date().toISOString().slice(0, 10);
-    setIfEmpty('quoteDate', todayISO);
-    setIfEmpty('refDate', todayISO);
-
-    syncHeaderDisplay();
-  }
-
-  function populateHospitalDropdown() {
-    const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
-    const select = document.getElementById('hospitalSelect');
-    select.innerHTML = '<option value="">Select Hospital</option>';
-    hospitals.forEach((hosp, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      opt.textContent = `${hosp.clientCode} - ${hosp.clientName}`;
-      select.appendChild(opt);
-    });
-  }
-
-  function populateHospitalDetails() {
-    const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
-    const idx = document.getElementById('hospitalSelect').value;
-    if (idx === '') return;
-    const hosp = hospitals[idx];
-    if (!hosp) return;
-
-    document.getElementById('hospitalName').value = hosp.clientName || '';
-    document.getElementById('hospitalAddress').value = hosp.address || '';
-    document.getElementById('contactPerson').value = '';
-    document.getElementById('contactPhone').value = hosp.mobile || '';
-    document.getElementById('contactEmail').value = hosp.email || '';
-
-    syncHeaderDisplay();
-  }
+  let instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
 
   function renderInstrumentSelection() {
     const container = document.getElementById('instrumentSelection');
@@ -456,241 +126,13 @@
     }
     instruments.forEach((inst, idx) => {
       const div = document.createElement('div');
-      div.innerHTML = `
-        <label>
-          <input type="checkbox" value="${idx}"> ${String(inst.description || '').replace(/<br>/g,' ')}
-        </label>`;
+      div.innerHTML = `<label><input type="checkbox" value="${idx}"> ${String(inst.description || '').replace(/<br>/g, ' ')}</label>`;
       container.appendChild(div);
     });
   }
 
-  function generateQuote() {
-    const selected = [...document.querySelectorAll('#instrumentSelection input:checked')]
-      .map(cb => parseInt(cb.value, 10));
-
-    let itemsTotal = 0;
-    const lineItems = [];
-
-    selected.forEach(idx => {
-      const inst = instruments[idx];
-      if (!inst) return;
-      itemsTotal += inst.price || 0;
-
-      lineItems.push({
-        type: 'Instrument',
-        name: String(inst.description || '').replace(/<br>/g,' '),
-        code: inst.catalog || '',
-        price: inst.price || 0
-      });
-
-      if (inst.optionalItems) {
-        inst.optionalItems.forEach(item => {
-          const raw = parseFloat((item.price || '').replace(/[^\d]/g,'')) || 0;
-          itemsTotal += raw;
-          lineItems.push({
-            type: 'Optional Item',
-            name: item.name || '',
-            code: item.code || '',
-            price: raw
-          });
-        });
-      }
-
-      if (inst.configurationItems) {
-        inst.configurationItems.forEach(item => {
-          const raw = parseFloat((item.price || '').replace(/[^\d]/g,'')) || 0;
-          itemsTotal += raw;
-          lineItems.push({
-            type: 'Configuration Item',
-            name: item.name || '',
-            code: item.code || '',
-            price: raw
-          });
-        });
-      }
-    });
-
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
-    const afterDiscount = itemsTotal - discount;
-    const gstPercent = 18;
-    const gstAmount = afterDiscount * gstPercent / 100;
-    const totalValue = afterDiscount + gstAmount;
-    const roundOff = Math.round(totalValue);
-
-    const header = {
-      quoteNo: document.getElementById('quoteNo').value,
-      quoteDate: document.getElementById('quoteDate').value,
-      refDate: document.getElementById('refDate').value,
-      hospitalName: document.getElementById('hospitalName').value,
-      hospitalAddress: document.getElementById('hospitalAddress').value,
-      contactPerson: document.getElementById('contactPerson').value,
-      contactPhone: document.getElementById('contactPhone').value,
-      contactEmail: document.getElementById('contactEmail').value
-    };
-
-    let lineItemsHTML = `
-      <h4>Line‑Item Breakdown</h4>
-      <table class="quote-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Code</th>
-            <th>Type</th>
-            <th style="text-align:right;">Price (INR)</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-    lineItems.forEach(li => {
-      const isInstrument = li.type === 'Instrument';
-      lineItemsHTML += `
-        <tr>
-          <td style="font-weight:${isInstrument ? '600' : '400'};">${li.name}</td>
-          <td>${li.code}</td>
-          <td>${li.type}</td>
-          <td style="text-align:right;">₹ ${Number(li.price || 0).toLocaleString('en-IN')}</td>
-        </tr>`;
-    });
-    lineItemsHTML += '</tbody></table>';
-
-    const summaryHTML = `
-      <div style="margin-top:1rem; padding:1rem; background:#fff; border:1px solid #ccc; border-radius:8px;">
-        <h4 style="margin-bottom:0.5rem;">Quote Summary</h4>
-        <p><strong>Items Value Total INR:</strong> ₹ ${itemsTotal.toLocaleString('en-IN')}</p>
-        <p><strong>Special Discount:</strong> ₹ ${discount.toLocaleString('en-IN')}</p>
-        <p><strong>Price After Discount:</strong> ₹ ${afterDiscount.toLocaleString('en-IN')}</p>
-        <p><strong>Freight Costs:</strong> ${document.getElementById('freight').value}</p>
-        <p><strong>GST @ ${gstPercent}%:</strong> ₹ ${gstAmount.toLocaleString('en-IN')}</p>
-        <p><strong>Total Value INR:</strong> ₹ ${totalValue.toLocaleString('en-IN')}</p>
-        <p><strong>Round Off:</strong> ₹ ${roundOff.toLocaleString('en-IN')}</p>
-      </div>
-      <div style="margin-top:2rem; text-align:right; font-style:italic; color:#555;">
-        <p>For ISTOS Medical Private Limited</p>
-      </div>
-    `;
-
-    document.getElementById('quoteSummary').innerHTML = lineItemsHTML + summaryHTML;
-
-    window.lastGeneratedQuote = {
-      header,
-      lineItems,
-      summary: {
-        itemsTotal,
-        discount,
-        afterDiscount,
-        freight: document.getElementById('freight').value,
-        gstPercent,
-        gstAmount,
-        totalValue,
-        roundOff
-      },
-      createdAt: new Date().toISOString()
-    };
-  }
-
-  function saveQuote() {
-    const summaryHTML = document.getElementById('quoteSummary').innerHTML;
-    if (!summaryHTML.trim()) {
-      alert('Please generate the quote before saving.');
-      return;
-    }
-
-    const selected = [...document.querySelectorAll('#instrumentSelection input:checked')]
-      .map(cb => parseInt(cb.value, 10));
-
-    let itemsTotal = 0;
-    const lineItems = [];
-
-    selected.forEach(idx => {
-      const inst = instruments[idx];
-      if (!inst) return;
-      itemsTotal += inst.price || 0;
-      lineItems.push({
-        type: 'Instrument',
-        name: String(inst.description || '').replace(/<br>/g,' '),
-        code: inst.catalog,
-        price: inst.price
-      });
-
-      if (inst.optionalItems) {
-        inst.optionalItems.forEach(item => {
-          const raw = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
-          itemsTotal += raw;
-          lineItems.push({ type: 'Optional Item', name: item.name, code: item.code, price: raw });
-        });
-      }
-
-      if (inst.configurationItems) {
-        inst.configurationItems.forEach(item => {
-          const raw = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
-          itemsTotal += raw;
-          lineItems.push({ type: 'Configuration Item', name: item.name, code: item.code, price: raw });
-        });
-      }
-    });
-
-    const header = {
-      quoteNo: document.getElementById('quoteNo').value,
-      quoteDate: document.getElementById('quoteDate').value,
-      refDate: document.getElementById('refDate').value,
-      hospitalName: document.getElementById('hospitalName').value,
-      hospitalAddress: document.getElementById('hospitalAddress').value,
-      contactPerson: document.getElementById('contactPerson').value,
-      contactPhone: document.getElementById('contactPhone').value,
-      contactEmail: document.getElementById('contactEmail').value,
-      yourReference: document.getElementById('yourReference').value,
-      officePhone: document.getElementById('officePhone').value
-    };
-
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
-    const freight = document.getElementById('freight').value;
-    const afterDiscount = itemsTotal - discount;
-    const gstPercent = 18;
-    const gstAmount = afterDiscount * gstPercent / 100;
-    const totalValue = afterDiscount + gstAmount;
-    const roundOff = Math.round(totalValue);
-
-    const summary = {
-      itemsTotal,
-      discount,
-      afterDiscount,
-      freight,
-      gstPercent,
-      gstAmount,
-      totalValue,
-      roundOff
-    };
-
-    const quote = { header, lineItems, summary, createdAt: new Date().toISOString() };
-    const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
-    quotes.push(quote);
-    localStorage.setItem('quotes', JSON.stringify(quotes));
-
-    alert('Quote saved successfully.');
-  }
-
-  // live sync for header fields
-  [
-    'quoteNo',
-    'quoteDate',
-    'refDate',
-    'hospitalName',
-    'hospitalAddress',
-    'contactPerson',
-    'contactPhone',
-    'contactEmail',
-    'yourReference',
-    'officePhone'
-  ].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', syncHeaderDisplay);
-    el.addEventListener('change', syncHeaderDisplay);
-  });
-
-  initHeaderDefaults();
-  populateHospitalDropdown();
+  populateHeader();
   renderInstrumentSelection();
 </script>
 </body>
-</html>
+</
