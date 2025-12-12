@@ -242,36 +242,61 @@
   </div>
 
   <!-- QUOTE BUILDER -->
-  <div id="quoteBuilder">
-    <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Builder</h3>
-
-    <div style="margin-bottom:1rem;">
-      <label><strong>Select Instruments for Quote:</strong></label>
-      <div id="instrumentSelection"></div>
-    </div>
-
-    <div style="margin-bottom:1rem;">
-      <label>Special Discount (₹):</label>
-      <input type="number" id="discount" placeholder="Enter discount">
-    </div>
-
-    <div style="margin-bottom:1rem;">
-      <label>Freight Costs:</label>
-      <input type="text" id="freight" value="Included">
-    </div>
-
-    <button onclick="generateQuote()" style="background:#0d6efd; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px;">
-      Generate Quote Summary
-    </button>
-    <button onclick="saveQuote()" style="margin-left:0.5rem; background:#198754; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px;">
-      Save Quote
-    </button>
-
-    <div id="quoteSummary" style="margin-top:1.5rem;"></div>
-  </div>
+<div id="quoteBuilder">
+  <h3>Quote Builder</h3>
+  <table class="quote-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Cat / Material No.</th>
+        <th>Description</th>
+        <th>Country of Origin / HSN Code</th>
+        <th>Quantity</th>
+        <th>Unit Price (INR)</th>
+        <th>Total Price (INR)</th>
+      </tr>
+    </thead>
+    <tbody id="quoteBuilderBody">
+      <!-- Populated dynamically -->
+    </tbody>
+  </table>
 </div>
 
+
 <script>
+
+  function populateQuoteBuilderFromInstrument() {
+  const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+  const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+  const selected = header.selectedInstrument;
+
+  if (!selected) return;
+
+  const row = `
+    <tr>
+      <td>${selected.instrumentCode}</td>
+      <td>${selected.materialNo || '—'}</td>
+      <td>${selected.description}</td>
+      <td>${selected.origin || '—'} / ${selected.hsnCode || '—'}</td>
+      <td><input type="number" value="1" min="1" id="qtyInput"></td>
+      <td><input type="text" value="${selected.unitPrice}" id="unitPriceInput"></td>
+      <td><input type="text" value="${selected.unitPrice}" id="totalPriceInput"></td>
+    </tr>
+  `;
+
+  document.getElementById('quoteBuilderBody').innerHTML = row;
+
+  // Auto-update total price on quantity or unit price change
+  document.getElementById('qtyInput').addEventListener('input', updateTotal);
+  document.getElementById('unitPriceInput').addEventListener('input', updateTotal);
+
+  function updateTotal() {
+    const qty = parseFloat(document.getElementById('qtyInput').value) || 0;
+    const unit = parseFloat(document.getElementById('unitPriceInput').value) || 0;
+    document.getElementById('totalPriceInput').value = (qty * unit).toFixed(2);
+  }
+}
+
   function formatISOToDMY(iso) {
     if (!iso) return '';
     const [y, m, d] = iso.split('-');
@@ -467,6 +492,8 @@
 
   populateHeader();
   renderInstrumentSelection();
+  populateQuoteBuilderFromInstrument();
+
 </script>
 </body>
 </html>
