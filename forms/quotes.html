@@ -18,6 +18,7 @@
     .quote-table td { padding:0.5rem; border-bottom:1px solid #eee; }
     .quote-table tr:nth-child(even) { background:#fafafa; }
     .btn-primary { background:#0d6efd; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px; cursor:pointer; }
+    .btn-save { background:#198754; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px; cursor:pointer; margin-left:0.5rem; }
     .btn-secondary { background:#6c757d; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px; cursor:pointer; margin-left:0.5rem; }
   </style>
 </head>
@@ -63,7 +64,7 @@
     </div>
 
     <button class="btn-primary" onclick="generateQuote()">Generate Quote Summary</button>
-    <button class="btn-secondary" onclick="saveQuote()">Save Quote</button>
+    <button class="btn-save" onclick="saveQuote()">Save Quote</button>
     <button class="btn-secondary" onclick="window.print()">Download / Print</button>
 
     <div id="quoteSummary" style="margin-top:1.5rem;"></div>
@@ -71,9 +72,7 @@
 </div>
 
 <script>
-  let instruments = JSON.parse(localStorage.getItem('instruments') || '[]'); // from instruments.html[web:14]
-  let lastGeneratedQuote = null; // will hold the latest quote object to save
-
+  let instruments = JSON.parse(localStorage.getItem('instruments') || '[]'); // from instruments.html[web:23]
   function goBack(){ if(window.history.length>1) window.history.back(); }
 
   function generateQuoteNo() {
@@ -87,16 +86,10 @@
 
   function initHeaderDefaults() {
     const quoteNoInput = document.getElementById('quoteNo');
-    if (!quoteNoInput.value) {
-      quoteNoInput.value = generateQuoteNo();
-    }
+    if (!quoteNoInput.value) quoteNoInput.value = generateQuoteNo();
     const today = new Date().toISOString().slice(0,10);
-    if (!document.getElementById('quoteDate').value) {
-      document.getElementById('quoteDate').value = today;
-    }
-    if (!document.getElementById('refDate').value) {
-      document.getElementById('refDate').value = today;
-    }
+    if (!document.getElementById('quoteDate').value) document.getElementById('quoteDate').value = today;
+    if (!document.getElementById('refDate').value) document.getElementById('refDate').value = today;
   }
 
   function renderInstrumentSelection(){
@@ -120,42 +113,25 @@
     const selected=[...document.querySelectorAll('#instrumentSelection input:checked')]
       .map(cb=>parseInt(cb.value,10));
     let itemsTotal=0;
-
-    const lineItems = [];
+    let lineItems = [];
 
     selected.forEach(idx=>{
       const inst=instruments[idx];
       itemsTotal += inst.price || 0;
-
-      lineItems.push({
-        type:'Instrument',
-        description:String(inst.description||'').replace(/<br>/g,' '),
-        code:inst.catalog||'',
-        price:inst.price||0
-      });
+      lineItems.push({ type: 'Instrument', name: String(inst.description||'').replace(/<br>/g,' '), code: inst.catalog||'', price: inst.price||0 });
 
       if(inst.optionalItems){
         inst.optionalItems.forEach(item=>{
           const raw=parseFloat((item.price||'').replace(/[^\d]/g,''))||0;
           itemsTotal+=raw;
-          lineItems.push({
-            type:'Optional Item',
-            description:item.name||'',
-            code:item.code||'',
-            price:raw
-          });
+          lineItems.push({ type:'Optional Item', name:item.name||'', code:item.code||'', price:raw });
         });
       }
       if(inst.configurationItems){
         inst.configurationItems.forEach(item=>{
           const raw=parseFloat((item.price||'').replace(/[^\d]/g,''))||0;
           itemsTotal+=raw;
-          lineItems.push({
-            type:'Configuration Item',
-            description:item.name||'',
-            code:item.code||'',
-            price:raw
-          });
+          lineItems.push({ type:'Configuration Item', name:item.name||'', code:item.code||'', price:raw });
         });
       }
     });
@@ -178,21 +154,7 @@
       contactEmail:document.getElementById('contactEmail').value
     };
 
-    // Keep full summary object for repository
-    const summary = {
-      itemsTotal,
-      discount,
-      afterDiscount,
-      gstPercent,
-      gstAmount,
-      totalValue,
-      roundOff,
-      freight: document.getElementById('freight').value
-    };
-
-    lastGeneratedQuote = { header, lineItems, summary, createdAt: new Date().toISOString() };
-
-    // Header block styling
+    // Build styled header
     const headerHTML = `
       <div style="margin-bottom:1rem; padding:1rem; background:#fff; border:1px solid #ccc; border-radius:8px;">
         <h4 style="margin-bottom:0.5rem;">Sales Quotation</h4>
@@ -225,46 +187,109 @@
       const isInstrument = li.type === 'Instrument';
       lineItemsHTML+=`
         <tr>
-          <td style="font-weight:${isInstrument?'600':'400'};">${li.description}</td>
+          <td style="font-weight:${isInstrument?'600':'400'};">${li.name}</td>
           <td>${li.code}</td>
           <td>${li.type}</td>
           <td style="text-align:right;">₹ ${Number(li.price||0).toLocaleString('en-IN')}</td>
-        </tr>
-      `;
+        </tr>`;
     });
     lineItemsHTML+='</tbody></table>';
 
-    // Summary block
     const summaryHTML = `
       <div style="margin-top:1rem; padding:1rem; background:#fff; border:1px solid #ccc; border-radius:8px;">
         <h4 style="margin-bottom:0.5rem;">Quote Summary</h4>
         <p><strong>Items Value Total INR:</strong> ₹ ${itemsTotal.toLocaleString('en-IN')}</p>
         <p><strong>Special Discount:</strong> ₹ ${discount.toLocaleString('en-IN')}</p>
         <p><strong>Price After Discount:</strong> ₹ ${afterDiscount.toLocaleString('en-IN')}</p>
-        <p><strong>Freight Costs:</strong> ${summary.freight}</p>
+        <p><strong>Freight Costs:</strong> ${document.getElementById('freight').value}</p>
         <p><strong>GST @ ${gstPercent}%:</strong> ₹ ${gstAmount.toLocaleString('en-IN')}</p>
         <p><strong>Total Value INR:</strong> ₹ ${totalValue.toLocaleString('en-IN')}</p>
         <p><strong>Round Off:</strong> ₹ ${roundOff.toLocaleString('en-IN')}</p>
       </div>
-    `;
-
-    const footerHTML = `
       <div style="margin-top:2rem; text-align:right; font-style:italic; color:#555;">
         <p>For ISTOS Medical Private Limited</p>
       </div>
     `;
 
-    document.getElementById('quoteSummary').innerHTML = headerHTML + lineItemsHTML + summaryHTML + footerHTML;
+    document.getElementById('quoteSummary').innerHTML = headerHTML + lineItemsHTML + summaryHTML;
   }
 
   function saveQuote() {
-    if (!lastGeneratedQuote) {
+    const quoteSummaryHTML = document.getElementById('quoteSummary').innerHTML;
+    if (!quoteSummaryHTML.trim()) {
       alert('Please generate the quote before saving.');
       return;
     }
-    let quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
-    quotes.push(lastGeneratedQuote);
-    localStorage.setItem('quotes', JSON.stringify(quotes)); // Quote repository seed[web:14]
+
+    const selected = [...document.querySelectorAll('#instrumentSelection input:checked')]
+      .map(cb => parseInt(cb.value, 10));
+
+    const header = {
+      quoteNo: document.getElementById('quoteNo').value,
+      quoteDate: document.getElementById('quoteDate').value,
+      refDate: document.getElementById('refDate').value,
+      hospitalName: document.getElementById('hospitalName').value,
+      hospitalAddress: document.getElementById('hospitalAddress').value,
+      contactPerson: document.getElementById('contactPerson').value,
+      contactPhone: document.getElementById('contactPhone').value,
+      contactEmail: document.getElementById('contactEmail').value
+    };
+
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const freight = document.getElementById('freight').value;
+
+    let itemsTotal = 0;
+    let lineItems = [];
+
+    selected.forEach(idx => {
+      const inst = instruments[idx];
+      itemsTotal += inst.price || 0;
+      lineItems.push({
+        type: 'Instrument',
+        name: String(inst.description||'').replace(/<br>/g,' '),
+        code: inst.catalog,
+        price: inst.price
+      });
+
+      if (inst.optionalItems) {
+        inst.optionalItems.forEach(item => {
+          const raw = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+          itemsTotal += raw;
+          lineItems.push({ type: 'Optional Item', name: item.name, code: item.code, price: raw });
+        });
+      }
+
+      if (inst.configurationItems) {
+        inst.configurationItems.forEach(item => {
+          const raw = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+          itemsTotal += raw;
+          lineItems.push({ type: 'Configuration Item', name: item.name, code: item.code, price: raw });
+        });
+      }
+    });
+
+    const afterDiscount = itemsTotal - discount;
+    const gstPercent = 18;
+    const gstAmount = afterDiscount * gstPercent / 100;
+    const totalValue = afterDiscount + gstAmount;
+    const roundOff = Math.round(totalValue);
+
+    const summary = {
+      itemsTotal,
+      discount,
+      afterDiscount,
+      freight,
+      gstPercent,
+      gstAmount,
+      totalValue,
+      roundOff
+    };
+
+    const quote = { header, lineItems, summary, createdAt: new Date().toISOString() };
+    const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+    quotes.push(quote);
+    localStorage.setItem('quotes', JSON.stringify(quotes)); // persist full quote object[web:22][web:25]
+
     alert('Quote saved successfully.');
   }
 
