@@ -8,7 +8,6 @@
     body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; } 
     header { background:#0d6efd; color:#fff; padding:0.75rem 1.5rem; text-align:center; font-size:1.5rem; font-weight:600; }
     .container { max-width:1200px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-
     .quote-header { margin-bottom:2rem; border:1px solid #ccc; border-radius:12px; background:#fff; padding:1.5rem; }
     .quote-header-top { display:flex; justify-content:flex-end; margin-bottom:1rem; }
     .logo-box img { height:60px; object-fit:contain; }
@@ -27,6 +26,7 @@
 
    .company-box p {
     font-size: 0.75rem;           /* Smaller font */
+    background: #d0d4d9;          /* unified darker grey */
     line-height: 1.2;             /* Tighter spacing */
     white-space: nowrap;          /* Prevent wrapping */
     overflow: hidden;             /* Hide overflow */
@@ -42,8 +42,8 @@
     background: #fff; /* white background for metadata block */
   }
 
-   .quote-right-title {
-    background: #f0f0f0; /* grey tint only for title */
+  .quote-right-title {
+    background: #d0d4d9; /* unified darker grey */
     padding: 0.5rem 0.75rem;
     border-radius: 6px;
     text-align: right;
@@ -57,46 +57,37 @@
 <body>
 <header>QMS - Quotes</header>
 
-<div class="container">
-  <!-- Branded Quote Header -->
-  <div class="quote-header">
-    <div class="quote-header-top">
-      <div class="logo-box">
-        <img src="../images/logo.png" alt="ISTOS Logo">
-      </div>
+<div class="quote-header-body">
+  <!-- LEFT SIDE -->
+  <div class="quote-left">
+    <div class="company-box">
+      <p><strong>ISTOS Medical Pvt Ltd.</strong> #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road, Yelachenahalli, Bangalore - 560062</p>
     </div>
-    <div class="quote-header-body">
-      <!-- LEFT SIDE -->
-      <div class="quote-left">
-        <div class="company-box">
-          <p><strong>ISTOS Medical Pvt Ltd.</strong> #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road, Yelachenahalli, Bangalore - 560062</p>
-        </div>
-        <div class="hospital-box">
-          <p><strong>To:</strong><br>
-          <span id="toHospitalName">Hospital / Client Name</span><br>
-          <span id="toHospitalAddress">Hospital Address</span></p>
-        </div>
-        <div class="attn-box">
-          <p><strong>Kind Attn:</strong> <span id="toAttn">Contact Person</span></p>
-        </div>
-      </div>
-
-      <!-- RIGHT SIDE -->
-      <div class="quote-right">
-        <div class="quote-right-title">SALES QUOTATION</div>
-        <div class="quote-meta-grid">
-          <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
-          <div class="label">Quotation Date</div><div class="value" id="metaQuoteDate"></div>
-          <div class="label">Your Reference</div><div class="value" id="metaYourRef"></div>
-          <div class="label">Ref Date</div><div class="value" id="metaRefDate"></div>
-          <div class="label">Your Contact Person</div><div class="value" id="metaContactPerson"></div>
-          <div class="label">Handphone</div><div class="value" id="metaPhone"></div>
-          <div class="label">Email</div><div class="value" id="metaEmail"></div>
-          <div class="label">Office</div><div class="value" id="metaOffice"></div>
-        </div>
-      </div>
+    <div class="hospital-box">
+      <p><strong>To:</strong><br>
+      <span id="toHospitalName">Hospital / Client Name</span><br>
+      <span id="toHospitalAddress">Hospital Address</span></p>
+    </div>
+    <div class="attn-box" style="margin-top:1rem; background:#e0f0ff; padding:0.75rem 1rem; border-radius:8px; font-weight:600; color:#0d6efd;">
+      KIND ATTN: <span id="toAttn">Purchase Department</span>
     </div>
   </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="quote-right">
+    <div class="quote-right-title">SALES QUOTATION</div>
+    <div class="quote-meta-grid">
+      <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
+      <div class="label">Quotation Date</div><div class="value" id="metaQuoteDate"></div>
+      <div class="label">Your Reference</div><div class="value" id="metaYourRef"></div>
+      <div class="label">Ref Date</div><div class="value" id="metaRefDate"></div>
+      <div class="label">Your Contact Person</div><div class="value" id="metaContactPerson"></div>
+      <div class="label">Handphone</div><div class="value" id="metaPhone"></div>
+      <div class="label">Email</div><div class="value" id="metaEmail"></div>
+      <div class="label">Office</div><div class="value" id="metaOffice"></div>
+    </div>
+  </div>
+</div>
 
   <!-- Quote Builder -->
   <div id="quoteBuilder">
