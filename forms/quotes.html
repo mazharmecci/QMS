@@ -82,14 +82,6 @@
       min-width: 300px;
     }
 
-    .quote-right {
-      flex: 1;
-      min-width: 300px;
-      background: #f0f0f0;
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-    }
-
     .company-box p {
       font-size: 0.8rem;
       white-space: nowrap;
@@ -132,15 +124,42 @@
       margin: 0 0 0.35rem;
     }
     
+    .quote-right {
+      flex: 1;
+      min-width: 300px;
+      background: #f0f0f0;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+    }
+    
     .quote-right-title {
       text-align: right;
       font-weight: 700;
       font-size: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       letter-spacing: 0.05em;
     }
     
     /* Header input controls */
+
+    .quote-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.35rem 1rem;
+      align-items: center;
+    }
+    
+    .quote-meta-grid .label {
+      font-size: 0.8rem;
+      color: #222;
+    }
+    
+    .quote-meta-grid .value {
+      font-size: 0.8rem;
+      color: #000;
+      text-align: right;
+      white-space: nowrap;
+    }
 
     .quote-meta-fields {
       margin-top: 1.5rem;
@@ -263,7 +282,7 @@
   <div class="quote-header">
     <div class="quote-header-top">
       <div class="logo-box">
-        <img src="images/logo.png" alt="ISTOS Logo">
+        <img src="../images/logo.png" alt="ISTOS Logo">
       </div>
     </div>
   
@@ -283,15 +302,34 @@
         </div>
       </div>
   
-      <!-- RIGHT SIDE -->
-      <div class="quote-right">
-        <p class="quote-right-title">SALES QUOTATION</p>
-        <p><strong>Quote No:</strong> <span id="metaQuoteNo">EQ/SQ/25-26/00001</span></p>
-        <p><strong>Quotation Date:</strong> <span id="metaQuoteDate">dd-mm-yyyy</span></p>
-        <p><strong>Reference Date:</strong> <span id="metaRefDate">dd-mm-yyyy</span></p>
-        <p><strong>Contact Person:</strong> <span id="metaContactPerson">Contact Person</span></p>
-        <p><strong>Phone:</strong> <span id="metaPhone">Phone</span></p>
-        <p><strong>Email:</strong> <span id="metaEmail">Email</span></p>
+    <!-- RIGHT SIDE -->
+    <div class="quote-right">
+      <div class="quote-right-title">SALES QUOTATION</div>
+    
+      <div class="quote-meta-grid">
+        <div class="label">Quote No.</div>
+        <div class="value" id="metaQuoteNo">EQ/SQ/25-26/00001</div>
+    
+        <div class="label">Quotation Date</div>
+        <div class="value" id="metaQuoteDate">12-12-2025</div>
+    
+        <div class="label">Your Reference</div>
+        <div class="value" id="metaYourRef">Telephonic</div>
+    
+        <div class="label">Ref Date</div>
+        <div class="value" id="metaRefDate">12-12-2025</div>
+    
+        <div class="label">Your Contact Person</div>
+        <div class="value" id="metaContactPerson">Mazhar Mecci</div>
+    
+        <div class="label">Handphone</div>
+        <div class="value" id="metaPhone">+91 99001 98668</div>
+    
+        <div class="label">Email</div>
+        <div class="value" id="metaEmail">xxxxxxxxxx@gmail.com</div>
+    
+        <div class="label">Office</div>
+        <div class="value" id="metaOffice">+91 80 2686 0607</div>
       </div>
     </div>
   
