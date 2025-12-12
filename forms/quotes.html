@@ -27,7 +27,7 @@
 
     .back-btn {
       border: none;
-      background: rgba(255,255,255,0.12);
+      background: rgba(255, 255, 255, 0.12);
       color: #fff;
       padding: 0.45rem 0.9rem;
       border-radius: 999px;
@@ -90,10 +90,6 @@
       margin: 0;
     }
 
-    .company-box p {
-      margin: 0;
-    }
-
     .hospital-box,
     .attn-box {
       margin-bottom: 1rem;
@@ -102,28 +98,10 @@
     }
 
     .hospital-box p,
-    .attn-box p,
-    .quote-right p {
+    .attn-box p {
       margin: 0 0 0.35rem;
     }
 
-    .quote-right p strong {
-      font-weight: 400;
-      flex: 1;
-    }
-    
-    .quote-right span {
-      text-align: right;
-      flex: 1;
-    }
-    
-    .quote-right p {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      margin: 0 0 0.35rem;
-    }
-    
     .quote-right {
       flex: 1;
       min-width: 300px;
@@ -131,7 +109,7 @@
       padding: 1rem 1.25rem;
       border-radius: 8px;
     }
-    
+
     .quote-right-title {
       text-align: right;
       font-weight: 700;
@@ -139,8 +117,6 @@
       margin-bottom: 0.75rem;
       letter-spacing: 0.05em;
     }
-    
-    /* Header input controls */
 
     .quote-meta-grid {
       display: grid;
@@ -148,13 +124,13 @@
       gap: 0.35rem 1rem;
       align-items: center;
     }
-    
+
     .quote-meta-grid .label {
       font-size: 0.8rem;
       font-weight: 600;
       color: #222;
     }
-    
+
     .quote-meta-grid .value {
       font-size: 0.8rem;
       color: #000;
@@ -286,7 +262,7 @@
         <img src="../images/istos-logo.png" alt="ISTOS Logo">
       </div>
     </div>
-  
+
     <div class="quote-header-body">
       <!-- LEFT SIDE -->
       <div class="quote-left">
@@ -295,44 +271,46 @@
         </div>
         <div class="hospital-box">
           <p><strong>To:</strong><br>
-          <span id="toHospitalName">Hospital / Client Name</span><br>
-          <span id="toHospitalAddress">Hospital Address</span></p>
+            <span id="toHospitalName">Hospital / Client Name</span><br>
+            <span id="toHospitalAddress">Hospital Address</span>
+          </p>
         </div>
         <div class="attn-box">
           <p><strong>Kind Attn:</strong> <span id="toAttn">Contact Person</span></p>
         </div>
       </div>
-  
-    <!-- RIGHT SIDE -->
+
+      <!-- RIGHT SIDE -->
       <div class="quote-right">
         <div class="quote-right-title">SALES QUOTATION</div>
         <div class="quote-meta-grid">
           <div class="label">Quote No.</div>
           <div class="value" id="metaQuoteNo">EQ/SQ/25-26/00001</div>
-      
+
           <div class="label">Quotation Date</div>
           <div class="value" id="metaQuoteDate">12-12-2025</div>
-      
+
           <div class="label">Your Reference</div>
           <div class="value" id="metaYourRef">Telephonic</div>
-      
+
           <div class="label">Ref Date</div>
           <div class="value" id="metaRefDate">12-12-2025</div>
-      
+
           <div class="label">Your Contact Person</div>
-          <div class="value" id="metaContactPerson">Mazhar Mecci</div>
-      
+          <div class="value" id="metaContactPerson">Contact Person</div>
+
           <div class="label">Handphone</div>
           <div class="value" id="metaPhone">+91 99001 98668</div>
-      
+
           <div class="label">Email</div>
           <div class="value" id="metaEmail">xxxxxxxxxx@gmail.com</div>
-      
+
           <div class="label">Office</div>
           <div class="value" id="metaOffice">+91 80 2686 0607</div>
         </div>
       </div>
-  
+    </div>
+
     <!-- FORM FIELDS -->
     <div class="quote-meta-fields">
       <select id="hospitalSelect" onchange="populateHospitalDetails()">
@@ -341,6 +319,8 @@
       <input type="text" id="quoteNo" placeholder="Quote No. (auto)">
       <input type="date" id="quoteDate">
       <input type="date" id="refDate">
+      <input type="text" id="yourReference" placeholder="Your Reference">
+      <input type="text" id="officePhone" placeholder="Office Phone">
       <input type="text" id="hospitalName" placeholder="Hospital / Client Name">
       <input type="text" id="hospitalAddress" placeholder="Hospital Address">
       <input type="text" id="contactPerson" placeholder="Contact Person">
@@ -397,13 +377,13 @@
 
   function formatISOToDMY(iso) {
     if (!iso) return 'dd-mm-yyyy';
-    const [y,m,d] = iso.split('-');
+    const [y, m, d] = iso.split('-');
     return `${d}-${m}-${y}`;
   }
 
   function syncHeaderDisplay() {
     const getValue = id => document.getElementById(id)?.value?.trim() || '';
-  
+
     const fields = {
       metaQuoteNo: getValue('quoteNo') || 'EQ/SQ/25-26/00001',
       metaQuoteDate: formatISOToDMY(getValue('quoteDate')),
@@ -417,24 +397,25 @@
       toHospitalAddress: getValue('hospitalAddress') || 'Hospital Address',
       toAttn: getValue('contactPerson') || 'Contact Person'
     };
-  
+
     Object.entries(fields).forEach(([id, value]) => {
       const el = document.getElementById(id);
       if (el) el.textContent = value;
     });
   }
+
   function initHeaderDefaults() {
     const setIfEmpty = (id, value) => {
       const el = document.getElementById(id);
       if (el && !el.value) el.value = value;
     };
-  
+
     setIfEmpty('quoteNo', generateQuoteNo());
-  
+
     const todayISO = new Date().toISOString().slice(0, 10);
     setIfEmpty('quoteDate', todayISO);
     setIfEmpty('refDate', todayISO);
-  
+
     syncHeaderDisplay();
   }
 
@@ -547,7 +528,6 @@
       contactEmail: document.getElementById('contactEmail').value
     };
 
-    // Header block is already at top; below we only show line items + summary
     let lineItemsHTML = `
       <h4>Line‑Item Breakdown</h4>
       <table class="quote-table">
@@ -591,7 +571,6 @@
 
     document.getElementById('quoteSummary').innerHTML = lineItemsHTML + summaryHTML;
 
-    // Keep last quote structured for future use
     window.lastGeneratedQuote = {
       header,
       lineItems,
@@ -610,8 +589,8 @@
   }
 
   function saveQuote() {
-    const html = document.getElementById('quoteSummary').innerHTML;
-    if (!html.trim()) {
+    const summaryHTML = document.getElementById('quoteSummary').innerHTML;
+    if (!summaryHTML.trim()) {
       alert('Please generate the quote before saving.');
       return;
     }
@@ -658,7 +637,9 @@
       hospitalAddress: document.getElementById('hospitalAddress').value,
       contactPerson: document.getElementById('contactPerson').value,
       contactPhone: document.getElementById('contactPhone').value,
-      contactEmail: document.getElementById('contactEmail').value
+      contactEmail: document.getElementById('contactEmail').value,
+      yourReference: document.getElementById('yourReference').value,
+      officePhone: document.getElementById('officePhone').value
     };
 
     const discount = parseFloat(document.getElementById('discount').value) || 0;
@@ -683,18 +664,29 @@
     const quote = { header, lineItems, summary, createdAt: new Date().toISOString() };
     const quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
     quotes.push(quote);
-    localStorage.setItem('quotes', JSON.stringify(quotes));  // structured repository[web:22][web:23]
+    localStorage.setItem('quotes', JSON.stringify(quotes));
 
     alert('Quote saved successfully.');
   }
 
   // live sync for header fields
-  ['quoteNo','quoteDate','refDate','hospitalName','hospitalAddress','contactPerson','contactPhone','contactEmail']
-    .forEach(id => {
-      const el = document.getElementById(id);
-      el.addEventListener('input', syncHeaderDisplay);
-      el.addEventListener('change', syncHeaderDisplay);
-    });
+  [
+    'quoteNo',
+    'quoteDate',
+    'refDate',
+    'hospitalName',
+    'hospitalAddress',
+    'contactPerson',
+    'contactPhone',
+    'contactEmail',
+    'yourReference',
+    'officePhone'
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', syncHeaderDisplay);
+    el.addEventListener('change', syncHeaderDisplay);
+  });
 
   initHeaderDefaults();
   populateHospitalDropdown();
