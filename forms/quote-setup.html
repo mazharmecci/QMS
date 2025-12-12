@@ -81,11 +81,6 @@
       grid-column: span 1;
     }
 
-    /* Make date + tooltip align nicely */
-    .full-span {
-      grid-column: span 2;
-    }
-
     .kind-attn-box {
       grid-column: span 2;
       background-color: #e0f0ff;
@@ -96,6 +91,17 @@
       margin-top: 1rem;
     }
 
+    /* Instrument preview block */
+    #instrumentPreview {
+      grid-column: span 2;
+      display: none;
+      font-size: 0.85rem;
+      color: #333;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      border: 1px dashed #cbd5e1;
+    }
   </style>
 </head>
 <body>
@@ -103,10 +109,23 @@
 <div class="container">
   <h2>Enter quote header details before proceeding to the final draft</h2>
   <form id="quoteSetupForm">
+    <!-- Hospital dropdown -->
     <select id="hospitalSelect" required>
       <option value="">Select Hospital</option>
     </select>
 
+    <!-- Instrument dropdown -->
+    <select id="instrumentSelect" required>
+      <option value="">Select Instrument</option>
+    </select>
+
+    <!-- Optional instrument preview -->
+    <div id="instrumentPreview">
+      <strong>Selected Instrument:</strong>
+      <span id="instrumentDetails"></span>
+    </div>
+
+    <!-- Auto quote no. -->
     <input
       type="text"
       id="quoteNo"
@@ -115,6 +134,7 @@
       title="Read-only auto-generated Quote No."
     >
 
+    <!-- Dates with tooltips -->
     <div>
       <input type="date" id="quoteDate" required>
       <div class="tooltip">Quotation Date</div>
@@ -125,15 +145,29 @@
       <div class="tooltip">Reference Date</div>
     </div>
 
+    <!-- Reference type -->
     <select id="yourReference" required>
       <option value="">Select Reference Type</option>
       <option value="Telephonic">Telephonic</option>
       <option value="Email">Email</option>
     </select>
 
+    <!-- Hospital details (auto from hospitalSelect) -->
     <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
     <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
-    <div class="kind-attn-box">KIND ATTN: <input type="text" id="kindAttn" placeholder="Name" required style="background:transparent; border:none; font-weight:600; color:#0d6efd; width:80%;"></div>
+
+    <!-- Kind Attn inline input -->
+    <div class="kind-attn-box">
+      KIND ATTN:
+      <input
+        type="text"
+        id="kindAttn"
+        placeholder="Name"
+        required
+        style="background:transparent; border:none; font-weight:600; color:#0d6efd; width:80%; outline:none;"
+      >
+    </div>
+
     <input type="text" id="contactPerson" placeholder="Contact Person" required>
     <input type="text" id="contactPhone" placeholder="Handphone" required>
     <input type="text" id="officePhone" placeholder="Officephone" required>
@@ -177,10 +211,53 @@
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
+  // Populate instruments from localStorage
+  function populateInstrumentDropdown() {
+    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+    const select = document.getElementById('instrumentSelect');
+    instruments.forEach((inst, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      const code = inst.instrumentCode || inst.catalog || '';
+      const name = inst.instrumentName || inst.description || '';
+      opt.textContent = `${code} - ${String(name).replace(/<br>/g, ' ')}`;
+      select.appendChild(opt);
+    });
+  }
+
+  // Live instrument preview
+  function setupInstrumentPreview() {
+    const select = document.getElementById('instrumentSelect');
+    const preview = document.getElementById('instrumentPreview');
+    const details = document.getElementById('instrumentDetails');
+
+    select.addEventListener('change', function () {
+      const idx = this.value;
+      const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+      const inst = instruments[idx];
+
+      if (inst) {
+        const name = inst.instrumentName || inst.description || '';
+        const desc = inst.description || '';
+        preview.style.display = 'block';
+        details.textContent =
+          `${String(name).replace(/<br>/g, ' ')} — ${String(desc).replace(/<br>/g, ' ')}`;
+      } else {
+        preview.style.display = 'none';
+        details.textContent = '';
+      }
+    });
+  }
+
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
   document.getElementById('quoteSetupForm').addEventListener('submit', function(e) {
     e.preventDefault();
+
+    const selectedInstrumentIndex = document.getElementById('instrumentSelect').value;
+    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+    const selectedInstrument = instruments[selectedInstrumentIndex] || null;
+
     const headerData = {
       quoteNo: document.getElementById('quoteNo').value,
       quoteDate: document.getElementById('quoteDate').value,
@@ -192,8 +269,11 @@
       contactPerson: document.getElementById('contactPerson').value,
       contactPhone: document.getElementById('contactPhone').value,
       contactEmail: document.getElementById('contactEmail').value,
-      officePhone: document.getElementById('officePhone').value
+      officePhone: document.getElementById('officePhone').value,
+      selectedInstrumentIndex,
+      selectedInstrument
     };
+
     localStorage.setItem('quoteHeader', JSON.stringify(headerData));
     window.location.href = 'quotes.html';
   });
@@ -203,7 +283,10 @@
   const todayISO = new Date().toISOString().slice(0,10);
   document.getElementById('quoteDate').value = todayISO;
   document.getElementById('refDate').value = todayISO;
+
   populateHospitalDropdown();
+  populateInstrumentDropdown();
+  setupInstrumentPreview();
 </script>
 </body>
 </html>
