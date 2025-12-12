@@ -31,31 +31,44 @@
       color: #0d6efd;
       margin-bottom: 1rem;
     }
-    form {
+    
+  form {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr; /* two-column layout */
       gap: 1rem;
     }
+    
+    /* Inputs & selects */
     form input,
-    form select,
-    form button {
-      padding: 0.8rem;
-      border: 1px solid #ccc;
+    form select {
+      padding: 0.75rem 1rem;
+      border: 1px solid #d0d4d9;
       border-radius: 8px;
       font-size: 0.95rem;
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+    
+    /* Focus state for accessibility */
+    form input:focus,
+    form select:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+      outline: none;
+    }
+    
+    /* Buttons */
     form button {
-      grid-column: span 2;
+      grid-column: span 2; /* full width across both columns */
+      padding: 0.9rem 1.2rem;
       background: #0d6efd;
-      color: white;
+      color: #fff;
       border: none;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    form button:hover {
-      background: #084298;
-    }
-
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor
+  
     /* Color-coded inputs */
     input[type="text"],
     input[type="email"] {
@@ -83,13 +96,21 @@
     }
 
     .kind-attn-box {
-      grid-column: span 2;
-      background-color: #e0f0ff;
+      margin: 1rem 0;
+      background: #e0f0ff;
       padding: 0.75rem 1rem;
       border-radius: 8px;
       font-weight: 600;
       color: #0d6efd;
-      margin-top: 1rem;
+    }
+    
+    .kind-attn-box input {
+      background: transparent;
+      border: none;
+      font-weight: 600;
+      color: #0d6efd;
+      width: 80%;
+      outline: none;
     }
 
     /* Instrument preview block */
@@ -103,80 +124,93 @@
       padding: 0.5rem 0.75rem;
       border: 1px dashed #cbd5e1;
     }
+    #instrumentSelect,
+    #yourReference {
+      width: 50%;
+      min-width: 250px;   /* optional safeguard for smaller screens */
+      display: inline-block;
+    }
+
   </style>
 </head>
 <body>
-<header>QMS - Quote Setup</header>
-<div class="container">
-  <h2>Plan your quote now</h2>
-  <form id="quoteSetupForm">
-    <!-- Hospital dropdown -->
-    <select id="hospitalSelect" required>
-      <option value="">Select Hospital</option>
-    </select>
+  <header>QMS - Quote Setup</header>
 
-    <!-- Instrument dropdown -->
-    <select id="instrumentSelect" required>
-      <option value="">Select Instrument</option>
-    </select>
+  <div class="container">
+    <h2>Plan your quote now</h2>
 
-    <!-- Optional instrument preview -->
-    <div id="instrumentPreview">
-      <strong>Selected Instrument:</strong>
-      <span id="instrumentDetails"></span>
-    </div>
+    <form id="quoteSetupForm">
+      <!-- Hospital & Instrument Selection -->
+      <div class="form-row">
+        <select id="hospitalSelect" required>
+          <option value="">Select Hospital</option>
+        </select>
 
-    <!-- Auto quote no. -->
-    <input
-      type="text"
-      id="quoteNo"
-      placeholder="Quote No. (auto)"
-      readonly
-      title="Read-only auto-generated Quote No."
-    >
+        <select id="instrumentSelect" required>
+          <option value="">Select Instrument</option>
+        </select>
+      </div>
 
-    <!-- Dates with tooltips -->
-    <div>
-      <input type="date" id="quoteDate" required>
-      <div class="tooltip">Quotation Date</div>
-    </div>
+      <!-- Instrument Preview -->
+      <div id="instrumentPreview" class="preview-box">
+        <strong>Selected Instrument:</strong>
+        <span id="instrumentDetails"></span>
+      </div>
 
-    <div>
-      <input type="date" id="refDate" required>
-      <div class="tooltip">Reference Date</div>
-    </div>
-
-    <!-- Reference type -->
-    <select id="yourReference" required>
-      <option value="">Select Reference Type</option>
-      <option value="Telephonic">Telephonic</option>
-      <option value="Email">Email</option>
-    </select>
-
-    <!-- Hospital details (auto from hospitalSelect) -->
-    <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
-    <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
-
-    <!-- Kind Attn inline input -->
-    <div class="kind-attn-box">
-      KIND ATTN:
+      <!-- Quote Number -->
       <input
         type="text"
-        id="kindAttn"
-        placeholder="Name"
-        required
-        style="background:transparent; border:none; font-weight:600; color:#0d6efd; width:80%; outline:none;"
+        id="quoteNo"
+        placeholder="Quote No. (auto)"
+        readonly
+        title="Read-only auto-generated Quote No."
       >
-    </div>
 
-    <input type="text" id="contactPerson" placeholder="Contact Person" required>
-    <input type="text" id="contactPhone" placeholder="Handphone" required>
-    <input type="text" id="officePhone" placeholder="Officephone" required>
-    <input type="email" id="contactEmail" placeholder="Email" required>
+      <!-- Dates -->
+      <div class="form-row">
+        <div class="date-field">
+          <input type="date" id="quoteDate" required>
+          <div class="tooltip">Quotation Date</div>
+        </div>
 
-    <button type="submit">Proceed to Quote</button>
-  </form>
-</div>
+        <div class="date-field">
+          <input type="date" id="refDate" required>
+          <div class="tooltip">Reference Date</div>
+        </div>
+      </div>
+
+      <!-- Reference Type -->
+      <select id="yourReference" required>
+        <option value="">Select Reference Type</option>
+        <option value="Telephonic">Telephonic</option>
+        <option value="Email">Email</option>
+      </select>
+
+      <!-- Hospital Details -->
+      <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
+      <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
+
+      <!-- Kind Attention -->
+      <div class="kind-attn-box">
+        KIND ATTN:
+        <input
+          type="text"
+          id="kindAttn"
+          placeholder="Name"
+          required
+        >
+      </div>
+
+      <!-- Contact Details -->
+      <input type="text" id="contactPerson" placeholder="Contact Person" required>
+      <input type="text" id="contactPhone" placeholder="Handphone" required>
+      <input type="text" id="officePhone" placeholder="Office Phone" required>
+      <input type="email" id="contactEmail" placeholder="Email" required>
+
+      <!-- Submit -->
+      <button type="submit">Proceed to Quote</button>
+    </form>
+  </div>
 
 <script>
   function generateQuoteNo() {
