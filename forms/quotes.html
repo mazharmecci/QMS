@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>QMS - Quotes</title>
-  <!-- Inter is still loaded; Aptos Display will be used if installed on the machine -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* Base font: Aptos Display if available, else system, else Inter */
+    /* Base font: Aptos Display if present, else system, else Inter */
     body {
       font-family: 'Aptos Display', system-ui, 'Inter', sans-serif;
       background:#f5f7fa;
@@ -44,7 +43,7 @@
       display:flex;
       gap:2rem;
       flex-wrap:wrap;
-      align-items:center;
+      align-items:center; /* aligns grey bars on one line */
     }
 
     .quote-left {
@@ -80,7 +79,7 @@
       font-size:13px;
     }
 
-    /* KIND ATTN box: light blue, black text, 10pt ≈ 13px */
+    /* KIND ATTN: light blue, black text */
     .attn-box {
       margin-top:7rem;
       background:#add8e6;
@@ -103,19 +102,21 @@
     /* SALES QUOTATION: 14pt ≈ 18px */
     .quote-right-title {
       background:#d0d4d9;
-      padding:0.5rem 0.75rem;
-      border-radius:6px;
-      text-align:right;
+      padding:0.6rem 1rem;   /* matches company-box padding */
+      border-radius:8px;
+      text-align:center;
       font-weight:700;
       font-size:18px;
-      margin-bottom:0;
+      margin:0;
       letter-spacing:0.05em;
     }
 
+    /* 4‑column grid: label, value, label, value */
     .quote-meta-grid {
       display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:0.5rem 1rem;
+      grid-template-columns:auto 1fr auto 1fr;
+      column-gap:0.75rem;
+      row-gap:0.25rem;
       align-items:center;
       margin-top:0.75rem;
     }
@@ -125,6 +126,7 @@
       font-size:9px;
       font-weight:600;
       color:#222;
+      text-align:left;
     }
 
     /* Values: default 12pt ≈ 16px */
@@ -140,6 +142,12 @@
     .quote-meta-grid .value-small {
       font-size:13px;
       font-weight:700;
+    }
+
+    /* Right-side columns visually right-aligned */
+    .quote-meta-grid .label.right,
+    .quote-meta-grid .value.right {
+      text-align:right;
     }
 
     /* Quote Builder */
@@ -201,30 +209,35 @@
       <!-- RIGHT SIDE -->
       <div class="quote-right">
         <div class="quote-right-title">SALES QUOTATION</div>
+
         <div class="quote-meta-grid">
+          <!-- Row 1 -->
           <div class="label">Quote No.</div>
-          <div class="value" id="metaQuoteNo"></div> <!-- 12pt -->
+          <div class="value" id="metaQuoteNo"></div>
 
-          <div class="label">Quotation Date</div>
-          <div class="value value-small" id="metaQuoteDate"></div> <!-- 10pt -->
+          <div class="label right">Quotation Date</div>
+          <div class="value value-small right" id="metaQuoteDate"></div>
 
+          <!-- Row 2 -->
           <div class="label">Your Reference</div>
-          <div class="value value-small" id="metaYourRef"></div> <!-- 10pt -->
+          <div class="value value-small" id="metaYourRef"></div>
 
-          <div class="label">Ref Date</div>
-          <div class="value value-small" id="metaRefDate"></div> <!-- 10pt -->
+          <div class="label right">Ref Date</div>
+          <div class="value value-small right" id="metaRefDate"></div>
 
+          <!-- Row 3 -->
           <div class="label">Your Contact Person</div>
-          <div class="value value-small" id="metaContactPerson"></div> <!-- 10pt -->
+          <div class="value value-small" id="metaContactPerson"></div>
 
-          <div class="label">Handphone</div>
-          <div class="value value-small" id="metaPhone"></div> <!-- 10pt -->
+          <div class="label right">Handphone</div>
+          <div class="value value-small right" id="metaPhone"></div>
 
+          <!-- Row 4 -->
           <div class="label">Email</div>
-          <div class="value value-small" id="metaEmail"></div> <!-- 10pt -->
+          <div class="value value-small" id="metaEmail"></div>
 
-          <div class="label">Office</div>
-          <div class="value value-small" id="metaOffice"></div> <!-- 10pt -->
+          <div class="label right">Office</div>
+          <div class="value value-small right" id="metaOffice"></div>
         </div>
       </div>
     </div>
