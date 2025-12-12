@@ -5,130 +5,167 @@
   <title>QMS - Quotes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; } 
-    header { background:#0d6efd; color:#fff; padding:0.75rem 1.5rem; text-align:center; font-size:1.5rem; font-weight:600; }
-    .container { max-width:1200px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    body {
+      font-family:'Inter',sans-serif;
+      background:#f5f7fa;
+      margin:0;
+    }
+    header {
+      background:#0d6efd;
+      color:#fff;
+      padding:0.75rem 1.5rem;
+      text-align:center;
+      font-size:1.5rem;
+      font-weight:600;
+    }
+    .container {
+      max-width:1200px;
+      margin:2rem auto;
+      padding:2rem;
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
 
-    .quote-header { margin-bottom:2rem; border:1px solid #ccc; border-radius:12px; background:#fff; padding:1.5rem; }
-    .quote-header-top { display:flex; justify-content:flex-end; margin-bottom:1rem; }
-    .logo-box img { height:60px; object-fit:contain; }
-    .quote-header-body { display:flex; gap:2rem; flex-wrap:wrap; }
-    .quote-left { flex:1; min-width:300px; }    
+    .quote-header {
+      margin-bottom:2rem;
+      border:1px solid #ccc;
+      border-radius:12px;
+      background:#fff;
+      padding:1.5rem;
+    }
+
+    .quote-header-body {
+      display:flex;
+      gap:2rem;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .quote-left {
+      flex:1;
+      min-width:300px;
+    }
 
     .company-box {
-      background:#e9ecef;
+      background:#d0d4d9;
       padding:0.6rem 1rem;
       border-radius:8px;
       margin-bottom:1rem;
       font-size:0.8rem;
+    }
+
+    .company-box p {
+      font-size:0.75rem;
+      line-height:1.2;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
-    }
-
-    #quoteBuilder { margin-top:0; padding:1.5rem; background:#f9fafc; border:1px solid #ddd; border-radius:12px; }
-    table.quote-table { width:100%; border-collapse:collapse; margin-bottom:1rem; }
-    table.quote-table th, table.quote-table td { padding:0.6rem; border-bottom:1px solid #ddd; text-align:left; }
-    table.quote-table th { background:#f0f4f8; }
-    table.quote-table td:last-child { text-align:right; }
-
-    .company-box p {
-      font-size: 0.75rem;
-      background: #d0d4d9;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin: 0;
+      margin:0;
     }
 
     .quote-right {
-      flex: 1;
-      min-width: 300px;
-      padding: 1rem 1.25rem;
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .quote-meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem 1rem;
-      align-items: center;    
-    }
-  
-    .quote-meta-grid .label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #222;
-    }
-  
-    .quote-meta-grid .value {
-      font-size: 0.8rem;
-      color: #000;
-      text-align: left;
-      white-space: nowrap;
+      flex:1;
+      min-width:300px;
+      background:#fff;
+      padding:1rem 1.25rem;
+      border-radius:8px;
     }
 
     .quote-right-title {
-      background: #d0d4d9;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      text-align: right;
-      font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      letter-spacing: 0.05em;
+      background:#d0d4d9;
+      padding:0.5rem 0.75rem;
+      border-radius:6px;
+      text-align:right;
+      font-weight:700;
+      font-size:1rem;
+      margin-bottom:0.75rem;
+      letter-spacing:0.05em;
     }
-  
-   <div class="attn-box" style="
-    margin-top:4rem; /* increased from 1rem to 4rem */
-    background:#e0f0ff;
-    padding:0.75rem 1rem;
-    border-radius:8px;
-    font-weight:600;
-    color:#0d6efd;
-  ">
-    KIND ATTN: <span id="toAttn"></span>
-  </div>
+
+    .quote-meta-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:0.5rem 1rem;
+      align-items:center;
+    }
+
+    .quote-meta-grid .label {
+      font-size:0.8rem;
+      font-weight:600;
+      color:#222;
+    }
+
+    .quote-meta-grid .value {
+      font-size:0.8rem;
+      color:#000;
+      text-align:left;
+      white-space:nowrap;
+    }
+
+    /* Quote Builder */
+    #quoteBuilder {
+      margin-top:0;
+      padding:1.5rem;
+      background:#f9fafc;
+      border:1px solid #ddd;
+      border-radius:12px;
+    }
+
+    table.quote-table {
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom:1rem;
+    }
+    table.quote-table th,
+    table.quote-table td {
+      padding:0.6rem;
+      border-bottom:1px solid #ddd;
+      text-align:left;
+    }
+    table.quote-table th {
+      background:#f0f4f8;
+    }
+    table.quote-table td:last-child {
+      text-align:right;
+    }
   </style>
 </head>
-  <body>
-  <header>QMS - Quotes</header>
-  
-  <div class="container">
-    <!-- QUOTE HEADER BLOCK -->
-    <div class="quote-header">
-      <div class="quote-header-body">
-        <!-- LEFT SIDE -->
-        <div class="quote-left">
-          <div class="company-box">
-            <p><strong>ISTOS Medical Pvt Ltd.</strong> #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road, Yelachenahalli, Bangalore - 560062</p>
-          </div>
-          <div class="hospital-box">
-            <p><strong>To:</strong><br>
-            <span id="toHospitalName">Hospital / Client Name</span><br>
-            <span id="toHospitalAddress">Hospital Address</span></p>
-          </div>
-          <div class="attn-box" style="margin-top:1rem; background:#e0f0ff; padding:0.75rem 1rem; border-radius:8px; font-weight:600; color:#0d6efd;">
-            KIND ATTN: <span id="toAttn"></span>
-          </div>
+<body>
+<header>QMS - Quotes</header>
+
+<div class="container">
+  <!-- Refactored QUOTE HEADER BLOCK -->
+  <div class="quote-header">
+    <div class="quote-header-body">
+      <!-- LEFT SIDE -->
+      <div class="quote-left">
+        <div class="company-box">
+          <p><strong>ISTOS Medical Pvt Ltd.</strong> #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road, Yelachenahalli, Bangalore - 560062</p>
         </div>
+        <div class="hospital-box">
+          <p><strong>To:</strong><br>
+            <span id="toHospitalName">Hospital / Client Name</span><br>
+            <span id="toHospitalAddress">Hospital Address</span>
+          </p>
+        </div>
+        <div class="attn-box"
+             style="margin-top:4rem; background:#d0d4d9; padding:0.75rem 1rem; border-radius:8px; font-weight:600; color:#0d6efd;">
+          KIND ATTN: <span id="toAttn">Purchase Department</span>
+        </div>
+      </div>
 
       <!-- RIGHT SIDE -->
       <div class="quote-right">
         <div class="quote-right-title">SALES QUOTATION</div>
         <div class="quote-meta-grid">
-          <!-- Left Column -->
           <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
-          <div class="label">Your Reference</div><div class="value" id="metaYourRef"></div>
-          <div class="label">Your Contact Person</div><div class="value" id="metaContactPerson"></div>
-          <div class="label">Email</div><div class="value" id="metaEmail"></div>
-  
-          <!-- Right Column -->
           <div class="label">Quotation Date</div><div class="value" id="metaQuoteDate"></div>
+          <div class="label">Your Reference</div><div class="value" id="metaYourRef"></div>
           <div class="label">Ref Date</div><div class="value" id="metaRefDate"></div>
+          <div class="label">Your Contact Person</div><div class="value" id="metaContactPerson"></div>
           <div class="label">Handphone</div><div class="value" id="metaPhone"></div>
+          <div class="label">Email</div><div class="value" id="metaEmail"></div>
           <div class="label">Office</div><div class="value" id="metaOffice"></div>
         </div>
       </div>
@@ -138,20 +175,25 @@
   <!-- Quote Builder -->
   <div id="quoteBuilder">
     <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Builder</h3>
+
     <div style="margin-bottom:1rem;">
       <label><strong>Select Instruments for Quote:</strong></label>
       <div id="instrumentSelection"></div>
     </div>
+
     <div style="margin-bottom:1rem;">
       <label>Special Discount (₹):</label>
       <input type="number" id="discount" placeholder="Enter discount">
     </div>
+
     <div style="margin-bottom:1rem;">
       <label>Freight Costs:</label>
       <input type="text" id="freight" value="Included">
     </div>
+
     <button onclick="generateQuote()" style="background:#0d6efd; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px;">Generate Quote Summary</button>
     <button onclick="saveQuote()" style="margin-left:0.5rem; background:#198754; color:#fff; padding:0.6rem 1rem; border:none; border-radius:8px;">Save Quote</button>
+
     <div id="quoteSummary" style="margin-top:1.5rem;"></div>
   </div>
 </div>
@@ -165,6 +207,7 @@
 
   function populateHeader() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+
     document.getElementById('metaQuoteNo').textContent = header.quoteNo || '';
     document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
     document.getElementById('metaYourRef').textContent = header.yourReference || '';
@@ -175,7 +218,8 @@
     document.getElementById('metaOffice').textContent = header.officePhone || '';
 
     document.getElementById('toHospitalName').textContent = header.hospitalName || 'Hospital / Client Name';
-    document.getElementById('toHospitalAddress').textContent = header.hospitalAddress || 'Hospital Address';    
+    document.getElementById('toHospitalAddress').textContent = header.hospitalAddress || 'Hospital Address';
+    document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
   let instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
@@ -189,12 +233,16 @@
     }
     instruments.forEach((inst, idx) => {
       const div = document.createElement('div');
-      div.innerHTML = `<label><input type="checkbox" value="${idx}"> ${String(inst.description || '').replace(/<br>/g, ' ')}</label>`;
+      div.innerHTML = `
+        <label>
+          <input type="checkbox" value="${idx}">
+          ${String(inst.description || '').replace(/<br>/g, ' ')}
+        </label>`;
       container.appendChild(div);
     });
   }
 
-  // TODO: implement generateQuote() and saveQuote() or reuse from your other file
+  // TODO: wire your existing generateQuote() + saveQuote() here
 
   populateHeader();
   renderInstrumentSelection();
