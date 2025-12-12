@@ -196,6 +196,11 @@
       display: none;
       font-size: 0.9rem;
     }
+    .optional-content {
+      display: none;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
 
     .price-cell {
       font-weight: 600;
@@ -502,6 +507,8 @@
       const pageItems = instruments.slice(start, end);
 
       pageItems.forEach((inst, index) => {
+        const hasOptional = inst.additional === 'Yes' && inst.optionalItems && inst.optionalItems.length;
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${inst.description}</td>
@@ -513,7 +520,7 @@
               ${inst.details}
               ${
                 inst.optionalItems && inst.optionalItems.length
-                  ? `<hr><strong>Optional Items:</strong><ul>` +
+                  ? `<hr><strong>Optional Items (for reference only):</strong><ul>` +
                     inst.optionalItems
                       .map(oi =>
                         `<li>${oi.name || oi.code || 'Item'} &mdash; ${oi.price || ''}</li>`
@@ -527,7 +534,27 @@
           <td>${inst.origin}</td>
           <td>${inst.catalog}</td>
           <td>${inst.hsn}</td>
-          <td>${inst.additional}</td>
+          <td>
+            ${
+              hasOptional
+                ? `
+                  <div class="collapse-toggle" onclick="toggleOptional(this)">
+                    ▶ Additional Items
+                  </div>
+                  <div class="optional-content">
+                    ${inst.optionalItems
+                      .map(item => `
+                        <div style="margin-bottom:0.3rem;">
+                          <strong>${item.name || 'Item'}</strong>
+                          ${item.code ? ` (${item.code})` : ''} – ${item.price || ''}
+                        </div>
+                      `)
+                      .join('')}
+                  </div>
+                `
+                : inst.additional || ''
+            }
+          </td>
           <td>${inst.configuration}</td>
           <td class="price-cell">${formatPriceDisplay(inst.price)}</td>
           <td>${inst.gstType}</td>
@@ -549,6 +576,13 @@
       const isVisible = details.style.display === 'block';
       details.style.display = isVisible ? 'none' : 'block';
       toggleEl.textContent = isVisible ? 'Details' : 'Hide details';
+    }
+
+    function toggleOptional(toggleEl) {
+      const content = toggleEl.nextElementSibling;
+      const isVisible = content.style.display === 'block';
+      content.style.display = isVisible ? 'none' : 'block';
+      toggleEl.textContent = isVisible ? '▶ Additional Items' : '▼ Additional Items';
     }
 
     function editInstrument(index) {
