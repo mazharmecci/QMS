@@ -251,6 +251,22 @@
       background: #0d6efd;
       color: white;
     }
+
+    /* Quote builder */
+    #quoteBuilder {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #f9fafc;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+    }
+    #quoteHeader {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #eef3f9;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+    }
   </style>
 </head>
 <body>
@@ -323,6 +339,45 @@
       <button onclick="prevPage()">Prev</button>
       <span id="pageInfo"></span>
       <button onclick="nextPage()">Next</button>
+    </div>
+
+    <!-- Quote Header -->
+    <div id="quoteHeader">
+      <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Header</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <input type="text" id="quoteNo" placeholder="Quote No. (e.g. EQ/SQ/25-26/00001)">
+        <input type="date" id="quoteDate">
+        <input type="date" id="refDate">
+        <input type="text" id="hospitalName" placeholder="Hospital / Client Name">
+        <input type="text" id="hospitalAddress" placeholder="Hospital Address">
+        <input type="text" id="contactPerson" placeholder="Contact Person">
+        <input type="text" id="contactPhone" placeholder="Contact Phone">
+        <input type="email" id="contactEmail" placeholder="Contact Email">
+      </div>
+    </div>
+
+    <!-- Quote Builder -->
+    <div id="quoteBuilder">
+      <h3 style="color:#0d6efd; margin-bottom:1rem;">Quote Builder</h3>
+      
+      <div style="margin-bottom:1rem;">
+        <label><strong>Select Instruments for Quote:</strong></label>
+        <div id="instrumentSelection"></div>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <label>Special Discount (₹):</label>
+        <input type="number" id="discount" placeholder="Enter discount">
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <label>Freight Costs:</label>
+        <input type="text" id="freight" value="Included">
+      </div>
+
+      <button onclick="generateQuote()" style="background:#0d6efd; color:white; padding:0.6rem 1rem; border:none; border-radius:8px;">Generate Quote Summary</button>
+
+      <div id="quoteSummary" style="margin-top:1.5rem;"></div>
     </div>
   </div>
 
@@ -565,6 +620,7 @@
       configurationItems = [];
       form.classList.remove('active');
       renderTable();
+      renderInstrumentSelection();
     });
 
     function formatPriceDisplay(value) {
@@ -704,6 +760,7 @@
       }
 
       renderTable();
+      renderInstrumentSelection();
     }
 
     function nextPage() {
@@ -720,8 +777,91 @@
       }
     }
 
+    // Quote builder: instrument selection
+    function renderInstrumentSelection() {
+      const container = document.getElementById('instrumentSelection');
+      if (!container) return;
+      container.innerHTML = '';
+      instruments.forEach((inst, idx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label>
+            <input type="checkbox" value="${idx}"> ${String(inst.description).replace(/<br>/g, ' ')}
+          </label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function generateQuote() {
+      const selected = [...document.querySelectorAll('#instrumentSelection input:checked')]
+        .map(cb => parseInt(cb.value, 10));
+
+      let itemsTotal = 0;
+
+      selected.forEach(idx => {
+        const inst = instruments[idx];
+        itemsTotal += inst.price || 0;
+
+        if (inst.optionalItems) {
+          inst.optionalItems.forEach(item => {
+            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+            itemsTotal += rawPrice;
+          });
+        }
+
+        if (inst.configurationItems) {
+          inst.configurationItems.forEach(item => {
+            const rawPrice = parseFloat((item.price || '').replace(/[^\d]/g, '')) || 0;
+            itemsTotal += rawPrice;
+          });
+        }
+      });
+
+      const discount = parseFloat(document.getElementById('discount').value) || 0;
+      const afterDiscount = itemsTotal - discount;
+      const gstPercent = 18;
+      const gstAmount = afterDiscount * gstPercent / 100;
+      const totalValue = afterDiscount + gstAmount;
+      const roundOff = Math.round(totalValue);
+
+      // Header values
+      const header = {
+        quoteNo: document.getElementById('quoteNo').value,
+        quoteDate: document.getElementById('quoteDate').value,
+        refDate: document.getElementById('refDate').value,
+        hospitalName: document.getElementById('hospitalName').value,
+        hospitalAddress: document.getElementById('hospitalAddress').value,
+        contactPerson: document.getElementById('contactPerson').value,
+        contactPhone: document.getElementById('contactPhone').value,
+        contactEmail: document.getElementById('contactEmail').value
+      };
+
+      document.getElementById('quoteSummary').innerHTML = `
+        <h4>Sales Quotation</h4>
+        <p><strong>Quote No:</strong> ${header.quoteNo || '-'}</p>
+        <p><strong>Quotation Date:</strong> ${header.quoteDate || '-'}</p>
+        <p><strong>Reference Date:</strong> ${header.refDate || '-'}</p>
+        <p><strong>Hospital / Client:</strong> ${header.hospitalName || '-'}</p>
+        <p><strong>Address:</strong> ${header.hospitalAddress || '-'}</p>
+        <p><strong>Contact Person:</strong> ${header.contactPerson || '-'}</p>
+        <p><strong>Phone:</strong> ${header.contactPhone || '-'}</p>
+        <p><strong>Email:</strong> ${header.contactEmail || '-'}</p>
+        <hr>
+        <h4>Quote Summary</h4>
+        <p><strong>Items Value Total INR:</strong> ₹ ${itemsTotal.toLocaleString('en-IN')}</p>
+        <p><strong>Special Discount:</strong> ₹ ${discount.toLocaleString('en-IN')}</p>
+        <p><strong>Price After Discount:</strong> ₹ ${afterDiscount.toLocaleString('en-IN')}</p>
+        <p><strong>Freight Costs:</strong> ${document.getElementById('freight').value}</p>
+        <p><strong>GST @ ${gstPercent}%:</strong> ₹ ${gstAmount.toLocaleString('en-IN')}</p>
+        <p><strong>Total Value INR:</strong> ₹ ${totalValue.toLocaleString('en-IN')}</p>
+        <p><strong>Round Off:</strong> ₹ ${roundOff.toLocaleString('en-IN')}</p>
+      `;
+    }
+
     // Initial render
     renderTable();
+    renderInstrumentSelection();
   </script>
 </body>
 </html>
