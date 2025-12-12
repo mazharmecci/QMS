@@ -115,7 +115,7 @@
     table {
       width: 100%;
       border-collapse: separate;
-      border-spacing: 0 8px; /* 1-line style gap between rows */
+      border-spacing: 0 8px;
       margin-top: 1rem;
     }
 
@@ -202,6 +202,49 @@
       color: #333;
       white-space: nowrap;
     }
+
+    /* Optional item modal */
+    #optionalItemModal {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1000;
+      width: 600px;
+    }
+    #optionalItemModal h3 {
+      margin-bottom: 1rem;
+    }
+    #optionalItemModal .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    #optionalItemModal input {
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    #optionalItemModal .modal-actions {
+      margin-top: 1rem;
+      text-align: right;
+    }
+    #optionalItemModal .modal-actions button {
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    #optionalItemModal .save-btn {
+      background: #0d6efd;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -277,6 +320,24 @@
     </div>
   </div>
 
+  <!-- Optional Item Modal -->
+  <div id="optionalItemModal">
+    <h3>Add Optional Item</h3>
+    <div class="modal-grid">
+      <input type="text" id="optItemId" placeholder="Item ID">
+      <input type="text" id="optItemCode" placeholder="Item Code">
+      <input type="text" id="optItemName" placeholder="Item Name">
+      <input type="text" id="optCatalogRef" placeholder="Catalog Reference Number">
+      <input type="text" id="optHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
+      <input type="text" id="optOrigin" placeholder="Country Of Origin">
+      <input type="text" id="optPrice" placeholder="Unit Price (₹)">
+    </div>
+    <div class="modal-actions">
+      <button class="save-btn" onclick="saveOptionalItem()">Save</button>
+      <button onclick="closeOptionalModal()">Cancel</button>
+    </div>
+  </div>
+
   <!-- Quill library -->
   <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
   <script>
@@ -285,11 +346,13 @@
     const pageInfo = document.getElementById('pageInfo');
     const hsnInput = document.getElementById('hsn');
     const priceInput = document.getElementById('price');
+    const additionalSelect = document.getElementById('additional');
 
     let instruments = [];
     let currentPage = 1;
     const pageSize = 10;
     let editIndex = null;
+    let optionalItems = [];
 
     // Initialize Quill editor
     const quill = new Quill('#detailsEditor', {
@@ -320,7 +383,7 @@
 
     // HSN: allow digits only, format as 1234 5678
     hsnInput.addEventListener('input', () => {
-      let digits = hsnInput.value.replace(/\D/g, '').slice(0, 8); // max 8 digits
+      let digits = hsnInput.value.replace(/\D/g, '').slice(0, 8);
       if (digits.length > 4) {
         digits = digits.slice(0, 4) + ' ' + digits.slice(4);
       }
@@ -343,6 +406,59 @@
       return digits ? parseInt(digits, 10) : 0;
     }
 
+    // Optional item modal logic
+    additionalSelect.addEventListener('change', function() {
+      if (this.value === 'Yes') {
+        document.getElementById('optionalItemModal').style.display = 'block';
+      }
+    });
+
+    function closeOptionalModal() {
+      document.getElementById('optionalItemModal').style.display = 'none';
+    }
+
+    // HSN validation / formatting inside modal
+    const optHSNInput = document.getElementById('optHSN');
+    optHSNInput.addEventListener('input', () => {
+      let digits = optHSNInput.value.replace(/\D/g, '').slice(0, 8);
+      if (digits.length > 4) {
+        digits = digits.slice(0, 4) + ' ' + digits.slice(4);
+      }
+      optHSNInput.value = digits;
+    });
+
+    // Price formatting inside modal
+    const optPriceInput = document.getElementById('optPrice');
+    optPriceInput.addEventListener('input', function() {
+      let raw = this.value.replace(/[^\d]/g, '');
+      if (raw) {
+        this.value = '₹ ' + parseFloat(raw).toLocaleString('en-IN');
+      } else {
+        this.value = '';
+      }
+    });
+
+    function saveOptionalItem() {
+      const hsn = optHSNInput.value.trim();
+      if (!/^\d{4}\s\d{4}$/.test(hsn)) {
+        alert('HSN Code must be in format: 1234 5678');
+        return;
+      }
+
+      const item = {
+        id: document.getElementById('optItemId').value,
+        code: document.getElementById('optItemCode').value,
+        name: document.getElementById('optItemName').value,
+        catalog: document.getElementById('optCatalogRef').value,
+        hsn: hsn,
+        origin: document.getElementById('optOrigin').value,
+        price: optPriceInput.value
+      };
+
+      optionalItems.push(item);
+      closeOptionalModal();
+    }
+
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -356,7 +472,8 @@
         configuration: document.getElementById('configuration').value,
         price: parsePriceValue(priceInput.value),
         gstType: document.getElementById('gstType').value,
-        gstPercent: document.getElementById('gstPercent').value
+        gstPercent: document.getElementById('gstPercent').value,
+        optionalItems: [...optionalItems]
       };
 
       if (editIndex !== null) {
@@ -368,6 +485,7 @@
 
       form.reset();
       quill.setContents([]);
+      optionalItems = [];
       form.classList.remove('active');
       renderTable();
     });
@@ -391,7 +509,20 @@
             <div class="collapse-toggle" onclick="toggleDetails(this)">
               Details
             </div>
-            <div class="details-content">${inst.details}</div>
+            <div class="details-content">
+              ${inst.details}
+              ${
+                inst.optionalItems && inst.optionalItems.length
+                  ? `<hr><strong>Optional Items:</strong><ul>` +
+                    inst.optionalItems
+                      .map(oi =>
+                        `<li>${oi.name || oi.code || 'Item'} &mdash; ${oi.price || ''}</li>`
+                      )
+                      .join('') +
+                    `</ul>`
+                  : ''
+              }
+            </div>
           </td>
           <td>${inst.origin}</td>
           <td>${inst.catalog}</td>
@@ -435,6 +566,7 @@
 
       quill.root.innerHTML = inst.details;
 
+      optionalItems = inst.optionalItems ? [...inst.optionalItems] : [];
       editIndex = index;
       form.classList.add('active');
     }
