@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>QMS - Instruments</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <style>
     body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; }
     header { background:#0d6efd; color:#fff; padding:0.75rem 1.5rem; }
@@ -18,8 +17,14 @@
 
     form { display:none; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0 2rem; }
     form.active { display:grid; }
-    form input, form select, form button { padding:0.8rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
-    #detailsEditor { grid-column:span 2; height:150px; background:#fff; border:1px solid #ccc; border-radius:8px; }
+    form input, form select, form button, form textarea {
+      padding:0.8rem;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:0.95rem;
+      font-family:'Inter',sans-serif;
+    }
+    #detailsInput { grid-column:span 2; height:150px; resize:vertical; }
     form button[type="submit"] { grid-column:span 2; background:#0d6efd; color:#fff; border:none; cursor:pointer; }
 
     table { width:100%; border-collapse:separate; border-spacing:0 8px; margin-top:1rem; }
@@ -64,7 +69,8 @@
 
   <form id="instrumentForm">
     <input type="text" id="description" placeholder="Instrument Description" required>
-    <div id="detailsEditor"></div>
+    <!-- Multiline details: 1st line = header, rest = bullet points -->
+    <textarea id="detailsInput" placeholder="First line = main item name&#10;Next lines = sub details, each on its own line"></textarea>
     <input type="text" id="origin" placeholder="Country Of Origin">
     <input type="text" id="catalog" placeholder="Catalog Reference">
     <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
@@ -120,13 +126,10 @@
 <div id="optionalItemModal" class="modal">
   <h3>Add Optional Item</h3>
   <div class="modal-grid">
-    <!-- History dropdown -->
     <select id="existingAdditionalSelect">
       <option value="">-- Reuse Existing Additional Item --</option>
     </select>
-
-    <div></div><!-- spacer -->
-
+    <div></div>
     <input type="text" id="optItemId" placeholder="Item ID">
     <input type="text" id="optItemCode" placeholder="Item Code">
     <input type="text" id="optItemName" placeholder="Item Name">
@@ -145,20 +148,16 @@
 <div id="configItemModal" class="modal">
   <h3>Add Configuration Item</h3>
   <div class="modal-grid">
-    <!-- History dropdown -->
     <select id="existingConfigSelect">
       <option value="">-- Reuse Existing Config Item --</option>
     </select>
-
-    <div></div><!-- spacer -->
-
+    <div></div>
     <input type="text" id="cfgItemId" placeholder="Item ID">
     <input type="text" id="cfgItemCode" placeholder="Item Code">
     <input type="text" id="cfgItemName" placeholder="Item Name">
     <input type="text" id="cfgCatalogRef" placeholder="Catalog Reference Number">
     <input type="text" id="cfgHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
     <input type="text" id="cfgOrigin" placeholder="Country Of Origin">
-
     <input type="text" id="cfgQty" placeholder="Qty" value="Included">
     <input type="text" id="cfgUP" placeholder="UP-INR" value="Included">
     <input type="text" id="cfgTP" placeholder="TP-INR" value="Included">
@@ -169,7 +168,6 @@
   </div>
 </div>
 
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
   const form = document.getElementById('instrumentForm');
   const tableBody = document.querySelector('#instrumentTable tbody');
@@ -178,6 +176,7 @@
   const unitPriceInput = document.getElementById('unitPrice');
   const additionalSelect = document.getElementById('additional');
   const configurationSelect = document.getElementById('configuration');
+  const detailsInput = document.getElementById('detailsInput');
 
   let instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
   let currentPage = 1;
@@ -185,12 +184,6 @@
   let editIndex = null;
   let optionalItems = [];
   let configurationItems = [];
-
-  const quill = new Quill('#detailsEditor', {
-    theme: 'snow',
-    placeholder: 'Enter instrument details...',
-    modules: { toolbar: [['bold','italic','underline'],[{list:'ordered'},{list:'bullet'}],[{header:[1,2,3,false]}],['link']] }
-  });
 
   function goBack(){ if(window.history.length>1) window.history.back(); }
   function toggleForm(){ form.classList.toggle('active'); }
@@ -213,10 +206,31 @@
     return digits ? parseInt(digits,10) : 0;
   }
 
+  // Convert multi-line text to header + bullet list
+  function buildDetailsHTML(rawText) {
+    const lines = rawText
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l);
+    if (!lines.length) return '';
+    const header = lines[0];
+    const subs = lines.slice(1);
+    if (!subs.length) {
+      return `<p><strong>${header}</strong></p>`;
+    }
+    const subsHtml = subs.map(line => `<li>${line}</li>`).join('');
+    return `
+      <p><strong>${header}</strong></p>
+      <ul>
+        ${subsHtml}
+      </ul>
+    `;
+  }
+
   /* ---------- MASTER REGISTRIES ---------- */
 
   function getConfigItemMaster() {
-    return JSON.parse(localStorage.getItem('configItemMaster') || '[]'); /* [web:150] */
+    return JSON.parse(localStorage.getItem('configItemMaster') || '[]'); /* array in localStorage[web:54] */
   }
   function saveConfigItemToMaster(item) {
     const master = getConfigItemMaster();
@@ -249,12 +263,10 @@
     );
   }
 
-  /* ---------- OPTIONAL MODAL WORKFLOW + HISTORY ---------- */
+  /* ---------- OPTIONAL MODAL WORKFLOW ---------- */
 
   additionalSelect.addEventListener('change', function(){
-    if(this.value==='Yes') {
-      openOptionalModal();
-    }
+    if(this.value==='Yes') openOptionalModal();
   });
 
   function openOptionalModal() {
@@ -289,7 +301,7 @@
     });
 
     select.onchange = function () {
-      const masterNow = getAdditionalItemMaster(); // re-read
+      const masterNow = getAdditionalItemMaster();
       const selected = masterNow[this.value];
       if (selected) {
         document.getElementById('optItemId').value    = selected.id || '';
@@ -309,7 +321,6 @@
       alert('HSN Code must be in format: 1234 5678');
       return;
     }
-
     const newItem = {
       id:document.getElementById('optItemId').value,
       code:document.getElementById('optItemCode').value,
@@ -319,24 +330,17 @@
       origin:document.getElementById('optOrigin').value,
       price:optPriceInput.value
     };
-
-    // Push into current instrument's optionalItems
     optionalItems.push({...newItem});
-
-    // Save to master if not duplicate
     if (!isDuplicateAdditionalItem(newItem)) {
       saveAdditionalItemToMaster(newItem);
     }
-
     closeOptionalModal();
   }
 
-  /* ---------- CONFIG MODAL WORKFLOW + HISTORY ---------- */
+  /* ---------- CONFIG MODAL WORKFLOW ---------- */
 
   configurationSelect.addEventListener('change', function(){
-    if(this.value==='Yes') {
-      openConfigModal();
-    }
+    if(this.value==='Yes') openConfigModal();
   });
 
   function openConfigModal(){
@@ -388,7 +392,6 @@
       alert('HSN Code must be in format: 1234 5678');
       return;
     }
-
     const qtyInput = document.getElementById('cfgQty');
     const upInput  = document.getElementById('cfgUP');
     const tpInput  = document.getElementById('cfgTP');
@@ -406,11 +409,9 @@
     };
 
     configurationItems.push({...newItem});
-
     if (!isDuplicateConfigItem(newItem)) {
       saveConfigItemToMaster(newItem);
     }
-
     closeConfigModal();
   }
 
@@ -418,9 +419,10 @@
 
   form.addEventListener('submit', e=>{
     e.preventDefault();
+    const detailsHTML = buildDetailsHTML(detailsInput.value);
     const instrument = {
       description: document.getElementById('description').value,
-      details: quill.root.innerHTML,
+      details: detailsHTML,
       origin: document.getElementById('origin').value,
       catalog: document.getElementById('catalog').value,
       hsn: hsnInput.value,
@@ -440,7 +442,7 @@
       instruments.push(instrument);
     }
     localStorage.setItem('instruments', JSON.stringify(instruments));
-    form.reset(); quill.setContents([]); unitPriceInput.value='';
+    form.reset(); unitPriceInput.value='';
     optionalItems=[]; configurationItems=[];
     form.classList.remove('active');
     renderTable();
@@ -533,7 +535,10 @@
     unitPriceInput.value=formatPriceDisplay(inst.unitPrice);
     document.getElementById('gstType').value=inst.gstType||'';
     document.getElementById('gstPercent').value=inst.gstPercent||'';
-    quill.root.innerHTML=inst.details||'';
+
+    // Editing: strip tags back to plain lines is complex; simplest is to leave textarea blank or store original
+    detailsInput.value = ''; // optional: you can store raw text separately if needed
+
     optionalItems = inst.optionalItems ? [...inst.optionalItems]:[];
     configurationItems = inst.configurationItems ? [...inst.configurationItems]:[];
     editIndex=i;
