@@ -47,7 +47,14 @@
     .modal { display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:650px; }
     .modal h3 { margin-bottom:1rem; }
     .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    .modal input, .modal select { padding:0.8rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
+    .modal input, .modal select, .modal textarea {
+      padding:0.8rem;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:0.95rem;
+      font-family:'Inter',sans-serif;
+    }
+    .modal textarea { grid-column:span 2; resize:vertical; }
     .modal-actions { margin-top:1rem; text-align:right; }
     .modal-actions button { padding:0.6rem 1rem; border-radius:8px; border:none; cursor:pointer; }
     .save-btn { background:#0d6efd; color:#fff; }
@@ -69,7 +76,6 @@
 
   <form id="instrumentForm">
     <input type="text" id="description" placeholder="Instrument Description" required>
-    <!-- Multiline details: 1st line = header, rest = bullet points -->
     <textarea id="detailsInput" placeholder="First line = main item name&#10;Next lines = sub details, each on its own line"></textarea>
     <input type="text" id="origin" placeholder="Country Of Origin">
     <input type="text" id="catalog" placeholder="Catalog Reference">
@@ -129,10 +135,16 @@
     <select id="existingAdditionalSelect">
       <option value="">-- Reuse Existing Additional Item --</option>
     </select>
+
     <div></div>
+
     <input type="text" id="optItemId" placeholder="Item ID">
     <input type="text" id="optItemCode" placeholder="Item Code">
-    <input type="text" id="optItemName" placeholder="Item Name">
+
+    <!-- multiline item name / description -->
+    <textarea id="optItemName" rows="4"
+      placeholder="First line = item name&#10;Next lines = sub details, each on its own line"></textarea>
+
     <input type="text" id="optCatalogRef" placeholder="Catalog Reference Number">
     <input type="text" id="optHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
     <input type="text" id="optOrigin" placeholder="Country Of Origin">
@@ -151,10 +163,16 @@
     <select id="existingConfigSelect">
       <option value="">-- Reuse Existing Config Item --</option>
     </select>
+
     <div></div>
+
     <input type="text" id="cfgItemId" placeholder="Item ID">
     <input type="text" id="cfgItemCode" placeholder="Item Code">
-    <input type="text" id="cfgItemName" placeholder="Item Name">
+
+    <!-- multiline item name / description -->
+    <textarea id="cfgItemName" rows="4"
+      placeholder="First line = item name&#10;Next lines = sub details, each on its own line"></textarea>
+
     <input type="text" id="cfgCatalogRef" placeholder="Catalog Reference Number">
     <input type="text" id="cfgHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
     <input type="text" id="cfgOrigin" placeholder="Country Of Origin">
@@ -206,7 +224,7 @@
     return digits ? parseInt(digits,10) : 0;
   }
 
-  // Convert multi-line text to header + bullet list
+  // instrument details: first line header, others bullets
   function buildDetailsHTML(rawText) {
     const lines = rawText
       .split('\n')
@@ -227,10 +245,10 @@
     `;
   }
 
-  /* ---------- MASTER REGISTRIES ---------- */
+  /* MASTER REGISTRIES */
 
   function getConfigItemMaster() {
-    return JSON.parse(localStorage.getItem('configItemMaster') || '[]'); /* array in localStorage[web:54] */
+    return JSON.parse(localStorage.getItem('configItemMaster') || '[]');
   }
   function saveConfigItemToMaster(item) {
     const master = getConfigItemMaster();
@@ -263,7 +281,7 @@
     );
   }
 
-  /* ---------- OPTIONAL MODAL WORKFLOW ---------- */
+  /* OPTIONAL MODAL */
 
   additionalSelect.addEventListener('change', function(){
     if(this.value==='Yes') openOptionalModal();
@@ -294,9 +312,10 @@
     select.innerHTML = '<option value="">-- Reuse Existing Additional Item --</option>';
     const master = getAdditionalItemMaster();
     master.forEach((item, idx) => {
+      const firstLine = (item.name || '').split('\n')[0] || '';
       const opt = document.createElement('option');
       opt.value = idx;
-      opt.textContent = `${item.code} - ${item.name}`;
+      opt.textContent = `${item.code} - ${firstLine}`;
       select.appendChild(opt);
     });
 
@@ -304,13 +323,13 @@
       const masterNow = getAdditionalItemMaster();
       const selected = masterNow[this.value];
       if (selected) {
-        document.getElementById('optItemId').value    = selected.id || '';
-        document.getElementById('optItemCode').value  = selected.code || '';
-        document.getElementById('optItemName').value  = selected.name || '';
-        document.getElementById('optCatalogRef').value= selected.catalog || '';
-        document.getElementById('optHSN').value       = selected.hsn || '';
-        document.getElementById('optOrigin').value    = selected.origin || '';
-        document.getElementById('optPrice').value     = selected.price || '';
+        document.getElementById('optItemId').value     = selected.id || '';
+        document.getElementById('optItemCode').value   = selected.code || '';
+        document.getElementById('optItemName').value   = selected.name || '';
+        document.getElementById('optCatalogRef').value = selected.catalog || '';
+        document.getElementById('optHSN').value        = selected.hsn || '';
+        document.getElementById('optOrigin').value     = selected.origin || '';
+        document.getElementById('optPrice').value      = selected.price || '';
       }
     };
   }
@@ -321,23 +340,27 @@
       alert('HSN Code must be in format: 1234 5678');
       return;
     }
+
     const newItem = {
-      id:document.getElementById('optItemId').value,
-      code:document.getElementById('optItemCode').value,
-      name:document.getElementById('optItemName').value,
-      catalog:document.getElementById('optCatalogRef').value,
+      id:    document.getElementById('optItemId').value,
+      code:  document.getElementById('optItemCode').value,
+      name:  document.getElementById('optItemName').value, // multiline
+      catalog: document.getElementById('optCatalogRef').value,
       hsn,
-      origin:document.getElementById('optOrigin').value,
-      price:optPriceInput.value
+      origin: document.getElementById('optOrigin').value,
+      price: document.getElementById('optPrice').value
     };
+
     optionalItems.push({...newItem});
+
     if (!isDuplicateAdditionalItem(newItem)) {
       saveAdditionalItemToMaster(newItem);
     }
+
     closeOptionalModal();
   }
 
-  /* ---------- CONFIG MODAL WORKFLOW ---------- */
+  /* CONFIG MODAL */
 
   configurationSelect.addEventListener('change', function(){
     if(this.value==='Yes') openConfigModal();
@@ -363,9 +386,10 @@
     select.innerHTML = '<option value="">-- Reuse Existing Config Item --</option>';
     const master = getConfigItemMaster();
     master.forEach((item, idx) => {
+      const firstLine = (item.name || '').split('\n')[0] || '';
       const opt = document.createElement('option');
       opt.value = idx;
-      opt.textContent = `${item.code} - ${item.name}`;
+      opt.textContent = `${item.code} - ${firstLine}`;
       select.appendChild(opt);
     });
 
@@ -392,30 +416,33 @@
       alert('HSN Code must be in format: 1234 5678');
       return;
     }
+
     const qtyInput = document.getElementById('cfgQty');
     const upInput  = document.getElementById('cfgUP');
     const tpInput  = document.getElementById('cfgTP');
 
     const newItem = {
-      id:document.getElementById('cfgItemId').value,
-      code:document.getElementById('cfgItemCode').value,
-      name:document.getElementById('cfgItemName').value,
-      catalog:document.getElementById('cfgCatalogRef').value,
+      id:    document.getElementById('cfgItemId').value,
+      code:  document.getElementById('cfgItemCode').value,
+      name:  document.getElementById('cfgItemName').value, // multiline
+      catalog: document.getElementById('cfgCatalogRef').value,
       hsn,
-      origin:document.getElementById('cfgOrigin').value,
-      qty: (qtyInput.value.trim() || 'Included'),
+      origin: document.getElementById('cfgOrigin').value,
+      qty:   (qtyInput.value.trim() || 'Included'),
       upInr: (upInput.value.trim() || 'Included'),
       tpInr: (tpInput.value.trim() || 'Included')
     };
 
     configurationItems.push({...newItem});
+
     if (!isDuplicateConfigItem(newItem)) {
       saveConfigItemToMaster(newItem);
     }
+
     closeConfigModal();
   }
 
-  /* ---------- MAIN FORM SAVE ---------- */
+  /* MAIN FORM SAVE */
 
   form.addEventListener('submit', e=>{
     e.preventDefault();
@@ -441,7 +468,7 @@
     } else {
       instruments.push(instrument);
     }
-    localStorage.setItem('instruments', JSON.stringify(instruments));
+    localStorage.setItem('instruments', JSON.stringify(instruments));[web:84]
     form.reset(); unitPriceInput.value='';
     optionalItems=[]; configurationItems=[];
     form.classList.remove('active');
@@ -472,10 +499,15 @@
           hasOptional
             ? `<div class="collapse-toggle" onclick="toggleOptional(this)">▶ Additional Items</div>
                <div class="optional-content">${
-                 inst.optionalItems.map(it=>`
-                   <div style="margin-bottom:0.3rem;">
-                     <strong>${it.name||'Item'}</strong>${it.code?` (${it.code})`:''} – ${it.price||''}
-                   </div>`).join('')
+                 inst.optionalItems.map(it=>{
+                   const lines = (it.name || '').split('\n');
+                   const title = lines[0] || 'Item';
+                   const subs  = lines.slice(1);
+                   return `
+                     <div style="margin-bottom:0.3rem;">
+                       <strong>${title}</strong>${it.code?` (${it.code})`:''}${subs.length ? '<br>'+subs.join('<br>') : ''} – ${it.price||''}
+                     </div>`;
+                 }).join('')
                }</div>`
             : (inst.additional||'')
         }</td>
@@ -483,11 +515,16 @@
           hasConfig
             ? `<div class="collapse-toggle" onclick="toggleConfig(this)">▶ Configuration Items</div>
                <div class="config-content">${
-                 inst.configurationItems.map(it=>`
-                   <div style="margin-bottom:0.3rem;">
-                     <strong>${it.name||'Item'}</strong>${it.code?` (${it.code})`:''}
-                     – Qty: ${it.qty || 'Included'}, UP: ${it.upInr || 'Included'}, TP: ${it.tpInr || 'Included'}
-                   </div>`).join('')
+                 inst.configurationItems.map(it=>{
+                   const lines = (it.name || '').split('\n');
+                   const title = lines[0] || 'Item';
+                   const subs  = lines.slice(1);
+                   return `
+                     <div style="margin-bottom:0.3rem;">
+                       <strong>${title}</strong>${it.code?` (${it.code})`:''}${subs.length ? '<br>'+subs.join('<br>') : ''}
+                       – Qty: ${it.qty || 'Included'}, UP: ${it.upInr || 'Included'}, TP: ${it.tpInr || 'Included'}
+                     </div>`;
+                 }).join('')
                }</div>`
             : (inst.configuration||'')
         }</td>
@@ -535,9 +572,7 @@
     unitPriceInput.value=formatPriceDisplay(inst.unitPrice);
     document.getElementById('gstType').value=inst.gstType||'';
     document.getElementById('gstPercent').value=inst.gstPercent||'';
-
-    // Editing: strip tags back to plain lines is complex; simplest is to leave textarea blank or store original
-    detailsInput.value = ''; // optional: you can store raw text separately if needed
+    detailsInput.value = ''; // raw text is not stored; you can enhance later if needed
 
     optionalItems = inst.optionalItems ? [...inst.optionalItems]:[];
     configurationItems = inst.configurationItems ? [...inst.configurationItems]:[];
