@@ -330,7 +330,7 @@
     const master = getAdditionalItemMaster();
     if (index < 0 || index >= master.length) return;
     master.splice(index, 1);
-    localStorage.setItem('additionalItemMaster', JSON.stringify(master));[web:94]
+    localStorage.setItem('additionalItemMaster', JSON.stringify(master));
     renderOptionalMasterList();
     populateExistingAdditionalDropdown();
   }
