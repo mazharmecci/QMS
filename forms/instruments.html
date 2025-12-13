@@ -39,10 +39,10 @@
     .details-content, .optional-content, .config-content { display:none; font-size:0.9rem; margin-top:0.5rem; }
     .price-cell { font-weight:600; white-space:nowrap; }
 
-    .modal { display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:600px; }
+    .modal { display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#fff; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:1000; width:650px; }
     .modal h3 { margin-bottom:1rem; }
     .modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-    .modal input { padding:0.8rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
+    .modal input, .modal select { padding:0.8rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
     .modal-actions { margin-top:1rem; text-align:right; }
     .modal-actions button { padding:0.6rem 1rem; border-radius:8px; border:none; cursor:pointer; }
     .save-btn { background:#0d6efd; color:#fff; }
@@ -120,6 +120,13 @@
 <div id="optionalItemModal" class="modal">
   <h3>Add Optional Item</h3>
   <div class="modal-grid">
+    <!-- History dropdown -->
+    <select id="existingAdditionalSelect">
+      <option value="">-- Reuse Existing Additional Item --</option>
+    </select>
+
+    <div></div><!-- spacer -->
+
     <input type="text" id="optItemId" placeholder="Item ID">
     <input type="text" id="optItemCode" placeholder="Item Code">
     <input type="text" id="optItemName" placeholder="Item Name">
@@ -138,6 +145,13 @@
 <div id="configItemModal" class="modal">
   <h3>Add Configuration Item</h3>
   <div class="modal-grid">
+    <!-- History dropdown -->
+    <select id="existingConfigSelect">
+      <option value="">-- Reuse Existing Config Item --</option>
+    </select>
+
+    <div></div><!-- spacer -->
+
     <input type="text" id="cfgItemId" placeholder="Item ID">
     <input type="text" id="cfgItemCode" placeholder="Item Code">
     <input type="text" id="cfgItemName" placeholder="Item Name">
@@ -145,7 +159,6 @@
     <input type="text" id="cfgHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
     <input type="text" id="cfgOrigin" placeholder="Country Of Origin">
 
-    <!-- New fields -->
     <input type="text" id="cfgQty" placeholder="Qty" value="Included">
     <input type="text" id="cfgUP" placeholder="UP-INR" value="Included">
     <input type="text" id="cfgTP" placeholder="TP-INR" value="Included">
@@ -180,7 +193,6 @@
   });
 
   function goBack(){ if(window.history.length>1) window.history.back(); }
-
   function toggleForm(){ form.classList.toggle('active'); }
 
   hsnInput.addEventListener('input', () => {
@@ -201,11 +213,58 @@
     return digits ? parseInt(digits,10) : 0;
   }
 
-  // Optional modal workflow
+  /* ---------- MASTER REGISTRIES ---------- */
+
+  function getConfigItemMaster() {
+    return JSON.parse(localStorage.getItem('configItemMaster') || '[]'); /* [web:150] */
+  }
+  function saveConfigItemToMaster(item) {
+    const master = getConfigItemMaster();
+    master.push(item);
+    localStorage.setItem('configItemMaster', JSON.stringify(master));
+  }
+  function isDuplicateConfigItem(newItem) {
+    const master = getConfigItemMaster();
+    return master.some(item =>
+      item.code === newItem.code &&
+      item.name === newItem.name &&
+      item.hsn === newItem.hsn
+    );
+  }
+
+  function getAdditionalItemMaster() {
+    return JSON.parse(localStorage.getItem('additionalItemMaster') || '[]');
+  }
+  function saveAdditionalItemToMaster(item) {
+    const master = getAdditionalItemMaster();
+    master.push(item);
+    localStorage.setItem('additionalItemMaster', JSON.stringify(master));
+  }
+  function isDuplicateAdditionalItem(newItem) {
+    const master = getAdditionalItemMaster();
+    return master.some(item =>
+      item.code === newItem.code &&
+      item.name === newItem.name &&
+      item.hsn === newItem.hsn
+    );
+  }
+
+  /* ---------- OPTIONAL MODAL WORKFLOW + HISTORY ---------- */
+
   additionalSelect.addEventListener('change', function(){
-    if(this.value==='Yes') document.getElementById('optionalItemModal').style.display='block';
+    if(this.value==='Yes') {
+      openOptionalModal();
+    }
   });
-  function closeOptionalModal(){ document.getElementById('optionalItemModal').style.display='none'; }
+
+  function openOptionalModal() {
+    populateExistingAdditionalDropdown();
+    document.getElementById('optionalItemModal').style.display='block';
+  }
+  function closeOptionalModal(){
+    document.getElementById('optionalItemModal').style.display='none';
+  }
+
   const optHSNInput = document.getElementById('optHSN');
   optHSNInput.addEventListener('input', ()=>{
     let d = optHSNInput.value.replace(/\D/g,'').slice(0,8);
@@ -217,10 +276,41 @@
     let raw = this.value.replace(/[^\d]/g,'');
     this.value = raw ? '₹ '+parseFloat(raw).toLocaleString('en-IN') : '';
   });
+
+  function populateExistingAdditionalDropdown() {
+    const select = document.getElementById('existingAdditionalSelect');
+    select.innerHTML = '<option value="">-- Reuse Existing Additional Item --</option>';
+    const master = getAdditionalItemMaster();
+    master.forEach((item, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = `${item.code} - ${item.name}`;
+      select.appendChild(opt);
+    });
+
+    select.onchange = function () {
+      const masterNow = getAdditionalItemMaster(); // re-read
+      const selected = masterNow[this.value];
+      if (selected) {
+        document.getElementById('optItemId').value    = selected.id || '';
+        document.getElementById('optItemCode').value  = selected.code || '';
+        document.getElementById('optItemName').value  = selected.name || '';
+        document.getElementById('optCatalogRef').value= selected.catalog || '';
+        document.getElementById('optHSN').value       = selected.hsn || '';
+        document.getElementById('optOrigin').value    = selected.origin || '';
+        document.getElementById('optPrice').value     = selected.price || '';
+      }
+    };
+  }
+
   function saveOptionalItem(){
     const hsn = optHSNInput.value.trim();
-    if(!/^\d{4}\s\d{4}$/.test(hsn)){ alert('HSN Code must be in format: 1234 5678'); return; }
-    optionalItems.push({
+    if(!/^\d{4}\s\d{4}$/.test(hsn)){
+      alert('HSN Code must be in format: 1234 5678');
+      return;
+    }
+
+    const newItem = {
       id:document.getElementById('optItemId').value,
       code:document.getElementById('optItemCode').value,
       name:document.getElementById('optItemName').value,
@@ -228,50 +318,103 @@
       hsn,
       origin:document.getElementById('optOrigin').value,
       price:optPriceInput.value
-    });
+    };
+
+    // Push into current instrument's optionalItems
+    optionalItems.push({...newItem});
+
+    // Save to master if not duplicate
+    if (!isDuplicateAdditionalItem(newItem)) {
+      saveAdditionalItemToMaster(newItem);
+    }
+
     closeOptionalModal();
   }
 
-// Configuration modal workflow
-configurationSelect.addEventListener('change', function(){
-  if(this.value==='Yes') document.getElementById('configItemModal').style.display='block';
-});
-function closeConfigModal(){ document.getElementById('configItemModal').style.display='none'; }
+  /* ---------- CONFIG MODAL WORKFLOW + HISTORY ---------- */
 
-const cfgHSNInput = document.getElementById('cfgHSN');
-cfgHSNInput.addEventListener('input', ()=>{
-  let d = cfgHSNInput.value.replace(/\D/g,'').slice(0,8);
-  if(d.length>4) d = d.slice(0,4)+' '+d.slice(4);
-  cfgHSNInput.value = d;
-});
-
-function saveConfigItem(){
-  const hsn = cfgHSNInput.value.trim();
-  if(!/^\d{4}\s\d{4}$/.test(hsn)){ alert('HSN Code must be in format: 1234 5678'); return; }
-
-  const qtyInput = document.getElementById('cfgQty');
-  const upInput  = document.getElementById('cfgUP');
-  const tpInput  = document.getElementById('cfgTP');
-
-  // Default all three as "Included" if empty
-  const qty = qtyInput.value.trim() || 'Included';
-  const up  = upInput.value.trim()  || 'Included';
-  const tp  = tpInput.value.trim()  || 'Included';
-
-  configurationItems.push({
-    id:document.getElementById('cfgItemId').value,
-    code:document.getElementById('cfgItemCode').value,
-    name:document.getElementById('cfgItemName').value,
-    catalog:document.getElementById('cfgCatalogRef').value,
-    hsn,
-    origin:document.getElementById('cfgOrigin').value,
-    qty,
-    upInr: up,
-    tpInr: tp
+  configurationSelect.addEventListener('change', function(){
+    if(this.value==='Yes') {
+      openConfigModal();
+    }
   });
 
-  closeConfigModal();
-}
+  function openConfigModal(){
+    populateExistingConfigDropdown();
+    document.getElementById('configItemModal').style.display='block';
+  }
+  function closeConfigModal(){
+    document.getElementById('configItemModal').style.display='none';
+  }
+
+  const cfgHSNInput = document.getElementById('cfgHSN');
+  cfgHSNInput.addEventListener('input', ()=>{
+    let d = cfgHSNInput.value.replace(/\D/g,'').slice(0,8);
+    if(d.length>4) d = d.slice(0,4)+' '+d.slice(4);
+    cfgHSNInput.value = d;
+  });
+
+  function populateExistingConfigDropdown() {
+    const select = document.getElementById('existingConfigSelect');
+    select.innerHTML = '<option value="">-- Reuse Existing Config Item --</option>';
+    const master = getConfigItemMaster();
+    master.forEach((item, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = `${item.code} - ${item.name}`;
+      select.appendChild(opt);
+    });
+
+    select.onchange = function () {
+      const masterNow = getConfigItemMaster();
+      const selected = masterNow[this.value];
+      if (selected) {
+        document.getElementById('cfgItemId').value     = selected.id || '';
+        document.getElementById('cfgItemCode').value   = selected.code || '';
+        document.getElementById('cfgItemName').value   = selected.name || '';
+        document.getElementById('cfgCatalogRef').value = selected.catalog || '';
+        document.getElementById('cfgHSN').value        = selected.hsn || '';
+        document.getElementById('cfgOrigin').value     = selected.origin || '';
+        document.getElementById('cfgQty').value        = selected.qty || 'Included';
+        document.getElementById('cfgUP').value         = selected.upInr || 'Included';
+        document.getElementById('cfgTP').value         = selected.tpInr || 'Included';
+      }
+    };
+  }
+
+  function saveConfigItem(){
+    const hsn = cfgHSNInput.value.trim();
+    if(!/^\d{4}\s\d{4}$/.test(hsn)){
+      alert('HSN Code must be in format: 1234 5678');
+      return;
+    }
+
+    const qtyInput = document.getElementById('cfgQty');
+    const upInput  = document.getElementById('cfgUP');
+    const tpInput  = document.getElementById('cfgTP');
+
+    const newItem = {
+      id:document.getElementById('cfgItemId').value,
+      code:document.getElementById('cfgItemCode').value,
+      name:document.getElementById('cfgItemName').value,
+      catalog:document.getElementById('cfgCatalogRef').value,
+      hsn,
+      origin:document.getElementById('cfgOrigin').value,
+      qty: (qtyInput.value.trim() || 'Included'),
+      upInr: (upInput.value.trim() || 'Included'),
+      tpInr: (tpInput.value.trim() || 'Included')
+    };
+
+    configurationItems.push({...newItem});
+
+    if (!isDuplicateConfigItem(newItem)) {
+      saveConfigItemToMaster(newItem);
+    }
+
+    closeConfigModal();
+  }
+
+  /* ---------- MAIN FORM SAVE ---------- */
 
   form.addEventListener('submit', e=>{
     e.preventDefault();
@@ -340,7 +483,8 @@ function saveConfigItem(){
                <div class="config-content">${
                  inst.configurationItems.map(it=>`
                    <div style="margin-bottom:0.3rem;">
-                     <strong>${it.name||'Item'}</strong>${it.code?` (${it.code})`:''} – ${it.price||''}
+                     <strong>${it.name||'Item'}</strong>${it.code?` (${it.code})`:''}
+                     – Qty: ${it.qty || 'Included'}, UP: ${it.upInr || 'Included'}, TP: ${it.tpInr || 'Included'}
                    </div>`).join('')
                }</div>`
             : (inst.configuration||'')
