@@ -362,7 +362,7 @@
     const master = getConfigItemMaster();
     if (index < 0 || index >= master.length) return;
     master.splice(index, 1);
-    localStorage.setItem('configItemMaster', JSON.stringify(master));[web:94]
+    localStorage.setItem('configItemMaster', JSON.stringify(master));
     renderConfigMasterList();
     populateExistingConfigDropdown();
   }
@@ -575,7 +575,7 @@
     } else {
       instruments.push(instrument);
     }
-    localStorage.setItem('instruments', JSON.stringify(instruments));[web:88]
+    localStorage.setItem('instruments', JSON.stringify(instruments));
     form.reset(); unitPriceInput.value='';
     optionalItems=[]; configurationItems=[];
     form.classList.remove('active');
