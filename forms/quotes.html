@@ -157,10 +157,26 @@
       text-transform:uppercase;
       letter-spacing:0.03em;
     }
+    table.quote-table th:nth-last-child(1),
+    table.quote-table th:nth-last-child(2),
     table.quote-table td:nth-last-child(1),
     table.quote-table td:nth-last-child(2) {
       text-align:right;
       white-space:nowrap;
+    }
+    table.quote-table td:nth-child(3) {
+      text-align:center;
+      white-space:nowrap;
+    }
+    .cat-main {
+      font-size:13px;
+      font-weight:600;
+      color:#000;
+    }
+    .cat-sub {
+      font-size:11px;
+      color:#555;
+      margin-top:2px;
     }
 
     /* TERMS */
@@ -248,8 +264,6 @@
         <tr>
           <th>Item</th>
           <th>Cat / Material No.</th>
-          <th>Description</th>
-          <th>Country of Origin / HSN Code</th>
           <th>Quantity</th>
           <th>Unit Price (INR)</th>
           <th>Total Price (INR)</th>
@@ -313,7 +327,6 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // 3‑layer mid section
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
     const inst = header.selectedInstrument;
@@ -328,50 +341,65 @@
     const fmt = v => (Number(v || 0)).toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }); // formatted values[web:113]
+    }); // Indian format[web:120]
 
-    // Layer 1: Main Instrument
+    // Helper to split multiline name/description into title + sublines
+    function buildStackedText(raw) {
+      const lines = (raw || '').split('\n').map(l => l.trim()).filter(l => l);
+      if (!lines.length) return '';
+      const title = lines[0];
+      const subs  = lines.slice(1);
+      if (!subs.length) {
+        return `<span class="cat-main">${title}</span>`;
+      }
+      return `
+        <span class="cat-main">${title}</span>
+        <div class="cat-sub">${subs.join('<br>')}</div>
+      `;
+    }
+
+    /* LAYER 1: MAIN INSTRUMENT
+       Item code fixed 001, catalog on top, description (from description/details) stacked below.
+    */
+    const instDesc = buildStackedText(inst.description || '');
+    const instDetailBlock = inst.details ? `<div class="cat-sub">${inst.details}</div>` : '';
     rows.push(`
-      <tr style="background:#eef5ff; font-weight:700;">
-        <td>MAIN INSTRUMENT</td>
-        <td>${inst.catalog || ''}</td>
-        <td>${inst.description || ''}</td>
-        <td>${inst.origin || '—'} / ${inst.hsn || '—'}</td>
-        <td style="text-align:center;">1</td>
-        <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
-        <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
-      </tr>
       <tr>
-        <td></td>
-        <td></td>
-        <td colspan="5">
-          ${inst.details || ''}
+        <td>001</td>
+        <td>
+          <span class="cat-main">${inst.catalog || ''}</span>
+          ${instDesc}
+          ${instDetailBlock}
         </td>
+        <td>01</td>
+        <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
+        <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
       </tr>
     `);
 
-    // Layer 2: Configuration Items (from selected instrument)
+    /* LAYER 2: CONFIGURATION ITEMS
+       Start at 002, continue 003, 004...
+    */
     const cfgItems = inst.configurationItems || [];
     if (cfgItems.length) {
       rows.push(`
         <tr style="background:#f7f7f7;">
-          <td colspan="7" style="font-weight:700;">CONFIGURATION ITEMS</td>
+          <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
         </tr>
       `);
 
-      cfgItems.forEach(item => {
-        const lines = (item.name || '').split('\n');
-        const title = lines[0] || 'Item';
-        const subs  = lines.slice(1);
-        const descHtml = subs.length ? `${title}<br>${subs.join('<br>')}` : title;
+      cfgItems.forEach((item, idx) => {
+        const code = String(idx + 2).padStart(3, '0'); // 002, 003...
+        const stacked = buildStackedText(item.name || '');
 
         rows.push(`
           <tr>
-            <td></td>
-            <td>${item.code || ''}</td>
-            <td>${descHtml}</td>
-            <td>${item.origin || '—'} / ${item.hsn || '—'}</td>
-            <td style="text-align:center;">${item.qty || 'Included'}</td>
+            <td>${code}</td>
+            <td>
+              <span class="cat-main">${item.code || ''}</span>
+              ${stacked}
+            </td>
+            <td>${item.qty || 'Included'}</td>
             <td style="text-align:right;">${item.upInr || 'Included'}</td>
             <td style="text-align:right;">${item.tpInr || 'Included'}</td>
           </tr>
@@ -379,31 +407,31 @@
       });
     }
 
-    // Layer 3: Additional Items (from selected instrument)
+    /* LAYER 3: ADDITIONAL ITEMS
+       Restart codes at 001, 002... under separate heading.
+    */
     const optItems = inst.optionalItems || [];
     if (optItems.length) {
       rows.push(`
         <tr style="background:#f7f7f7;">
-          <td colspan="7" style="font-weight:700;">ADDITIONAL ITEMS</td>
+          <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
         </tr>
       `);
 
-      optItems.forEach(item => {
-        const lines = (item.name || '').split('\n');
-        const title = lines[0] || 'Item';
-        const subs  = lines.slice(1);
-        const descHtml = subs.length ? `${title}<br>${subs.join('<br>')}` : title;
-
+      optItems.forEach((item, idx) => {
+        const code = String(idx + 1).padStart(3, '0'); // 001, 002...
+        const stacked = buildStackedText(item.name || '');
         const rawPrice = (item.price || '').replace(/[^\d]/g, '');
         const priceNum = rawPrice ? Number(rawPrice) : 0;
 
         rows.push(`
           <tr>
-            <td></td>
-            <td>${item.code || ''}</td>
-            <td>${descHtml}</td>
-            <td>${item.origin || '—'} / ${item.hsn || '—'}</td>
-            <td style="text-align:center;">1</td>
+            <td>${code}</td>
+            <td>
+              <span class="cat-main">${item.code || ''}</span>
+              ${stacked}
+            </td>
+            <td>01</td>
             <td style="text-align:right;">${fmt(priceNum)}</td>
             <td style="text-align:right;">${fmt(priceNum)}</td>
           </tr>
@@ -414,7 +442,6 @@
     body.innerHTML = rows.join('');
   }
 
-  // INIT
   populateHeader();
   renderQuoteBuilder();
 </script>
