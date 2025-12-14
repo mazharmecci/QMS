@@ -124,6 +124,20 @@
       text-align:right;
     }
 
+    .cat-main {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #000;
+      margin: 0;              /* ensure no extra gap */
+    }
+    
+    .cat-sub {
+      font-size: 11px;
+      color: #555;
+      margin: 0;              /* remove top margin */
+      line-height: 1.3;       /* slightly tighter line height */
+    }
     /* MID SECTION TABLE */
 
     #quoteBuilder {
@@ -145,16 +159,16 @@
     }
     table.quote-table th,
     table.quote-table td {
-      padding:0.6rem;
-      border-bottom:1px solid #ddd;
-      text-align:left;
-      vertical-align:top;
-      font-size:13px;
+      padding: 0.35rem 0.6rem;  /* was 0.6rem; reduce vertical padding */
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
     }
     table.quote-table th {
       background:#f0f4f8;
       font-size:12px;
-      text-transform:uppercase;
+      text-transform:capitalize;
       letter-spacing:0.03em;
     }
     table.quote-table th:nth-last-child(1),
@@ -253,7 +267,7 @@
       <thead>
         <tr>
           <th>Item</th>
-          <th>Cat / Material No.</th>
+          <th>Cat / Material No.<br>Description</th>
           <th>Quantity</th>
           <th>Unit Price (INR)</th>
           <th>Total Price (INR)</th>
