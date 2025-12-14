@@ -168,16 +168,6 @@
       text-align:center;
       white-space:nowrap;
     }
-    .cat-main {
-      font-size:13px;
-      font-weight:600;
-      color:#000;
-    }
-    .cat-sub {
-      font-size:11px;
-      color:#555;
-      margin-top:2px;
-    }
 
     /* TERMS */
 
@@ -327,6 +317,30 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
+  // Modular stacked cell formatter
+  function formatStackedQuoteCell(obj) {
+    const code = obj.code || '';
+    const name = obj.name || '';
+    const description = obj.description || '';
+
+    // Simple split into lines for description
+    const descLines = description
+      ? description.split('\n').map(l => l.trim()).filter(l => l)
+      : [];
+    const formattedDesc = descLines.join('\n');
+
+    return `
+      <td style="white-space:pre-line; vertical-align:top;">
+        <div style="font-size:13px; font-weight:600;">${code}</div>
+        <div style="font-size:12px; font-weight:500; color:#222;">${name}</div>
+        ${formattedDesc
+          ? `<div style="font-size:11px; color:#555; margin-top:2px;">${formattedDesc.replace(/\n/g, '<br>')}</div>`
+          : ''
+        }
+      </td>
+    `;
+  }
+
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
     const inst = header.selectedInstrument;
@@ -341,45 +355,27 @@
     const fmt = v => (Number(v || 0)).toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }); // Indian format[web:120]
+    }); // localized numbers[web:120]
 
-    // Helper to split multiline name/description into title + sublines
-    function buildStackedText(raw) {
-      const lines = (raw || '').split('\n').map(l => l.trim()).filter(l => l);
-      if (!lines.length) return '';
-      const title = lines[0];
-      const subs  = lines.slice(1);
-      if (!subs.length) {
-        return `<span class="cat-main">${title}</span>`;
-      }
-      return `
-        <span class="cat-main">${title}</span>
-        <div class="cat-sub">${subs.join('<br>')}</div>
-      `;
-    }
-
-    /* LAYER 1: MAIN INSTRUMENT
-       Item code fixed 001, catalog on top, description (from description/details) stacked below.
-    */
-    const instDesc = buildStackedText(inst.description || '');
-    const instDetailBlock = inst.details ? `<div class="cat-sub">${inst.details}</div>` : '';
+    // MAIN INSTRUMENT (Item 001)
     rows.push(`
       <tr>
         <td>001</td>
-        <td>
-          <span class="cat-main">${inst.catalog || ''}</span>
-          ${instDesc}
-          ${instDetailBlock}
-        </td>
+        ${formatStackedQuoteCell({
+          code: inst.catalog || '',
+          name: inst.description || '',
+          // combine instrument description + HTML details text (strip tags crudely)
+          description: (inst.details || '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+        })}
         <td>01</td>
         <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
         <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
       </tr>
     `);
 
-    /* LAYER 2: CONFIGURATION ITEMS
-       Start at 002, continue 003, 004...
-    */
+    // CONFIGURATION ITEMS (start 002,003,...; same column layout)
     const cfgItems = inst.configurationItems || [];
     if (cfgItems.length) {
       rows.push(`
@@ -389,16 +385,20 @@
       `);
 
       cfgItems.forEach((item, idx) => {
-        const code = String(idx + 2).padStart(3, '0'); // 002, 003...
-        const stacked = buildStackedText(item.name || '');
+        const itemCode = String(idx + 2).padStart(3, '0'); // 002,003,...
+        const nameRaw = item.name || '';
+        const nameLines = nameRaw.split('\n').map(l => l.trim()).filter(l => l);
+        const name = nameLines[0] || '';
+        const desc = nameLines.slice(1).join('\n');
 
         rows.push(`
           <tr>
-            <td>${code}</td>
-            <td>
-              <span class="cat-main">${item.code || ''}</span>
-              ${stacked}
-            </td>
+            <td>${itemCode}</td>
+            ${formatStackedQuoteCell({
+              code: item.code || '',
+              name,
+              description: desc
+            })}
             <td>${item.qty || 'Included'}</td>
             <td style="text-align:right;">${item.upInr || 'Included'}</td>
             <td style="text-align:right;">${item.tpInr || 'Included'}</td>
@@ -407,9 +407,7 @@
       });
     }
 
-    /* LAYER 3: ADDITIONAL ITEMS
-       Restart codes at 001, 002... under separate heading.
-    */
+    // ADDITIONAL ITEMS (restart 001,002,... under its own heading)
     const optItems = inst.optionalItems || [];
     if (optItems.length) {
       rows.push(`
@@ -419,18 +417,23 @@
       `);
 
       optItems.forEach((item, idx) => {
-        const code = String(idx + 1).padStart(3, '0'); // 001, 002...
-        const stacked = buildStackedText(item.name || '');
+        const itemCode = String(idx + 1).padStart(3, '0'); // 001,002,...
+        const nameRaw = item.name || '';
+        const nameLines = nameRaw.split('\n').map(l => l.trim()).filter(l => l);
+        const name = nameLines[0] || '';
+        const desc = nameLines.slice(1).join('\n');
+
         const rawPrice = (item.price || '').replace(/[^\d]/g, '');
         const priceNum = rawPrice ? Number(rawPrice) : 0;
 
         rows.push(`
           <tr>
-            <td>${code}</td>
-            <td>
-              <span class="cat-main">${item.code || ''}</span>
-              ${stacked}
-            </td>
+            <td>${itemCode}</td>
+            ${formatStackedQuoteCell({
+              code: item.code || '',
+              name,
+              description: desc
+            })}
             <td>01</td>
             <td style="text-align:right;">${fmt(priceNum)}</td>
             <td style="text-align:right;">${fmt(priceNum)}</td>
