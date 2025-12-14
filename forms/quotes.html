@@ -166,8 +166,10 @@ function formatStackedQuoteCell({
 }) {
   let block = `
     <td style="white-space:pre-line; vertical-align:top;">
-      <div class="cat-main">${code}</div>
-      <div class="cat-main">${name}</div>
+      <div style="display:flex; gap:12px; font-weight:bold;">
+        <div class="cat-main">${code}</div>
+        <div class="cat-main">${name}</div>
+      </div>
       ${description ? `<div class="cat-sub">${description}</div>` : ''}
   `;
 
