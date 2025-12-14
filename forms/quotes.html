@@ -331,28 +331,55 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Modular stacked cell formatter
+  // Modular stacked cell formatter with strict structure
   function formatStackedQuoteCell(obj) {
     const code = obj.code || '';
     const name = obj.name || '';
     const description = obj.description || '';
+    const supplied = obj.supplied || [];
+    const dimensions = obj.dimensions || '';
+    const weight = obj.weight || '';
+    const power = obj.power || '';
+    const country = obj.country || '';
+    const hsn = obj.hsn || '';
 
-    // Simple split into lines for description
-    const descLines = description
-      ? description.split('\n').map(l => l.trim()).filter(l => l)
-      : [];
-    const formattedDesc = descLines.join('\n');
-
-    return `
+    let block = `
       <td style="white-space:pre-line; vertical-align:top;">
         <div style="font-size:13px; font-weight:600;">${code}</div>
         <div style="font-size:12px; font-weight:500; color:#222;">${name}</div>
-        ${formattedDesc
-          ? `<div style="font-size:11px; color:#555; margin-top:2px;">${formattedDesc.replace(/\n/g, '<br>')}</div>`
-          : ''
-        }
-      </td>
+        <div style="font-size:11px; color:#555;">${description}</div>
     `;
+
+    if (supplied.length) {
+      block += `
+        <div style="font-size:11px; color:#555; margin-top:6px;">
+          <strong>Supplied Complete with:</strong><br>
+          ${supplied.join('<br>')}
+        </div>
+      `;
+    }
+
+    if (dimensions || weight || power) {
+      block += `
+        <div style="font-size:11px; color:#555; margin-top:6px;">
+          ${dimensions ? 'Dimensions: ' + dimensions + '<br>' : ''}
+          ${weight ? 'Weight: ' + weight + '<br>' : ''}
+          ${power ? 'Power: ' + power : ''}
+        </div>
+      `;
+    }
+
+    if (country || hsn) {
+      block += `
+        <div style="font-size:11px; color:#555; margin-top:6px;">
+          Country of Origin: ${country}<br>
+          HSN Code: ${hsn}
+        </div>
+      `;
+    }
+
+    block += `</td>`;
+    return block;
   }
 
   function renderQuoteBuilder() {
@@ -369,7 +396,7 @@
     const fmt = v => (Number(v || 0)).toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }); // localized numbers[web:120]
+    });
 
     // MAIN INSTRUMENT (Item 001)
     rows.push(`
@@ -377,11 +404,20 @@
         <td>001</td>
         ${formatStackedQuoteCell({
           code: inst.catalog || '',
-          name: inst.description || '',
-          // combine instrument description + HTML details text (strip tags crudely)
-          description: (inst.details || '')
-            .replace(/<br\s*\/?>/gi, '\n')
-            .replace(/<[^>]+>/g, '')
+          name: inst.instrumentName || inst.description || '',
+          description: inst.longDescription || inst.description || '',
+          supplied: inst.supplied || [
+            'Base device – 1 No.',
+            'Section waste tray – 1 No.',
+            'Protective cover – 1 No.',
+            'Power Cord – 1 No.',
+            'Operating manual IFU2003006 – 1 No.'
+          ],
+          dimensions: inst.dimensions || '450 x 530 x 275 mm',
+          weight: inst.weight || '38 Kgs',
+          power: inst.power || '115-230 Vac – 50/60 Hz',
+          country: inst.origin || 'Germany',
+          hsn: inst.hsn || '90127 9010'
         })}
         <td>01</td>
         <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
@@ -389,7 +425,7 @@
       </tr>
     `);
 
-    // CONFIGURATION ITEMS (start 002,003,...; same column layout)
+    // CONFIGURATION ITEMS (start 002,003,...)
     const cfgItems = inst.configurationItems || [];
     if (cfgItems.length) {
       rows.push(`
@@ -399,19 +435,20 @@
       `);
 
       cfgItems.forEach((item, idx) => {
-        const itemCode = String(idx + 2).padStart(3, '0'); // 002,003,...
-        const nameRaw = item.name || '';
-        const nameLines = nameRaw.split('\n').map(l => l.trim()).filter(l => l);
-        const name = nameLines[0] || '';
-        const desc = nameLines.slice(1).join('\n');
-
+        const itemCode = String(idx + 2).padStart(3, '0');
         rows.push(`
           <tr>
             <td>${itemCode}</td>
             ${formatStackedQuoteCell({
               code: item.code || '',
-              name,
-              description: desc
+              name: item.itemName || '',
+              description: item.description || '',
+              supplied: item.supplied || [],
+              dimensions: item.dimensions || '',
+              weight: item.weight || '',
+              power: item.power || '',
+              country: item.country || '',
+              hsn: item.hsn || ''
             })}
             <td>${item.qty || 'Included'}</td>
             <td style="text-align:right;">${item.upInr || 'Included'}</td>
@@ -421,7 +458,7 @@
       });
     }
 
-    // ADDITIONAL ITEMS (restart 001,002,... under its own heading)
+    // ADDITIONAL ITEMS (restart 001,002,...)
     const optItems = inst.optionalItems || [];
     if (optItems.length) {
       rows.push(`
@@ -431,12 +468,7 @@
       `);
 
       optItems.forEach((item, idx) => {
-        const itemCode = String(idx + 1).padStart(3, '0'); // 001,002,...
-        const nameRaw = item.name || '';
-        const nameLines = nameRaw.split('\n').map(l => l.trim()).filter(l => l);
-        const name = nameLines[0] || '';
-        const desc = nameLines.slice(1).join('\n');
-
+        const itemCode = String(idx + 1).padStart(3, '0');
         const rawPrice = (item.price || '').replace(/[^\d]/g, '');
         const priceNum = rawPrice ? Number(rawPrice) : 0;
 
@@ -445,8 +477,14 @@
             <td>${itemCode}</td>
             ${formatStackedQuoteCell({
               code: item.code || '',
-              name,
-              description: desc
+              name: item.itemName || '',
+              description: item.description || '',
+              supplied: item.supplied || [],
+              dimensions: item.dimensions || '',
+              weight: item.weight || '',
+              power: item.power || '',
+              country: item.country || '',
+              hsn: item.hsn || ''
             })}
             <td>01</td>
             <td style="text-align:right;">${fmt(priceNum)}</td>
@@ -462,5 +500,6 @@
   populateHeader();
   renderQuoteBuilder();
 </script>
+
 </body>
 </html>
