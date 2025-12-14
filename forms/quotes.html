@@ -192,115 +192,118 @@ table.quote-table td:nth-child(2) {
 </div>
 
 <script>
-  function formatISOToDMY(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}-${m}-${y}`;}
+  function formatISOToDMY(iso){
+    if(!iso) return '';
+    const [y,m,d] = iso.split('-');
+    return `${d}-${m}-${y}`;
+  }
+
   function splitAddress(address){
-    if(!address)return['',''];
-    const parts=address.split(',');
-    if(parts.length<2)return[address.trim(),''];
-    const line2=parts.slice(-1)[0].trim();
-    const line1=parts.slice(0,-1).join(',').trim();
+    if(!address) return ['',''];
+    const parts = address.split(',');
+    if(parts.length < 2) return [address.trim(), ''];
+    const line2 = parts.slice(-1)[0].trim();
+    const line1 = parts.slice(0, -1).join(',').trim();
     return [line1, line2];
   }
 
   function populateHeader() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
-    document.getElementById('metaQuoteNo').textContent = header.quoteNo || '';
+    document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
     document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
-    document.getElementById('metaYourRef').textContent = header.yourReference || '';
-    document.getElementById('metaRefDate').textContent = formatISOToDMY(header.refDate);
+    document.getElementById('metaYourRef').textContent   = header.yourReference || '';
+    document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
     document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
-    document.getElementById('metaPhone').textContent = header.contactPhone || '';
-    document.getElementById('metaEmail').textContent = header.contactEmail || '';
-    document.getElementById('metaOffice').textContent = header.officePhone || '';
+    document.getElementById('metaPhone').textContent     = header.contactPhone || '';
+    document.getElementById('metaEmail').textContent     = header.contactEmail || '';
+    document.getElementById('metaOffice').textContent    = header.officePhone || '';
     document.getElementById('toHospitalNameLine').textContent = header.hospitalName || 'Hospital / Client Name';
+
     const [line1, line2] = splitAddress(header.hospitalAddress || '');
     document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
     document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
+  // Formatter: cat on line 1, name on line 2, description directly below (any length)
+  function formatStackedQuoteCell({
+    code = '',
+    name = '',
+    description = '',
+    supplied = [],
+    dimensions = '',
+    weight = '',
+    power = '',
+    country = '',
+    hsn = ''
+  }) {
+    // allow optional manual line split in description using '\n'
+    const descParts = (description || '').split('\n');
+    const descLine1 = descParts[0] || '';
+    const descLine2 = descParts.slice(1).join(' ').trim();
 
-// Formatter with tight "no gaps" formatting matching your spec
-// Formatter with tight "no gaps" formatting, and 2-part description
-function formatStackedQuoteCell({
-  code = '',
-  name = '',
-  description = '',
-  supplied = [],
-  dimensions = '',
-  weight = '',
-  power = '',
-  country = '',
-  hsn = ''
-}) {
-  // split description into at most 2 visual lines (part1 + part2)
-  const descParts = (description || '').split('\n');
-  const descLine1 = descParts[0] || '';
-  const descLine2 = descParts.slice(1).join(' ').trim(); // rest combined as second line
+    let block = `
+      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+        <div class="cat-main" style="margin:0;">${code}</div>`;
 
-  let block = `
-    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-      <div class="cat-main" style="margin:0;">${code}</div>`;
+    if (name) {
+      block += `
+        <div class="cat-main" style="margin:0;">${name}</div>`;
+    }
 
-  // line 2: main name (e.g. pfm Rotary 3006 EM ...)
-  if (name) {
-    block += `
-      <div class="cat-main" style="margin:0;">${name}</div>`;
+    if (descLine1) {
+      block += `
+        <div class="cat-sub" style="margin-top:2px;">${descLine1}</div>`;
+    }
+
+    if (descLine2) {
+      block += `
+        <div class="cat-sub" style="margin-top:0;">${descLine2}</div>`;
+    }
+
+    if (supplied.length) {
+      const suppliedLines = supplied
+        .map(line => `  – ${line}`)
+        .join('\n');
+      block += `
+        <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
+          Supplied complete with:<br>${suppliedLines}
+        </div>`;
+    }
+
+    if (dimensions || weight || power) {
+      const lines = [];
+      if (dimensions) lines.push(`Dimensions: ${dimensions}`);
+      if (weight)    lines.push(`Weight: ${weight}`);
+      if (power)     lines.push(`Power: ${power}`);
+      block += `
+        <div class="cat-sub" style="margin-top:6px;">
+          ${lines.join('<br>')}
+        </div>`;
+    }
+
+    if (country || hsn) {
+      const lines = [];
+      if (country) lines.push(`Country of Origin: ${country}`);
+      if (hsn)     lines.push(`HSN Code: ${hsn}`);
+      block += `
+        <div class="cat-sub" style="margin-top:6px;">
+          ${lines.join('<br>')}
+        </div>`;
+    }
+
+    block += `</td>`;
+    return block;
   }
-
-  // description line 1 – directly under name, no gap
-  if (descLine1) {
-    block += `
-      <div class="cat-sub" style="margin-top:2px;">${descLine1}</div>`;
-  }
-
-  // description line 2 – immediately under line 1 (still tight)
-  if (descLine2) {
-    block += `
-      <div class="cat-sub" style="margin-top:0;">${descLine2}</div>`;
-  }
-
-  // blank gap only before "Supplied complete with"
-  if (supplied.length) {
-    const suppliedLines = supplied
-      .map(line => `  – ${line}`)
-      .join('\n');
-    block += `
-      <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
-        Supplied complete with:<br>${suppliedLines}
-      </div>`;
-  }
-
-  if (dimensions || weight || power) {
-    const lines = [];
-    if (dimensions) lines.push(`Dimensions: ${dimensions}`);
-    if (weight)    lines.push(`Weight: ${weight}`);
-    if (power)     lines.push(`Power: ${power}`);
-    block += `
-      <div class="cat-sub" style="margin-top:6px;">
-        ${lines.join('<br>')}
-      </div>`;
-  }
-
-  if (country || hsn) {
-    const lines = [];
-    if (country) lines.push(`Country of Origin: ${country}`);
-    if (hsn)     lines.push(`HSN Code: ${hsn}`);
-    block += `
-      <div class="cat-sub" style="margin-top:6px;">
-        ${lines.join('<br>')}
-      </div>`;
-  }
-
-  block += `</td>`;
-  return block;
-}
 
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
-    const inst = header.selectedInstrument;
-    const body = document.getElementById('quoteBuilderBody');
-    const fmt = v => (Number(v || 0)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const inst   = header.selectedInstrument;
+    const body   = document.getElementById('quoteBuilderBody');
+    const fmt    = v => (Number(v || 0)).toLocaleString(
+      'en-IN',
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    );
 
     if (!inst) {
       body.innerHTML = '';
@@ -336,72 +339,80 @@ function formatStackedQuoteCell({
       </tr>
     `);
 
-// CONFIGURATION ITEMS (from selected instrument)
-const configItems = inst.configurationItems || [];
-if (configItems.length) {
-  rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td></tr>`);
-  configItems.forEach((item, idx) => {
-    const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003, ...
-    // expect: code = "030051", name = "Blade holder Base unit for Rotary 3000/3004/3005/3006"
-    rows.push(`
-      <tr>
-        <td>${itemCode}</td>
-        ${formatStackedQuoteCell({
-          code: item.code || item.itemCode || '',
-          name: item.name || item.itemName || '',
-          description: item.longDescription || '',
-          supplied: item.supplied || [],
-          dimensions: item.dimensions || '',
-          weight: item.weight || '',
-          power: item.power || '',
-          country: item.origin || item.country || '',
-          hsn: item.hsn || ''
-        })}
-        <td>${item.qty || 'Included'}</td>
-        <td>${item.upInr || 'Included'}</td>
-        <td>${item.tpInr || 'Included'}</td>
-      </tr>
-    `);
-  });
-}
+    // CONFIGURATION ITEMS
+    const configItems = inst.configurationItems || [];
+    if (configItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
+        </tr>
+      `);
+      configItems.forEach((item, idx) => {
+        const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatStackedQuoteCell({
+              code: item.code || item.itemCode || '',
+              name: item.name || item.itemName || '',
+              description: item.longDescription || '',
+              supplied: item.supplied || [],
+              dimensions: item.dimensions || '',
+              weight: item.weight || '',
+              power: item.power || '',
+              country: item.origin || item.country || '',
+              hsn: item.hsn || ''
+            })}
+            <td>${item.qty || 'Included'}</td>
+            <td>${item.upInr || 'Included'}</td>
+            <td>${item.tpInr || 'Included'}</td>
+          </tr>
+        `);
+      });
+    }
 
-// ADDITIONAL ITEMS (from selected instrument; restart codes 001, 002...)
-const additionalItems = inst.optionalItems || [];
-if (additionalItems.length) {
-  rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td></tr>`);
-  additionalItems.forEach((item, idx) => {
-    const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
-    const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
-    const priceNum = rawPrice ? Number(rawPrice) : 0;
-    const qty = Number(item.qty || 1);
+    // ADDITIONAL ITEMS
+    const additionalItems = inst.optionalItems || [];
+    if (additionalItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
+        </tr>
+      `);
+      additionalItems.forEach((item, idx) => {
+        const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
+        const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
+        const priceNum = rawPrice ? Number(rawPrice) : 0;
+        const qty      = Number(item.qty || 1);
 
-    rows.push(`
-      <tr>
-        <td>${itemCode}</td>
-        ${formatStackedQuoteCell({
-          code: item.code || item.itemCode || '',
-          name: item.name || item.itemName || '',
-          description: item.longDescription || '',
-          supplied: item.supplied || [],
-          dimensions: item.dimensions || '',
-          weight: item.weight || '',
-          power: item.power || '',
-          country: item.origin || item.country || '',
-          hsn: item.hsn || ''
-        })}
-        <td>${qty.toString().padStart(2, '0')}</td>
-        <td>${fmt(priceNum)}</td>
-        <td>${fmt(priceNum * qty)}</td>
-      </tr>
-    `);
-  });
-}
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatStackedQuoteCell({
+              code: item.code || item.itemCode || '',
+              name: item.name || item.itemName || '',
+              description: item.longDescription || '',
+              supplied: item.supplied || [],
+              dimensions: item.dimensions || '',
+              weight: item.weight || '',
+              power: item.power || '',
+              country: item.origin || item.country || '',
+              hsn: item.hsn || ''
+            })}
+            <td>${qty.toString().padStart(2, '0')}</td>
+            <td>${fmt(priceNum)}</td>
+            <td>${fmt(priceNum * qty)}</td>
+          </tr>
+        `);
+      });
+    }
 
-body.innerHTML = rows.join('');
-
+    body.innerHTML = rows.join('');
+  }
 
   populateHeader();
   renderQuoteBuilder();
 </script>
+
 </body>
 </html>
