@@ -126,7 +126,12 @@
 
 <script>
   function formatISOToDMY(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}-${m}-${y}`;}
-  function splitAddress(address){if(!address)return['',''];const parts=address.split(',');if(parts.length<2)return[address.trim(),''];const line2=parts.slice(-1)[0].trim();const line1=parts.slice(0,-1).join(',').trim();
+  function splitAddress(address){
+    if(!address)return['',''];
+    const parts=address.split(',');
+    if(parts.length<2)return[address.trim(),''];
+    const line2=parts.slice(-1)[0].trim();
+    const line1=parts.slice(0,-1).join(',').trim();
     return [line1, line2];
   }
 
@@ -147,26 +152,59 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Formatter with tight-knit Dimensions + Country/HSN
-  function formatStackedQuoteCell({ code='', name='', description='', supplied=[], dimensions='', weight='', power='', country='', hsn='' }) {
+  // Formatter with indentation and spacing
+  function formatStackedQuoteCell({
+    code='',
+    name='',
+    description='',
+    supplied=[],
+    dimensions='',
+    weight='',
+    power='',
+    country='',
+    hsn=''
+  }) {
     let block = `
       <td style="white-space:pre-line; vertical-align:top;">
         <div class="cat-main">${code}</div>
         <div class="cat-main">${name}</div>
         ${description ? `<div class="cat-sub">${description}</div>` : ''}
     `;
+
+    // Supplied complete with: indented lines
     if (supplied.length) {
-      block += `<div class="cat-sub"><strong>Supplied Complete with:</strong><br>${supplied.join('<br>')}</div>`;
+      const suppliedLines = supplied
+        .map(line => `<div style="padding-left:10px;">${line}</div>`)
+        .join('');
+      block += `
+        <div class="cat-sub" style="margin-top:4px;">
+          <strong>Supplied complete with:</strong>
+          ${suppliedLines}
+        </div>
+      `;
     }
-    if (dimensions || weight || power || country || hsn) {
-      block += `<div class="cat-sub">`;
-      if (dimensions) block += `Dimensions: ${dimensions}<br>`;
-      if (weight) block += `Weight: ${weight}<br>`;
-      if (power) block += `Power: ${power}<br>`;
-      if (country) block += `Country of Origin: ${country}<br>`;
-      if (hsn) block += `HSN Code: ${hsn}`;
-      block += `</div>`;
+
+    // Gap, then tight dimensions/weight/power
+    if (dimensions || weight || power) {
+      block += `
+        <div class="cat-sub" style="margin-top:8px;">
+          ${dimensions ? `Dimensions: ${dimensions}<br>` : ''}
+          ${weight ? `Weight: ${weight}<br>` : ''}
+          ${power ? `Power: ${power}` : ''}
+        </div>
+      `;
     }
+
+    // Gap, then country + HSN
+    if (country || hsn) {
+      block += `
+        <div class="cat-sub" style="margin-top:8px;">
+          ${country ? `Country of Origin: ${country}<br>` : ''}
+          ${hsn ? `HSN Code: ${hsn}` : ''}
+        </div>
+      `;
+    }
+
     block += `</td>`;
     return block;
   }
@@ -174,59 +212,61 @@
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
     const inst = header.selectedInstrument;
-    const configItems = JSON.parse(localStorage.getItem('configItemMaster') || '[]');
-    const additionalItems = JSON.parse(localStorage.getItem('additionalItemMaster') || '[]');
     const body = document.getElementById('quoteBuilderBody');
-    const fmt = v => (Number(v || 0)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fmt = v => (Number(v || 0)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); // Indian format[web:27]
+
+    if (!inst) {
+      body.innerHTML = '';
+      return;
+    }
 
     const rows = [];
 
-    // MAIN INSTRUMENT
-    if (inst) {
-      rows.push(`
-        <tr>
-          <td>001</td>
-          ${formatStackedQuoteCell({
-            code: inst.catalog || '',
-            name: inst.instrumentName || inst.description || '',
-            description: inst.longDescription || '',
-            supplied: inst.supplied || [
-              'Base device – 1 No.',
-              'Section waste tray – 1 No.',
-              'Protective cover – 1 No.',
-              'Power Cord – 1 No.',
-              'Operating manual IFU2003006 – 1 No.'
-            ],
-            dimensions: inst.dimensions || '450 x 530 x 275 mm',
-            weight: inst.weight || '38 Kgs',
-            power: inst.power || '115-230 Vac – 50/60 Hz',
-            country: inst.origin || 'Germany',
-            hsn: inst.hsn || '90127 9010'
-          })}
-          <td>01</td>
-          <td>${fmt(inst.unitPrice)}</td>
-          <td>${fmt(inst.unitPrice)}</td>
-        </tr>
-      `);
-    }
+    // MAIN INSTRUMENT (001)
+    rows.push(`
+      <tr>
+        <td>001</td>
+        ${formatStackedQuoteCell({
+          code: inst.catalog || '',
+          name: inst.instrumentName || inst.description || '',
+          description: inst.longDescription || '',
+          supplied: inst.supplied || [
+            'Base device – 1 No.',
+            'Section waste tray – 1 No.',
+            'Protective cover – 1 No.',
+            'Power Cord – 1 No.',
+            'Operating manual IFU2003006 – 1 No.'
+          ],
+          dimensions: inst.dimensions || '450 x 530 x 275 mm',
+          weight: inst.weight || '38 Kgs',
+          power: inst.power || '115-230 Vac – 50/60 Hz',
+          country: inst.origin || 'Germany',
+          hsn: inst.hsn || '90127 9010'
+        })}
+        <td>01</td>
+        <td>${fmt(inst.unitPrice)}</td>
+        <td>${fmt(inst.unitPrice)}</td>
+      </tr>
+    `);
 
-    // CONFIGURATION ITEMS
+    // CONFIGURATION ITEMS (from selected instrument)
+    const configItems = inst.configurationItems || [];
     if (configItems.length) {
       rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td></tr>`);
       configItems.forEach((item, idx) => {
-        const itemCode = String(idx+2).padStart(3,'0');
+        const itemCode = String(idx+2).padStart(3,'0'); // 002, 003, ...
         rows.push(`
           <tr>
             <td>${itemCode}</td>
             ${formatStackedQuoteCell({
-              code: item.itemCode || '',
-              name: item.itemName || '',
-              description: item.description || '',
+              code: item.code || item.itemCode || '',
+              name: (item.name || item.itemName || '').split('\n')[0] || '',
+              description: (item.name || item.itemName || '').split('\n').slice(1).join('\n'),
               supplied: item.supplied || [],
               dimensions: item.dimensions || '',
               weight: item.weight || '',
               power: item.power || '',
-              country: item.country || '',
+              country: item.origin || item.country || '',
               hsn: item.hsn || ''
             })}
             <td>${item.qty || 'Included'}</td>
@@ -237,29 +277,36 @@
       });
     }
 
-    // ADDITIONAL ITEMS
+    // ADDITIONAL ITEMS (from selected instrument; restart codes 001, 002...)
+    const additionalItems = inst.optionalItems || [];
     if (additionalItems.length) {
       rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td></tr>`);
       additionalItems.forEach((item, idx) => {
-        const itemCode = String(idx+1).padStart(3,'0');
-        const priceNum = Number((item.unitPrice||0));
+        const itemCode = String(idx+1).padStart(3,'0'); // 001, 002...
+        const nameLines = (item.name || item.itemName || '').split('\n').map(l=>l.trim()).filter(l=>l);
+        const name = nameLines[0] || '';
+        const desc = nameLines.slice(1).join('\n');
+        const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g,'');
+        const priceNum = rawPrice ? Number(rawPrice) : 0;
+        const qty = Number(item.qty || 1);
+
         rows.push(`
           <tr>
             <td>${itemCode}</td>
             ${formatStackedQuoteCell({
-              code: item.itemCode || '',
-              name: item.itemName || '',
-              description: item.description || '',
+              code: item.code || item.itemCode || '',
+              name,
+              description: desc,
               supplied: item.supplied || [],
               dimensions: item.dimensions || '',
               weight: item.weight || '',
               power: item.power || '',
-              country: item.country || '',
+              country: item.origin || item.country || '',
               hsn: item.hsn || ''
             })}
-            <td>${item.qty || '01'}</td>
+            <td>${qty.toString().padStart(2,'0')}</td>
             <td>${fmt(priceNum)}</td>
-            <td>${fmt(priceNum * (item.qty||1))}</td>
+            <td>${fmt(priceNum * qty)}</td>
           </tr>
         `);
       });
@@ -273,5 +320,3 @@
 </script>
 </body>
 </html>
-
-  
