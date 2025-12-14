@@ -300,7 +300,7 @@ function formatStackedQuoteCell({
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
     const inst = header.selectedInstrument;
     const body = document.getElementById('quoteBuilderBody');
-    const fmt = v => (Number(v || 0)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); // Indian format[web:27]
+    const fmt = v => (Number(v || 0)).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 
     if (!inst) {
       body.innerHTML = '';
