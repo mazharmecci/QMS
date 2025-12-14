@@ -219,70 +219,63 @@ table.quote-table td:nth-child(2) {
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Formatter with tighter spacing
-  function formatStackedQuoteCell({
-    code='',
-    name='',
-    description='',
-    supplied=[],
-    dimensions='',
-    weight='',
-    power='',
-    country='',
-    hsn=''
-  }) {
-    let block = `
-      <td style="white-space:pre-line; vertical-align:top;">
-        <div class="cat-main">${code}</div>
-        <div class="cat-main">${name}</div>
-    `;
-  
-    if (description) {
-      block += `
-        <div class="cat-sub" style="margin-top:4px;">
-          ${description}
-        </div>
-      `;
-    }
-  
-    if (supplied.length) {
-      const suppliedLines = supplied
-        .map(line => `<div style="padding-left:10px;">${line}</div>`)
-        .join('');
-      block += `
-        <div class="cat-sub" style="margin-top:4px;">
-          <strong>Supplied complete with:</strong>
-          ${suppliedLines}
-        </div>
-      `;
-    }
-  
-    if (dimensions || weight || power) {
-      const lines = [];
-      if (dimensions) lines.push(`Dimensions: ${dimensions}`);
-      if (weight)    lines.push(`Weight: ${weight}`);
-      if (power)     lines.push(`Power: ${power}`);
-      block += `
-        <div class="cat-sub" style="margin-top:4px;">
-          ${lines.join('<br>')}
-        </div>
-      `;
-    }
-  
-    if (country || hsn) {
-      const lines = [];
-      if (country) lines.push(`Country of Origin: ${country}`);
-      if (hsn)     lines.push(`HSN Code: ${hsn}`);
-      block += `
-        <div class="cat-sub" style="margin-top:4px;">
-          ${lines.join('<br>')}
-        </div>
-      `;
-    }
-  
-    block += `</td>`;
-    return block;
+
+// Formatter with tight "no gaps" formatting matching your spec
+function formatStackedQuoteCell({
+  code='',
+  name='',
+  description='',
+  supplied=[],
+  dimensions='',
+  weight='',
+  power='',
+  country='',
+  hsn=''
+}) {
+  let block = `
+    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+      <div class="cat-main" style="margin:0;">${code}</div>
+      <div class="cat-main" style="margin:0;">${name}</div>`;
+
+  if (description) {
+    block += `
+      <div class="cat-sub" style="margin-top:2px; margin-bottom:8px;">${description}</div>`;
   }
+
+  if (supplied.length) {
+    const suppliedLines = supplied
+      .map(line => `  – ${line}`)
+      .join('\n');
+    block += `
+      <div class="cat-sub" style="margin-top:4px; font-size:11px; line-height:1.25;">
+        Supplied complete with:<br>${suppliedLines}
+      </div>`;
+  }
+
+  if (dimensions || weight || power) {
+    const lines = [];
+    if (dimensions) lines.push(`Dimensions: ${dimensions}`);
+    if (weight)    lines.push(`Weight: ${weight}`);
+    if (power)     lines.push(`Power: ${power}`);
+    block += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  if (country || hsn) {
+    const lines = [];
+    if (country) lines.push(`Country of Origin: ${country}`);
+    if (hsn)     lines.push(`HSN Code: ${hsn}`);
+    block += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  block += `</td>`;
+  return block;
+}
 
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
