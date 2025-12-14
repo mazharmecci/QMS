@@ -124,28 +124,20 @@
       text-align:right;
     }
 
-    /* CAT / DESCRIPTION STACK */
-
     .cat-main {
-      display:block;
-      font-size:13px;
-      font-weight:600;
-      color:#000;
-      margin:0;
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #000;
+      margin: 0;              /* ensure no extra gap */
     }
-    .cat-title {
-      font-size:13px;
-      font-weight:600;
-      color:#000;
-      margin:0;
-    }
+    
     .cat-sub {
-      font-size:11px;
-      color:#555;
-      margin:0;
-      line-height:1.3;
+      font-size: 11px;
+      color: #555;
+      margin: 0;              /* remove top margin */
+      line-height: 1.3;       /* slightly tighter line height */
     }
-
     /* MID SECTION TABLE */
 
     #quoteBuilder {
@@ -167,11 +159,11 @@
     }
     table.quote-table th,
     table.quote-table td {
-      padding:0.35rem 0.6rem;
-      border-bottom:1px solid #ddd;
-      text-align:left;
-      vertical-align:top;
-      font-size:13px;
+      padding: 0.35rem 0.6rem;  /* was 0.6rem; reduce vertical padding */
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
     }
     table.quote-table th {
       background:#f0f4f8;
@@ -189,16 +181,6 @@
     table.quote-table td:nth-child(3) {
       text-align:center;
       white-space:nowrap;
-    }
-
-    /* SECTION HEADER ROWS */
-
-    .section-header-row {
-      background:#00B0F0;
-      color:#000;
-    }
-    .section-header-row td {
-      font-weight:700;
     }
 
     /* TERMS */
@@ -349,26 +331,28 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Build stacked block: first line = title, rest = body
-  function buildStackedText(raw) {
-    const lines = (raw || '')
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l);
-    if (!lines.length) return '';
-    const title = lines[0];
-    const subs  = lines.slice(1);
-    return `
-      <div class="cat-title">${title}</div>
-      ${subs.length ? `<div class="cat-sub">${subs.join('<br>')}</div>` : ''}
-    `;
-  }
+  // Modular stacked cell formatter
+  function formatStackedQuoteCell(obj) {
+    const code = obj.code || '';
+    const name = obj.name || '';
+    const description = obj.description || '';
 
-  function fmtInr(v) {
-    return (Number(v || 0)).toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }); /* localized Indian style [web:48] */
+    // Simple split into lines for description
+    const descLines = description
+      ? description.split('\n').map(l => l.trim()).filter(l => l)
+      : [];
+    const formattedDesc = descLines.join('\n');
+
+    return `
+      <td style="white-space:pre-line; vertical-align:top;">
+        <div style="font-size:13px; font-weight:600;">${code}</div>
+        <div style="font-size:12px; font-weight:500; color:#222;">${name}</div>
+        ${formattedDesc
+          ? `<div style="font-size:11px; color:#555; margin-top:2px;">${formattedDesc.replace(/\n/g, '<br>')}</div>`
+          : ''
+        }
+      </td>
+    `;
   }
 
   function renderQuoteBuilder() {
@@ -382,56 +366,53 @@
     }
 
     const rows = [];
+    const fmt = v => (Number(v || 0)).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }); // localized numbers[web:120]
 
     // MAIN INSTRUMENT (Item 001)
-    const instCombined = [
-      inst.instrumentName || '',
-      inst.description || '',
-      inst.suppliedWith || '',
-      inst.dimensions || ''
-    ].filter(Boolean).join('\n');
-
-    const instStack = buildStackedText(instCombined);
-
     rows.push(`
       <tr>
         <td>001</td>
-        <td>
-          <span class="cat-main">${inst.catalog || ''}</span>
-          ${instStack}
-        </td>
+        ${formatStackedQuoteCell({
+          code: inst.catalog || '',
+          name: inst.description || '',
+          // combine instrument description + HTML details text (strip tags crudely)
+          description: (inst.details || '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+        })}
         <td>01</td>
-        <td style="text-align:right;">${fmtInr(inst.unitPrice)}</td>
-        <td style="text-align:right;">${fmtInr(inst.unitPrice)}</td>
+        <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
+        <td style="text-align:right;">${fmt(inst.unitPrice)}</td>
       </tr>
     `);
 
-    // CONFIGURATION ITEMS
+    // CONFIGURATION ITEMS (start 002,003,...; same column layout)
     const cfgItems = inst.configurationItems || [];
     if (cfgItems.length) {
       rows.push(`
-        <tr class="section-header-row">
-          <td colspan="5">CONFIGURATION ITEMS</td>
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
         </tr>
       `);
 
       cfgItems.forEach((item, idx) => {
-        const itemCode = String(idx + 2).padStart(3, '0'); // 002,003...
-        const cfgCombined = [
-          item.itemName || '',
-          item.catalogRef || '',
-          item.suppliedWith || '',
-          item.dimensions || ''
-        ].filter(Boolean).join('\n');
-        const cfgStack = buildStackedText(cfgCombined);
+        const itemCode = String(idx + 2).padStart(3, '0'); // 002,003,...
+        const nameRaw = item.name || '';
+        const nameLines = nameRaw.split('\n').map(l => l.trim()).filter(l => l);
+        const name = nameLines[0] || '';
+        const desc = nameLines.slice(1).join('\n');
 
         rows.push(`
           <tr>
             <td>${itemCode}</td>
-            <td>
-              <span class="cat-main">${item.itemCode || ''}</span>
-              ${cfgStack}
-            </td>
+            ${formatStackedQuoteCell({
+              code: item.code || '',
+              name,
+              description: desc
+            })}
             <td>${item.qty || 'Included'}</td>
             <td style="text-align:right;">${item.upInr || 'Included'}</td>
             <td style="text-align:right;">${item.tpInr || 'Included'}</td>
@@ -440,38 +421,36 @@
       });
     }
 
-    // ADDITIONAL ITEMS
+    // ADDITIONAL ITEMS (restart 001,002,... under its own heading)
     const optItems = inst.optionalItems || [];
     if (optItems.length) {
       rows.push(`
-        <tr class="section-header-row">
-          <td colspan="5">ADDITIONAL ITEMS</td>
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
         </tr>
       `);
 
       optItems.forEach((item, idx) => {
-        const itemCode = String(idx + 1).padStart(3, '0'); // 001,002...
-        const optCombined = [
-          item.itemName || '',
-          item.catalogRef || '',
-          item.suppliedWith || '',
-          item.dimensions || ''
-        ].filter(Boolean).join('\n');
-        const optStack = buildStackedText(optCombined);
+        const itemCode = String(idx + 1).padStart(3, '0'); // 001,002,...
+        const nameRaw = item.name || '';
+        const nameLines = nameRaw.split('\n').map(l => l.trim()).filter(l => l);
+        const name = nameLines[0] || '';
+        const desc = nameLines.slice(1).join('\n');
 
-        const rawPrice = (item.price || '').replace(/[^\d.]/g, '');
+        const rawPrice = (item.price || '').replace(/[^\d]/g, '');
         const priceNum = rawPrice ? Number(rawPrice) : 0;
 
         rows.push(`
           <tr>
             <td>${itemCode}</td>
-            <td>
-              <span class="cat-main">${item.itemCode || ''}</span>
-              ${optStack}
-            </td>
+            ${formatStackedQuoteCell({
+              code: item.code || '',
+              name,
+              description: desc
+            })}
             <td>01</td>
-            <td style="text-align:right;">${fmtInr(priceNum)}</td>
-            <td style="text-align:right;">${fmtInr(priceNum)}</td>
+            <td style="text-align:right;">${fmt(priceNum)}</td>
+            <td style="text-align:right;">${fmt(priceNum)}</td>
           </tr>
         `);
       });
