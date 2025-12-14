@@ -48,7 +48,7 @@
     .cat-sub { font-size:11px; color:#555; margin:0; line-height:1.3; }
 
 /* MID SECTION TABLE */
-    
+/* MID SECTION TABLE */
 #quoteBuilder {
   margin-top:1.5rem;
   padding:1.5rem;
@@ -56,39 +56,29 @@
   border:1px solid #ddd;
   border-radius:12px;
 }
-    
 #quoteBuilder h3 {
   margin-top:0;
   margin-bottom:0.75rem;
   color:#0d6efd;
 }
-    
+table.quote-table {
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:1rem;
+}
 table.quote-table th,
 table.quote-table td {
-  padding:0.35rem 0.6rem;
+  padding:0.25rem 0.6rem;
   border-bottom:1px solid #ddd;
   text-align:left;
-  vertical-align:top;        /* default: top for all cells */
+  vertical-align:top;        /* everything top by default */
   font-size:13px;
 }
-
-/* keep quantity centered, prices right as before */
-table.quote-table th:nth-last-child(1),
-table.quote-table th:nth-last-child(2),
-table.quote-table td:nth-last-child(1),
-table.quote-table td:nth-last-child(2) {
-  text-align:right;
-  white-space:nowrap;
-}
-table.quote-table td:nth-child(3) {
-  text-align:center;
-  white-space:nowrap;
-}
-
-/* explicitly ensure Item and Cat/Material are top aligned */
-table.quote-table td:nth-child(1),
-table.quote-table td:nth-child(2) {
-  vertical-align:top;
+table.quote-table th {
+  background:#f0f4f8;
+  font-size:12px;
+  text-transform:capitalize;
+  letter-spacing:0.03em;
 }
 
 /* prices right-aligned */
@@ -106,12 +96,11 @@ table.quote-table td:nth-child(3) {
   white-space:nowrap;
 }
 
-/* align Item and Cat/Material vertically in the middle */
+/* ensure Item and Cat/Material are top-aligned */
 table.quote-table td:nth-child(1),
 table.quote-table td:nth-child(2) {
-  vertical-align:middle;
+  vertical-align:top;
 }
-
 
     /* TERMS */
     #termsBlock { margin-top:1.5rem; background:#fff; border:1px solid #ccc; border-radius:8px; padding:1rem 1.25rem; font-size:12px; line-height:1.4; }
@@ -224,10 +213,16 @@ table.quote-table td:nth-child(2) {
       <td style="white-space:pre-line; vertical-align:top;">
         <div class="cat-main">${code}</div>
         <div class="cat-main">${name}</div>
-        ${description ? `<div class="cat-sub" style="margin-top:4px;">${description}</div>` : ''}
     `;
   
-    // Supplied complete with (1 line gap before, small indent on items)
+    if (description) {
+      block += `
+        <div class="cat-sub" style="margin-top:4px;">
+          ${description}
+        </div>
+      `;
+    }
+  
     if (supplied.length) {
       const suppliedLines = supplied
         .map(line => `<div style="padding-left:10px;">${line}</div>`)
@@ -240,7 +235,6 @@ table.quote-table td:nth-child(2) {
       `;
     }
   
-    // Dimensions / weight / power as one tight group
     if (dimensions || weight || power) {
       const lines = [];
       if (dimensions) lines.push(`Dimensions: ${dimensions}`);
@@ -253,7 +247,6 @@ table.quote-table td:nth-child(2) {
       `;
     }
   
-    // Country + HSN as one tight group
     if (country || hsn) {
       const lines = [];
       if (country) lines.push(`Country of Origin: ${country}`);
