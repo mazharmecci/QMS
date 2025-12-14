@@ -152,62 +152,62 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Formatter with indentation and spacing
-  function formatStackedQuoteCell({
-    code='',
-    name='',
-    description='',
-    supplied=[],
-    dimensions='',
-    weight='',
-    power='',
-    country='',
-    hsn=''
-  }) {
-    let block = `
-      <td style="white-space:pre-line; vertical-align:top;">
-        <div class="cat-main">${code}</div>
-        <div class="cat-main">${name}</div>
-        ${description ? `<div class="cat-sub">${description}</div>` : ''}
+  // Formatter with tighter spacing
+function formatStackedQuoteCell({
+  code='',
+  name='',
+  description='',
+  supplied=[],
+  dimensions='',
+  weight='',
+  power='',
+  country='',
+  hsn=''
+}) {
+  let block = `
+    <td style="white-space:pre-line; vertical-align:top;">
+      <div class="cat-main">${code}</div>
+      <div class="cat-main">${name}</div>
+      ${description ? `<div class="cat-sub">${description}</div>` : ''}
+  `;
+
+  // Supplied complete with: indented lines
+  if (supplied.length) {
+    const suppliedLines = supplied
+      .map(line => `<div style="padding-left:10px; margin:2px 0;">${line}</div>`)
+      .join('');
+    block += `
+      <div class="cat-sub" style="margin-top:4px; margin-bottom:6px;">
+        <strong>Supplied complete with:</strong>
+        ${suppliedLines}
+      </div>
     `;
-
-    // Supplied complete with: indented lines
-    if (supplied.length) {
-      const suppliedLines = supplied
-        .map(line => `<div style="padding-left:10px;">${line}</div>`)
-        .join('');
-      block += `
-        <div class="cat-sub" style="margin-top:4px;">
-          <strong>Supplied complete with:</strong>
-          ${suppliedLines}
-        </div>
-      `;
-    }
-
-    // Gap, then tight dimensions/weight/power
-    if (dimensions || weight || power) {
-      block += `
-        <div class="cat-sub" style="margin-top:8px;">
-          ${dimensions ? `Dimensions: ${dimensions}<br>` : ''}
-          ${weight ? `Weight: ${weight}<br>` : ''}
-          ${power ? `Power: ${power}` : ''}
-        </div>
-      `;
-    }
-
-    // Gap, then country + HSN
-    if (country || hsn) {
-      block += `
-        <div class="cat-sub" style="margin-top:8px;">
-          ${country ? `Country of Origin: ${country}<br>` : ''}
-          ${hsn ? `HSN Code: ${hsn}` : ''}
-        </div>
-      `;
-    }
-
-    block += `</td>`;
-    return block;
   }
+
+  // Tight dimensions/weight/power group
+  if (dimensions || weight || power) {
+    block += `
+      <div class="cat-sub" style="margin-top:4px; margin-bottom:4px;">
+        ${dimensions ? `Dimensions: ${dimensions}<br>` : ''}
+        ${weight ? `Weight: ${weight}<br>` : ''}
+        ${power ? `Power: ${power}` : ''}
+      </div>
+    `;
+  }
+
+  // Tight country + HSN group
+  if (country || hsn) {
+    block += `
+      <div class="cat-sub" style="margin-top:4px;">
+        ${country ? `Country of Origin: ${country}<br>` : ''}
+        ${hsn ? `HSN Code: ${hsn}` : ''}
+      </div>
+    `;
+  }
+
+  block += `</td>`;
+  return block;
+}
 
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
