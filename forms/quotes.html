@@ -243,8 +243,7 @@ table.quote-table td:nth-child(2) {
     const descLine2 = descParts.slice(1).join(' ').trim();
 
     let block = `
-      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-        <div class="cat-main" style="margin:0;">${code}</div>`;
+      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">       
 
     if (name) {
       block += `
@@ -349,12 +348,15 @@ function normalizeItem(raw) {
     .map(l => l.trim())
     .filter(Boolean);
 
-  // First line is the main description/title
-  const mainDesc = descLines[0] || name || '';
-  const featureLines = descLines.slice(1); // everything after the first line
+  // Main description/title: prefer name, else first line of desc
+  const mainDesc = name || descLines[0] || '';
+
+  // Feature lines: everything after the first line of desc
+  const featureLines = name ? descLines : descLines.slice(1);
 
   return {
     code,
+    name,
     mainDesc,
     featureLines,
     qty: raw.qty,
@@ -372,8 +374,7 @@ function formatConfigOrAdditionalCell(itemRaw) {
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-      <!-- Bold: Material No -->
-      <div class="cat-main" style="margin:0; font-weight:bold;">${item.code}</div>
+      <!-- Bold: Material No -->      
       <!-- Bold: Main description/title -->
       <div class="cat-main" style="margin:0; font-weight:bold;">${item.mainDesc}</div>
   `;
