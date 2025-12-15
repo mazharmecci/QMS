@@ -427,18 +427,16 @@ function getTitleAndFeatures(itemRaw) {
 
 /* Additional item cell formatter (two bold lines, gaps, features, specs, meta) */
 function formatAdditionalCell(itemRaw) {
-  const code = itemRaw.code || itemRaw.itemCode || '';
-  const { title, features } = getTitleAndFeatures(itemRaw);
-  const country = itemRaw.country || itemRaw.origin || '';
-  const hsn = itemRaw.hsn || itemRaw.hsnCode || '';
-  const dimensions = itemRaw.dimensions || '';
-  const weight = itemRaw.weight || '';
-  const power = itemRaw.power || '';
+  const code = itemRaw.code || '';
+  const descLines = (itemRaw.longDescription || itemRaw.description || '')
+    .split('\n').map(l => l.trim()).filter(Boolean);
+  const title = descLines[0] || '';
+  const features = descLines.slice(1);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
-      <div class="cat-main" style="font-weight:600;">${code}</div>
-      <div class="cat-main" style="font-weight:600;">${title}</div>
+      <div class="cat-main">${code}</div>
+      <div class="cat-main">${title}</div>
       <div style="height:8px;"></div>
   `;
 
@@ -448,17 +446,17 @@ function formatAdditionalCell(itemRaw) {
   }
 
   const specLines = [];
-  if (dimensions) specLines.push(`Dimensions: ${dimensions}`);
-  if (weight)     specLines.push(`Weight – ${weight}`);
-  if (power)      specLines.push(`Power: ${power}`);
+  if (itemRaw.dimensions) specLines.push(`Dimensions: ${itemRaw.dimensions}`);
+  if (itemRaw.weight)     specLines.push(`Weight – ${itemRaw.weight}`);
+  if (itemRaw.power)      specLines.push(`Power: ${itemRaw.power}`);
   if (specLines.length) {
     html += `<div class="cat-sub" style="padding-left:15px;">${specLines.join('<br>')}</div>`;
     html += `<div style="height:8px;"></div>`;
   }
 
   const metaLines = [];
-  if (country) metaLines.push(`Country of Origin: ${country}`);
-  if (hsn)     metaLines.push(`HSN Code: ${hsn}`);
+  if (itemRaw.country) metaLines.push(`Country of Origin: ${itemRaw.country}`);
+  if (itemRaw.hsn)     metaLines.push(`HSN Code: ${itemRaw.hsn}`);
   if (metaLines.length) {
     html += `<div class="cat-sub" style="padding-left:15px;">${metaLines.join('<br>')}</div>`;
   }
@@ -467,17 +465,17 @@ function formatAdditionalCell(itemRaw) {
   return html;
 }
 
-/* Configuration item cell formatter (two bold lines, gap, features, gap, meta) */
 function formatConfigCell(itemRaw) {
-  const code = itemRaw.code || itemRaw.itemCode || '';
-  const { title, features } = getTitleAndFeatures(itemRaw);
-  const country = itemRaw.country || itemRaw.origin || '';
-  const hsn = itemRaw.hsn || itemRaw.hsnCode || '';
+  const code = itemRaw.code || '';
+  const descLines = (itemRaw.longDescription || itemRaw.description || '')
+    .split('\n').map(l => l.trim()).filter(Boolean);
+  const title = descLines[0] || '';
+  const features = descLines.slice(1);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
-      <div class="cat-main" style="font-weight:600;">${code}</div>
-      <div class="cat-main" style="font-weight:600;">${title}</div>
+      <div class="cat-main">${code}</div>
+      <div class="cat-main">${title}</div>
       <div style="height:8px;"></div>
   `;
 
@@ -487,8 +485,8 @@ function formatConfigCell(itemRaw) {
   }
 
   const metaLines = [];
-  if (country) metaLines.push(`Country of Origin: ${country}`);
-  if (hsn)     metaLines.push(`HSN Code: ${hsn}`);
+  if (itemRaw.country) metaLines.push(`Country of Origin: ${itemRaw.country}`);
+  if (itemRaw.hsn)     metaLines.push(`HSN Code: ${itemRaw.hsn}`);
   if (metaLines.length) {
     html += `<div class="cat-sub" style="padding-left:15px;">${metaLines.join('<br>')}</div>`;
   }
@@ -496,6 +494,7 @@ function formatConfigCell(itemRaw) {
   html += `</td>`;
   return html;
 }
+
 
 function renderQuoteBuilder() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
