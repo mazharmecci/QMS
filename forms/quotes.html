@@ -343,32 +343,20 @@ function normalizeItem(raw) {
   const code = raw.code || raw.itemCode || '';
   const name = raw.name || raw.itemName || '';
 
-  // Gather lines from multiple possible sources
-  const longDesc = (raw.longDescription || raw.description || '')
+  // Split description into lines
+  const descLines = (raw.longDescription || raw.description || '')
     .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
 
-  const features = Array.isArray(raw.features) ? raw.features : [];
-  const specs    = Array.isArray(raw.specs) ? raw.specs : [];
-  const lines    = Array.isArray(raw.lines) ? raw.lines : [];
-
-  // Merge all possible description lines
-  const allLines = [...longDesc, ...features, ...specs, ...lines]
-    .map(l => (typeof l === 'string' ? l.trim() : ''))
-    .filter(Boolean);
-
-  // First line: prefer explicit name, else first description line
-  const firstLine = name || allLines[0] || '';
-
-  // Remaining lines: everything after the first description line
-  const restLines = allLines.slice(1);
+  // First line is the main description/title
+  const mainDesc = descLines[0] || name || '';
+  const featureLines = descLines.slice(1); // everything after the first line
 
   return {
     code,
-    name,
-    firstLine,
-    restLines,
+    mainDesc,
+    featureLines,
     qty: raw.qty,
     upInr: raw.upInr,
     tpInr: raw.tpInr,
@@ -377,6 +365,39 @@ function normalizeItem(raw) {
     country: raw.country || raw.origin || raw.originCountry || '',
     hsn: raw.hsn || raw.hsnCode || ''
   };
+}
+
+function formatConfigOrAdditionalCell(itemRaw) {
+  const item = normalizeItem(itemRaw);
+
+  let html = `
+    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+      <!-- Bold: Material No -->
+      <div class="cat-main" style="margin:0; font-weight:bold;">${item.code}</div>
+      <!-- Bold: Main description/title -->
+      <div class="cat-main" style="margin:0; font-weight:bold;">${item.mainDesc}</div>
+  `;
+
+  // Normal, indented: feature lines
+  if (item.featureLines.length) {
+    html += item.featureLines
+      .map(line => `<div class="cat-sub" style="padding-left:10px;">${line}</div>`)
+      .join('');
+  }
+
+  // Normal, indented: Country + HSN grouped tightly
+  if (item.country || item.hsn) {
+    const lines = [];
+    if (item.country) lines.push(`Country of Origin: ${item.country}`);
+    if (item.hsn)     lines.push(`HSN Code: ${item.hsn}`);
+    html += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  html += `</td>`;
+  return html;
 }
 
 function formatConfigOrAdditionalCell(itemRaw) {
