@@ -263,276 +263,141 @@
 </div>
 
 <script>
-  function formatISOToDMY(iso){
-    if(!iso) return '';
-    const [y,m,d] = iso.split('-');
-    return `${d}-${m}-${y}`;
+function formatISOToDMY(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}-${m}-${y}`;
+}
+
+function splitAddress(address){
+  if(!address) return ['',''];
+  const parts = address.split(',');
+  if(parts.length < 2) return [address.trim(), ''];
+  const line2 = parts.slice(-1)[0].trim();
+  const line1 = parts.slice(0, -1).join(',').trim();
+  return [line1, line2];
+}
+
+function validateHeader(header) {
+  const errors = [];
+  if (!header.quoteNo) errors.push("Quote No is missing");
+  if (!header.quoteDate) errors.push("Quote Date is missing");
+  if (!header.refDate) errors.push("Reference Date is missing");
+  if (!header.hospitalName) errors.push("Hospital Name is missing");
+  if (!header.hospitalAddress) errors.push("Hospital Address is missing");
+  if (!header.contactPhone) errors.push("Contact Phone is missing");
+  if (!header.contactEmail) errors.push("Contact Email is missing");
+  if (header.selectedInstrument) {
+    const inst = header.selectedInstrument;
+    if (!inst.unitPrice || isNaN(inst.unitPrice)) {
+      errors.push("Instrument Unit Price is invalid");
+    }
+    if (inst.hsn && !/^\d{4}\s\d{4}$/.test(inst.hsn)) {
+      errors.push("Instrument HSN Code must be in format: 1234 5678");
+    }
   }
-
-  function splitAddress(address){
-    if(!address) return ['',''];
-    const parts = address.split(',');
-    if(parts.length < 2) return [address.trim(), ''];
-    const line2 = parts.slice(-1)[0].trim();
-    const line1 = parts.slice(0, -1).join(',').trim();
-    return [line1, line2];
+  if (errors.length) {
+    alert("Validation errors:\n" + errors.join("\n"));
+    return false;
   }
+  return true;
+}
 
-  function populateHeader() {
-    const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
-    document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
-    document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
-    document.getElementById('metaYourRef').textContent   = header.yourReference || '';
-    document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
-    document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
-    document.getElementById('metaPhone').textContent     = header.contactPhone || '';
-    document.getElementById('metaEmail').textContent     = header.contactEmail || '';
-    document.getElementById('metaOffice').textContent    = header.officePhone || '';
-    document.getElementById('toHospitalNameLine').textContent = header.hospitalName || 'Hospital / Client Name';
+function populateHeader() {
+  const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+  if (!validateHeader(header)) return;
 
-    const [line1, line2] = splitAddress(header.hospitalAddress || '');
-    document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
-    document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
-    document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
-  }
+  document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
+  document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
+  document.getElementById('metaYourRef').textContent   = header.yourReference || '';
+  document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
+  document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
+  document.getElementById('metaPhone').textContent     = header.contactPhone || '';
+  document.getElementById('metaEmail').textContent     = header.contactEmail || '';
+  document.getElementById('metaOffice').textContent    = header.officePhone || '';
+  document.getElementById('toHospitalNameLine').textContent = header.hospitalName || 'Hospital / Client Name';
 
-  // Instrument cell formatter
-  function formatStackedQuoteCell({
-    code = '',
-    name = '',
-    description = '',
-    supplied = [],
-    dimensions = '',
-    weight = '',
-    power = '',
-    country = '',
-    hsn = ''
-  }) {
-    const descParts = (description || '').split('\n');
-    const descLine1 = descParts[0] || '';
-    const descLine2 = descParts.slice(1).join(' ').trim();
+  const [line1, line2] = splitAddress(header.hospitalAddress || '');
+  document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
+  document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
+  document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
+}
 
-    let block = `
-      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-        <div class="cat-main" style="margin:0; font-weight:600;">${code}</div>`;
 
-    if (name) {
-      block += `
-        <div class="cat-main" style="margin:0; font-weight:600;">${name}</div>`;
-    }
+function renderQuoteBuilder() {
+  const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+  const inst   = header.selectedInstrument;
+  const body   = document.getElementById('quoteBuilderBody');
+  const fmt    = v => (Number(v || 0)).toLocaleString('en-IN',{ minimumFractionDigits: 2 });
 
-    if (descLine1) {
-      block += `
-        <div class="cat-sub" style="margin-top:2px;">${descLine1}</div>`;
-    }
+  if (!inst) { body.innerHTML = ''; return; }
 
-    if (descLine2) {
-      block += `
-        <div class="cat-sub" style="margin-top:0;">${descLine2}</div>`;
-    }
+  const rows = [];
 
-    if (supplied.length) {
-      const suppliedLines = supplied.map(line => `  – ${line}`).join('\n');
-      block += `
-        <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
-          Supplied complete with:<br>${suppliedLines}
-        </div>`;
-    }
+  // MAIN INSTRUMENT
+  rows.push(`
+    <tr>
+      <td>001</td>
+      ${formatStackedQuoteCell({
+        code: inst.catalog || '',
+        name: inst.instrumentName || inst.description || '',
+        description: inst.longDescription || '',
+        supplied: inst.supplied || [],
+        dimensions: inst.dimensions || '',
+        weight: inst.weight || '',
+        power: inst.power || '',
+        country: inst.origin || '',
+        hsn: inst.hsn || ''
+      })}
+      <td>01</td>
+      <td>${fmt(inst.unitPrice)}</td>
+      <td>${fmt(inst.unitPrice)}</td>
+    </tr>
+  `);
 
-    if (dimensions || weight || power) {
-      const lines = [];
-      if (dimensions) lines.push(`Dimensions: ${dimensions}`);
-      if (weight)    lines.push(`Weight: ${weight}`);
-      if (power)     lines.push(`Power: ${power}`);
-      block += `
-        <div class="cat-sub" style="margin-top:6px;">
-          ${lines.join('<br>')}
-        </div>`;
-    }
-
-    if (country || hsn) {
-      const lines = [];
-      if (country) lines.push(`Country of Origin: ${country}`);
-      if (hsn)     lines.push(`HSN Code: ${hsn}`);
-      block += `
-        <div class="cat-sub" style="margin-top:6px;">
-          ${lines.join('<br>')}
-        </div>`;
-    }
-
-    block += `</td>`;
-    return block;
-  }
-
-  // Normalize config/additional items
-  function normalizeItem(raw) {
-    const code = raw.code || raw.itemCode || '';
-    const name = raw.name || raw.itemName || '';
-
-    const descLines = (raw.longDescription || raw.description || '')
-      .split('\n')
-      .map(l => l.trim())
-      .filter(Boolean);
-
-    const mainDesc = name || descLines[0] || '';
-    const featureLines = descLines.slice(name ? 0 : 1);
-
-    return {
-      code,
-      mainDesc,
-      featureLines,
-      qty: raw.qty,
-      upInr: raw.upInr,
-      tpInr: raw.tpInr,
-      price: raw.price,
-      unitPrice: raw.unitPrice,
-      country: raw.country || raw.origin || raw.originCountry || '',
-      hsn: raw.hsn || raw.hsnCode || '',
-      dimensions: raw.dimensions || '',
-      weight: raw.weight || '',
-      power: raw.power || ''
-    };
-  }
-
-  // Config & additional cells: only first two lines bold, rest normal + indented
-  function formatConfigOrAdditionalCell(itemRaw) {
-    const item = normalizeItem(itemRaw);
-
-    let html = `
-      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-        <div class="cat-main" style="margin:0; font-weight:600;">${item.code}</div>
-        <div class="cat-main" style="margin:0; font-weight:600;">${item.mainDesc}</div>
-    `;
-
-    if (item.featureLines.length) {
-      html += item.featureLines
-        .map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`)
-        .join('');
-    }
-
-    if (item.dimensions || item.weight || item.power) {
-      const specLines = [];
-      if (item.dimensions) specLines.push(`Dimensions: ${item.dimensions}`);
-      if (item.weight)     specLines.push(`Weight: ${item.weight}`);
-      if (item.power)      specLines.push(`Power: ${item.power}`);
-      html += `
-        <div class="cat-sub" style="margin-top:6px; padding-left:15px;">
-          ${specLines.join('<br>')}
-        </div>`;
-    }
-
-    if (item.country || item.hsn) {
-      const lines = [];
-      if (item.country) lines.push(`Country of Origin: ${item.country}`);
-      if (item.hsn)     lines.push(`HSN Code: ${item.hsn}`);
-      html += `
-        <div class="cat-sub" style="margin-top:6px; padding-left:15px;">
-          ${lines.join('<br>')}
-        </div>`;
-    }
-
-    html += `</td>`;
-    return html;
-  }
-
-  function renderQuoteBuilder() {
-    const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
-    const inst   = header.selectedInstrument;
-    const body   = document.getElementById('quoteBuilderBody');
-    const fmt    = v => (Number(v || 0)).toLocaleString(
-      'en-IN',
-      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-    );
-
-    if (!inst) {
-      body.innerHTML = '';
-      return;
-    }
-
-    const rows = [];
-
-    // MAIN INSTRUMENT (001)
-    rows.push(`
-      <tr>
-        <td>001</td>
-        ${formatStackedQuoteCell({
-          code: inst.catalog || '',
-          name: inst.instrumentName || inst.description || '',
-          description: inst.longDescription || '',
-          supplied: inst.supplied || [
-            'Base device – 1 No.',
-            'Section waste tray – 1 No.',
-            'Protective cover – 1 No.',
-            'Power Cord – 1 No.',
-            'Operating manual IFU2003006 – 1 No.'
-          ],
-          dimensions: inst.dimensions || '450 x 530 x 275 mm',
-          weight: inst.weight || '38 Kgs',
-          power: inst.power || '115-230 Vac – 50/60 Hz',
-          country: inst.origin || 'Germany',
-          hsn: inst.hsn || '90127 9010'
-        })}
-        <td>01</td>
-        <td>${fmt(inst.unitPrice)}</td>
-        <td>${fmt(inst.unitPrice)}</td>
-      </tr>
-    `);
-
-    // CONFIGURATION ITEMS
-    const configItems = inst.configurationItems || inst.configItems || [];
-    if (configItems.length) {
+  // CONFIGURATION ITEMS
+  const configItems = inst.configurationItems || [];
+  if (configItems.length) {
+    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="6" style="font-weight:700;">CONFIGURATION ITEMS</td></tr>`);
+    configItems.forEach((item, idx) => {
+      const itemCode = String(idx + 2).padStart(3, '0');
       rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
+        <tr>
+          <td>${itemCode}</td>
+          ${formatConfigOrAdditionalCell(item)}
+          <td>${item.qty ?? 'Included'}</td>
+          <td>${item.upInr ?? 'Included'}</td>
+          <td>${item.tpInr ?? 'Included'}</td>
         </tr>
       `);
-
-      configItems.forEach((item, idx) => {
-        const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
-        rows.push(`
-          <tr>
-            <td>${itemCode}</td>
-            ${formatConfigOrAdditionalCell(item)}
-            <td>${item.qty ?? 'Included'}</td>
-            <td>${item.upInr ?? 'Included'}</td>
-            <td>${item.tpInr ?? 'Included'}</td>
-          </tr>
-        `);
-      });
-    }
-
-    // ADDITIONAL ITEMS
-    const additionalItems = inst.optionalItems || inst.additionalItems || [];
-    if (additionalItems.length) {
-      rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
-        </tr>
-      `);
-
-      additionalItems.forEach((item, idx) => {
-        const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
-        const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
-        const priceNum = rawPrice ? Number(rawPrice) : 0;
-        const qty = Number(item.qty || 1);
-
-        rows.push(`
-          <tr>
-            <td>${itemCode}</td>
-            ${formatConfigOrAdditionalCell(item)}
-            <td>${qty.toString().padStart(2, '0')}</td>
-            <td>${fmt(priceNum)}</td>
-            <td>${fmt(priceNum * qty)}</td>
-          </tr>
-        `);
-      });
-    }
-
-    body.innerHTML = rows.join('');
+    });
   }
 
-  populateHeader();
-  renderQuoteBuilder();
+  // ADDITIONAL ITEMS
+  const additionalItems = inst.optionalItems || [];
+  if (additionalItems.length) {
+    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="6" style="font-weight:700;">ADDITIONAL ITEMS</td></tr>`);
+    additionalItems.forEach((item, idx) => {
+      const itemCode = String(idx + 1).padStart(3, '0');
+      const priceNum = Number(item.price || item.unitPrice || 0);
+      const qty = Number(item.qty || 1);
+      rows.push(`
+        <tr>
+          <td>${itemCode}</td>
+          ${formatConfigOrAdditionalCell(item)}
+          <td>${qty.toString().padStart(2, '0')}</td>
+          <td>${fmt(priceNum)}</td>
+          <td>${fmt(priceNum * qty)}</td>
+        </tr>
+      `);
+    });
+  }
+
+  body.innerHTML = rows.join('');
+}
+
+populateHeader();
+renderQuoteBuilder();
 </script>
 </body>
 </html>
