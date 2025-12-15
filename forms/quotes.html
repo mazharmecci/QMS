@@ -41,17 +41,9 @@
       flex-wrap:wrap;
       align-items:flex-start;
     }
-    .attn-box {
-      margin-top:1rem;
-      background:#add8e6;
-      padding:0.75rem 1rem;
-      border-radius:8px;
-      font-weight:800;
-      color:#000;
-      text-align:left;
-      font-size:14px;
-    }
     .quote-left { flex:1; min-width:300px; }
+    .quote-right { flex:1; min-width:300px; background:#fff; padding:1rem 1.25rem; border-radius:8px; }
+
     .company-box {
       background:#d0d4d9;
       text-align:left;
@@ -69,13 +61,18 @@
     }
     .hospital-box p { margin:0; font-size:13px; line-height:1.3; }
     .hospital-box span { font-size:13px; }
-    .quote-right {
-      flex:1;
-      min-width:300px;
-      background:#fff;
-      padding:1rem 1.25rem;
+
+    .attn-box {
+      margin-top:1rem;
+      background:#add8e6;
+      padding:0.75rem 1rem;
       border-radius:8px;
+      font-weight:800;
+      color:#000;
+      text-align:left;
+      font-size:14px;
     }
+
     .quote-right-title {
       background:#d0d4d9;
       text-align:right;
@@ -84,6 +81,7 @@
       margin-bottom:1rem;
       font-weight:800;
     }
+
     .quote-meta-grid {
       display:grid;
       grid-template-columns:auto 1fr auto 1fr;
@@ -112,12 +110,14 @@
       font-size:13px;
       color:#000;
       margin:0;
+      font-weight:600;
     }
     .cat-sub {
       font-size:11px;
       color:#555;
       margin:0;
       line-height:1.3;
+      font-weight:400;
     }
 
     /* MID SECTION TABLE */
@@ -171,29 +171,15 @@
       white-space: nowrap;
     }
 
-    /* Top-align Item number and Cat/Material (columns 1 and 2) */
+    /* Top-align Item number and Cat/Material */
     table.quote-table td:nth-child(1),
     table.quote-table td:nth-child(2) {
       vertical-align: top;
     }
 
-    /* Lock weights: cat-main bold, cat-sub normal */
-    table.quote-table .cat-main {
-      font-weight: 600;
-      font-size: 13px;
-      color: #000;
-      margin: 0;
-    }
-    table.quote-table .cat-sub {
-      font-weight: 400 !important;
-      font-size: 11px;
-      color: #555;
-      margin: 0;
-      line-height: 1.3;
-    }
     table.quote-table .cat-sub b,
     table.quote-table .cat-sub strong {
-      font-weight: 500;
+      font-weight:500;
     }
 
     /* TERMS */
@@ -284,6 +270,7 @@
 </div>
 
 <script>
+/* ---------- Utility helpers ---------- */
 function formatISOToDMY(iso){
   if(!iso) return '';
   const [y,m,d] = iso.split('-');
@@ -299,6 +286,15 @@ function splitAddress(address){
   return [line1, line2];
 }
 
+function moneyINR(value){
+  const num = Number(value || 0);
+  return num.toLocaleString('en-IN',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+/* ---------- Header population & validation ---------- */
 function validateHeader(header) {
   const errors = [];
   if (!header.quoteNo) errors.push("Quote No is missing");
@@ -308,8 +304,9 @@ function validateHeader(header) {
   if (!header.hospitalAddress) errors.push("Hospital Address is missing");
   if (!header.contactPhone) errors.push("Contact Phone is missing");
   if (!header.contactEmail) errors.push("Contact Email is missing");
-  if (header.selectedInstrument) {
-    const inst = header.selectedInstrument;
+
+  const inst = header.selectedInstrument;
+  if (inst) {
     if (!inst.unitPrice || isNaN(inst.unitPrice)) {
       errors.push("Instrument Unit Price is invalid");
     }
@@ -317,6 +314,7 @@ function validateHeader(header) {
       errors.push("Instrument HSN Code must be in format: 1234 5678");
     }
   }
+
   if (errors.length) {
     alert("Validation errors:\n" + errors.join("\n"));
     return false;
@@ -336,7 +334,9 @@ function populateHeader() {
   document.getElementById('metaPhone').textContent     = header.contactPhone || '';
   document.getElementById('metaEmail').textContent     = header.contactEmail || '';
   document.getElementById('metaOffice').textContent    = header.officePhone || '';
-  document.getElementById('toHospitalNameLine').textContent = header.hospitalName || 'Hospital / Client Name';
+
+  document.getElementById('toHospitalNameLine').textContent =
+    header.hospitalName || 'Hospital / Client Name';
 
   const [line1, line2] = splitAddress(header.hospitalAddress || '');
   document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
@@ -344,80 +344,85 @@ function populateHeader() {
   document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
 }
 
-/* Instrument cell formatter (Main instrument) */
-function formatStackedQuoteCell({
-  code = '',
-  name = '',
-  description = '',
-  supplied = [],
-  dimensions = '',
-  weight = '',
-  power = '',
-  country = '',
-  hsn = ''
-}) {
-  const descParts = (description || '').split('\n').map(s=>s.trim()).filter(Boolean);
-  const descLine1 = descParts[0] || '';
-  const descLine2 = descParts.slice(1).join(' ').trim();
+/* ---------- Description parsing (shared) ---------- */
+function parseDescription(item) {
+  const rawDesc = (item.longDescription || item.description || '').split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
 
-  let block = `
+  const name = (item.name || item.itemName || item.instrumentName || '').trim();
+  const title = name || rawDesc[0] || '';
+  const features = name ? rawDesc : rawDesc.slice(1);
+  return { title, features };
+}
+
+/* ---------- Cell formatters ---------- */
+function formatMainInstrumentCell(inst) {
+  const { title, features } = parseDescription({
+    name: inst.instrumentName || inst.description,
+    longDescription: inst.longDescription
+  });
+
+  const supplied = inst.supplied || [];
+  const specs = [];
+  if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
+  if (inst.weight)     specs.push(`Weight: ${inst.weight}`);
+  if (inst.power)      specs.push(`Power: ${inst.power}`);
+
+  const meta = [];
+  if (inst.origin || inst.country) meta.push(`Country of Origin: ${inst.origin || inst.country}`);
+  if (inst.hsn)                    meta.push(`HSN Code: ${inst.hsn}`);
+
+  let html = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
-      <div class="cat-main" style="margin:0; font-weight:600;">${code}</div>`;
+      <div class="cat-main">${inst.catalog || inst.code || ''}</div>
+  `;
 
-  if (name) {
-    block += `
-      <div class="cat-main" style="margin:0; font-weight:600;">${name}</div>`;
+  if (title) {
+    html += `<div class="cat-main">${title}</div>`;
   }
 
-  if (descLine1) {
-    block += `
-      <div class="cat-sub" style="margin-top:4px;">${descLine1}</div>`;
-  }
-
-  if (descLine2) {
-    block += `
-      <div class="cat-sub" style="margin-top:2px;">${descLine2}</div>`;
+  if (features.length) {
+    html += `<div style="height:8px;"></div>`;
+    html += features.map(line =>
+      `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`
+    ).join('');
   }
 
   if (supplied.length) {
-    const suppliedLines = supplied.map(line => `– ${line}`).join('<br>');
-    block += `
-      <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
-        Supplied complete with:<br>${suppliedLines}
+    html += `<div style="height:8px;"></div>`;
+    html += `
+      <div class="cat-sub" style="padding-left:15px;">
+        Supplied complete with:<br>${supplied.map(s => `– ${s}`).join('<br>')}
       </div>`;
   }
 
-  if (dimensions || weight || power) {
-    const lines = [];
-    if (dimensions) lines.push(`Dimensions: ${dimensions}`);
-    if (weight)    lines.push(`Weight: ${weight}`);
-    if (power)     lines.push(`Power: ${power}`);
-    block += `
-      <div class="cat-sub" style="margin-top:6px;">
-        ${lines.join('<br>')}
-      </div>`;
+  if (specs.length) {
+    html += `<div style="height:8px;"></div>`;
+    html += `<div class="cat-sub" style="padding-left:15px;">${specs.join('<br>')}</div>`;
   }
 
-  if (country || hsn) {
-    const lines = [];
-    if (country) lines.push(`Country of Origin: ${country}`);
-    if (hsn)     lines.push(`HSN Code: ${hsn}`);
-    block += `
-      <div class="cat-sub" style="margin-top:6px;">
-        ${lines.join('<br>')}
-      </div>`;
+  if (meta.length) {
+    html += `<div style="height:8px;"></div>`;
+    html += `<div class="cat-sub" style="padding-left:15px;">${meta.join('<br>')}</div>`;
   }
 
-  block += `</td>`;
-  return block;
+  html += `</td>`;
+  return html;
 }
 
-function formatAdditionalCell(itemRaw) {
-  const code = itemRaw.code || '';
-  const descLines = (itemRaw.longDescription || itemRaw.description || '')
-    .split('\n').map(l => l.trim()).filter(Boolean);
-  const title = descLines[0] || '';
-  const features = descLines.slice(1);
+function formatGenericItemCell(itemRaw) {
+  const { title, features } = parseDescription(itemRaw);
+  const code = itemRaw.code || itemRaw.catalog || '';
+  const specs = [];
+  if (itemRaw.dimensions) specs.push(`Dimensions: ${itemRaw.dimensions}`);
+  if (itemRaw.weight)     specs.push(`Weight – ${itemRaw.weight}`);
+  if (itemRaw.power)      specs.push(`Power: ${itemRaw.power}`);
+
+  const meta = [];
+  if (itemRaw.country || itemRaw.origin)
+    meta.push(`Country of Origin: ${itemRaw.country || itemRaw.origin}`);
+  if (itemRaw.hsn) meta.push(`HSN Code: ${itemRaw.hsn}`);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
@@ -427,67 +432,35 @@ function formatAdditionalCell(itemRaw) {
   `;
 
   if (features.length) {
-    html += features.map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`).join('');
+    html += features.map(line =>
+      `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`
+    ).join('');
     html += `<div style="height:8px;"></div>`;
   }
 
-  const specLines = [];
-  if (itemRaw.dimensions) specLines.push(`Dimensions: ${itemRaw.dimensions}`);
-  if (itemRaw.weight)     specLines.push(`Weight – ${itemRaw.weight}`);
-  if (itemRaw.power)      specLines.push(`Power: ${itemRaw.power}`);
-  if (specLines.length) {
-    html += `<div class="cat-sub" style="padding-left:15px;">${specLines.join('<br>')}</div>`;
+  if (specs.length) {
+    html += `<div class="cat-sub" style="padding-left:15px;">${specs.join('<br>')}</div>`;
     html += `<div style="height:8px;"></div>`;
   }
 
-  const metaLines = [];
-  if (itemRaw.country) metaLines.push(`Country of Origin: ${itemRaw.country}`);
-  if (itemRaw.hsn)     metaLines.push(`HSN Code: ${itemRaw.hsn}`);
-  if (metaLines.length) {
-    html += `<div class="cat-sub" style="padding-left:15px;">${metaLines.join('<br>')}</div>`;
+  if (meta.length) {
+    html += `<div class="cat-sub" style="padding-left:15px;">${meta.join('<br>')}</div>`;
   }
 
   html += `</td>`;
   return html;
 }
 
-function formatConfigCell(itemRaw) {
-  const code = itemRaw.code || '';
-  const descLines = (itemRaw.longDescription || itemRaw.description || '')
-    .split('\n').map(l => l.trim()).filter(Boolean);
-  const title = descLines[0] || '';
-  const features = descLines.slice(1);
-
-  let html = `
-    <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
-      <div class="cat-main">${code}</div>
-      <div class="cat-main">${title}</div>
-      <div style="height:8px;"></div>
-  `;
-
-  if (features.length) {
-    html += features.map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`).join('');
-    html += `<div style="height:8px;"></div>`;
-  }
-
-  const metaLines = [];
-  if (itemRaw.country) metaLines.push(`Country of Origin: ${itemRaw.country}`);
-  if (itemRaw.hsn)     metaLines.push(`HSN Code: ${itemRaw.hsn}`);
-  if (metaLines.length) {
-    html += `<div class="cat-sub" style="padding-left:15px;">${metaLines.join('<br>')}</div>`;
-  }
-
-  html += `</td>`;
-  return html;
-}
-
+/* ---------- Main render ---------- */
 function renderQuoteBuilder() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
   const inst   = header.selectedInstrument;
   const body   = document.getElementById('quoteBuilderBody');
-  const fmt    = v => (Number(v || 0)).toLocaleString('en-IN',{ minimumFractionDigits: 2 });
 
-  if (!inst) { body.innerHTML = ''; return; }
+  if (!inst) {
+    body.innerHTML = '';
+    return;
+  }
 
   const rows = [];
 
@@ -495,56 +468,61 @@ function renderQuoteBuilder() {
   rows.push(`
     <tr>
       <td>001</td>
-      ${formatStackedQuoteCell({
-        code: inst.catalog || '',
-        name: inst.instrumentName || inst.description || '',
-        description: inst.longDescription || '',
-        supplied: inst.supplied || [],
-        dimensions: inst.dimensions || '',
-        weight: inst.weight || '',
-        power: inst.power || '',
-        country: inst.origin || '',
-        hsn: inst.hsn || ''
-      })}
+      ${formatMainInstrumentCell(inst)}
       <td>01</td>
-      <td>${fmt(inst.unitPrice)}</td>
-      <td>${fmt(inst.unitPrice)}</td>
+      <td>${moneyINR(inst.unitPrice)}</td>
+      <td>${moneyINR(inst.unitPrice)}</td>
     </tr>
   `);
 
-  // CONFIGURATION ITEMS
-  const configItems = inst.configurationItems || [];
+  // CONFIGURATION ITEMS (included)
+  const configItems =
+    inst.configurationItems || inst.configItems || [];
   if (configItems.length) {
-    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td></tr>`);
+    rows.push(`
+      <tr style="background:#00B0F0; color:#000;">
+        <td colspan="6" style="font-weight:700;">CONFIGURATION ITEMS</td>
+      </tr>
+    `);
     configItems.forEach((item, idx) => {
       const itemCode = String(idx + 2).padStart(3, '0');
+      const qty = item.qty != null ? item.qty : 'Included';
+      const up  = item.upInr != null ? item.upInr : 'Included';
+      const tp  = item.tpInr != null ? item.tpInr : 'Included';
       rows.push(`
         <tr>
           <td>${itemCode}</td>
-          ${formatConfigCell(item)}
-          <td>${item.qty ?? 'Included'}</td>
-          <td>${item.upInr ?? 'Included'}</td>
-          <td>${item.tpInr ?? 'Included'}</td>
+          ${formatGenericItemCell(item)}
+          <td>${qty}</td>
+          <td>${typeof up === 'number' ? moneyINR(up) : up}</td>
+          <td>${typeof tp === 'number' ? moneyINR(tp) : tp}</td>
         </tr>
       `);
     });
   }
 
-  // ADDITIONAL ITEMS
-  const additionalItems = inst.optionalItems || [];
+  // ADDITIONAL / OPTIONAL ITEMS (priced)
+  const additionalItems =
+    inst.optionalItems || inst.additionalItems || [];
   if (additionalItems.length) {
-    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td></tr>`);
+    rows.push(`
+      <tr style="background:#00B0F0; color:#000;">
+        <td colspan="6" style="font-weight:700;">ADDITIONAL ITEMS</td>
+      </tr>
+    `);
     additionalItems.forEach((item, idx) => {
       const itemCode = String(idx + 1).padStart(3, '0');
-      const priceNum = Number(item.price || item.unitPrice || 0);
-      const qty = Number(item.qty || 1);
+      const qtyNum   = Number(item.qty || 1);
+      const unitRaw  = item.price || item.unitPrice || item.upInr || 0;
+      const unitNum  = Number(unitRaw);
+      const totalNum = unitNum * qtyNum;
       rows.push(`
         <tr>
           <td>${itemCode}</td>
-          ${formatAdditionalCell(item)}
-          <td>${qty.toString().padStart(2, '0')}</td>
-          <td>${fmt(priceNum)}</td>
-          <td>${fmt(priceNum * qty)}</td>
+          ${formatGenericItemCell(item)}
+          <td>${qtyNum.toString().padStart(2, '0')}</td>
+          <td>${moneyINR(unitNum)}</td>
+          <td>${moneyINR(totalNum)}</td>
         </tr>
       `);
     });
@@ -553,6 +531,7 @@ function renderQuoteBuilder() {
   body.innerHTML = rows.join('');
 }
 
+/* ---------- Bootstrapping ---------- */
 populateHeader();
 renderQuoteBuilder();
 </script>
