@@ -384,7 +384,6 @@ function formatConfigOrAdditionalCell(item) {
   html += `</td>`;
   return html;
 }
-
 // CONFIGURATION ITEMS
 const configItems = inst.configurationItems || [];
 if (configItems.length) {
@@ -393,13 +392,26 @@ if (configItems.length) {
       <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
     </tr>
   `);
-
   configItems.forEach((item, idx) => {
     const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
+    const descLines = (item.longDescription || '').split('\n');
+    const firstLine = descLines[0] || '';
+    const restLines = descLines.slice(1);
+
     rows.push(`
       <tr>
         <td>${itemCode}</td>
-        ${formatConfigOrAdditionalCell(item)}
+        <td style="white-space:pre-line; vertical-align:top;" colspan="1">
+          <!-- Bold: Material No -->
+          <div style="padding-left:10px; font-weight:bold;">${item.code || item.itemCode || ''}</div>
+          <!-- Bold: First description line -->
+          ${firstLine ? `<div style="padding-left:10px; font-weight:bold;">${firstLine}</div>` : ''}
+          <!-- Normal, indented: remaining description lines -->
+          ${restLines.map(line => `<div style="padding-left:10px;">- ${line}</div>`).join('')}
+          <!-- Normal, indented: Country + HSN -->
+          ${item.country || item.origin ? `<div style="padding-left:10px;">Country of Origin: ${item.country || item.origin}</div>` : ''}
+          ${item.hsn ? `<div style="padding-left:10px;">HSN Code: ${item.hsn}</div>` : ''}
+        </td>
         <td>${item.qty || 'Included'}</td>
         <td>${item.upInr || 'Included'}</td>
         <td>${item.tpInr || 'Included'}</td>
@@ -416,17 +428,29 @@ if (additionalItems.length) {
       <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
     </tr>
   `);
-
   additionalItems.forEach((item, idx) => {
     const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
     const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
     const priceNum = rawPrice ? Number(rawPrice) : 0;
-    const qty      = Number(item.qty || 1);
+    const qty = Number(item.qty || 1);
+    const descLines = (item.longDescription || '').split('\n');
+    const firstLine = descLines[0] || '';
+    const restLines = descLines.slice(1);
 
     rows.push(`
       <tr>
         <td>${itemCode}</td>
-        ${formatConfigOrAdditionalCell(item)}
+        <td style="white-space:pre-line; vertical-align:top;" colspan="1">
+          <!-- Bold: Material No -->
+          <div style="padding-left:10px; font-weight:bold;">${item.code || item.itemCode || ''}</div>
+          <!-- Bold: First description line -->
+          ${firstLine ? `<div style="padding-left:10px; font-weight:bold;">${firstLine}</div>` : ''}
+          <!-- Normal, indented: remaining description lines -->
+          ${restLines.map(line => `<div style="padding-left:10px;">- ${line}</div>`).join('')}
+          <!-- Normal, indented: Country + HSN -->
+          ${item.country || item.origin ? `<div style="padding-left:10px;">Country of Origin: ${item.country || item.origin}</div>` : ''}
+          ${item.hsn ? `<div style="padding-left:10px;">HSN Code: ${item.hsn}</div>` : ''}
+        </td>
         <td>${qty.toString().padStart(2, '0')}</td>
         <td>${fmt(priceNum)}</td>
         <td>${fmt(priceNum * qty)}</td>
@@ -434,7 +458,6 @@ if (additionalItems.length) {
     `);
   });
 }
-
 
 body.innerHTML = rows.join('');
 
