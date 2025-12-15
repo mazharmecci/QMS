@@ -353,42 +353,50 @@
   }
 
   // For config & additional items: bold first two lines, rest normal + indented
-  function formatConfigOrAdditionalCell(raw) {
-    const code = raw.code || raw.itemCode || '';
-    const title = raw.name || raw.itemName || '';
-    const descLines = (raw.longDescription || raw.description || '')
-      .split('\n')
-      .map(l => l.trim())
-      .filter(Boolean);
+function formatConfigOrAdditionalCell(itemRaw) {
+  const item = normalizeItem(itemRaw);
 
-    let html = `
-      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-        <div class="cat-main" style="margin:0; font-weight:bold;">${code}</div>
-        <div class="cat-main" style="margin:0; font-weight:bold;">${title}</div>
-    `;
+  let html = `
+    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+      <!-- Bold: Material No -->
+      <div class="cat-main" style="margin:0; font-weight:bold;">${item.code}</div>
+      <!-- Bold: Main description/title -->
+      <div class="cat-main" style="margin:0; font-weight:bold;">${item.mainDesc}</div>
+  `;
 
-    if (descLines.length) {
-      html += descLines
-        .map(line => `<div class="cat-sub" style="padding-left:10px;">${line}</div>`)
-        .join('');
-    }
-
-    const country = raw.country || raw.origin || '';
-    const hsn = raw.hsn || raw.hsnCode || '';
-
-    if (country || hsn) {
-      const lines = [];
-      if (country) lines.push(`Country of Origin: ${country}`);
-      if (hsn)     lines.push(`HSN Code: ${hsn}`);
-      html += `
-        <div class="cat-sub" style="margin-top:6px; padding-left:10px;">
-          ${lines.join('<br>')}
-        </div>`;
-    }
-
-    html += `</td>`;
-    return html;
+  // Normal, indented: feature lines with leading dash
+  if (item.featureLines.length) {
+    html += item.featureLines
+      .map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`)
+      .join('');
   }
+
+  // Add a gap before specs (dimensions/weight/power)
+  if (item.dimensions || item.weight || item.power) {
+    const specLines = [];
+    if (item.dimensions) specLines.push(`Dimensions: ${item.dimensions}`);
+    if (item.weight)    specLines.push(`Weight: ${item.weight}`);
+    if (item.power)     specLines.push(`Power: ${item.power}`);
+    html += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${specLines.join('<br>')}
+      </div>`;
+  }
+
+  // Normal, indented: Country + HSN grouped tightly
+  if (item.country || item.hsn) {
+    const lines = [];
+    if (item.country) lines.push(`Country of Origin: ${item.country}`);
+    if (item.hsn)     lines.push(`HSN Code: ${item.hsn}`);
+    html += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  html += `</td>`;
+  return html;
+}
 
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
