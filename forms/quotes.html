@@ -339,31 +339,30 @@ table.quote-table td:nth-child(2) {
       </tr>
     `);
 
-  function formatConfigOrAdditionalCell(item) {
+function formatConfigOrAdditionalCell(item) {
   const code = item.code || item.itemCode || '';
   const name = item.name || item.itemName || '';
   const desc = item.longDescription || '';
 
-  const descLines = desc.split('\n').map(l => l.trim()).filter(Boolean);
-  const firstLine = descLines[0] || '';
-  const restLines = descLines.slice(1);
+  // Treat each line of longDescription as a bullet line
+  const featureLines = desc
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top;">
       <div style="padding-left:10px; font-weight:bold;">${code}</div>
       <div style="padding-left:10px; font-weight:bold;">${name}</div>`;
 
-  if (firstLine) {
-    html += `
-      <div style="padding-left:10px;">${firstLine}</div>`;
-  }
-
-  if (restLines.length) {
-    html += restLines
-      .map(line => `<div style="padding-left:10px;">${line}</div>`)
+  // Bullet-style features, normal weight
+  if (featureLines.length) {
+    html += featureLines
+      .map(line => `<div style="padding-left:10px;"> - ${line}</div>`)
       .join('');
   }
 
+  // Optional: origin & HSN on new lines, same indent
   if (item.country || item.origin) {
     html += `
       <div style="padding-left:10px; margin-top:6px;">Country of Origin: ${item.country || item.origin}</div>`;
@@ -378,7 +377,7 @@ table.quote-table td:nth-child(2) {
   return html;
 }
 
-    
+
 // CONFIGURATION ITEMS
 const configItems = inst.configurationItems || [];
 if (configItems.length) {
@@ -387,6 +386,7 @@ if (configItems.length) {
       <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
     </tr>
   `);
+
   configItems.forEach((item, idx) => {
     const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
     rows.push(`
@@ -401,6 +401,7 @@ if (configItems.length) {
   });
 }
 
+
 // ADDITIONAL ITEMS
 const additionalItems = inst.optionalItems || [];
 if (additionalItems.length) {
@@ -409,6 +410,7 @@ if (additionalItems.length) {
       <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
     </tr>
   `);
+
   additionalItems.forEach((item, idx) => {
     const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
     const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
@@ -426,7 +428,6 @@ if (additionalItems.length) {
     `);
   });
 }
-
 
 body.innerHTML = rows.join('');
 
