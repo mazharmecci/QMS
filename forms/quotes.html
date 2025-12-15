@@ -339,37 +339,46 @@ table.quote-table td:nth-child(2) {
       </tr>
     `);
     
-
 function formatConfigOrAdditionalCell(item) {
   const code = item.code || item.itemCode || '';
   const name = item.name || item.itemName || '';
   const desc = item.longDescription || '';
 
-  const lines = desc
+  // All description content (features, etc.) in one array
+  const descLines = desc
     .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top;">
+      <!-- line 1: material no. bold -->
       <div style="padding-left:10px; font-weight:bold;">${code}</div>
-      <div style="padding-left:10px; font-weight:bold;">${name}</div>`;
+      <!-- line 2: description/title bold -->
+      <div style="padding-left:10px; font-weight:bold;">${name}</div>
+  `;
 
-  // remaining description lines, normal weight, same indent, prefixed with " - "
-  if (lines.length) {
-    html += lines
-      .map(line => `<div style="padding-left:10px;"> - ${line}</div>`)
+  // Remaining lines: normal weight, indented, with leading dash
+  if (descLines.length) {
+    html += descLines
+      .map(line => `<div style="padding-left:10px; font-weight:normal;"> - ${line}</div>`)
       .join('');
   }
 
+  // Origin (normal)
   if (item.country || item.origin) {
     html += `
-      <div style="padding-left:10px; margin-top:6px;">Country of Origin: ${item.country || item.origin}</div>`;
+      <div style="padding-left:10px; margin-top:6px; font-weight:normal;">
+        Country of Origin: ${item.country || item.origin}
+      </div>`;
   }
 
+  // HSN (normal)
   if (item.hsn) {
     html += `
-      <div style="padding-left:10px;">HSN Code: ${item.hsn}</div>`;
+      <div style="padding-left:10px; font-weight:normal;">
+        HSN Code: ${item.hsn}
+      </div>`;
   }
 
   html += `</td>`;
