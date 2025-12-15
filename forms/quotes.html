@@ -338,46 +338,64 @@ table.quote-table td:nth-child(2) {
         <td>${fmt(inst.unitPrice)}</td>
       </tr>
     `);
-    
-function formatConfigOrAdditionalCell(item) {
-  const code = item.code || item.itemCode || '';
-  const name = item.name || item.itemName || '';
-  const desc = item.longDescription || '';
 
-  // Split description into lines
-  const descLines = (desc || '')
-    .split('\n')
-    .map(l => l.trim())
+function normalizeItem(raw) {
+  const code = raw.code || raw.itemCode || '';
+  const name = raw.name || raw.itemName || '';
+
+  // Gather lines from multiple possible sources
+  const longDesc = (raw.longDescription || raw.description || '').split('\n');
+  const features = Array.isArray(raw.features) ? raw.features : [];
+  const specs    = Array.isArray(raw.specs) ? raw.specs : [];
+  const lines    = Array.isArray(raw.lines) ? raw.lines : [];
+
+  // Clean and merge
+  const allLines = [
+    ...longDesc,
+    ...features,
+    ...specs,
+    ...lines
+  ]
+    .map(l => (typeof l === 'string' ? l.trim() : ''))
     .filter(Boolean);
 
-  // First line (title) bold, rest normal
-  const firstLine = descLines[0] || '';
-  const restLines = descLines.slice(1);
+  return {
+    code,
+    // First line: prefer an explicit title, else fall back to name, else first desc line
+    firstLine: allLines[0] || name || '',
+    restLines: allLines.slice(name ? 0 : 1), // if name exists and was not in allLines, keep allLines as rest
+    qty: raw.qty,
+    upInr: raw.upInr,
+    tpInr: raw.tpInr,
+    price: raw.price,
+    unitPrice: raw.unitPrice,
+    country: raw.country || raw.origin || raw.originCountry || '',
+    hsn: raw.hsn || raw.hsnCode || ''
+  };
+}
+
+function formatConfigOrAdditionalCell(itemRaw) {
+  const item = normalizeItem(itemRaw);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top;">
-      <!-- line 1: material no. bold -->
-      <div style="padding-left:10px; font-weight:bold;">${code}</div>
-      <!-- line 2: first description/title bold -->
-      ${firstLine ? `<div style="padding-left:10px; font-weight:bold;">${firstLine}</div>` : ''}
+      <div style="padding-left:10px; font-weight:bold;">${item.code}</div>
+      ${item.firstLine ? `<div style="padding-left:10px; font-weight:bold;">${item.firstLine}</div>` : ''}
   `;
 
-  // Remaining description lines: normal, indented, with leading dash
-  if (restLines.length) {
-    html += restLines
+  if (item.restLines.length) {
+    html += item.restLines
       .map(line => `<div style="padding-left:10px; font-weight:normal;">- ${line}</div>`)
       .join('');
   }
 
-  // Origin (normal)
-  if (item.country || item.origin) {
+  if (item.country) {
     html += `
       <div style="padding-left:10px; margin-top:6px; font-weight:normal;">
-        Country of Origin: ${item.country || item.origin}
+        Country of Origin: ${item.country}
       </div>`;
   }
 
-  // HSN (normal)
   if (item.hsn) {
     html += `
       <div style="padding-left:10px; font-weight:normal;">
@@ -390,40 +408,42 @@ function formatConfigOrAdditionalCell(item) {
 }
 
 // CONFIGURATION ITEMS
-const configItems = inst.configurationItems || [];
+const configItems = inst.configurationItems || inst.configItems || [];
 if (configItems.length) {
   rows.push(`
     <tr style="background:#00B0F0; color:#000;">
       <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
     </tr>
   `);
+
   configItems.forEach((item, idx) => {
     const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
     rows.push(`
       <tr>
         <td>${itemCode}</td>
         ${formatConfigOrAdditionalCell(item)}
-        <td>${item.qty || 'Included'}</td>
-        <td>${item.upInr || 'Included'}</td>
-        <td>${item.tpInr || 'Included'}</td>
+        <td>${(item.qty ?? 'Included')}</td>
+        <td>${(item.upInr ?? 'Included')}</td>
+        <td>${(item.tpInr ?? 'Included')}</td>
       </tr>
     `);
   });
 }
 
 // ADDITIONAL ITEMS
-const additionalItems = inst.optionalItems || [];
+const additionalItems = inst.optionalItems || inst.additionalItems || [];
 if (additionalItems.length) {
   rows.push(`
     <tr style="background:#00B0F0; color:#000;">
       <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
     </tr>
   `);
+
   additionalItems.forEach((item, idx) => {
     const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
     const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
     const priceNum = rawPrice ? Number(rawPrice) : 0;
-    const qty = Number(item.qty || 1);
+    const qty      = Number(item.qty || 1);
 
     rows.push(`
       <tr>
@@ -436,6 +456,7 @@ if (additionalItems.length) {
     `);
   });
 }
+
 
 body.innerHTML = rows.join('');
 
