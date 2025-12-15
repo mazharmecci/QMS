@@ -331,6 +331,9 @@ function formatStackedQuoteCell({
   hsn = ''
 }) {
   const descLines = (description || '').split('\n').map(l => l.trim()).filter(Boolean);
+  const firstLine = descLines[0] || '';
+  const secondLine = descLines[1] || '';
+  const featureLines = descLines.slice(2);
 
   let block = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
@@ -338,17 +341,23 @@ function formatStackedQuoteCell({
       <div class="cat-main">${name}</div>
   `;
 
-  if (descLines.length) {
-    descLines.forEach(line => {
-      block += `<div class="cat-main">${line}</div>`;
-    });
+  if (firstLine) {
+    block += `<div class="cat-main">${firstLine}</div>`;
+  }
+
+  if (secondLine) {
+    block += `<div class="cat-main">${secondLine}</div>`;
+  }
+
+  if (featureLines.length) {
     block += `<div style="height:8px;"></div>`;
+    block += featureLines.map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`).join('');
   }
 
   if (supplied.length) {
+    block += `<div style="height:8px;"></div>`;
     block += `<div class="cat-sub" style="font-weight:600;">Supplied Complete with:</div>`;
     block += supplied.map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`).join('');
-    block += `<div style="height:8px;"></div>`;
   }
 
   const specLines = [];
@@ -356,14 +365,15 @@ function formatStackedQuoteCell({
   if (weight)     specLines.push(`Weight: ${weight}`);
   if (power)      specLines.push(`Power: ${power}`);
   if (specLines.length) {
-    block += `<div class="cat-sub" style="padding-left:15px;">${specLines.join('<br>')}</div>`;
     block += `<div style="height:8px;"></div>`;
+    block += `<div class="cat-sub" style="padding-left:15px;">${specLines.join('<br>')}</div>`;
   }
 
   const metaLines = [];
   if (country) metaLines.push(`Country of Origin: ${country}`);
   if (hsn)     metaLines.push(`HSN Code: ${hsn}`);
   if (metaLines.length) {
+    block += `<div style="height:8px;"></div>`;
     block += `<div class="cat-sub" style="padding-left:15px;">${metaLines.join('<br>')}</div>`;
   }
 
