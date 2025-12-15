@@ -352,6 +352,38 @@
     return block;
   }
 
+
+  function normalizeItem(raw) {
+  const code = raw.code || raw.itemCode || '';
+  const name = raw.name || raw.itemName || '';
+
+  // Split description into lines
+  const descLines = (raw.longDescription || raw.description || '')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  // Main description/title: first line
+  const mainDesc = name || descLines[0] || '';
+  const featureLines = descLines.slice(1);
+
+  return {
+    code,
+    mainDesc,
+    featureLines,
+    qty: raw.qty,
+    upInr: raw.upInr,
+    tpInr: raw.tpInr,
+    price: raw.price,
+    unitPrice: raw.unitPrice,
+    country: raw.country || raw.origin || raw.originCountry || '',
+    hsn: raw.hsn || raw.hsnCode || '',
+    dimensions: raw.dimensions || '',
+    weight: raw.weight || '',
+    power: raw.power || ''
+  };
+}
+
   // For config & additional items: bold first two lines, rest normal + indented
 function formatConfigOrAdditionalCell(itemRaw) {
   const item = normalizeItem(itemRaw);
