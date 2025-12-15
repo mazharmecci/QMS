@@ -349,6 +349,7 @@ if (configItems.length) {
   `);
   configItems.forEach((item, idx) => {
     const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
+    const descLines = (item.longDescription || '').split('\n');
     rows.push(`
       <tr>
         <td>${itemCode}</td>
@@ -357,10 +358,7 @@ if (configItems.length) {
           <div style="padding-left:10px; font-weight:bold;">
             ${item.name || item.itemName || ''}
           </div>
-          ${item.longDescription
-            .split('\n')
-            .map(line => `<div style="padding-left:10px;">${line}</div>`)
-            .join('')}
+          ${descLines.map(line => `<div style="padding-left:10px;">${line}</div>`).join('')}
           ${item.country || item.origin
             ? `<div style="padding-left:10px; margin-top:6px;">Country of Origin: ${item.country || item.origin}</div>`
             : ''}
@@ -389,6 +387,7 @@ if (additionalItems.length) {
     const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
     const priceNum = rawPrice ? Number(rawPrice) : 0;
     const qty = Number(item.qty || 1);
+    const descLines = (item.longDescription || '').split('\n');
 
     rows.push(`
       <tr>
@@ -398,10 +397,7 @@ if (additionalItems.length) {
           <div style="padding-left:10px; font-weight:bold;">
             ${item.name || item.itemName || ''}
           </div>
-          ${item.longDescription
-            .split('\n')
-            .map(line => `<div style="padding-left:10px;">${line}</div>`)
-            .join('')}
+          ${descLines.map(line => `<div style="padding-left:10px;">${line}</div>`).join('')}
           ${item.country || item.origin
             ? `<div style="padding-left:10px; margin-top:6px;">Country of Origin: ${item.country || item.origin}</div>`
             : ''}
