@@ -391,6 +391,55 @@ function formatStackedQuoteCell({
   return block;
 }
 
+// Config & Additional item cell formatter
+function formatConfigOrAdditionalCell(itemRaw) {
+  const item = {
+    code: itemRaw.code || itemRaw.itemCode || '',
+    name: itemRaw.name || itemRaw.itemName || '',
+    description: itemRaw.longDescription || itemRaw.description || '',
+    qty: itemRaw.qty || 'Included',
+    upInr: itemRaw.upInr || 'Included',
+    tpInr: itemRaw.tpInr || 'Included',
+    country: itemRaw.country || itemRaw.origin || '',
+    hsn: itemRaw.hsn || itemRaw.hsnCode || '',
+    dimensions: itemRaw.dimensions || '',
+    weight: itemRaw.weight || '',
+    power: itemRaw.power || ''
+  };
+
+  const descLines = item.description.split('\n').map(l => l.trim()).filter(Boolean);
+  const mainDesc = item.name || descLines[0] || '';
+  const featureLines = descLines.slice(item.name ? 0 : 1);
+
+  let html = `
+    <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
+      <div class="cat-main" style="font-weight:600;">${item.code}</div>
+      <div class="cat-main" style="font-weight:600;">${mainDesc}</div>
+  `;
+
+  if (featureLines.length) {
+    html += featureLines.map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`).join('');
+  }
+
+  if (item.dimensions || item.weight || item.power) {
+    const specs = [];
+    if (item.dimensions) specs.push(`Dimensions: ${item.dimensions}`);
+    if (item.weight) specs.push(`Weight: ${item.weight}`);
+    if (item.power) specs.push(`Power: ${item.power}`);
+    html += `<div class="cat-sub" style="margin-top:6px; padding-left:15px;">${specs.join('<br>')}</div>`;
+  }
+
+  if (item.country || item.hsn) {
+    const meta = [];
+    if (item.country) meta.push(`Country of Origin: ${item.country}`);
+    if (item.hsn) meta.push(`HSN Code: ${item.hsn}`);
+    html += `<div class="cat-sub" style="margin-top:6px; padding-left:15px;">${meta.join('<br>')}</div>`;
+  }
+
+  html += `</td>`;
+  return html;
+}
+
 
 function renderQuoteBuilder() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
