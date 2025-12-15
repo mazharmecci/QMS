@@ -282,90 +282,86 @@
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Instrument cell formatter (leave as-is structurally)
-  function formatStackedQuoteCell({
-    code = '',
-    name = '',
-    description = '',
-    supplied = [],
-    dimensions = '',
-    weight = '',
-    power = '',
-    country = '',
-    hsn = ''
-  }) {
-    const descParts = (description || '').split('\n');
-    const descLine1 = descParts[0] || '';
-    const descLine2 = descParts.slice(1).join(' ').trim();
+  // Instrument cell formatter (unchanged behavior)
+function formatStackedQuoteCell({
+  code = '',
+  name = '',
+  description = '',
+  supplied = [],
+  dimensions = '',
+  weight = '',
+  power = '',
+  country = '',
+  hsn = ''
+}) {
+  const descParts = (description || '').split('\n');
+  const descLine1 = descParts[0] || '';
+  const descLine2 = descParts.slice(1).join(' ').trim();
 
-    let block = `
-      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-        <div class="cat-main" style="margin:0;">${code}</div>`;
+  let block = `
+    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+      <div class="cat-main" style="margin:0;">${code}</div>`;
 
-    if (name) {
-      block += `
-        <div class="cat-main" style="margin:0;">${name}</div>`;
-    }
-
-    if (descLine1) {
-      block += `
-        <div class="cat-sub" style="margin-top:2px;">${descLine1}</div>`;
-    }
-
-    if (descLine2) {
-      block += `
-        <div class="cat-sub" style="margin-top:0;">${descLine2}</div>`;
-    }
-
-    if (supplied.length) {
-      const suppliedLines = supplied
-        .map(line => `  – ${line}`)
-        .join('\n');
-      block += `
-        <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
-          Supplied complete with:<br>${suppliedLines}
-        </div>`;
-    }
-
-    if (dimensions || weight || power) {
-      const lines = [];
-      if (dimensions) lines.push(`Dimensions: ${dimensions}`);
-      if (weight)    lines.push(`Weight: ${weight}`);
-      if (power)     lines.push(`Power: ${power}`);
-      block += `
-        <div class="cat-sub" style="margin-top:6px;">
-          ${lines.join('<br>')}
-        </div>`;
-    }
-
-    if (country || hsn) {
-      const lines = [];
-      if (country) lines.push(`Country of Origin: ${country}`);
-      if (hsn)     lines.push(`HSN Code: ${hsn}`);
-      block += `
-        <div class="cat-sub" style="margin-top:6px;">
-          ${lines.join('<br>')}
-        </div>`;
-    }
-
-    block += `</td>`;
-    return block;
+  if (name) {
+    block += `
+      <div class="cat-main" style="margin:0;">${name}</div>`;
   }
 
+  if (descLine1) {
+    block += `
+      <div class="cat-sub" style="margin-top:2px;">${descLine1}</div>`;
+  }
 
-  function normalizeItem(raw) {
+  if (descLine2) {
+    block += `
+      <div class="cat-sub" style="margin-top:0;">${descLine2}</div>`;
+  }
+
+  if (supplied.length) {
+    const suppliedLines = supplied.map(line => `  – ${line}`).join('\n');
+    block += `
+      <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
+        Supplied complete with:<br>${suppliedLines}
+      </div>`;
+  }
+
+  if (dimensions || weight || power) {
+    const lines = [];
+    if (dimensions) lines.push(`Dimensions: ${dimensions}`);
+    if (weight)    lines.push(`Weight: ${weight}`);
+    if (power)     lines.push(`Power: ${power}`);
+    block += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  if (country || hsn) {
+    const lines = [];
+    if (country) lines.push(`Country of Origin: ${country}`);
+    if (hsn)     lines.push(`HSN Code: ${hsn}`);
+    block += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  block += `</td>`;
+  return block;
+}
+
+// Normalize config/additional items
+function normalizeItem(raw) {
   const code = raw.code || raw.itemCode || '';
   const name = raw.name || raw.itemName || '';
 
-  // Split description into lines
   const descLines = (raw.longDescription || raw.description || '')
     .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
 
-  // Main description/title: first line
   const mainDesc = name || descLines[0] || '';
-  const featureLines = descLines.slice(1);
+  const featureLines = descLines.slice(name ? 0 : 1);
 
   return {
     code,
@@ -384,44 +380,40 @@
   };
 }
 
-  // For config & additional items: bold first two lines, rest normal + indented
+// Config & additional cells: ONLY first two lines bold, feature lines normal
 function formatConfigOrAdditionalCell(itemRaw) {
   const item = normalizeItem(itemRaw);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-      <!-- Bold: Material No -->
       <div class="cat-main" style="margin:0; font-weight:bold;">${item.code}</div>
-      <!-- Bold: Main description/title -->
       <div class="cat-main" style="margin:0; font-weight:bold;">${item.mainDesc}</div>
   `;
 
-  // Normal, indented: feature lines with leading dash
+  // Normal text, indented feature lines
   if (item.featureLines.length) {
     html += item.featureLines
       .map(line => `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`)
       .join('');
   }
 
-  // Add a gap before specs (dimensions/weight/power)
   if (item.dimensions || item.weight || item.power) {
     const specLines = [];
     if (item.dimensions) specLines.push(`Dimensions: ${item.dimensions}`);
-    if (item.weight)    specLines.push(`Weight: ${item.weight}`);
-    if (item.power)     specLines.push(`Power: ${item.power}`);
+    if (item.weight)     specLines.push(`Weight: ${item.weight}`);
+    if (item.power)      specLines.push(`Power: ${item.power}`);
     html += `
-      <div class="cat-sub" style="margin-top:6px;">
+      <div class="cat-sub" style="margin-top:6px; padding-left:15px;">
         ${specLines.join('<br>')}
       </div>`;
   }
 
-  // Normal, indented: Country + HSN grouped tightly
   if (item.country || item.hsn) {
     const lines = [];
     if (item.country) lines.push(`Country of Origin: ${item.country}`);
     if (item.hsn)     lines.push(`HSN Code: ${item.hsn}`);
     html += `
-      <div class="cat-sub" style="margin-top:6px;">
+      <div class="cat-sub" style="margin-top:6px; padding-left:15px;">
         ${lines.join('<br>')}
       </div>`;
   }
