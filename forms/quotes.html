@@ -344,24 +344,28 @@ function formatConfigOrAdditionalCell(item) {
   const name = item.name || item.itemName || '';
   const desc = item.longDescription || '';
 
-  // All description content (features, etc.) in one array
-  const descLines = desc
+  // Split description into lines
+  const descLines = (desc || '')
     .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
+
+  // First line (title) bold, rest normal
+  const firstLine = descLines[0] || '';
+  const restLines = descLines.slice(1);
 
   let html = `
     <td style="white-space:pre-line; vertical-align:top;">
       <!-- line 1: material no. bold -->
       <div style="padding-left:10px; font-weight:bold;">${code}</div>
-      <!-- line 2: description/title bold -->
-      <div style="padding-left:10px; font-weight:bold;">${name}</div>
+      <!-- line 2: first description/title bold -->
+      ${firstLine ? `<div style="padding-left:10px; font-weight:bold;">${firstLine}</div>` : ''}
   `;
 
-  // Remaining lines: normal weight, indented, with leading dash
-  if (descLines.length) {
-    html += descLines
-      .map(line => `<div style="padding-left:10px; font-weight:normal;"> - ${line}</div>`)
+  // Remaining description lines: normal, indented, with leading dash
+  if (restLines.length) {
+    html += restLines
+      .map(line => `<div style="padding-left:10px; font-weight:normal;">- ${line}</div>`)
       .join('');
   }
 
@@ -384,6 +388,8 @@ function formatConfigOrAdditionalCell(item) {
   html += `</td>`;
   return html;
 }
+
+    
 // CONFIGURATION ITEMS
 const configItems = inst.configurationItems || [];
 if (configItems.length) {
