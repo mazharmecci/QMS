@@ -323,6 +323,74 @@ function populateHeader() {
   document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
 }
 
+  // Instrument cell formatter
+function formatStackedQuoteCell({
+  code = '',
+  name = '',
+  description = '',
+  supplied = [],
+  dimensions = '',
+  weight = '',
+  power = '',
+  country = '',
+  hsn = ''
+}) {
+  const descParts = (description || '').split('\n');
+  const descLine1 = descParts[0] || '';
+  const descLine2 = descParts.slice(1).join(' ').trim();
+
+  let block = `
+    <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
+      <div class="cat-main" style="margin:0; font-weight:600;">${code}</div>`;
+
+  if (name) {
+    block += `
+      <div class="cat-main" style="margin:0; font-weight:600;">${name}</div>`;
+  }
+
+  if (descLine1) {
+    block += `
+      <div class="cat-sub" style="margin-top:4px;">${descLine1}</div>`;
+  }
+
+  if (descLine2) {
+    block += `
+      <div class="cat-sub" style="margin-top:2px;">${descLine2}</div>`;
+  }
+
+  if (supplied.length) {
+    const suppliedLines = supplied.map(line => `– ${line}`).join('<br>');
+    block += `
+      <div class="cat-sub" style="margin-top:8px; font-size:11px; line-height:1.25;">
+        Supplied complete with:<br>${suppliedLines}
+      </div>`;
+  }
+
+  if (dimensions || weight || power) {
+    const lines = [];
+    if (dimensions) lines.push(`Dimensions: ${dimensions}`);
+    if (weight)    lines.push(`Weight: ${weight}`);
+    if (power)     lines.push(`Power: ${power}`);
+    block += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  if (country || hsn) {
+    const lines = [];
+    if (country) lines.push(`Country of Origin: ${country}`);
+    if (hsn)     lines.push(`HSN Code: ${hsn}`);
+    block += `
+      <div class="cat-sub" style="margin-top:6px;">
+        ${lines.join('<br>')}
+      </div>`;
+  }
+
+  block += `</td>`;
+  return block;
+}
+
 
 function renderQuoteBuilder() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
