@@ -531,8 +531,8 @@ function renderQuoteBuilder() {
   // CONFIGURATION ITEMS
   const configItems = inst.configurationItems || [];
   if (configItems.length) {
-    // Important: match current table’s 5 columns
-    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td></tr>`);
+    // Important: match current table’s 6 columns
+    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="6" style="font-weight:700;">CONFIGURATION ITEMS</td></tr>`);
     configItems.forEach((item, idx) => {
       const itemCode = String(idx + 2).padStart(3, '0');
       rows.push(`
@@ -550,8 +550,8 @@ function renderQuoteBuilder() {
   // ADDITIONAL ITEMS
   const additionalItems = inst.optionalItems || [];
   if (additionalItems.length) {
-    // Important: match current table’s 5 columns
-    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td></tr>`);
+    // Important: match current table’s 6 columns
+    rows.push(`<tr style="background:#00B0F0; color:#000;"><td colspan="6" style="font-weight:700;">ADDITIONAL ITEMS</td></tr>`);
     additionalItems.forEach((item, idx) => {
       const itemCode = String(idx + 1).padStart(3, '0');
       const priceNum = Number(item.price || item.unitPrice || 0);
