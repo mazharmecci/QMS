@@ -26,108 +26,160 @@
       border-radius:12px;
       box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
-    
-/* HEADER BLOCK */
-.quote-header {
-  margin-bottom:1.5rem;
-  border:1px solid #ccc;
-  border-radius:8px;
-  background:#fff;
-  padding:2rem;
-}
-.quote-header-body {
-  display:flex;
-  gap:1rem;
-  flex-wrap:wrap;
-  align-items:flex-start;   /* ensure both columns align at the top */
-}
 
-/* remove large top margin that pushes the left column down */
-.attn-box {
-  margin-top:1rem;          /* was 7rem */
-  background:#add8e6;
-  padding:0.75rem 1rem;
-  border-radius:8px;
-  font-weight:800;
-  color:#000;
-  text-align:left;
-  font-size:14px;
-}
+    /* HEADER BLOCK */
+    .quote-header {
+      margin-bottom:1.5rem;
+      border:1px solid #ccc;
+      border-radius:8px;
+      background:#fff;
+      padding:2rem;
+    }
+    .quote-header-body {
+      display:flex;
+      gap:1rem;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+    .attn-box {
+      margin-top:1rem;
+      background:#add8e6;
+      padding:0.75rem 1rem;
+      border-radius:8px;
+      font-weight:800;
+      color:#000;
+      text-align:left;
+      font-size:14px;
+    }
     .quote-left { flex:1; min-width:300px; }
-    .company-box { background:#d0d4d9; text-align:left; padding:0.2rem 1rem; border-radius:4px; margin-bottom:1rem; }
-    .company-box p { font-size:10px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:0; }
+    .company-box {
+      background:#d0d4d9;
+      text-align:left;
+      padding:0.2rem 1rem;
+      border-radius:4px;
+      margin-bottom:1rem;
+    }
+    .company-box p {
+      font-size:10px;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin:0;
+    }
     .hospital-box p { margin:0; font-size:13px; line-height:1.3; }
-    .hospital-box span { font-size:13px; }    
-    .quote-right { flex:1; min-width:300px; background:#fff; padding:1rem 1.25rem; border-radius:8px; }
-    .quote-right-title { background:#d0d4d9; text-align:right; padding:0.2rem 1rem; border-radius:4px; margin-bottom:1rem; font-weight:800; }
-    .quote-meta-grid { display:grid; grid-template-columns:auto 1fr auto 1fr; column-gap:0.75rem; row-gap:0.55rem; }
-    .quote-meta-grid .label { font-size:9px; font-weight:500; color:#222; text-align:left; }
-    .quote-meta-grid .value { font-size:16px; font-weight:700; color:#000; text-align:left; white-space:nowrap; }
+    .hospital-box span { font-size:13px; }
+    .quote-right {
+      flex:1;
+      min-width:300px;
+      background:#fff;
+      padding:1rem 1.25rem;
+      border-radius:8px;
+    }
+    .quote-right-title {
+      background:#d0d4d9;
+      text-align:right;
+      padding:0.2rem 1rem;
+      border-radius:4px;
+      margin-bottom:1rem;
+      font-weight:800;
+    }
+    .quote-meta-grid {
+      display:grid;
+      grid-template-columns:auto 1fr auto 1fr;
+      column-gap:0.75rem;
+      row-gap:0.55rem;
+    }
+    .quote-meta-grid .label {
+      font-size:9px;
+      font-weight:500;
+      color:#222;
+      text-align:left;
+    }
+    .quote-meta-grid .value {
+      font-size:16px;
+      font-weight:700;
+      color:#000;
+      text-align:left;
+      white-space:nowrap;
+    }
     .quote-meta-grid .value-small { font-size:13px; font-weight:600; }
-    .quote-meta-grid .label.right, .quote-meta-grid .value.right { text-align:right; }
+    .quote-meta-grid .label.right,
+    .quote-meta-grid .value.right { text-align:right; }
 
     .cat-main { display:block; font-size:13px; font-weight:600; color:#000; margin:0; }
     .cat-sub { font-size:11px; color:#555; margin:0; line-height:1.3; }
 
-/* MID SECTION TABLE */
-/* MID SECTION TABLE */
-#quoteBuilder {
-  margin-top:1.5rem;
-  padding:1.5rem;
-  background:#f9fafc;
-  border:1px solid #ddd;
-  border-radius:12px;
-}
-#quoteBuilder h3 {
-  margin-top:0;
-  margin-bottom:0.75rem;
-  color:#0d6efd;
-}
-table.quote-table {
-  width:100%;
-  border-collapse:collapse;
-  margin-bottom:1rem;
-}
-table.quote-table th,
-table.quote-table td {
-  padding:0.25rem 0.6rem;
-  border-bottom:1px solid #ddd;
-  text-align:left;
-  vertical-align:top;        /* everything top by default */
-  font-size:13px;
-}
-table.quote-table th {
-  background:#f0f4f8;
-  font-size:12px;
-  text-transform:capitalize;
-  letter-spacing:0.03em;
-}
-
-/* prices right-aligned */
-table.quote-table th:nth-last-child(1),
-table.quote-table th:nth-last-child(2),
-table.quote-table td:nth-last-child(1),
-table.quote-table td:nth-last-child(2) {
-  text-align:right;
-  white-space:nowrap;
-}
-
-/* quantity centered */
-table.quote-table td:nth-child(3) {
-  text-align:center;
-  white-space:nowrap;
-}
-
-/* ensure Item and Cat/Material are top-aligned */
-table.quote-table td:nth-child(1),
-table.quote-table td:nth-child(2) {
-  vertical-align:top;
-}
+    /* MID SECTION TABLE */
+    #quoteBuilder {
+      margin-top:1.5rem;
+      padding:1.5rem;
+      background:#f9fafc;
+      border:1px solid #ddd;
+      border-radius:12px;
+    }
+    #quoteBuilder h3 {
+      margin-top:0;
+      margin-bottom:0.75rem;
+      color:#0d6efd;
+    }
+    table.quote-table {
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom:1rem;
+    }
+    table.quote-table th,
+    table.quote-table td {
+      padding:0.25rem 0.6rem;
+      border-bottom:1px solid #ddd;
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    table.quote-table th {
+      background:#f0f4f8;
+      font-size:12px;
+      text-transform:capitalize;
+      letter-spacing:0.03em;
+    }
+    /* prices right-aligned */
+    table.quote-table th:nth-last-child(1),
+    table.quote-table th:nth-last-child(2),
+    table.quote-table td:nth-last-child(1),
+    table.quote-table td:nth-last-child(2) {
+      text-align:right;
+      white-space:nowrap;
+    }
+    /* quantity centered */
+    table.quote-table td:nth-child(3) {
+      text-align:center;
+      white-space:nowrap;
+    }
+    /* ensure Item and Cat/Material are top-aligned */
+    table.quote-table td:nth-child(1),
+    table.quote-table td:nth-child(2) {
+      vertical-align:top;
+    }
 
     /* TERMS */
-    #termsBlock { margin-top:1.5rem; background:#fff; border:1px solid #ccc; border-radius:8px; padding:1rem 1.25rem; font-size:12px; line-height:1.4; }
-    #termsBlock h4 { margin-top:0; color:#0d6efd; font-size:13px; }
-    #termsBlock ul { padding-left:1.1rem; margin:0.25rem 0 0; }
+    #termsBlock {
+      margin-top:1.5rem;
+      background:#fff;
+      border:1px solid #ccc;
+      border-radius:8px;
+      padding:1rem 1.25rem;
+      font-size:12px;
+      line-height:1.4;
+    }
+    #termsBlock h4 {
+      margin-top:0;
+      color:#0d6efd;
+      font-size:13px;
+    }
+    #termsBlock ul {
+      padding-left:1.1rem;
+      margin:0.25rem 0 0;
+    }
     #termsBlock li { margin-bottom:0.15rem; }
   </style>
 </head>
@@ -141,7 +193,12 @@ table.quote-table td:nth-child(2) {
           <p><strong>ISTOS Medical Pvt Ltd.</strong> #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road, Yelachenahalli, Bangalore - 560062</p>
         </div>
         <div class="hospital-box">
-          <p><strong>To:</strong><br><span id="toHospitalNameLine"></span><br><span id="toHospitalAddressLine1"></span><br><span id="toHospitalAddressLine2"></span></p>
+          <p>
+            <strong>To:</strong><br>
+            <span id="toHospitalNameLine"></span><br>
+            <span id="toHospitalAddressLine1"></span><br>
+            <span id="toHospitalAddressLine2"></span>
+          </p>
         </div>
         <div class="attn-box">KIND ATTN: <span id="toAttn"></span></div>
       </div>
@@ -225,7 +282,7 @@ table.quote-table td:nth-child(2) {
     document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
   }
 
-  // Formatter: cat on line 1, name on line 2, description directly below (any length)
+  // Instrument cell formatter (leave as-is structurally)
   function formatStackedQuoteCell({
     code = '',
     name = '',
@@ -237,13 +294,13 @@ table.quote-table td:nth-child(2) {
     country = '',
     hsn = ''
   }) {
-    // allow optional manual line split in description using '\n'
     const descParts = (description || '').split('\n');
     const descLine1 = descParts[0] || '';
     const descLine2 = descParts.slice(1).join(' ').trim();
 
     let block = `
-      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">       
+      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+        <div class="cat-main" style="margin:0;">${code}</div>`;
 
     if (name) {
       block += `
@@ -295,6 +352,44 @@ table.quote-table td:nth-child(2) {
     return block;
   }
 
+  // For config & additional items: bold first two lines, rest normal + indented
+  function formatConfigOrAdditionalCell(raw) {
+    const code = raw.code || raw.itemCode || '';
+    const title = raw.name || raw.itemName || '';
+    const descLines = (raw.longDescription || raw.description || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    let html = `
+      <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
+        <div class="cat-main" style="margin:0; font-weight:bold;">${code}</div>
+        <div class="cat-main" style="margin:0; font-weight:bold;">${title}</div>
+    `;
+
+    if (descLines.length) {
+      html += descLines
+        .map(line => `<div class="cat-sub" style="padding-left:10px;">${line}</div>`)
+        .join('');
+    }
+
+    const country = raw.country || raw.origin || '';
+    const hsn = raw.hsn || raw.hsnCode || '';
+
+    if (country || hsn) {
+      const lines = [];
+      if (country) lines.push(`Country of Origin: ${country}`);
+      if (hsn)     lines.push(`HSN Code: ${hsn}`);
+      html += `
+        <div class="cat-sub" style="margin-top:6px; padding-left:10px;">
+          ${lines.join('<br>')}
+        </div>`;
+    }
+
+    html += `</td>`;
+    return html;
+  }
+
   function renderQuoteBuilder() {
     const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
     const inst   = header.selectedInstrument;
@@ -338,164 +433,61 @@ table.quote-table td:nth-child(2) {
       </tr>
     `);
 
-function normalizeItem(raw) {
-  const code = raw.code || raw.itemCode || '';
-  const name = raw.name || raw.itemName || '';
+    // CONFIGURATION ITEMS
+    const configItems = inst.configurationItems || inst.configItems || [];
+    if (configItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
+        </tr>
+      `);
 
-  // Split description into lines
-  const descLines = (raw.longDescription || raw.description || '')
-    .split('\n')
-    .map(l => l.trim())
-    .filter(Boolean);
+      configItems.forEach((item, idx) => {
+        const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatConfigOrAdditionalCell(item)}
+            <td>${item.qty ?? 'Included'}</td>
+            <td>${item.upInr ?? 'Included'}</td>
+            <td>${item.tpInr ?? 'Included'}</td>
+          </tr>
+        `);
+      });
+    }
 
-  // Main description/title: prefer name, else first line of desc
-  const mainDesc = name || descLines[0] || '';
+    // ADDITIONAL ITEMS
+    const additionalItems = inst.optionalItems || inst.additionalItems || [];
+    if (additionalItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
+        </tr>
+      `);
 
-  // Feature lines: everything after the first line of desc
-  const featureLines = name ? descLines : descLines.slice(1);
+      additionalItems.forEach((item, idx) => {
+        const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
+        const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
+        const priceNum = rawPrice ? Number(rawPrice) : 0;
+        const qty = Number(item.qty || 1);
 
-  return {
-    code,
-    name,
-    mainDesc,
-    featureLines,
-    qty: raw.qty,
-    upInr: raw.upInr,
-    tpInr: raw.tpInr,
-    price: raw.price,
-    unitPrice: raw.unitPrice,
-    country: raw.country || raw.origin || raw.originCountry || '',
-    hsn: raw.hsn || raw.hsnCode || ''
-  };
-}
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatConfigOrAdditionalCell(item)}
+            <td>${qty.toString().padStart(2, '0')}</td>
+            <td>${fmt(priceNum)}</td>
+            <td>${fmt(priceNum * qty)}</td>
+          </tr>
+        `);
+      });
+    }
 
-function formatConfigOrAdditionalCell(itemRaw) {
-  const item = normalizeItem(itemRaw);
-
-  let html = `
-    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-      <!-- Bold: Material No -->      
-      <!-- Bold: Main description/title -->
-      <div class="cat-main" style="margin:0; font-weight:bold;">${item.mainDesc}</div>
-  `;
-
-  // Normal, indented: feature lines
-  if (item.featureLines.length) {
-    html += item.featureLines
-      .map(line => `<div class="cat-sub" style="padding-left:10px;">${line}</div>`)
-      .join('');
+    body.innerHTML = rows.join('');
   }
-
-  // Normal, indented: Country + HSN grouped tightly
-  if (item.country || item.hsn) {
-    const lines = [];
-    if (item.country) lines.push(`Country of Origin: ${item.country}`);
-    if (item.hsn)     lines.push(`HSN Code: ${item.hsn}`);
-    html += `
-      <div class="cat-sub" style="margin-top:6px;">
-        ${lines.join('<br>')}
-      </div>`;
-  }
-
-  html += `</td>`;
-  return html;
-}
-
-function formatConfigOrAdditionalCell(itemRaw) {
-  const item = normalizeItem(itemRaw);
-
-  const descParts = (item.description || '').split('\n').map(l => l.trim()).filter(Boolean);
-  const descLine1 = descParts[0] || '';
-  const descLine2 = descParts.slice(1).join(' ').trim();
-
-  let block = `
-    <td style="white-space:pre-line; vertical-align:top; line-height:1.2;">
-      <div class="cat-main" style="margin:0;">${item.code}</div>
-      <div class="cat-main" style="margin:0;">${item.name}</div>
-  `;
-
-  if (descLine1) {
-    block += `
-      <div class="cat-sub" style="margin-top:2px;">${descLine1}</div>`;
-  }
-
-  if (descLine2) {
-    block += `
-      <div class="cat-sub" style="margin-top:0;">${descLine2}</div>`;
-  }
-
-  if (item.country || item.hsn) {
-    const lines = [];
-    if (item.country) lines.push(`Country of Origin: ${item.country}`);
-    if (item.hsn)     lines.push(`HSN Code: ${item.hsn}`);
-    block += `
-      <div class="cat-sub" style="margin-top:6px;">
-        ${lines.join('<br>')}
-      </div>`;
-  }
-
-  block += `</td>`;
-  return block;
-}
-
-// CONFIGURATION ITEMS
-const configItems = inst.configurationItems || inst.configItems || [];
-if (configItems.length) {
-  rows.push(`
-    <tr style="background:#00B0F0; color:#000;">
-      <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
-    </tr>
-  `);
-
-  configItems.forEach((item, idx) => {
-    const itemCode = String(idx + 2).padStart(3, '0'); // 002, 003...
-    rows.push(`
-      <tr>
-        <td>${itemCode}</td>
-        ${formatConfigOrAdditionalCell(item)}
-        <td>${item.qty ?? 'Included'}</td>
-        <td>${item.upInr ?? 'Included'}</td>
-        <td>${item.tpInr ?? 'Included'}</td>
-      </tr>
-    `);
-  });
-}
-
-// ADDITIONAL ITEMS
-const additionalItems = inst.optionalItems || inst.additionalItems || [];
-if (additionalItems.length) {
-  rows.push(`
-    <tr style="background:#00B0F0; color:#000;">
-      <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
-    </tr>
-  `);
-
-  additionalItems.forEach((item, idx) => {
-    const itemCode = String(idx + 1).padStart(3, '0'); // 001, 002...
-    const rawPrice = (item.price || item.unitPrice || '').toString().replace(/[^\d]/g, '');
-    const priceNum = rawPrice ? Number(rawPrice) : 0;
-    const qty = Number(item.qty || 1);
-
-    rows.push(`
-      <tr>
-        <td>${itemCode}</td>
-        ${formatConfigOrAdditionalCell(item)}
-        <td>${qty.toString().padStart(2, '0')}</td>
-        <td>${fmt(priceNum)}</td>
-        <td>${fmt(priceNum * qty)}</td>
-      </tr>
-    `);
-  });
-}
-
-
-body.innerHTML = rows.join('');
-
-}
 
   populateHeader();
   renderQuoteBuilder();
 </script>
-
 </body>
 </html>
