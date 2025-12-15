@@ -110,11 +110,15 @@
     .cat-main {
       display:block;
       font-size:13px;
-      /* no global bold, bold is applied inline only where needed */
       color:#000;
       margin:0;
     }
-    .cat-sub { font-size:11px; color:#555; margin:0; line-height:1.3; }
+    .cat-sub {
+      font-size:11px;
+      color:#555;
+      margin:0;
+      line-height:1.3;
+    }
 
     /* MID SECTION TABLE */
     #quoteBuilder {
@@ -165,6 +169,10 @@
     table.quote-table td:nth-child(1),
     table.quote-table td:nth-child(2) {
       vertical-align:top;
+    }
+    /* force feature/description lines to normal weight */
+    table.quote-table .cat-sub {
+      font-weight:400;
     }
 
     /* TERMS */
