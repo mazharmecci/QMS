@@ -217,15 +217,19 @@
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
+  function getInstrumentLabel(inst) {
+    const code = inst.instrumentCode || inst.catalog || '';
+    const name = inst.instrumentName || inst.name || '';
+    return `${code} - ${name}`;
+  }
+
   function populateInstrumentDropdown() {
-    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]'); // [web:148][web:150]
+    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
     const select = document.getElementById('instrumentSelect');
     instruments.forEach((inst, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
-      const code = inst.instrumentCode || inst.catalog || '';
-      const name = inst.description || '';
-      opt.textContent = `${code} - ${String(name).replace(/<br>/g, ' ')}`;
+      opt.textContent = getInstrumentLabel(inst);
       select.appendChild(opt);
     });
   }
@@ -241,9 +245,9 @@
       const inst = instruments[idx];
 
       if (inst) {
-        const name = inst.description || '';
+        const name = inst.instrumentName || inst.name || inst.description || inst.catalog || '';
         preview.style.display = 'block';
-        details.textContent = `${String(name).replace(/<br>/g, ' ')}`;
+        details.textContent = name.replace(/<br>/g, ' ');
       } else {
         preview.style.display = 'none';
         details.textContent = '';
@@ -289,5 +293,6 @@
   populateInstrumentDropdown();
   setupInstrumentPreview();
 </script>
+
 </body>
 </html>
