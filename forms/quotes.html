@@ -338,14 +338,14 @@ table.quote-table td:nth-child(2) {
         <td>${fmt(inst.unitPrice)}</td>
       </tr>
     `);
+    
 
 function formatConfigOrAdditionalCell(item) {
   const code = item.code || item.itemCode || '';
   const name = item.name || item.itemName || '';
   const desc = item.longDescription || '';
 
-  // Treat each line of longDescription as a bullet line
-  const featureLines = desc
+  const lines = desc
     .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
@@ -355,14 +355,13 @@ function formatConfigOrAdditionalCell(item) {
       <div style="padding-left:10px; font-weight:bold;">${code}</div>
       <div style="padding-left:10px; font-weight:bold;">${name}</div>`;
 
-  // Bullet-style features, normal weight
-  if (featureLines.length) {
-    html += featureLines
+  // remaining description lines, normal weight, same indent, prefixed with " - "
+  if (lines.length) {
+    html += lines
       .map(line => `<div style="padding-left:10px;"> - ${line}</div>`)
       .join('');
   }
 
-  // Optional: origin & HSN on new lines, same indent
   if (item.country || item.origin) {
     html += `
       <div style="padding-left:10px; margin-top:6px;">Country of Origin: ${item.country || item.origin}</div>`;
@@ -376,7 +375,6 @@ function formatConfigOrAdditionalCell(item) {
   html += `</td>`;
   return html;
 }
-
 
 // CONFIGURATION ITEMS
 const configItems = inst.configurationItems || [];
@@ -400,7 +398,6 @@ if (configItems.length) {
     `);
   });
 }
-
 
 // ADDITIONAL ITEMS
 const additionalItems = inst.optionalItems || [];
@@ -428,6 +425,7 @@ if (additionalItems.length) {
     `);
   });
 }
+
 
 body.innerHTML = rows.join('');
 
