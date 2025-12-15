@@ -27,7 +27,6 @@
       box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
 
-    /* HEADER BLOCK */
     .quote-header {
       margin-bottom:1.5rem;
       border:1px solid #ccc;
@@ -105,7 +104,7 @@
     .quote-meta-grid .label.right,
     .quote-meta-grid .value.right { text-align:right; }
 
-    /* MID SECTION TABLE */
+
     #quoteBuilder {
       margin-top:1.5rem;
       padding:1.5rem;
@@ -119,7 +118,6 @@
       color:#0d6efd;
     }
 
-    /* 5-column quote table: Item | Cat/Material+Description | Qty | Unit Price | Total Price */
     table.quote-table {
       width: 100%;
       border-collapse: collapse;
@@ -140,7 +138,6 @@
       letter-spacing: 0.03em;
     }
 
-    /* RIGHT ALIGN last two numeric columns */
     table.quote-table th:nth-child(4),
     table.quote-table th:nth-child(5),
     table.quote-table td:nth-child(4),
@@ -149,14 +146,12 @@
       white-space: nowrap;
     }
 
-    /* CENTER the quantity column (3rd column) */
     table.quote-table td:nth-child(3),
     table.quote-table th:nth-child(3) {
       text-align: center;
       white-space: nowrap;
     }
 
-    /* Top-align Item number and Cat/Material */
     table.quote-table td:nth-child(1),
     table.quote-table td:nth-child(2) {
       vertical-align: top;
@@ -167,7 +162,6 @@
       font-weight:500;
     }
 
-    /* TERMS */
     #termsBlock {
       margin-top:1.5rem;
       background:#fff;
@@ -255,13 +249,12 @@
 </div>
 
 <script>
-/* ---------- Utility helpers ---------- */
+/* ========= Helpers ========= */
 function formatISOToDMY(iso){
   if(!iso) return '';
   const [y,m,d] = iso.split('-');
   return `${d}-${m}-${y}`;
 }
-
 function splitAddress(address){
   if(!address) return ['',''];
   const parts = address.split(',');
@@ -270,7 +263,6 @@ function splitAddress(address){
   const line1 = parts.slice(0, -1).join(',').trim();
   return [line1, line2];
 }
-
 function moneyINR(value){
   const num = Number(value || 0);
   return num.toLocaleString('en-IN',{
@@ -279,7 +271,7 @@ function moneyINR(value){
   });
 }
 
-/* ---------- Header population & validation ---------- */
+/* ========= Header ========= */
 function validateHeader(header) {
   const errors = [];
   if (!header.quoteNo) errors.push("Quote No is missing");
@@ -289,24 +281,12 @@ function validateHeader(header) {
   if (!header.hospitalAddress) errors.push("Hospital Address is missing");
   if (!header.contactPhone) errors.push("Contact Phone is missing");
   if (!header.contactEmail) errors.push("Contact Email is missing");
-
-  const inst = header.selectedInstrument;
-  if (inst) {
-    if (!inst.unitPrice || isNaN(inst.unitPrice)) {
-      errors.push("Instrument Unit Price is invalid");
-    }
-    if (inst.hsn && !/^\d{4}\s\d{4}$/.test(inst.hsn)) {
-      errors.push("Instrument HSN Code must be in format: 1234 5678");
-    }
-  }
-
   if (errors.length) {
     alert("Validation errors:\n" + errors.join("\n"));
     return false;
   }
   return true;
 }
-
 function populateHeader() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
   if (!validateHeader(header)) return;
@@ -329,24 +309,29 @@ function populateHeader() {
   document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
 }
 
-/* ---------- Description parsing (shared) ---------- */
-function parseDescription(item) {
-  const rawDesc = (item.longDescription || item.description || '').split('\n')
+/* ========= Shared description parser ========= */
+// Always read multiline strings as given in localStorage, preserve all lines.
+function parseLines(raw) {
+  if (!raw) return [];
+  return String(raw)
+    .split('\n')
     .map(l => l.trim())
     .filter(Boolean);
-
-  const name = (item.name || item.itemName || item.instrumentName || '').trim();
-  const title = name || rawDesc[0] || '';
-  const features = name ? rawDesc : rawDesc.slice(1);
-  return { title, features };
 }
 
-/* ---------- Cell formatters ---------- */
-function formatMainInstrumentCell(inst) {
-  const { title, features } = parseDescription({
-    name: inst.instrumentName || inst.description,
-    longDescription: inst.longDescription
-  });
+/* ========= Formatters for each section ========= */
+// Main instrument = code (bold) + 2 bold lines + blocks with gaps
+function formatInstrumentCell(inst) {
+  const code = inst.catalog || inst.code || '';
+  const name = inst.instrumentName || inst.name || '';
+  const descLines = parseLines(inst.longDescription || inst.description || '');
+
+  const boldLines = [];
+  if (code) boldLines.push(code);
+  if (name) boldLines.push(name);
+  if (descLines[0]) boldLines.push(descLines[0]); // first description line bold per your spec
+
+  const restDesc = descLines.slice(1);
 
   const supplied = inst.supplied || [];
   const specs = [];
@@ -358,89 +343,91 @@ function formatMainInstrumentCell(inst) {
   if (inst.origin || inst.country) meta.push(`Country of Origin: ${inst.origin || inst.country}`);
   if (inst.hsn)                    meta.push(`HSN Code: ${inst.hsn}`);
 
-  let html = `
-    <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
-      <div class="cat-main">${inst.catalog || inst.code || ''}</div>
-  `;
+  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
 
-  if (title) {
-    html += `<div class="cat-main">${title}</div>`;
-  }
+  boldLines.forEach(line => {
+    html += `<div class="cat-main">${line}</div>`;
+  });
 
-  if (features.length) {
+  if (restDesc.length) {
     html += `<div style="height:8px;"></div>`;
-    html += features.map(line =>
-      `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`
-    ).join('');
+    html += `<div class="cat-sub">` + restDesc.join(' ') + `</div>`;
   }
 
   if (supplied.length) {
     html += `<div style="height:8px;"></div>`;
-    html += `
-      <div class="cat-sub" style="padding-left:15px;">
-        Supplied complete with:<br>${supplied.map(s => `– ${s}`).join('<br>')}
-      </div>`;
+    html += `<div class="cat-sub">Supplied Complete with:<br>`;
+    html += supplied.map(s => ` - ${s}`).join('<br>');
+    html += `</div>`;
   }
 
   if (specs.length) {
     html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub" style="padding-left:15px;">${specs.join('<br>')}</div>`;
+    html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
   }
 
   if (meta.length) {
     html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub" style="padding-left:15px;">${meta.join('<br>')}</div>`;
+    html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
   }
 
   html += `</td>`;
   return html;
 }
 
-function formatGenericItemCell(itemRaw) {
-  const { title, features } = parseDescription(itemRaw);
-  const code = itemRaw.code || itemRaw.catalog || '';
+// Config / Additional items = 2 bold lines + bullet features + specs + meta
+function formatItemCell(item) {
+  const code = item.code || item.catalog || '';
+  const name = item.name || item.itemName || item.instrumentName || '';
+  const descLines = parseLines(item.longDescription || item.description || '');
+
+  const bold1 = code;
+  const bold2 = name || descLines[0] || '';
+  const featureLines = name ? descLines : descLines.slice(1);
+
   const specs = [];
-  if (itemRaw.dimensions) specs.push(`Dimensions: ${itemRaw.dimensions}`);
-  if (itemRaw.weight)     specs.push(`Weight – ${itemRaw.weight}`);
-  if (itemRaw.power)      specs.push(`Power: ${itemRaw.power}`);
+  if (item.dimensions) specs.push(`Dimensions: ${item.dimensions}`);
+  if (item.weight)     specs.push(`Weight: ${item.weight}`);
+  if (item.power)      specs.push(`Power: ${item.power}`);
 
   const meta = [];
-  if (itemRaw.country || itemRaw.origin)
-    meta.push(`Country of Origin: ${itemRaw.country || itemRaw.origin}`);
-  if (itemRaw.hsn) meta.push(`HSN Code: ${itemRaw.hsn}`);
+  if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
+  if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
 
-  let html = `
-    <td style="white-space:pre-line; vertical-align:top; line-height:1.3;">
-      <div class="cat-main">${code}</div>
-      <div class="cat-main">${title}</div>
-      <div style="height:8px;"></div>
-  `;
+  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
 
-  if (features.length) {
-    html += features.map(line =>
-      `<div class="cat-sub" style="padding-left:15px;">- ${line}</div>`
-    ).join('');
+  if (bold1) html += `<div class="cat-main">${bold1}</div>`;
+  if (bold2) html += `<div class="cat-main">${bold2}</div>`;
+
+  if (featureLines.length) {
     html += `<div style="height:8px;"></div>`;
+    html += featureLines
+      .map(line => `<div class="cat-sub">- ${line}</div>`)
+      .join('');
   }
 
   if (specs.length) {
-    html += `<div class="cat-sub" style="padding-left:15px;">${specs.join('<br>')}</div>`;
     html += `<div style="height:8px;"></div>`;
+    html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
   }
 
   if (meta.length) {
-    html += `<div class="cat-sub" style="padding-left:15px;">${meta.join('<br>')}</div>`;
+    html += `<div style="height:8px;"></div>`;
+    html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
   }
 
   html += `</td>`;
   return html;
 }
 
-/* ---------- Main render ---------- */
+/* ========= Main renderer ========= */
 function renderQuoteBuilder() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
   const inst   = header.selectedInstrument;
   const body   = document.getElementById('quoteBuilderBody');
+
+  console.log('quoteHeader:', header);              // debug: confirm all data present
+  console.log('instrument:', inst);
 
   if (!inst) {
     body.innerHTML = '';
@@ -453,46 +440,47 @@ function renderQuoteBuilder() {
   rows.push(`
     <tr>
       <td>001</td>
-      ${formatMainInstrumentCell(inst)}
+      ${formatInstrumentCell(inst)}
       <td>01</td>
       <td>${moneyINR(inst.unitPrice)}</td>
       <td>${moneyINR(inst.unitPrice)}</td>
     </tr>
   `);
 
-  // CONFIGURATION ITEMS (included)
-  const configItems =
-    inst.configurationItems || inst.configItems || [];
+  // CONFIGURATION ITEMS
+  const configItems = inst.configurationItems || inst.configItems || [];
   if (configItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
-        <td colspan="6" style="font-weight:700;">CONFIGURATION ITEMS</td>
+        <td colspan="5" style="font-weight:700;">CONFIGURATION ITEMS</td>
       </tr>
     `);
     configItems.forEach((item, idx) => {
       const itemCode = String(idx + 2).padStart(3, '0');
       const qty = item.qty != null ? item.qty : 'Included';
-      const up  = item.upInr != null ? item.upInr : 'Included';
-      const tp  = item.tpInr != null ? item.tpInr : 'Included';
+      const upRaw = item.upInr != null ? item.upInr : 'Included';
+      const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
+      const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
+      const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
+
       rows.push(`
         <tr>
           <td>${itemCode}</td>
-          ${formatGenericItemCell(item)}
+          ${formatItemCell(item)}
           <td>${qty}</td>
-          <td>${typeof up === 'number' ? moneyINR(up) : up}</td>
-          <td>${typeof tp === 'number' ? moneyINR(tp) : tp}</td>
+          <td>${upCell}</td>
+          <td>${tpCell}</td>
         </tr>
       `);
     });
   }
 
-  // ADDITIONAL / OPTIONAL ITEMS (priced)
-  const additionalItems =
-    inst.optionalItems || inst.additionalItems || [];
+  // ADDITIONAL ITEMS
+  const additionalItems = inst.optionalItems || inst.additionalItems || [];
   if (additionalItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
-        <td colspan="6" style="font-weight:700;">ADDITIONAL ITEMS</td>
+        <td colspan="5" style="font-weight:700;">ADDITIONAL ITEMS</td>
       </tr>
     `);
     additionalItems.forEach((item, idx) => {
@@ -501,10 +489,11 @@ function renderQuoteBuilder() {
       const unitRaw  = item.price || item.unitPrice || item.upInr || 0;
       const unitNum  = Number(unitRaw);
       const totalNum = unitNum * qtyNum;
+
       rows.push(`
         <tr>
           <td>${itemCode}</td>
-          ${formatGenericItemCell(item)}
+          ${formatItemCell(item)}
           <td>${qtyNum.toString().padStart(2, '0')}</td>
           <td>${moneyINR(unitNum)}</td>
           <td>${moneyINR(totalNum)}</td>
@@ -516,7 +505,7 @@ function renderQuoteBuilder() {
   body.innerHTML = rows.join('');
 }
 
-/* ---------- Bootstrapping ---------- */
+/* ========= Boot ========= */
 populateHeader();
 renderQuoteBuilder();
 </script>
