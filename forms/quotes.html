@@ -133,47 +133,70 @@
       margin-bottom:0.75rem;
       color:#0d6efd;
     }
-    table.quote-table {
-      width:100%;
-      border-collapse:collapse;
-      margin-bottom:1rem;
-    }
-    table.quote-table th,
-    table.quote-table td {
-      padding:0.25rem 0.6rem;
-      border-bottom:1px solid #ddd;
-      text-align:left;
-      vertical-align:top;
-      font-size:13px;
-    }
-    table.quote-table th {
-      background:#f0f4f8;
-      font-size:12px;
-      text-transform:capitalize;
-      letter-spacing:0.03em;
-    }
-    /* prices right-aligned */
-    table.quote-table th:nth-last-child(1),
-    table.quote-table th:nth-last-child(2),
-    table.quote-table td:nth-last-child(1),
-    table.quote-table td:nth-last-child(2) {
-      text-align:right;
-      white-space:nowrap;
-    }
-    /* quantity centered */
-    table.quote-table td:nth-child(3) {
-      text-align:center;
-      white-space:nowrap;
-    }
-    /* ensure Item and Cat/Material are top-aligned */
-    table.quote-table td:nth-child(1),
-    table.quote-table td:nth-child(2) {
-      vertical-align:top;
-    }
-    /* force feature/description lines to normal weight */
-    table.quote-table .cat-sub {
-      font-weight:400;
-    }
+
+    /* Ensure Item table has 6 columns: Item | Cat/Material | Description | Qty | Unit Price | Total Price */
+table.quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+table.quote-table th,
+table.quote-table td {
+  padding: 0.25rem 0.6rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+}
+table.quote-table th {
+  background: #f0f4f8;
+  font-size: 12px;
+  text-transform: capitalize;
+  letter-spacing: 0.03em;
+}
+
+  /* RIGHT ALIGN last two numeric columns (Unit Price, Total Price) */
+  table.quote-table th:nth-child(5),
+  table.quote-table th:nth-child(6),
+  table.quote-table td:nth-child(5),
+  table.quote-table td:nth-child(6) {
+    text-align: right;
+    white-space: nowrap;
+  }
+  
+  /* CENTER the quantity column (4th column) */
+  table.quote-table td:nth-child(4),
+  table.quote-table th:nth-child(4) {
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  /* Top-align Item number and Cat/Material (columns 1 and 2) */
+  table.quote-table td:nth-child(1),
+  table.quote-table td:nth-child(2) {
+    vertical-align: top;
+  }
+  
+  /* Lock weights: cat-main bold, cat-sub normal */
+  table.quote-table .cat-main {
+    font-weight: 600;       /* Bold lines: code + title only */
+    font-size: 13px;
+    color: #000;
+    margin: 0;
+  }
+  table.quote-table .cat-sub {
+    font-weight: 400 !important; /* Force normal for features/specs/meta */
+    font-size: 11px;
+    color: #555;
+    margin: 0;
+    line-height: 1.3;
+  }
+  
+  /* Optional: ensure any stray <b>/<strong> inside cat-sub do not override normal weight */
+  table.quote-table .cat-sub b,
+  table.quote-table .cat-sub strong {
+    font-weight: 500; /* slightly emphasized but not bold-bold */
+  }
 
     /* TERMS */
     #termsBlock {
