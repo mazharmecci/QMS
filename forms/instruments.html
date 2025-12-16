@@ -318,6 +318,42 @@ Next lines = sub details, each on its own line"></textarea>
     );
   }
 
+
+  <script>
+function fixInstrumentNames() {
+  const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+  let updated = false;
+
+  instruments.forEach(inst => {
+    // If instrumentName is missing or empty
+    if (!inst.instrumentName || !inst.instrumentName.trim()) {
+      const rawDesc = (inst.longDescription || inst.description || '').trim();
+      if (rawDesc) {
+        const lines = rawDesc.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length > 0) {
+          inst.instrumentName = lines[0]; // First line = main item name
+          // Optional: remove first line from longDescription so it's only overview + extras
+          inst.longDescription = lines.slice(1).join('\n');
+          updated = true;
+        }
+      }
+    }
+  });
+
+  if (updated) {
+    localStorage.setItem('instruments', JSON.stringify(instruments));
+    console.log("Instrument names fixed and saved.");
+    alert("Instrument names have been updated. Refresh the page to see changes.");
+  } else {
+    console.log("No instruments needed fixing.");
+    alert("All instruments already have instrumentName set.");
+  }
+}
+
+// Run once to fix stored instruments
+fixInstrumentNames();
+</script>
+
   /* OPTIONAL MASTER LIST RENDER + DELETE */
 
   function renderOptionalMasterList() {
