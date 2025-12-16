@@ -223,37 +223,45 @@
     return `${code} - ${name}`;
   }
 
-  function populateInstrumentDropdown() {
+function populateInstrumentDropdown() {
+  const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+  const select = document.getElementById('instrumentSelect');
+  instruments.forEach((inst, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    const code = inst.instrumentCode || inst.catalog || '';
+    const name = inst.instrumentName || '';
+    opt.textContent = `${code} - ${name}`;
+    select.appendChild(opt);
+  });
+}
+
+function setupInstrumentPreview() {
+  const select = document.getElementById('instrumentSelect');
+  const preview = document.getElementById('instrumentPreview');
+  const details = document.getElementById('instrumentDetails');
+
+  select.addEventListener('change', function () {
+    const idx = this.value;
     const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-    const select = document.getElementById('instrumentSelect');
-    instruments.forEach((inst, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      opt.textContent = getInstrumentLabel(inst);
-      select.appendChild(opt);
-    });
-  }
+    const inst = instruments[idx];
 
-  function setupInstrumentPreview() {
-    const select = document.getElementById('instrumentSelect');
-    const preview = document.getElementById('instrumentPreview');
-    const details = document.getElementById('instrumentDetails');
+    if (!inst) {
+      preview.style.display = 'none';
+      details.textContent = '';
+      return;
+    }
 
-    select.addEventListener('change', function () {
-      const idx = this.value;
-      const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-      const inst = instruments[idx];
+    const name = inst.instrumentName || '';
+    const descLines = (inst.longDescription || inst.description || '').split('\n').map(l => l.trim()).filter(Boolean);
+    const overview = descLines[0] || '';
+    const extras = descLines.slice(1).join(' ');
 
-      if (inst) {
-        const name = inst.instrumentName || inst.name || inst.description || inst.catalog || '';
-        preview.style.display = 'block';
-        details.textContent = name.replace(/<br>/g, ' ');
-      } else {
-        preview.style.display = 'none';
-        details.textContent = '';
-      }
-    });
-  }
+    const fullText = [name, overview, extras].filter(Boolean).join(' — ');
+    preview.style.display = 'block';
+    details.textContent = fullText;
+  });
+}
 
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
