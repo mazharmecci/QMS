@@ -164,10 +164,11 @@
     #quoteBuilder {
       margin-top:1.5rem;
       padding:1.5rem;
-      background:#f9fafc;
+      background:#ffffff;    /* or background: transparent; */
       border:1px solid #ddd;
       border-radius:12px;
     }
+
     #quoteBuilder h3 {
       margin-top:0;
       margin-bottom:0.75rem;
@@ -188,7 +189,8 @@
       font-size:13px;
     }
     table.quote-table th {
-      background:#f0f4f8;
+      background:#e0e0e0;   /* darker grey so text stands out on paper */
+      color:#000;
       font-size:12px;
       text-transform:capitalize;
       letter-spacing:0.03em;
@@ -281,11 +283,11 @@
     @media print {
       body {
         margin:0;
-        background:#fff;
+        background:#ffffff;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;   /* better color fidelity in some browsers */
       }
-      header {
-        display:none;          /* hide web UI header/back button when printing */
-      }
+      
       .container {
         margin:0;
         padding:0;
