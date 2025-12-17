@@ -72,6 +72,28 @@
     .modal-actions { margin-top:1rem; text-align:right; }
     .modal-actions button { padding:0.6rem 1rem; border-radius:8px; border:none; cursor:pointer; }
     .save-btn { background:#0d6efd; color:#fff; }
+
+    /* simple multi-select list area */
+    .multi-select-list {
+      grid-column:span 2;
+      max-height:160px;
+      overflow-y:auto;
+      border:1px solid #eee;
+      border-radius:6px;
+      padding:0.5rem;
+      font-size:0.85rem;
+      margin-top:0.5rem;
+    }
+    .multi-select-list h4 {
+      margin:0 0 0.25rem;
+      font-size:0.85rem;
+      color:#0d6efd;
+    }
+    .multi-select-list label {
+      display:block;
+      margin-bottom:4px;
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -165,12 +187,17 @@ Next lines = sub details, each on its own line"></textarea>
     <input type="text" id="optHSN" placeholder="HSN Code (1234 5678)" maxlength="9">
     <input type="text" id="optOrigin" placeholder="Country Of Origin">
     <input type="text" id="optPrice" placeholder="Unit Price (₹)">
+
+    <!-- NEW: multi-select list of optional items from master -->
+    <div id="optionalSelectList" class="multi-select-list">
+      <!-- filled by renderOptionalSelectionList() -->
+    </div>
   </div>
 
   <div id="optionalMasterList" style="grid-column:span 2; margin-top:1rem; border-top:1px solid #eee; padding-top:0.5rem; font-size:0.85rem;"></div>
 
   <div class="modal-actions">
-    <button class="save-btn" onclick="saveOptionalItem()">Save</button>
+    <button class="save-btn" onclick="saveOptionalItem()">Save / Update Selection</button>
     <button onclick="closeOptionalModal()">Close</button>
   </div>
 </div>
@@ -198,12 +225,17 @@ Next lines = sub details, each on its own line"></textarea>
     <input type="text" id="cfgQty" placeholder="Qty" value="Included">
     <input type="text" id="cfgUP" placeholder="UP-INR" value="Included">
     <input type="text" id="cfgTP" placeholder="TP-INR" value="Included">
+
+    <!-- NEW: multi-select list of config items from master -->
+    <div id="configSelectList" class="multi-select-list">
+      <!-- filled by renderConfigSelectionList() -->
+    </div>
   </div>
 
   <div id="configMasterList" style="grid-column:span 2; margin-top:1rem; border-top:1px solid #eee; padding-top:0.5rem; font-size:0.85rem;"></div>
 
   <div class="modal-actions">
-    <button class="save-btn" onclick="saveConfigItem()">Save</button>
+    <button class="save-btn" onclick="saveConfigItem()">Save / Update Selection</button>
     <button onclick="closeConfigModal()">Close</button>
   </div>
 </div>
@@ -261,7 +293,6 @@ Next lines = sub details, each on its own line"></textarea>
     const second = lines[1] || '';
     const rest = lines.slice(2);
 
-    // HTML for table preview: first bold line + bullets for rest.
     let detailsHTML = '';
     if (first) {
       detailsHTML += `<p><strong>${first}</strong></p>`;
@@ -318,7 +349,7 @@ Next lines = sub details, each on its own line"></textarea>
     );
   }
 
-  // One-time migration helper for existing instruments (no nested <script>).
+  // One-time migration helper (kept as in your version).
   function fixInstrumentNames() {
     const stored = JSON.parse(localStorage.getItem('instruments') || '[]');
     let updated = false;
@@ -340,12 +371,10 @@ Next lines = sub details, each on its own line"></textarea>
     if (updated) {
       localStorage.setItem('instruments', JSON.stringify(stored));
       console.log("Instrument names fixed and saved.");
-    } else {
-      console.log("No instruments needed fixing.");
     }
   }
 
-  // OPTIONAL MASTER LIST RENDER + DELETE
+  /* OPTIONAL MASTER LIST + MULTI-SELECT */
 
   function renderOptionalMasterList() {
     const container = document.getElementById('optionalMasterList');
@@ -368,6 +397,27 @@ Next lines = sub details, each on its own line"></textarea>
     }).join('');
   }
 
+  function renderOptionalSelectionList() {
+    const list = document.getElementById('optionalSelectList');
+    if (!list) return;
+    const master = getAdditionalItemMaster();
+    if (!master.length) {
+      list.innerHTML = '<h4>Available Optional Items</h4><em>No items in master yet.</em>';
+      return;
+    }
+    list.innerHTML = '<h4>Select Optional Items for this Instrument</h4>' +
+      master.map((item, idx) => {
+        const firstLine = (item.name || '').split('\n')[0] || '';
+        const isChecked = optionalItems.some(oi => oi.code === item.code && oi.hsn === item.hsn);
+        return `
+          <label>
+            <input type="checkbox" class="optional-checkbox" data-idx="${idx}" ${isChecked ? 'checked' : ''}>
+            <strong>${firstLine}</strong> ${item.code ? '('+item.code+')' : ''} – ${item.price || ''}
+          </label>
+        `;
+      }).join('');
+  }
+
   function deleteOptionalMasterItem(index) {
     const master = getAdditionalItemMaster();
     if (index < 0 || index >= master.length) return;
@@ -375,9 +425,10 @@ Next lines = sub details, each on its own line"></textarea>
     localStorage.setItem('additionalItemMaster', JSON.stringify(master));
     renderOptionalMasterList();
     populateExistingAdditionalDropdown();
+    renderOptionalSelectionList();
   }
 
-  /* CONFIG MASTER LIST RENDER + DELETE */
+  /* CONFIG MASTER LIST + MULTI-SELECT */
 
   function renderConfigMasterList() {
     const container = document.getElementById('configMasterList');
@@ -400,6 +451,27 @@ Next lines = sub details, each on its own line"></textarea>
     }).join('');
   }
 
+  function renderConfigSelectionList() {
+    const list = document.getElementById('configSelectList');
+    if (!list) return;
+    const master = getConfigItemMaster();
+    if (!master.length) {
+      list.innerHTML = '<h4>Available Config Items</h4><em>No items in master yet.</em>';
+      return;
+    }
+    list.innerHTML = '<h4>Select Config Items for this Instrument</h4>' +
+      master.map((item, idx) => {
+        const firstLine = (item.name || '').split('\n')[0] || '';
+        const isChecked = configurationItems.some(ci => ci.code === item.code && ci.hsn === item.hsn);
+        return `
+          <label>
+            <input type="checkbox" class="config-checkbox" data-idx="${idx}" ${isChecked ? 'checked' : ''}>
+            <strong>${firstLine}</strong> ${item.code ? '('+item.code+')' : ''} – Qty: ${item.qty || 'Included'}, UP: ${item.upInr || 'Included'}
+          </label>
+        `;
+      }).join('');
+  }
+
   function deleteConfigMasterItem(index) {
     const master = getConfigItemMaster();
     if (index < 0 || index >= master.length) return;
@@ -407,6 +479,7 @@ Next lines = sub details, each on its own line"></textarea>
     localStorage.setItem('configItemMaster', JSON.stringify(master));
     renderConfigMasterList();
     populateExistingConfigDropdown();
+    renderConfigSelectionList();
   }
 
   /* OPTIONAL MODAL WORKFLOW */
@@ -418,6 +491,7 @@ Next lines = sub details, each on its own line"></textarea>
   function openOptionalModal() {
     populateExistingAdditionalDropdown();
     renderOptionalMasterList();
+    renderOptionalSelectionList();
     document.getElementById('optionalItemModal').style.display='block';
   }
   function closeOptionalModal(){
@@ -463,38 +537,60 @@ Next lines = sub details, each on its own line"></textarea>
 
   function saveOptionalItem(){
     const hsn = optHSNInput.value.trim();
-    if(!/^\d{4}\s\d{4}$/.test(hsn)){
-      alert('HSN Code must be in format: 1234 5678');
-      return;
+
+    // If user filled a new item, add it first.
+    if (document.getElementById('optItemCode').value ||
+        document.getElementById('optItemName').value ||
+        document.getElementById('optCatalogRef').value ||
+        hsn ||
+        document.getElementById('optOrigin').value ||
+        document.getElementById('optPrice').value) {
+
+      if(!/^\d{4}\s\d{4}$/.test(hsn)){
+        alert('HSN Code must be in format: 1234 5678');
+        return;
+      }
+
+      const newItem = {
+        id:    document.getElementById('optItemId').value,
+        code:  document.getElementById('optItemCode').value,
+        name:  document.getElementById('optItemName').value,
+        catalog: document.getElementById('optCatalogRef').value,
+        hsn,
+        origin: document.getElementById('optOrigin').value,
+        price: document.getElementById('optPrice').value
+      };
+
+      if (!isDuplicateAdditionalItem(newItem)) {
+        saveAdditionalItemToMaster(newItem);
+      }
+
+      // reset fields for next new entry
+      document.getElementById('optItemId').value = '';
+      document.getElementById('optItemCode').value = '';
+      document.getElementById('optItemName').value = '';
+      document.getElementById('optCatalogRef').value = '';
+      document.getElementById('optHSN').value = '';
+      document.getElementById('optOrigin').value = '';
+      document.getElementById('optPrice').value = '';
     }
 
-    const newItem = {
-      id:    document.getElementById('optItemId').value,
-      code:  document.getElementById('optItemCode').value,
-      name:  document.getElementById('optItemName').value,
-      catalog: document.getElementById('optCatalogRef').value,
-      hsn,
-      origin: document.getElementById('optOrigin').value,
-      price: document.getElementById('optPrice').value
-    };
-
-    optionalItems.push({...newItem});
-
-    if (!isDuplicateAdditionalItem(newItem)) {
-      saveAdditionalItemToMaster(newItem);
-    }
-
-    // clear fields for next entry, keep modal open
-    document.getElementById('optItemId').value = '';
-    document.getElementById('optItemCode').value = '';
-    document.getElementById('optItemName').value = '';
-    document.getElementById('optCatalogRef').value = '';
-    document.getElementById('optHSN').value = '';
-    document.getElementById('optOrigin').value = '';
-    document.getElementById('optPrice').value = '';
+    // Now sync checkboxes into optionalItems array
+    const master = getAdditionalItemMaster();
+    const checks = document.querySelectorAll('.optional-checkbox');
+    optionalItems = [];
+    checks.forEach(ch => {
+      if (ch.checked) {
+        const idx = parseInt(ch.dataset.idx,10);
+        if (!isNaN(idx) && master[idx]) {
+          optionalItems.push({...master[idx]});
+        }
+      }
+    });
 
     populateExistingAdditionalDropdown();
     renderOptionalMasterList();
+    renderOptionalSelectionList();
   }
 
   /* CONFIG MODAL WORKFLOW */
@@ -506,6 +602,7 @@ Next lines = sub details, each on its own line"></textarea>
   function openConfigModal(){
     populateExistingConfigDropdown();
     renderConfigMasterList();
+    renderConfigSelectionList();
     document.getElementById('configItemModal').style.display='block';
   }
   function closeConfigModal(){
@@ -549,46 +646,66 @@ Next lines = sub details, each on its own line"></textarea>
 
   function saveConfigItem(){
     const hsn = cfgHSNInput.value.trim();
-    if(!/^\d{4}\s\d{4}$/.test(hsn)){
-      alert('HSN Code must be in format: 1234 5678');
-      return;
+
+    // If user filled a new config item, add it first.
+    if (document.getElementById('cfgItemCode').value ||
+        document.getElementById('cfgItemName').value ||
+        document.getElementById('cfgCatalogRef').value ||
+        hsn ||
+        document.getElementById('cfgOrigin').value) {
+
+      if(!/^\d{4}\s\d{4}$/.test(hsn)){
+        alert('HSN Code must be in format: 1234 5678');
+        return;
+      }
+
+      const qtyInput = document.getElementById('cfgQty');
+      const upInput  = document.getElementById('cfgUP');
+      const tpInput  = document.getElementById('cfgTP');
+
+      const newItem = {
+        id:    document.getElementById('cfgItemId').value,
+        code:  document.getElementById('cfgItemCode').value,
+        name:  document.getElementById('cfgItemName').value,
+        catalog: document.getElementById('cfgCatalogRef').value,
+        hsn,
+        origin: document.getElementById('cfgOrigin').value,
+        qty:   (qtyInput.value.trim() || 'Included'),
+        upInr: (upInput.value.trim() || 'Included'),
+        tpInr: (tpInput.value.trim() || 'Included')
+      };
+
+      if (!isDuplicateConfigItem(newItem)) {
+        saveConfigItemToMaster(newItem);
+      }
+
+      document.getElementById('cfgItemId').value = '';
+      document.getElementById('cfgItemCode').value = '';
+      document.getElementById('cfgItemName').value = '';
+      document.getElementById('cfgCatalogRef').value = '';
+      document.getElementById('cfgHSN').value = '';
+      document.getElementById('cfgOrigin').value = '';
+      qtyInput.value = 'Included';
+      upInput.value = 'Included';
+      tpInput.value = 'Included';
     }
 
-    const qtyInput = document.getElementById('cfgQty');
-    const upInput  = document.getElementById('cfgUP');
-    const tpInput  = document.getElementById('cfgTP');
-
-    const newItem = {
-      id:    document.getElementById('cfgItemId').value,
-      code:  document.getElementById('cfgItemCode').value,
-      name:  document.getElementById('cfgItemName').value,
-      catalog: document.getElementById('cfgCatalogRef').value,
-      hsn,
-      origin: document.getElementById('cfgOrigin').value,
-      qty:   (qtyInput.value.trim() || 'Included'),
-      upInr: (upInput.value.trim() || 'Included'),
-      tpInr: (tpInput.value.trim() || 'Included')
-    };
-
-    configurationItems.push({...newItem});
-
-    if (!isDuplicateConfigItem(newItem)) {
-      saveConfigItemToMaster(newItem);
-    }
-
-    // clear fields for next entry, keep modal open
-    document.getElementById('cfgItemId').value = '';
-    document.getElementById('cfgItemCode').value = '';
-    document.getElementById('cfgItemName').value = '';
-    document.getElementById('cfgCatalogRef').value = '';
-    document.getElementById('cfgHSN').value = '';
-    document.getElementById('cfgOrigin').value = '';
-    qtyInput.value = 'Included';
-    upInput.value = 'Included';
-    tpInput.value = 'Included';
+    // Now sync checkboxes into configurationItems array
+    const master = getConfigItemMaster();
+    const checks = document.querySelectorAll('.config-checkbox');
+    configurationItems = [];
+    checks.forEach(ch => {
+      if (ch.checked) {
+        const idx = parseInt(ch.dataset.idx,10);
+        if (!isNaN(idx) && master[idx]) {
+          configurationItems.push({...master[idx]});
+        }
+      }
+    });
 
     populateExistingConfigDropdown();
     renderConfigMasterList();
+    renderConfigSelectionList();
   }
 
   /* MAIN FORM SAVE */
@@ -606,13 +723,10 @@ Next lines = sub details, each on its own line"></textarea>
     const instrument = {
       description: document.getElementById('description').value,
 
-      // For listing preview:
       details: detailsHTML,
-
-      // For quoteBuilder usage later:
-      instrumentName: firstLine,            // line 1
-      instrumentShortLine: secondLine,      // line 2
-      instrumentExtraLines: remainingLines, // all remaining lines as one string
+      instrumentName: firstLine,
+      instrumentShortLine: secondLine,
+      instrumentExtraLines: remainingLines,
 
       origin: document.getElementById('origin').value,
       catalog: document.getElementById('catalog').value,
@@ -760,9 +874,6 @@ Next lines = sub details, each on its own line"></textarea>
 
   function nextPage(){ if(currentPage*pageSize<instruments.length){ currentPage++; renderTable(); } }
   function prevPage(){ if(currentPage>1){ currentPage--; renderTable(); } }
-
-  // Optional: run once if you need to migrate existing localStorage data
-  // fixInstrumentNames();
 
   renderTable();
 </script>
