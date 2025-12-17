@@ -59,16 +59,25 @@
 /* overall header body: stack rows vertically */
 .quote-header-body {
   display:flex;
-  flex-direction:column;
-  gap:0.75rem;
+  gap:1rem;
 }
 
+/* two main columns */
+.quote-left,
+.quote-right {
+  flex:1 1 0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+    
 /* logo: pinned to top-right, its own row */
 .quote-logo-wrap {
   align-self:flex-end;
+  margin-bottom:0.5rem;
 }
 .quote-logo-wrap img {
-  max-height:70px;          /* adjust size as you like */
+  max-height:70px;
   width:auto;
   display:block;
 }
@@ -80,7 +89,7 @@
   align-items:stretch;
 }
 
-/* boxes share same grey and height */
+/* company box + sales box share row */
 .company-box,
 .sales-box {
   flex:1 1 0;
@@ -88,7 +97,7 @@
   border-radius:4px;
   padding:0.6rem 1rem;
   display:flex;
-  align-items:center;        /* vertical centering */
+  align-items:center;
 }
 
 /* company text compact, single line if needed */
@@ -101,38 +110,40 @@
   text-overflow:ellipsis;
 }
 
-/* SALES QUOTATION text on right */
+/* SALES QUOTATION text */
 .sales-title {
   margin-left:auto;
   font-weight:900;
   font-size:18px;
 }
 
+/* hospital + attn stay in LEFT column and take same width as company box */
+.hospital-box,
+.attn-box {
+  margin-top:0.5rem;
+}
 
-  .hospital-box p { margin:0; font-size:13px; line-height:1.3; }
-  .hospital-box span { font-size:13px; }
+.attn-box {
+  background:#add8e6;
+  padding:0.75rem 1rem;
+  border-radius:8px;
+  font-weight:800;
+  color:#000;
+  font-size:14px;
+}
 
-  .attn-box {
-    margin-top:1rem;
-    background:#add8e6;
-    padding:0.75rem 1rem;
-    border-radius:8px;
-    font-weight:800;
-    color:#000;
-    text-align:left;
-    font-size:14px;
-  }
-
-  .quote-meta-grid {
-    margin-top:0.6rem;
-    background:#fff;
-    border-radius:4px;
-    padding:0.5rem 0.75rem;
-    display:grid;
-    grid-template-columns:auto 1fr auto 1fr;
-    column-gap:0.75rem;
-    row-gap:0.55rem;
-  }
+/* right column meta grid directly under SALES QUOTATION */
+.quote-meta-grid {
+  margin-top:0.5rem;
+  background:#fff;
+  border-radius:4px;
+  padding:0.5rem 0.75rem;
+  display:grid;
+  grid-template-columns:auto 1fr auto 1fr;
+  column-gap:0.75rem;
+  row-gap:0.55rem;
+}
+    
   .quote-meta-grid .label {
     font-size:9px;
     font-weight:500;
@@ -313,13 +324,8 @@
           <div class="quote-header">
             <div class="quote-header-body">
           
-              <!-- logo row -->
-              <div class="quote-logo-wrap">
-                <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
-              </div>
-          
-              <!-- company + SALES QUOTATION row -->
-              <div class="quote-top-row">
+              <!-- LEFT COLUMN: company + To + Kind Attn -->
+              <div class="quote-left">
                 <div class="company-box">
                   <p>
                     <strong>ISTOS Medical Pvt Ltd.</strong>
@@ -327,11 +333,7 @@
                     Yelachenahalli, Bangalore - 560062
                   </p>
                 </div>
-                <div class="sales-box">
-                  <div class="sales-title">SALES QUOTATION</div>
-                </div>
-              </div>          
-                <!-- below that: To + Attn -->
+          
                 <div class="hospital-box">
                   <p>
                     <strong>To:</strong><br>
@@ -340,10 +342,22 @@
                     <span id="toHospitalAddressLine2"></span>
                   </p>
                 </div>
-                <div class="attn-box">KIND ATTN: <span id="toAttn"></span></div>
-              </div>         
           
-                <!-- meta grid below logo -->
+                <div class="attn-box">
+                  KIND ATTN: <span id="toAttn"></span>
+                </div>
+              </div>
+          
+              <!-- RIGHT COLUMN: logo + SALES QUOTATION + meta grid -->
+              <div class="quote-right">
+                <div class="quote-logo-wrap">
+                  <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+                </div>
+          
+                <div class="sales-box">
+                  <div class="sales-title">SALES QUOTATION</div>
+                </div>
+          
                 <div class="quote-meta-grid">
                   <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
                   <div class="label right">Quotation Date</div><div class="value value-small right" id="metaQuoteDate"></div>
