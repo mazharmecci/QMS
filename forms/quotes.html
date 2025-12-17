@@ -78,12 +78,6 @@
       display:block;
     }
 
-    .quote-top-row {
-      display:flex;
-      gap:1rem;
-      align-items:stretch;
-    }
-
     .company-box,
     .sales-box {
       flex:1 1 0;
@@ -217,29 +211,27 @@
       font-weight:500;
     }
 
-   #termsBlock {
-  margin-top: 1.5rem;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-#termsBlock h4 {
-  margin-top: 0;
-  color: #0d6efd;
-  font-size: 13px;
-}
-
-#termsTextBlock {
-  margin-top: 0.25rem;
-}
-
-#termsTextBlock p {
-  margin: 0.35rem 0;
-}
+    /* Terms & Conditions block */
+    #termsBlock {
+      margin-top: 1.5rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    #termsBlock h2 {
+      margin-top: 0;
+      color: #0d6efd;
+      font-size: 13px;
+    }
+    #termsTextBlock {
+      margin-top: 0.25rem;
+    }
+    #termsTextBlock p {
+      margin: 0.35rem 0;
+    }
 
     .section-header-label {
       font-weight:700;
@@ -254,7 +246,6 @@
     }
 
     /* === Printable frame with repeating header/footer === */
-
     .print-footer tr,
     .print-footer td {
       border-top:none !important;
@@ -409,7 +400,7 @@
           </div>
 
           <div id="termsBlock">
-            <h2>Terms and Condtions of Sale</h2>
+            <h2>Terms and Conditions of Sale</h2>
             <div id="termsTextBlock"></div>
           </div>
         </td>
@@ -548,10 +539,8 @@ function populateHeader() {
   const termsEl = document.getElementById('termsTextBlock');
   if (termsEl) {
     if (header.termsHtml) {
-      // render exactly as saved from quote-setup
       termsEl.innerHTML = header.termsHtml;
     } else if (header.termsText) {
-      // fallback for older quotes that only stored plain text
       termsEl.textContent = header.termsText;
     } else {
       termsEl.textContent = '';
@@ -671,6 +660,7 @@ function renderQuoteBuilder() {
   const selection = header.itemSelection || getInitialSelection(inst);
   const rows = [];
 
+  // Main instrument row
   rows.push(`
     <tr>
       <td>001</td>
@@ -681,6 +671,7 @@ function renderQuoteBuilder() {
     </tr>
   `);
 
+  // Configuration items
   const configItems = inst.configurationItems || inst.configItems || [];
   if (configItems.length) {
     rows.push(`
@@ -725,6 +716,7 @@ function renderQuoteBuilder() {
     });
   }
 
+  // Additional items
   const additionalItems = inst.optionalItems || inst.additionalItems || [];
   if (additionalItems.length) {
     rows.push(`
@@ -746,7 +738,7 @@ function renderQuoteBuilder() {
 
       const itemCode = String(idx + 1).padStart(3, '0');
       const qtyNum   = Number(item.qty || 1);
-      const unitRaw  = item.price || item.unitPrice || item.upInr || 0;
+      const unitRaw  = item.price || item.unitPrice || item.upInr || item.tpInr || 0;
       const unitNum  = Number(unitRaw);
       const totalNum = unitNum * qtyNum;
 
