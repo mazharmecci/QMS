@@ -717,61 +717,72 @@ function renderQuoteBuilder() {
   }
 
   // Additional items
-  const additionalItems = inst.optionalItems || inst.additionalItems || [];
-  if (additionalItems.length) {
+// Additional items
+const additionalItems = inst.optionalItems || inst.additionalItems || [];
+if (additionalItems.length) {
+  rows.push(`
+    <tr style="background:#00B0F0; color:#000;">
+      <td colspan="5" style="font-weight:700;">
+        <span class="section-header-label">ADDITIONAL ITEMS</span>
+        <span class="section-header-controls">
+          <label>
+            <input type="checkbox" id="optSelectAll"> Select all
+          </label>
+        </span>
+      </td>
+    </tr>
+  `);
+
+  additionalItems.forEach((item, idx) => {
+    const selected = !selection.optional || selection.optional[idx] !== false;
+    if (!selected) return;
+
+    const itemCode = String(idx + 1).padStart(3, '0');
+    const qtyNum   = Number(item.qty || 1);
+
+    // 1) Try explicit numeric fields
+    let unitNum = Number(
+      item.price ?? item.unitPrice ?? item.upInr ?? item.tpInr ?? 0
+    );
+    if (Number.isNaN(unitNum)) unitNum = 0;
+
+    // 2) If still zero, try to parse from any text that may contain "₹ 55,380"
+    if (!unitNum) {
+      const fullText = [
+        item.longDescription,
+        item.description,
+        item.name,
+        item.itemName,
+        item.instrumentName
+      ].filter(Boolean).join(' ');
+
+      // Match ₹ or Rs / INR followed by digits and commas
+      const priceMatch = fullText.match(/(?:₹|Rs\.?|INR)\s*([\d,]+)/i); // [web:377][web:382]
+      if (priceMatch && priceMatch[1]) {
+        unitNum = parseInt(priceMatch[1].replace(/,/g, ''), 10);
+        if (Number.isNaN(unitNum)) unitNum = 0;
+      }
+    }
+
+    const totalNum = unitNum * qtyNum;
+
     rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
-          <span class="section-header-label">ADDITIONAL ITEMS</span>
-          <span class="section-header-controls">
-            <label>
-              <input type="checkbox" id="optSelectAll"> Select all
-            </label>
-          </span>
+      <tr>
+        <td>
+          <input type="checkbox"
+                 class="opt-item-check"
+                 data-index="${idx}"
+                 ${selected ? 'checked' : ''}>
+          ${itemCode}
         </td>
+        ${formatItemCell(item)}
+        <td>${qtyNum.toString().padStart(2, '0')}</td>
+        <td>${moneyINR(unitNum)}</td>
+        <td>${moneyINR(totalNum)}</td>
       </tr>
     `);
-
-    additionalItems.forEach((item, idx) => {
-      const selected = !selection.optional || selection.optional[idx] !== false;
-      if (!selected) return;
-
-      const itemCode = String(idx + 1).padStart(3, '0');
-      const qtyNum   = Number(item.qty || 1);
-
-      // 1) Try numeric fields first
-      let unitNum = Number(
-        item.price || item.unitPrice || item.upInr || item.tpInr || 0
-      );
-
-      // 2) If still 0 or NaN, try to parse from description text like "– ₹ 55,380"
-      if (!unitNum) {
-        const text = String(item.longDescription || item.description || '');
-        const priceMatch = text.match(/₹\s*([\d,]+)/);   // captures 55,380 from "₹ 55,380"
-        if (priceMatch && priceMatch[1]) {
-          unitNum = parseFloat(priceMatch[1].replace(/,/g, ''));
-        }
-      }
-
-      const totalNum = unitNum * qtyNum;
-
-      rows.push(`
-        <tr>
-          <td>
-            <input type="checkbox"
-                   class="opt-item-check"
-                   data-index="${idx}"
-                   ${selected ? 'checked' : ''}>
-            ${itemCode}
-          </td>
-          ${formatItemCell(item)}
-          <td>${qtyNum.toString().padStart(2, '0')}</td>
-          <td>${moneyINR(unitNum)}</td>
-          <td>${moneyINR(totalNum)}</td>
-        </tr>
-      `);
-    });
-  }
+  });
+}
 
   body.innerHTML = rows.join('');
   wireSelectionHandlers();
