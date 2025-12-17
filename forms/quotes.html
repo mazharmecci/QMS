@@ -151,38 +151,11 @@
     .quote-meta-grid .label.right,
     .quote-meta-grid .value.right { text-align:right; }
 
-    /* personal message block (filled from salesNote) */
     #salesNoteBlock {
       margin:0 0 1rem 0;
       font-size:13px;
       line-height:1.5;
       white-space:pre-line;
-    }
-
-     .sales-note-block {
-      margin-bottom:1rem;
-    }
-    .sales-note-label {
-      display:block;
-      font-size:12px;
-      font-weight:600;
-      margin-bottom:0.25rem;
-      color:#444;
-    }
-    #salesNote {
-      width:100%;
-      min-height:90px;
-      padding:0.6rem 0.75rem;
-      font-size:13px;
-      border:1px solid #d0d4d9;
-      border-radius:6px;
-      resize:vertical;
-      background:#fff;
-    }
-    #salesNote:focus {
-      outline:none;
-      border-color:#0d6efd;
-      box-shadow:0 0 0 3px rgba(13,110,253,0.15);
     }
 
     #quoteBuilder {
@@ -258,11 +231,12 @@
       color:#0d6efd;
       font-size:13px;
     }
-    #termsBlock ul {
-      padding-left:1.1rem;
-      margin:0.25rem 0 0;
+    #termsTextBlock {
+      font-size:12px;
+      line-height:1.4;
+      white-space:pre-line;
+      margin-top:0.25rem;
     }
-    #termsBlock li { margin-bottom:0.15rem; }
 
     .section-header-label {
       font-weight:700;
@@ -278,7 +252,6 @@
 
     /* === Printable frame with repeating header/footer === */
 
-    /* remove the border line above the footer row */
     .print-footer tr,
     .print-footer td {
       border-top:none !important;
@@ -309,7 +282,6 @@
       margin:15mm 15mm 20mm 15mm;
     }
 
-    /* Print-specific rules */
     @media print {
       body {
         margin:0;
@@ -362,7 +334,6 @@
           <div class="quote-header">
             <div class="quote-header-body">
 
-              <!-- LEFT COLUMN -->
               <div class="quote-left">
                 <div class="company-box">
                   <p>
@@ -386,7 +357,6 @@
                 </div>
               </div>
 
-              <!-- RIGHT COLUMN -->
               <div class="quote-right">
                 <div class="quote-logo-wrap">
                   <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
@@ -417,7 +387,6 @@
     <tbody class="print-body">
       <tr>
         <td>
-          <!-- personal message from salesNote -->
           <div id="salesNoteBlock"></div>
 
           <div id="quoteBuilder">
@@ -438,15 +407,7 @@
 
           <div id="termsBlock">
             <h4>Terms and Conditions of Sale</h4>
-            <ul>
-              <li><strong>Validity:</strong> Offer valid for 60 days from date of quotation.</li>
-              <li><strong>Delivery:</strong> 6–8 weeks from receipt of valid purchase order.</li>
-              <li><strong>Payment:</strong> 100% advance via RTGS/NEFT/IMPS/Cheque/Draft.</li>
-              <li><strong>Warranty:</strong> 12 months from installation against manufacturing defects.</li>
-              <li><strong>GST:</strong> Extra @ 18% on all offered products.</li>
-              <li><strong>Installation & Training:</strong> Free by ISTOS engineers at client site.</li>
-              <li><strong>Documentation:</strong> Provided post successful installation.</li>
-            </ul>
+            <div id="termsTextBlock"></div>
           </div>
         </td>
       </tr>
@@ -576,10 +537,14 @@ function populateHeader() {
   document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
   document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
 
-  // personal message block from salesNote
   const noteEl = document.getElementById('salesNoteBlock');
   if (noteEl && header.salesNote) {
     noteEl.textContent = header.salesNote;
+  }
+
+  const termsEl = document.getElementById('termsTextBlock');
+  if (termsEl) {
+    termsEl.textContent = header.termsText || '';
   }
 }
 
