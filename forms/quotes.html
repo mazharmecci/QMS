@@ -279,39 +279,44 @@
       margin:15mm 15mm 20mm 15mm;
     }
     
-    /* Print-specific rules */
-    @media print {
-      body {
-        margin:0;
-        background:#ffffff;
-        -webkit-print-color-adjust: exact;
-        color-adjust: exact;   /* better color fidelity in some browsers */
-      }
-      
-      .container {
-        margin:0;
-        padding:0;
-        box-shadow:none;
-        border-radius:0;
-      }
-    
-      /* repeat header & footer on every page */
-      thead.print-header {
-        display:table-header-group;
-      }
-      tfoot.print-footer {
-        display:table-footer-group;
-      }
-    
-      .cfg-item-check,
-      .opt-item-check,
-      #cfgSelectAll,
-      #optSelectAll,
-      .section-header-controls {
-        display:none;
-      }
+   /* Print-specific rules */
+  @media print {
+    body {
+      margin:0;
+      background:#ffffff;
+      -webkit-print-color-adjust: exact;
+      color-adjust: exact;   /* better color fidelity in some browsers */
     }
-    
+  
+    /* hide the on-screen app header during print */
+    header {
+      display:none !important;
+    }
+  
+    .container {
+      margin:0;
+      padding:0;
+      box-shadow:none;
+      border-radius:0;
+    }
+  
+    /* repeat header & footer on every page */
+    thead.print-header {
+      display:table-header-group;
+    }
+    tfoot.print-footer {
+      display:table-footer-group;
+    }
+  
+    .cfg-item-check,
+    .opt-item-check,
+    #cfgSelectAll,
+    #optSelectAll,
+    .section-header-controls {
+      display:none;
+    }
+  }
+
   </style>
 </head>
 <body>
