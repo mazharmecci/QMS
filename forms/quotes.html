@@ -13,11 +13,30 @@
     header {
       background:#0d6efd;
       color:#fff;
-      padding:0.85rem 1rem;
-      text-align:right;
-      font-size:1rem;
-      font-weight:600;
+      padding:0.75rem 1.5rem;
     }
+    .header-inner {
+      max-width:1200px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .back-btn {
+      border:none;
+      background:rgba(255,255,255,0.12);
+      color:#fff;
+      padding:0.45rem 0.9rem;
+      border-radius:999px;
+      cursor:pointer;
+    }
+    .header-title {
+      flex:1;
+      text-align:center;
+      font-weight:600;
+      font-size:1.5rem;
+    }
+
     .container {
       max-width:1200px;
       margin:2rem auto;
@@ -193,19 +212,25 @@
       cursor:pointer;
     }
 
-@media print {
-  .cfg-item-check,
-  .opt-item-check,
-  #cfgSelectAll,
-  #optSelectAll,
-  .section-header-controls {
-    display:none;
-  }
-}
+    @media print {
+      .cfg-item-check,
+      .opt-item-check,
+      #cfgSelectAll,
+      #optSelectAll,
+      .section-header-controls {
+        display:none;
+      }
+    }
   </style>
 </head>
 <body>
-<header>QMS - Quotes</header>
+<header>
+  <div class="header-inner">
+    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+    <div class="header-title">QMS - Quotes</div>
+  </div>
+</header>
+
 <div class="container">
   <div class="quote-header">
     <div class="quote-header-body">
@@ -274,6 +299,9 @@
 </div>
 
 <script>
+/* ========= Navigation ========= */
+function goBack(){ if (window.history.length > 1) window.history.back(); }
+
 /* ========= Generic helpers ========= */
 function formatISOToDMY(iso){
   if(!iso) return '';
@@ -303,6 +331,26 @@ function parseLines(raw) {
     .filter(Boolean);
 }
 
+/* ========= Data access ========= */
+function getQuoteHeaderRaw(){
+  return JSON.parse(localStorage.getItem('quoteHeader') || '{}');  // localStorage object [web:86][web:122]
+}
+function getInstrumentsMaster(){
+  return JSON.parse(localStorage.getItem('instruments') || '[]');
+}
+function resolveInstrumentForHeader(header){
+  const all = getInstrumentsMaster();
+  if (header.selectedInstrumentIndex != null && header.selectedInstrumentIndex !== '') {
+    const idx = Number(header.selectedInstrumentIndex);
+    if (!isNaN(idx) && all[idx]) return all[idx];
+  }
+  if (header.instrumentCode) {
+    const instByCode = all.find(i => (i.instrumentCode || i.catalog || '') === header.instrumentCode);
+    if (instByCode) return instByCode;
+  }
+  return null;
+}
+
 /* ========= Header handling ========= */
 function validateHeader(header) {
   const errors = [];
@@ -329,18 +377,18 @@ function getInitialSelection(inst) {
   };
 }
 
-function getQuoteHeader(){
-  const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
-  const inst = header.selectedInstrument;
+function getQuoteContext(){
+  const header = getQuoteHeaderRaw();
+  const inst = resolveInstrumentForHeader(header);
   if (inst && !header.itemSelection) {
     header.itemSelection = getInitialSelection(inst);
     localStorage.setItem('quoteHeader', JSON.stringify(header));
   }
-  return header;
+  return { header, inst };
 }
 
 function populateHeader() {
-  const header = getQuoteHeader();
+  const { header } = getQuoteContext();
   if (!validateHeader(header)) return;
 
   document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
@@ -373,7 +421,8 @@ function formatInstrumentCell(inst) {
   if (descLines[0]) boldLines.push(descLines[0]);
 
   const restDesc = descLines.slice(1);
-  const supplied = inst.supplied || [];
+  const supplied = inst.suppliedWith || inst.supplied || []; // use new array from instruments.html
+
   const specs = [];
   if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
   if (inst.weight)     specs.push(`Weight: ${inst.weight}`);
@@ -396,7 +445,7 @@ function formatInstrumentCell(inst) {
 
   if (supplied.length) {
     html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub">Supplied Complete with:<br>`;
+    html += `<div class="cat-sub"><strong>Supplied Complete with:</strong><br>`;
     html += supplied.map(s => ` - ${s}`).join('<br>');
     html += `</div>`;
   }
@@ -461,8 +510,9 @@ function formatItemCell(item) {
 
 /* ========= Quote builder with per-quote selection ========= */
 function renderQuoteBuilder() {
-  const header = getQuoteHeader();
-  const inst   = header.selectedInstrument;
+  const ctx   = getQuoteContext();
+  const header = ctx.header;
+  const inst   = ctx.inst;
   const body   = document.getElementById('quoteBuilderBody');
 
   if (!inst) {
@@ -502,7 +552,7 @@ function renderQuoteBuilder() {
 
     configItems.forEach((item, idx) => {
       const selected = !selection.config || selection.config[idx] !== false;
-      if (!selected) return; // hide unchecked items
+      if (!selected) return;
 
       const itemCode = String(idx + 2).padStart(3, '0');
       const qty = item.qty != null ? item.qty : 'Included';
@@ -579,8 +629,9 @@ function renderQuoteBuilder() {
 
 /* ========= Persist selection in localStorage ========= */
 function wireSelectionHandlers() {
-  const header = getQuoteHeader();
-  const inst   = header.selectedInstrument;
+  const ctx   = getQuoteContext();
+  const header = ctx.header;
+  const inst   = ctx.inst;
   if (!inst) return;
 
   const cfgChecks = Array.from(document.querySelectorAll('.cfg-item-check'));
@@ -608,8 +659,8 @@ function wireSelectionHandlers() {
     });
 
     header.itemSelection = newSelection;
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
-    renderQuoteBuilder(); // re-render to hide unchecked rows
+    localStorage.setItem('quoteHeader', JSON.stringify(header));  // persist updated selection [web:118][web:122]
+    renderQuoteBuilder();
   }
 
   cfgChecks.forEach(ch => ch.addEventListener('change', saveSelection));
@@ -621,7 +672,6 @@ function wireSelectionHandlers() {
       cfgChecks.forEach(ch => { ch.checked = cfgAll.checked; });
       saveSelection();
     });
-    // initialise Select All based on current state
     if (cfgChecks.length && cfgChecks.every(ch => ch.checked)) {
       cfgAll.checked = true;
     }
