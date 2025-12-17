@@ -192,6 +192,16 @@
     .section-header-controls label {
       cursor:pointer;
     }
+
+@media print {
+  .cfg-item-check,
+  .opt-item-check,
+  #cfgSelectAll,
+  #optSelectAll,
+  .section-header-controls {
+    display:none;
+  }
+}
   </style>
 </head>
 <body>
