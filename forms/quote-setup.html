@@ -135,6 +135,36 @@
     }
     #instrumentSelect,
     #yourReference { min-width:250px; }
+
+    /* sales note textarea */
+    .sales-note-block {
+      grid-column:span 2;
+      margin-top:1rem;
+    }
+    .sales-note-label {
+      display:block;
+      font-size:12px;
+      font-weight:600;
+      margin-bottom:0.25rem;
+      color:#444;
+    }
+    #salesNote {
+      width:100%;
+      min-height:90px;
+      padding:0.6rem 0.75rem;
+      font-size:13px;
+      border:1px solid #d0d4d9;
+      border-radius:6px;
+      resize:vertical;
+      background:#fff;
+      font-family:'Inter',sans-serif;
+      white-space:pre-wrap;
+    }
+    #salesNote:focus {
+      outline:none;
+      border-color:#0d6efd;
+      box-shadow:0 0 0 3px rgba(13,110,253,0.15);
+    }
   </style>
 </head>
 <body>
@@ -202,6 +232,17 @@
       <input type="text" id="contactPhone" placeholder="Handphone" required>
       <input type="text" id="officePhone" placeholder="Office Phone" required>
       <input type="email" id="contactEmail" placeholder="Email" required>
+
+      <!-- personal message textarea -->
+      <div class="sales-note-block">
+        <label for="salesNote" class="sales-note-label">Personal message to customer</label>
+        <textarea
+          id="salesNote"
+          rows="4"
+          placeholder="Dear Sir,
+
+As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
+      </div>
 
       <button type="submit">Proceed to Quote</button>
     </form>
@@ -307,13 +348,13 @@
       contactPhone: document.getElementById('contactPhone').value,
       contactEmail: document.getElementById('contactEmail').value,
       officePhone: document.getElementById('officePhone').value,
+      salesNote: document.getElementById('salesNote').value,   // <<< new field
 
-      // pass only reference, not full copy, so quotes.html can always read latest instrument
       selectedInstrumentIndex,
       instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
     };
 
-    localStorage.setItem('quoteHeader', JSON.stringify(headerData));
+    localStorage.setItem('quoteHeader', JSON.stringify(headerData));  // [web:183]
     window.location.href = 'quotes.html';
   });
 
