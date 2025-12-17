@@ -54,35 +54,70 @@
       padding:2rem;
     }
     
+    /* two equal-height columns on one row */
     .quote-header-body {
       display:flex;
-      flex-wrap:nowrap;          /* keep both boxes on same row */
-      align-items:stretch;       /* same height */
+      flex-wrap:nowrap;
+      align-items:stretch;
       gap:1rem;
     }
     
     .quote-left,
     .quote-right {
       flex:1 1 0;
-      min-width:0;               /* prevent overflow pushing things down */
+      min-width:0;
       display:flex;
       flex-direction:column;
     }
     
+    /* company + right panel share same background and height */
     .company-box,
     .quote-right {
-      height:100%;               /* match heights */
+      background:#d0d4d9;           /* same as SALES QUOTATION */
+      height:100%;
       display:flex;
       flex-direction:column;
-      justify-content:center;    /* vertical centering of text */
+      justify-content:center;
     }
     
-    /* Optional: tighten paddings so heights match visually */
+    /* company box text: small, single line */
     .company-box {
-      padding:0.5rem 1rem;
+      padding:0.35rem 0.75rem;
     }
+    .company-box p {
+      margin:0;
+      font-size:10px;               /* smaller font */
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    
+    /* right side: logo on top-right, title bar sharing same grey */
     .quote-right {
-      padding:0.5rem 1.25rem;
+      position:relative;
+      padding:0.75rem 1rem 0.75rem 1rem;
+      background:#d0d4d9;
+    }
+    
+    /* logo container */
+    .quote-logo-wrap {
+      position:absolute;
+      top:0.35rem;
+      right:0.75rem;
+    }
+    .quote-logo-wrap img {
+      max-height:55px;
+      width:auto;
+      display:block;
+    }
+    
+    /* SALES QUOTATION bar aligned to right */
+    .quote-right-title {
+      margin-top:auto;              /* push to bottom inside grey box */
+      text-align:right;
+      font-weight:800;
+      font-size:14px;
     }
     
     .hospital-box p { margin:0; font-size:13px; line-height:1.3; }
@@ -261,8 +296,11 @@
         <div class="attn-box">KIND ATTN: <span id="toAttn"></span></div>
       </div>
       <div class="quote-right">
-        <div class="quote-right-title">SALES QUOTATION</div>
-        <div class="quote-meta-grid">
+          <div class="quote-logo-wrap">
+            <img src="./images/istos-logo.jpg" alt="ISTOS Medical Logo">
+          </div>
+          <div class="quote-right-title">SALES QUOTATION</div>
+          <div class="quote-meta-grid">
           <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
           <div class="label right">Quotation Date</div><div class="value value-small right" id="metaQuoteDate"></div>
           <div class="label">Your Reference</div><div class="value value-small" id="metaYourRef"></div>
