@@ -261,27 +261,30 @@
       padding:0;
       border:none;
     }
+    
+    /* footer content */
     .footer {
       font-size:10px;
-      text-align:center;
+      text-align:right;        /* right align footer text */
       border-top:1px solid #ccc;
       padding-top:4px;
       margin-top:4px;
     }
-
-    /* A4 page setup + repeating header/footer in print */
+    
+    /* A4 page setup */
     @page {
       size:A4;
       margin:15mm 15mm 20mm 15mm;
     }
-
+    
+    /* Print-specific rules */
     @media print {
       body {
         margin:0;
         background:#fff;
       }
       header {
-        display:none;        /* hide web UI header/back button when printing */
+        display:none;          /* hide web UI header/back button when printing */
       }
       .container {
         margin:0;
@@ -289,14 +292,15 @@
         box-shadow:none;
         border-radius:0;
       }
-
+    
+      /* repeat header & footer on every page */
       thead.print-header {
         display:table-header-group;
       }
       tfoot.print-footer {
         display:table-footer-group;
       }
-
+    
       .cfg-item-check,
       .opt-item-check,
       #cfgSelectAll,
@@ -305,6 +309,7 @@
         display:none;
       }
     }
+    
   </style>
 </head>
 <body>
@@ -409,12 +414,17 @@
         </td>
       </tr>
     </tbody>
-
     <tfoot class="print-footer">
       <tr>
         <td>
           <div class="footer">
-            ISTOS Medical Pvt Ltd. · #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road, Yelachenahalli, Bangalore - 560062 · Phone: +91-XXXXXXXXXX
+            ISTOS Medical Private Limited<br>
+            # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, 
+            Bikasipura Main Road, Yelachenahalli,<br>
+            BANGALORE, Karnataka, INDIA 560 062<br>
+            P: +91 80 2686 0607 | F: +91 80 2686 0668 | 
+            E: talktous@istos.in | www.istosmedical.com<br>
+            CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
           </div>
         </td>
       </tr>
