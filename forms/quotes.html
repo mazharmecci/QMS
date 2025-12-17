@@ -251,9 +251,17 @@
     }
 
     /* === Printable frame with repeating header/footer === */
+
+    /* remove the border line above the footer row */
+    .print-footer tr,
+    .print-footer td {
+      border-top:none !important;
+    }
+
     .print-frame {
       width:100%;
       border-collapse:collapse;
+      border:none;
     }
     .print-header td,
     .print-body td,
