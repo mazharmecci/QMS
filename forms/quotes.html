@@ -78,23 +78,32 @@
       display:block;
     }
 
-    .company-box,
+    /* Separate the two boxes so they don't share the same padding/behavior */
+    .company-box {
+      flex: 0 0 auto;              /* do not stretch vertically with sales-box */
+      background:#d0d4d9;
+      border-radius:4px;
+      padding:0.25rem 0.75rem;     /* reduced padding => less height */
+      display:flex;
+      align-items:center;
+    }
+    
     .sales-box {
       flex:1 1 0;
       background:#d0d4d9;
       border-radius:4px;
-      padding:0.6rem 1rem;
+      padding:0.6rem 1rem;         /* keep original height for sales-box */
       display:flex;
       align-items:center;
     }
-
+    
     .company-box p {
-      margin: 0;
-      font-size: 9px;        /* was 10px */
-      line-height: 1.1;      /* slightly tighter */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin:0;
+      font-size:9px;
+      line-height:1.1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .sales-title {
