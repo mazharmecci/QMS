@@ -845,8 +845,129 @@ function wireSelectionHandlers() {
   }
 }
 
+  // Build a flat list of line items from the table/body you already render
+function buildLineItemsFromCurrentQuote() {
+  const items = [];
+  const ctx = getQuoteContext();          // you already have this in your current file
+  const inst = ctx.inst;
+  const header = ctx.header;
+
+  // 1) Main instrument
+  if (inst) {
+    items.push({
+      name: inst.instrumentName || inst.name || '',
+      code: inst.catalog || inst.code || '',
+      type: 'Instrument',
+      price: Number(inst.unitPrice || 0)
+    });
+  }
+
+  // 2) Config items (only selected ones)
+  const selection = header.itemSelection || getInitialSelection(inst || {});
+  const configItems = inst ? (inst.configurationItems || inst.configItems || []) : [];
+  configItems.forEach((item, idx) => {
+    const selected = !selection.config || selection.config[idx] !== false;
+    if (!selected) return;
+
+    const price = item.tpInr != null
+      ? Number(item.tpInr)
+      : Number(item.upInr || 0);
+
+    items.push({
+      name: item.name || item.itemName || '',
+      code: item.code || item.catalog || '',
+      type: 'Configuration',
+      price: price
+    });
+  });
+
+  // 3) Additional items (only selected ones)
+  const additionalItems = inst ? (inst.optionalItems || inst.additionalItems || []) : [];
+  additionalItems.forEach((item, idx) => {
+    const selected = !selection.optional || selection.optional[idx] !== false;
+    if (!selected) return;
+
+    let unitNum = 0;
+    if (item.price) {
+      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+      unitNum = parseInt(cleaned, 10) || 0;
+    } else {
+      unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
+    }
+
+    items.push({
+      name: item.name || item.itemName || '',
+      code: item.code || item.catalog || '',
+      type: 'Additional',
+      price: unitNum
+    });
+  });
+
+  return items;
+}
+
+// Compute summary using your existing header/fields
+function buildSummaryFromHeader(header) {
+  const itemsTotal   = Number(header.itemsTotal || header.itemsValueTotal || 0);
+  const discount     = Number(header.discount || 0);
+  const afterDisc    = Number(header.afterDiscount || (itemsTotal - discount));
+  const freight      = header.freight || 'As applicable';
+  const gstPercent   = Number(header.gstPercent || 0);
+  const gstAmount    = Number(header.gstAmount || ((afterDisc * gstPercent) / 100));
+  const totalValue   = Number(header.totalValue || (afterDisc + gstAmount));
+  const roundOff     = Number(header.roundOff || 0);
+
+  return {
+    itemsTotal,
+    discount,
+    afterDiscount: afterDisc,
+    freight,
+    gstPercent,
+    gstAmount,
+    totalValue,
+    roundOff
+  };
+}
+
+function finalizeQuote() {
+  const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+
+  // Basic validation – adjust to match what you already enforce
+  if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
+    alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
+    return;
+  }
+
+  const lineItems = buildLineItemsFromCurrentQuote();
+  const summary   = buildSummaryFromHeader(header);
+
+  // Build final quote object for history
+  const quote = {
+    header,         // full header (hospital, contact, T&C, etc.)
+    lineItems,      // flat list
+    summary,        // totals
+    status: 'submitted',
+    history: [{
+      status: 'submitted',
+      date: new Date().toISOString().slice(0,10),
+      time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+    }]
+  };
+
+  const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
+  existing.push(quote);
+  localStorage.setItem('quotes', JSON.stringify(existing));
+
+  alert('Quote has been finalized and saved to history as "Submitted".\nYou can now see it in quotes-history.html.');
+}
+
 populateHeader();
 renderQuoteBuilder();
 </script>
+
+  <button type="button" class="btn btn-primary" onclick="finalizeQuote()">
+  ✅ Finalize & Save to History
+</button>
+
 </body>
 </html>
