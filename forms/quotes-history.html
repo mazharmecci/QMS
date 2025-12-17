@@ -2,83 +2,218 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>QMS - Quote Repository</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <title>Quote History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; }
-    header { background:#0d6efd; color:#fff; padding:0.75rem 1.5rem; text-align:center; font-size:1.5rem; font-weight:600; }
-    .container { max-width:1200px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-    h2 { color:#0d6efd; margin-bottom:1rem; }
-    table { width:100%; border-collapse:collapse; }
-    table th, table td { padding:0.8rem; border-bottom:1px solid #ddd; text-align:left; }
-    table th { background:#f0f4f8; }
-    .actions button { margin-right:0.5rem; padding:0.4rem 0.8rem; border:none; border-radius:6px; cursor:pointer; }
+    header { background:#0d6efd; color:#fff; padding:1rem 1.5rem; text-align:center; font-size:1.6rem; font-weight:600; }
+    .container { max-width:1400px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+    
+    .dashboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.5rem; margin-bottom:2rem; padding:1.5rem; background:#f8f9ff; border-radius:10px; }
+    .stat-card { text-align:center; padding:1rem; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+    .stat-number { font-size:2rem; font-weight:600; color:#0d6efd; }
+    .stat-label { color:#666; font-size:0.9rem; margin-top:0.25rem; }
+    
+    h2 { color:#0d6efd; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+    .controls { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin-bottom:1.5rem; padding:1rem; background:#f0f4f8; border-radius:8px; }
+    .controls input, .controls select { padding:0.6rem 1rem; border:1px solid #ddd; border-radius:6px; font-size:0.95rem; }
+    .btn { padding:0.6rem 1.2rem; border:none; border-radius:6px; cursor:pointer; font-weight:500; transition:all 0.2s; }
+    .btn-primary { background:#0d6efd; color:#fff; }
+    .btn-secondary { background:#6c757d; color:#fff; }
+    .btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+    
+    table { width:100%; border-collapse:collapse; margin-top:1rem; }
+    table th, table td { padding:1rem 0.8rem; border-bottom:1px solid #e9ecef; text-align:left; }
+    table th { background:#f8f9fa; font-weight:600; color:#495057; cursor:pointer; user-select:none; position:sticky; top:0; }
+    table th:hover { background:#e9ecef; }
+    table tr:hover { background:#f8f9ff; }
+    
+    .status-badge { padding:0.4rem 0.8rem; border-radius:20px; font-size:0.85rem; font-weight:600; text-transform:uppercase; }
+    .status-draft { background:#e3f2fd; color:#1976d2; }
+    .status-submitted { background:#fff3cd; color:#856404; }
+    .status-approved { background:#d4edda; color:#155724; }
+    .status-sent { background:#cce5ff; color:#004085; }
+    .status-won { background:#d4edda; color:#155724; font-weight:700; }
+    .status-lost { background:#f8d7da; color:#721c24; }
+    
+    .actions button { margin-right:0.5rem; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; }
     .view-btn { background:#0d6efd; color:#fff; }
+    .status-btn { background:#28a745; color:#fff; font-size:0.8rem; padding:0.3rem 0.6rem; }
     .delete-btn { background:#dc3545; color:#fff; }
-    .quote-details { margin-top:1rem; padding:1rem; background:#f9fafc; border:1px solid #ddd; border-radius:8px; }
+    
+    .quote-details { margin-top:2rem; padding:2rem; background:#f8f9ff; border:1px solid #dee2e6; border-radius:12px; }
+    .status-timeline { margin:2rem 0; padding:1.5rem; background:#fff; border-radius:8px; border-left:4px solid #0d6efd; }
+    .timeline-item { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid #eee; }
+    .timeline-item:last-child { margin-bottom:0; border-bottom:none; }
+    .timeline-dot { width:12px; height:12px; background:#0d6efd; border-radius:50%; margin-top:0.4rem; flex-shrink:0; }
+    .timeline-content h4 { margin:0 0 0.5rem 0; color:#0d6efd; }
+    .timeline-meta { font-size:0.9rem; color:#666; }
+    
+    .hidden { display:none; }
+    @media (max-width:768px) {
+      .controls { flex-direction:column; align-items:stretch; }
+      table { font-size:0.9rem; }
+      .actions button { padding:0.4rem 0.6rem; font-size:0.8rem; }
+    }
   </style>
 </head>
 <body>
-<header>QMS - Quote Repository</header>
+<header>📋 ISTOS Medical Quote Repository</header>
 <div class="container">
-  <h2>Saved Quotes</h2>
+  <!-- Dashboard Stats -->
+  <div class="dashboard" id="dashboardStats">
+    <div class="stat-card">
+      <div class="stat-number" id="totalQuotes">0</div>
+      <div class="stat-label">Total Quotes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="pendingQuotes">0</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="wonQuotes">0</div>
+      <div class="stat-label">Won</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="conversionRate">--</div>
+      <div class="stat-label">Win Rate</div>
+    </div>
+  </div>
+
+  <h2>📊 Quote History</h2>
+  
+  <!-- Controls -->
+  <div class="controls">
+    <input id="filterStatus" placeholder="Filter by status..." list="statusList">
+    <input id="filterHospital" placeholder="Filter hospital name...">
+    <input id="filterDate" type="date">
+    <input id="filterQuoteNo" placeholder="Quote number...">
+    <button class="btn btn-secondary" onclick="applyFilters()">🔍 Filter</button>
+    <button class="btn btn-secondary" onclick="clearFilters()">🧹 Clear</button>
+    <button class="btn btn-primary" onclick="exportCSV()">📥 Export CSV</button>
+  </div>
+  
+  <datalist id="statusList">
+    <option value="Draft">
+    <option value="Submitted">
+    <option value="Approved">
+    <option value="Sent">
+    <option value="Won">
+    <option value="Lost">
+  </datalist>
+
   <table id="quoteTable">
     <thead>
       <tr>
-        <th>#</th>
-        <th>Quote No</th>
-        <th>Date</th>
-        <th>Hospital</th>
-        <th>Total Value (INR)</th>
+        <th onclick="sortTable('index')">#</th>
+        <th onclick="sortTable('quoteNo')">Quote No <span class="sort-icon" data-sort="quoteNo">↕️</span></th>
+        <th onclick="sortTable('date')">Date <span class="sort-icon" data-sort="date">↕️</span></th>
+        <th onclick="sortTable('hospital')">Hospital <span class="sort-icon" data-sort="hospital">↕️</span></th>
+        <th onclick="sortTable('value')">Total Value (₹) <span class="sort-icon" data-sort="value">↕️</span></th>
+        <th>Status <span class="sort-icon" data-sort="status">↕️</span></th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-  <div id="quoteDetails"></div>
+  
+  <div id="quoteDetails" class="hidden"></div>
 </div>
 
 <script>
   const tableBody = document.querySelector('#quoteTable tbody');
   const detailsDiv = document.getElementById('quoteDetails');
   let quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+  let filteredQuotes = [...quotes];
+  let sortConfig = { key: null, direction: 'asc' };
 
-  function renderTable() {
+  // Status colors mapping
+  const statusColors = {
+    'draft': 'draft',
+    'submitted': 'submitted', 
+    'approved': 'approved',
+    'sent': 'sent',
+    'won': 'won',
+    'lost': 'lost'
+  };
+
+  function saveQuotes() {
+    localStorage.setItem('quotes', JSON.stringify(quotes));
+  }
+
+  function renderTable(data = filteredQuotes) {
     tableBody.innerHTML = '';
-    quotes.forEach((q, index) => {
+    data.forEach((q, index) => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${index+1}</td>
-        <td>${q.header.quoteNo||'-'}</td>
-        <td>${q.header.quoteDate||'-'}</td>
-        <td>${q.header.hospitalName||'-'}</td>
+        <td>${index + 1}</td>
+        <td>${q.header.quoteNo || '-'}</td>
+        <td>${q.header.quoteDate || '-'}</td>
+        <td>${q.header.hospitalName || '-'}</td>
         <td>₹ ${q.summary.totalValue.toLocaleString('en-IN')}</td>
+        <td><span class="status-badge status-${(q.status || 'draft')}">${q.status || 'Draft'}</span></td>
         <td class="actions">
-          <button class="view-btn" onclick="viewQuote(${index})">View</button>
-          <button class="delete-btn" onclick="deleteQuote(${index})">Delete</button>
+          <button class="view-btn" onclick="viewQuote(${quotes.indexOf(q)})">👁️ View</button>
+          <button class="status-btn" onclick="updateStatus(${quotes.indexOf(q)}, 'next')">${getNextStatus(q.status || 'draft')}</button>
+          <button class="delete-btn" onclick="deleteQuote(${quotes.indexOf(q)})">🗑️ Delete</button>
         </td>
       `;
       tableBody.appendChild(row);
     });
+    updateDashboardStats();
+  }
+
+  function getNextStatus(current) {
+    const sequence = ['draft', 'submitted', 'approved', 'sent', 'won', 'lost'];
+    const idx = sequence.indexOf(current);
+    return idx < sequence.length - 1 ? sequence[idx + 1] : 'lost';
+  }
+
+  function updateStatus(index, action) {
+    const quote = quotes[index];
+    const currentStatus = quote.status || 'draft';
+    let newStatus;
+    
+    if (action === 'next') {
+      const sequence = ['draft', 'submitted', 'approved', 'sent', 'won', 'lost'];
+      const idx = sequence.indexOf(currentStatus);
+      newStatus = sequence[Math.min(idx + 1, sequence.length - 1)];
+    }
+    
+    quote.status = newStatus;
+    quote.history = quote.history || [];
+    quote.history.push({
+      status: newStatus,
+      date: new Date().toISOString().slice(0, 10),
+      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    });
+    
+    saveQuotes();
+    filteredQuotes = [...quotes];
+    applyFilters();
   }
 
   function viewQuote(index) {
     const q = quotes[index];
-    let lineItemsHTML = `
-      <h3>Quote Details</h3>
-      <p><strong>Quote No:</strong> ${q.header.quoteNo}</p>
-      <p><strong>Date:</strong> ${q.header.quoteDate}</p>
-      <p><strong>Hospital:</strong> ${q.header.hospitalName}</p>
-      <hr>
-      <h4>Line‑Item Breakdown</h4>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:1rem;">
-        <thead>
-          <tr style="background:#f0f4f8;">
-            <th>Item</th><th>Code</th><th>Type</th><th style="text-align:right;">Price (INR)</th>
-          </tr>
-        </thead>
+    detailsDiv.classList.remove('hidden');
+    
+    const lineItemsHTML = `
+      <h3>📄 Quote Details - ${q.header.quoteNo}</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem;">
+        <p><strong>Quote No:</strong> ${q.header.quoteNo}</p>
+        <p><strong>Date:</strong> ${q.header.quoteDate}</p>
+        <p><strong>Hospital:</strong> ${q.header.hospitalName}</p>
+        <p><strong>Status:</strong> <span class="status-badge status-${q.status || 'draft'}">${q.status || 'Draft'}</span></p>
+      </div>
+      
+      <h4>📋 Line Items</h4>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:2rem;">
+        <thead><tr style="background:#f0f4f8;">
+          <th>Item</th><th>Code</th><th>Type</th><th style="text-align:right;">Price (₹)</th>
+        </tr></thead>
         <tbody>
     `;
+    
     q.lineItems.forEach(li => {
       lineItemsHTML += `
         <tr>
@@ -89,31 +224,176 @@
         </tr>
       `;
     });
-    lineItemsHTML += `</tbody></table>
-      <h4>Quote Summary</h4>
-      <p><strong>Items Value Total INR:</strong> ₹ ${q.summary.itemsTotal.toLocaleString('en-IN')}</p>
-      <p><strong>Special Discount:</strong> ₹ ${q.summary.discount.toLocaleString('en-IN')}</p>
-      <p><strong>Price After Discount:</strong> ₹ ${q.summary.afterDiscount.toLocaleString('en-IN')}</p>
-      <p><strong>Freight Costs:</strong> ${q.summary.freight}</p>
-      <p><strong>GST @ ${q.summary.gstPercent}%:</strong> ₹ ${q.summary.gstAmount.toLocaleString('en-IN')}</p>
-      <p><strong>Total Value INR:</strong> ₹ ${q.summary.totalValue.toLocaleString('en-IN')}</p>
-      <p><strong>Round Off:</strong> ₹ ${q.summary.roundOff.toLocaleString('en-IN')}</p>
-      <div style="margin-top:2rem; text-align:right; font-style:italic; color:#555;">
-        <p>For ISTOS Medical Private Limited</p>
+    
+    const historyHTML = q.history && q.history.length ? `
+      <div class="status-timeline">
+        <h4>📈 Status History</h4>
+        ${q.history.map(h => `
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+              <h4>${h.status.toUpperCase()}</h4>
+              <div class="timeline-meta">${h.date} at ${h.time}</div>
+            </div>
+          </div>
+        `).reverse().join('')}
+      </div>
+    ` : '';
+
+    detailsDiv.innerHTML = `
+      <div class="quote-details">
+        ${lineItemsHTML}</tbody></table>
+        <h4>💰 Summary</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1rem;">
+          <p><strong>Items Total:</strong> ₹ ${q.summary.itemsTotal.toLocaleString('en-IN')}</p>
+          <p><strong>Discount:</strong> ₹ ${q.summary.discount.toLocaleString('en-IN')}</p>
+          <p><strong>After Discount:</strong> ₹ ${q.summary.afterDiscount.toLocaleString('en-IN')}</p>
+          <p><strong>Freight:</strong> ${q.summary.freight}</p>
+          <p><strong>GST @ ${q.summary.gstPercent}%:</strong> ₹ ${q.summary.gstAmount.toLocaleString('en-IN')}</p>
+          <p><strong>Total Value:</strong> ₹ ${q.summary.totalValue.toLocaleString('en-IN')}</p>
+        </div>
+        
+        <div style="margin-top:2rem; text-align:right; font-style:italic; color:#555; padding-top:2rem; border-top:1px solid #ddd;">
+          <p>For ISTOS Medical Private Limited</p>
+        </div>
+        
+        ${historyHTML}
+        
+        <div style="margin-top:2rem; text-align:center;">
+          <button class="btn btn-primary" onclick="printQuote(${index})">🖨️ Print Quote</button>
+          <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">❌ Close</button>
+        </div>
       </div>
     `;
-    detailsDiv.innerHTML = `<div class="quote-details">${lineItemsHTML}</div>`;
   }
 
   function deleteQuote(index) {
     if (confirm('Are you sure you want to delete this quote?')) {
-      quotes.splice(index,1);
-      localStorage.setItem('quotes', JSON.stringify(quotes));
+      quotes.splice(index, 1);
+      saveQuotes();
+      filteredQuotes = [...quotes];
       renderTable();
-      detailsDiv.innerHTML = '';
+      detailsDiv.classList.add('hidden');
     }
   }
 
+  function updateDashboardStats() {
+    const total = quotes.length;
+    const pending = quotes.filter(q => !q.status || ['draft', 'submitted'].includes(q.status)).length;
+    const won = quotes.filter(q => q.status === 'won').length;
+    const conversion = total ? Math.round((won / total) * 100) : 0;
+    
+    document.getElementById('totalQuotes').textContent = total;
+    document.getElementById('pendingQuotes').textContent = pending;
+    document.getElementById('wonQuotes').textContent = won;
+    document.getElementById('conversionRate').textContent = `${conversion}%`;
+  }
+
+  function applyFilters() {
+    const statusFilter = document.getElementById('filterStatus').value.toLowerCase().trim();
+    const hospitalFilter = document.getElementById('filterHospital').value.toLowerCase().trim();
+    const dateFilter = document.getElementById('filterDate').value;
+    const quoteNoFilter = document.getElementById('filterQuoteNo').value.toLowerCase().trim();
+
+    filteredQuotes = quotes.filter(q => {
+      const quoteNo = (q.header.quoteNo || '').toLowerCase();
+      const hospital = (q.header.hospitalName || '').toLowerCase();
+      const status = (q.status || 'draft').toLowerCase();
+      const date = q.header.quoteDate || '';
+      
+      return (!statusFilter || status.includes(statusFilter)) &&
+             (!hospitalFilter || hospital.includes(hospitalFilter)) &&
+             (!dateFilter || date.startsWith(dateFilter)) &&
+             (!quoteNoFilter || quoteNo.includes(quoteNoFilter));
+    });
+    
+    renderTable(filteredQuotes);
+  }
+
+  function clearFilters() {
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterHospital').value = '';
+    document.getElementById('filterDate').value = '';
+    document.getElementById('filterQuoteNo').value = '';
+    filteredQuotes = [...quotes];
+    renderTable();
+  }
+
+  function sortTable(key) {
+    if (sortConfig.key === key) {
+      sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortConfig.key = key;
+      sortConfig.direction = 'asc';
+    }
+
+    filteredQuotes.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch(key) {
+        case 'quoteNo': aVal = a.header.quoteNo || ''; bVal = b.header.quoteNo || ''; break;
+        case 'date': aVal = a.header.quoteDate || ''; bVal = b.header.quoteDate || ''; break;
+        case 'hospital': aVal = a.header.hospitalName || ''; bVal = b.header.hospitalName || ''; break;
+        case 'value': aVal = a.summary.totalValue || 0; bVal = b.summary.totalValue || 0; break;
+        case 'status': aVal = a.status || 'draft'; bVal = b.status || 'draft'; break;
+        default: return 0;
+      }
+      
+      if (typeof aVal === 'number') {
+        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      return sortConfig.direction === 'asc' ? 
+        String(aVal).localeCompare(String(bVal)) : 
+        String(bVal).localeCompare(String(aVal));
+    });
+    
+    renderTable(filteredQuotes);
+  }
+
+  function exportCSV() {
+    const headers = ['Quote No', 'Date', 'Hospital', 'Total Value', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...quotes.map(q => [
+        q.header.quoteNo || '',
+        q.header.quoteDate || '',
+        `"${q.header.hospitalName || ''}"`,
+        q.summary.totalValue || 0,
+        q.status || 'Draft'
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quotes-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  }
+
+  function printQuote(index) {
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Quote ${quotes[index].header.quoteNo}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        @media print { body { margin: 0; } }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+      </style></head>
+      <body>${detailsDiv.innerHTML}</body></html>
+    `);
+    win.document.close();
+    win.print();
+  }
+
+  // Event listeners for real-time filtering
+  document.getElementById('filterStatus').addEventListener('input', applyFilters);
+  document.getElementById('filterHospital').addEventListener('input', applyFilters);
+  document.getElementById('filterDate').addEventListener('change', applyFilters);
+  document.getElementById('filterQuoteNo').addEventListener('input', applyFilters);
+
+  // Initialize
   renderTable();
 </script>
 </body>
