@@ -47,94 +47,67 @@
     }
 
 
-  .quote-header {
-    margin-bottom:1.5rem;
-    border:1px solid #ccc;
-    border-radius:8px;
-    background:#fff;
-    padding:2rem;
-  }
+.quote-header {
+  margin-bottom:1.5rem;
+  border:1px solid #ccc;
+  border-radius:8px;
+  background:#fff;
+  padding:2rem;
+  position:relative;
+}
 
+/* overall header body: stack rows vertically */
 .quote-header-body {
-  display: flex;
-  align-items: stretch;
-  gap: 1rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.75rem;
 }
 
-/* left & right columns */
-.quote-left,
-.quote-right {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* title bar: breathe, keep to one line */
-.quote-right-title {
-  display: inline-block;
-  align-self: flex-end;       /* align to the right */
-  background: #d0d4d9;
-  color: #000;
-  padding: 0.35rem 1.25rem;
-  border-radius: 4px;
-  font-weight: 900;
-  font-size: 18px;
-  line-height: 1;             /* tight line height */
-  white-space: nowrap;        /* force single line */
-  max-width: 100%;            /* allow wide title */
-}
-
-/* right column: logo fixed at top, title below with room */
-.quote-right {
-  background: #fff;
-  position: relative;
-  padding: 0.6rem 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start; /* logo at top */
-}
-
-/* logo at top-right, minimal bottom margin */
+/* logo: pinned to top-right, its own row */
 .quote-logo-wrap {
-  align-self: flex-end;
-  margin-bottom: 0.5rem;
+  align-self:flex-end;
 }
 .quote-logo-wrap img {
-  max-height: 56px;   /* slightly smaller to free space */
-  width: auto;
-  display: inline-block;
+  max-height:70px;          /* adjust size as you like */
+  width:auto;
+  display:block;
 }
 
-  /* row with company box and SALES QUOTATION, equal height */
-  .quote-top-row {
-    display:flex;
-    gap:1rem;
-    align-items:stretch;
-  }
-
-/* company box: match right column height */
-.company-box {
-  background: #d0d4d9;
-  padding: 0.6rem 0.9rem;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center; /* center vertically for balance */
+/* second row: company + SALES QUOTATION, equal height */
+.quote-top-row {
+  display:flex;
+  gap:1rem;
+  align-items:stretch;
 }
+
+/* boxes share same grey and height */
+.company-box,
+.sales-box {
+  flex:1 1 0;
+  background:#d0d4d9;
+  border-radius:4px;
+  padding:0.6rem 1rem;
+  display:flex;
+  align-items:center;        /* vertical centering */
+}
+
+/* company text compact, single line if needed */
 .company-box p {
-  margin: 0;
-  font-size: 10px;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin:0;
+  font-size:10px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-  .sales-title {
-    margin-left:auto;
-    font-weight:900;
-    font-size:18px;
-  }
+/* SALES QUOTATION text on right */
+.sales-title {
+  margin-left:auto;
+  font-weight:900;
+  font-size:18px;
+}
+
 
   .hospital-box p { margin:0; font-size:13px; line-height:1.3; }
   .hospital-box span { font-size:13px; }
@@ -340,22 +313,24 @@
           <div class="quote-header">
             <div class="quote-header-body">
           
-              <!-- LEFT COLUMN -->
-              <div class="quote-left">
-                <!-- top row: company + SALES QUOTATION side by side -->
-                <div class="quote-top-row">
-                  <div class="company-box">
-                    <p>
-                      <strong>ISTOS Medical Pvt Ltd.</strong>
-                      #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road,
-                      Yelachenahalli, Bangalore - 560062
-                    </p>
-                  </div>
-                  <div class="sales-box">
-                    <div class="sales-title">SALES QUOTATION</div>
-                  </div>
-                </div>
+              <!-- logo row -->
+              <div class="quote-logo-wrap">
+                <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+              </div>
           
+              <!-- company + SALES QUOTATION row -->
+              <div class="quote-top-row">
+                <div class="company-box">
+                  <p>
+                    <strong>ISTOS Medical Pvt Ltd.</strong>
+                    #51/5, 2nd Cross, J.C. Ind Area, Bikasipura Main Road,
+                    Yelachenahalli, Bangalore - 560062
+                  </p>
+                </div>
+                <div class="sales-box">
+                  <div class="sales-title">SALES QUOTATION</div>
+                </div>
+              </div>          
                 <!-- below that: To + Attn -->
                 <div class="hospital-box">
                   <p>
