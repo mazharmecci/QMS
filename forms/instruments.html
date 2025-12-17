@@ -73,7 +73,6 @@
     .modal-actions button { padding:0.6rem 1rem; border-radius:8px; border:none; cursor:pointer; }
     .save-btn { background:#0d6efd; color:#fff; }
 
-    /* simple multi-select list area */
     .multi-select-list {
       grid-column:span 2;
       max-height:160px;
@@ -94,6 +93,37 @@
       margin-bottom:4px;
       cursor:pointer;
     }
+
+    /* Toast notification */
+    .toast-container {
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      z-index:2000;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .toast {
+      min-width:220px;
+      max-width:320px;
+      background:#198754;
+      color:#fff;
+      padding:0.6rem 0.9rem;
+      border-radius:6px;
+      font-size:13px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
+      opacity:0;
+      transform:translateY(10px);
+      transition:opacity 0.25s ease, transform 0.25s ease;
+    }
+    .toast.show {
+      opacity:1;
+      transform:translateY(0);
+    }
+    .toast.error {
+      background:#dc3545;
+    }
   </style>
 </head>
 <body>
@@ -103,6 +133,8 @@
     <div class="header-title">QMS - Instruments</div>
   </div>
 </header>
+
+<div id="toastContainer" class="toast-container"></div>
 
 <div class="container">
   <div class="top-bar">
@@ -188,10 +220,7 @@ Next lines = sub details, each on its own line"></textarea>
     <input type="text" id="optOrigin" placeholder="Country Of Origin">
     <input type="text" id="optPrice" placeholder="Unit Price (₹)">
 
-    <!-- NEW: multi-select list of optional items from master -->
-    <div id="optionalSelectList" class="multi-select-list">
-      <!-- filled by renderOptionalSelectionList() -->
-    </div>
+    <div id="optionalSelectList" class="multi-select-list"></div>
   </div>
 
   <div id="optionalMasterList" style="grid-column:span 2; margin-top:1rem; border-top:1px solid #eee; padding-top:0.5rem; font-size:0.85rem;"></div>
@@ -226,10 +255,7 @@ Next lines = sub details, each on its own line"></textarea>
     <input type="text" id="cfgUP" placeholder="UP-INR" value="Included">
     <input type="text" id="cfgTP" placeholder="TP-INR" value="Included">
 
-    <!-- NEW: multi-select list of config items from master -->
-    <div id="configSelectList" class="multi-select-list">
-      <!-- filled by renderConfigSelectionList() -->
-    </div>
+    <div id="configSelectList" class="multi-select-list"></div>
   </div>
 
   <div id="configMasterList" style="grid-column:span 2; margin-top:1rem; border-top:1px solid #eee; padding-top:0.5rem; font-size:0.85rem;"></div>
@@ -241,6 +267,26 @@ Next lines = sub details, each on its own line"></textarea>
 </div>
 
 <script>
+  /* Toast helper */
+  function showToast(message, type = 'success', duration = 1800) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const el = document.createElement('div');
+    el.className = 'toast' + (type === 'error' ? ' error' : '');
+    el.textContent = message;
+    container.appendChild(el);
+
+    requestAnimationFrame(() => el.classList.add('show'));
+
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => {
+        if (el.parentNode === container) container.removeChild(el);
+      }, 250);
+    }, duration);
+  }
+
   const form = document.getElementById('instrumentForm');
   const tableBody = document.querySelector('#instrumentTable tbody');
   const pageInfo = document.getElementById('pageInfo');
@@ -282,7 +328,6 @@ Next lines = sub details, each on its own line"></textarea>
     return digits ? parseInt(digits,10) : 0;
   }
 
-  // Split details into first line, second line, and remaining lines, and also build HTML.
   function parseDetails(rawText) {
     const lines = rawText
       .split('\n')
@@ -314,7 +359,6 @@ Next lines = sub details, each on its own line"></textarea>
   }
 
   /* MASTER REGISTRIES */
-
   function getConfigItemMaster() {
     return JSON.parse(localStorage.getItem('configItemMaster') || '[]');
   }
@@ -349,7 +393,6 @@ Next lines = sub details, each on its own line"></textarea>
     );
   }
 
-  // One-time migration helper (kept as in your version).
   function fixInstrumentNames() {
     const stored = JSON.parse(localStorage.getItem('instruments') || '[]');
     let updated = false;
@@ -375,7 +418,6 @@ Next lines = sub details, each on its own line"></textarea>
   }
 
   /* OPTIONAL MASTER LIST + MULTI-SELECT */
-
   function renderOptionalMasterList() {
     const container = document.getElementById('optionalMasterList');
     const master = getAdditionalItemMaster();
@@ -429,7 +471,6 @@ Next lines = sub details, each on its own line"></textarea>
   }
 
   /* CONFIG MASTER LIST + MULTI-SELECT */
-
   function renderConfigMasterList() {
     const container = document.getElementById('configMasterList');
     const master = getConfigItemMaster();
@@ -483,7 +524,6 @@ Next lines = sub details, each on its own line"></textarea>
   }
 
   /* OPTIONAL MODAL WORKFLOW */
-
   additionalSelect.addEventListener('change', function(){
     if(this.value==='Yes') openOptionalModal();
   });
@@ -538,7 +578,6 @@ Next lines = sub details, each on its own line"></textarea>
   function saveOptionalItem(){
     const hsn = optHSNInput.value.trim();
 
-    // If user filled a new item, add it first.
     if (document.getElementById('optItemCode').value ||
         document.getElementById('optItemName').value ||
         document.getElementById('optCatalogRef').value ||
@@ -565,7 +604,6 @@ Next lines = sub details, each on its own line"></textarea>
         saveAdditionalItemToMaster(newItem);
       }
 
-      // reset fields for next new entry
       document.getElementById('optItemId').value = '';
       document.getElementById('optItemCode').value = '';
       document.getElementById('optItemName').value = '';
@@ -575,7 +613,6 @@ Next lines = sub details, each on its own line"></textarea>
       document.getElementById('optPrice').value = '';
     }
 
-    // Now sync checkboxes into optionalItems array
     const master = getAdditionalItemMaster();
     const checks = document.querySelectorAll('.optional-checkbox');
     optionalItems = [];
@@ -591,10 +628,11 @@ Next lines = sub details, each on its own line"></textarea>
     populateExistingAdditionalDropdown();
     renderOptionalMasterList();
     renderOptionalSelectionList();
+
+    showToast('Optional items selection saved');
   }
 
   /* CONFIG MODAL WORKFLOW */
-
   configurationSelect.addEventListener('change', function(){
     if(this.value==='Yes') openConfigModal();
   });
@@ -647,12 +685,14 @@ Next lines = sub details, each on its own line"></textarea>
   function saveConfigItem(){
     const hsn = cfgHSNInput.value.trim();
 
-    // If user filled a new config item, add it first.
     if (document.getElementById('cfgItemCode').value ||
         document.getElementById('cfgItemName').value ||
         document.getElementById('cfgCatalogRef').value ||
         hsn ||
-        document.getElementById('cfgOrigin').value) {
+        document.getElementById('cfgOrigin').value ||
+        document.getElementById('cfgQty').value.trim() !== '' ||
+        document.getElementById('cfgUP').value.trim() !== '' ||
+        document.getElementById('cfgTP').value.trim() !== '') {
 
       if(!/^\d{4}\s\d{4}$/.test(hsn)){
         alert('HSN Code must be in format: 1234 5678');
@@ -690,7 +730,6 @@ Next lines = sub details, each on its own line"></textarea>
       tpInput.value = 'Included';
     }
 
-    // Now sync checkboxes into configurationItems array
     const master = getConfigItemMaster();
     const checks = document.querySelectorAll('.config-checkbox');
     configurationItems = [];
@@ -706,10 +745,11 @@ Next lines = sub details, each on its own line"></textarea>
     populateExistingConfigDropdown();
     renderConfigMasterList();
     renderConfigSelectionList();
+
+    showToast('Configuration items selection saved');
   }
 
   /* MAIN FORM SAVE */
-
   form.addEventListener('submit', e=>{
     e.preventDefault();
 
@@ -722,12 +762,10 @@ Next lines = sub details, each on its own line"></textarea>
 
     const instrument = {
       description: document.getElementById('description').value,
-
       details: detailsHTML,
       instrumentName: firstLine,
       instrumentShortLine: secondLine,
       instrumentExtraLines: remainingLines,
-
       origin: document.getElementById('origin').value,
       catalog: document.getElementById('catalog').value,
       hsn: hsnInput.value,
@@ -752,6 +790,7 @@ Next lines = sub details, each on its own line"></textarea>
     optionalItems=[]; configurationItems=[];
     form.classList.remove('active');
     renderTable();
+    showToast('Instrument saved');
   });
 
   function formatPriceDisplay(v){ return '₹ '+Number(v||0).toLocaleString('en-IN'); }
