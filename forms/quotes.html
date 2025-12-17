@@ -70,6 +70,21 @@
   flex-direction: column;
 }
 
+/* title bar: breathe, keep to one line */
+.quote-right-title {
+  display: inline-block;
+  align-self: flex-end;       /* align to the right */
+  background: #d0d4d9;
+  color: #000;
+  padding: 0.35rem 1.25rem;
+  border-radius: 4px;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;             /* tight line height */
+  white-space: nowrap;        /* force single line */
+  max-width: 100%;            /* allow wide title */
+}
+    
   /* --- top logo row, spans only right side visually --- */
   .quote-logo-wrap {
     text-align:right;
