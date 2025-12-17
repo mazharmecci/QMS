@@ -14,10 +14,29 @@
       background:#0d6efd;
       color:#fff;
       padding:0.75rem 1.5rem;
-      text-align:center;
-      font-size:1.5rem;
-      font-weight:600;
     }
+    .header-inner {
+      max-width:1200px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .back-btn {
+      border:none;
+      background:rgba(255,255,255,0.12);
+      color:#fff;
+      padding:0.45rem 0.9rem;
+      border-radius:999px;
+      cursor:pointer;
+    }
+    .header-title {
+      flex:1;
+      text-align:center;
+      font-weight:600;
+      font-size:1.5rem;
+    }
+
     .container {
       max-width:1200px;
       margin:2rem auto;
@@ -119,7 +138,12 @@
   </style>
 </head>
 <body>
-  <header>QMS - Quote Setup</header>
+  <header>
+    <div class="header-inner">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div class="header-title">QMS - Quote Setup</div>
+    </div>
+  </header>
 
   <div class="container">
     <h2>Plan your quote now</h2>
@@ -184,6 +208,8 @@
   </div>
 
 <script>
+  function goBack(){ if (window.history.length > 1) window.history.back(); }
+
   function generateQuoteNo() {
     const lastNo = localStorage.getItem('lastQuoteNo') || 'EQ/SQ/25-26/00000';
     const parts = lastNo.split('/');
@@ -217,51 +243,48 @@
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
-  function getInstrumentLabel(inst) {
-    const code = inst.instrumentCode || inst.catalog || '';
-    const name = inst.instrumentName || inst.name || '';
-    return `${code} - ${name}`;
+  function populateInstrumentDropdown() {
+    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+    const select = document.getElementById('instrumentSelect');
+    instruments.forEach((inst, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      const code = inst.instrumentCode || inst.catalog || '';
+      const name = inst.instrumentName || '';
+      opt.textContent = `${code} - ${name}`;
+      select.appendChild(opt);
+    });
   }
 
-function populateInstrumentDropdown() {
-  const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-  const select = document.getElementById('instrumentSelect');
-  instruments.forEach((inst, idx) => {
-    const opt = document.createElement('option');
-    opt.value = idx;
-    const code = inst.instrumentCode || inst.catalog || '';
-    const name = inst.instrumentName || '';
-    opt.textContent = `${code} - ${name}`;
-    select.appendChild(opt);
-  });
-}
+  function setupInstrumentPreview() {
+    const select = document.getElementById('instrumentSelect');
+    const preview = document.getElementById('instrumentPreview');
+    const details = document.getElementById('instrumentDetails');
 
-function setupInstrumentPreview() {
-  const select = document.getElementById('instrumentSelect');
-  const preview = document.getElementById('instrumentPreview');
-  const details = document.getElementById('instrumentDetails');
+    select.addEventListener('change', function () {
+      const idx = this.value;
+      const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+      const inst = instruments[idx];
 
-  select.addEventListener('change', function () {
-    const idx = this.value;
-    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-    const inst = instruments[idx];
+      if (!inst) {
+        preview.style.display = 'none';
+        details.textContent = '';
+        return;
+      }
 
-    if (!inst) {
-      preview.style.display = 'none';
-      details.textContent = '';
-      return;
-    }
+      const name = inst.instrumentName || '';
+      const descLines = (inst.longDescription || inst.description || '')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean);
+      const overview = descLines[0] || '';
+      const extras = descLines.slice(1).join(' ');
 
-    const name = inst.instrumentName || '';
-    const descLines = (inst.longDescription || inst.description || '').split('\n').map(l => l.trim()).filter(Boolean);
-    const overview = descLines[0] || '';
-    const extras = descLines.slice(1).join(' ');
-
-    const fullText = [name, overview, extras].filter(Boolean).join(' — ');
-    preview.style.display = 'block';
-    details.textContent = fullText;
-  });
-}
+      const fullText = [name, overview, extras].filter(Boolean).join(' — ');
+      preview.style.display = 'block';
+      details.textContent = fullText;
+    });
+  }
 
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
@@ -270,7 +293,7 @@ function setupInstrumentPreview() {
 
     const selectedInstrumentIndex = document.getElementById('instrumentSelect').value;
     const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-    const selectedInstrument = instruments[selectedInstrumentIndex] || null;
+    const inst = instruments[selectedInstrumentIndex] || null;
 
     const headerData = {
       quoteNo: document.getElementById('quoteNo').value,
@@ -284,8 +307,10 @@ function setupInstrumentPreview() {
       contactPhone: document.getElementById('contactPhone').value,
       contactEmail: document.getElementById('contactEmail').value,
       officePhone: document.getElementById('officePhone').value,
+
+      // pass only reference, not full copy, so quotes.html can always read latest instrument
       selectedInstrumentIndex,
-      selectedInstrument
+      instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
     };
 
     localStorage.setItem('quoteHeader', JSON.stringify(headerData));
