@@ -25,6 +25,7 @@
       font-family:'Inter',sans-serif;
     }
     #detailsInput { grid-column:span 2; height:150px; resize:vertical; }
+    #suppliedWithInput { grid-column:span 2; height:110px; resize:vertical; }
     form button[type="submit"] { grid-column:span 2; background:#0d6efd; color:#fff; border:none; cursor:pointer; }
 
     table { width:100%; border-collapse:separate; border-spacing:0 8px; margin-top:1rem; }
@@ -144,9 +145,18 @@
 
   <form id="instrumentForm">
     <input type="text" id="description" placeholder="Instrument Description" required>
+
     <textarea id="detailsInput" placeholder="First line = main item name
 Second line = short overview
 Next lines = extra details, each on its own line"></textarea>
+
+    <textarea id="suppliedWithInput" placeholder="Supplied Complete with:
+Base device – 1 No.
+Section waste tray – 1 No.
+Protective cover – 1 No.
+Power Cord – 1 No.
+Operating manual IFU2003006 – 1 No."></textarea>
+
     <input type="text" id="origin" placeholder="Country Of Origin">
     <input type="text" id="catalog" placeholder="Catalog Reference">
     <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
@@ -295,6 +305,7 @@ Next lines = sub details, each on its own line"></textarea>
   const additionalSelect = document.getElementById('additional');
   const configurationSelect = document.getElementById('configuration');
   const detailsInput = document.getElementById('detailsInput');
+  const suppliedWithInput = document.getElementById('suppliedWithInput');
 
   const optHSNInput = document.getElementById('optHSN');
   const optPriceInput = document.getElementById('optPrice');
@@ -760,12 +771,18 @@ Next lines = sub details, each on its own line"></textarea>
       detailsHTML
     } = parseDetails(detailsInput.value);
 
+    const suppliedWithLines = (suppliedWithInput.value || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);  // turn textarea into array of lines [web:102][web:106]
+
     const instrument = {
       description: document.getElementById('description').value,
       details: detailsHTML,
       instrumentName: firstLine,
       instrumentShortLine: secondLine,
       instrumentExtraLines: remainingLines,
+      suppliedWith: suppliedWithLines,
       origin: document.getElementById('origin').value,
       catalog: document.getElementById('catalog').value,
       hsn: hsnInput.value,
@@ -896,6 +913,8 @@ Next lines = sub details, each on its own line"></textarea>
     if (inst.instrumentShortLine) parts.push(inst.instrumentShortLine);
     if (inst.instrumentExtraLines) parts.push(inst.instrumentExtraLines);
     detailsInput.value = parts.join('\n');
+
+    suppliedWithInput.value = (inst.suppliedWith || []).join('\n');  // restore supplied block [web:102]
 
     optionalItems = inst.optionalItems ? [...inst.optionalItems]:[];
     configurationItems = inst.configurationItems ? [...inst.configurationItems]:[];
