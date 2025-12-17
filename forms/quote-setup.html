@@ -387,35 +387,37 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
-  document.getElementById('quoteSetupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+document.getElementById('quoteSetupForm').addEventListener('submit', function(e) {
+  e.preventDefault();
 
-    const selectedInstrumentIndex = document.getElementById('instrumentSelect').value;
-    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-    const inst = instruments[selectedInstrumentIndex] || null;
+  const selectedInstrumentIndex = document.getElementById('instrumentSelect').value;
+  const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+  const inst = instruments[selectedInstrumentIndex] || null;
 
-    const headerData = {
-      quoteNo: document.getElementById('quoteNo').value,
-      quoteDate: document.getElementById('quoteDate').value,
-      yourReference: document.getElementById('yourReference').value,
-      refDate: document.getElementById('refDate').value,
-      hospitalName: document.getElementById('hospitalName').value,
-      hospitalAddress: document.getElementById('hospitalAddress').value,
-      kindAttn: document.getElementById('kindAttn').value,
-      contactPerson: document.getElementById('contactPerson').value,
-      contactPhone: document.getElementById('contactPhone').value,
-      contactEmail: document.getElementById('contactEmail').value,
-      officePhone: document.getElementById('officePhone').value,
-      salesNote: document.getElementById('salesNote').value,
-      termsText: document.getElementById('termsText').value,
+  const headerData = {
+    quoteNo: document.getElementById('quoteNo').value,
+    quoteDate: document.getElementById('quoteDate').value,
+    yourReference: document.getElementById('yourReference').value,
+    refDate: document.getElementById('refDate').value,
+    hospitalName: document.getElementById('hospitalName').value,
+    hospitalAddress: document.getElementById('hospitalAddress').value,
+    kindAttn: document.getElementById('kindAttn').value,
+    contactPerson: document.getElementById('contactPerson').value,
+    contactPhone: document.getElementById('contactPhone').value,
+    contactEmail: document.getElementById('contactEmail').value,
+    officePhone: document.getElementById('officePhone').value,
+    salesNote: document.getElementById('salesNote').value,
 
-      selectedInstrumentIndex,
-      instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
-    };
+    // CHANGED: use innerHTML (or innerText) from the block instead of .value on a non-existent textarea
+    termsText: document.getElementById('termsTextBlock').innerText,
 
-    localStorage.setItem('quoteHeader', JSON.stringify(headerData));  /* [web:183] */
-    window.location.href = 'quotes.html';
-  });
+    selectedInstrumentIndex,
+    instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
+  };
+
+  localStorage.setItem('quoteHeader', JSON.stringify(headerData));
+  window.location.href = 'quotes.html';
+});
 
   document.getElementById('quoteNo').value = generateQuoteNo();
   const todayISO = new Date().toISOString().slice(0,10);
