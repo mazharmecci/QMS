@@ -3,323 +3,386 @@
 <head>
   <meta charset="UTF-8">
   <title>Quote History</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family:'Inter',sans-serif; background:#f5f7fa; margin:0; }
-    header { background:#0d6efd; color:#fff; padding:1rem 1.5rem; text-align:center; font-size:1.6rem; font-weight:600; }
-    .container { max-width:1400px; margin:2rem auto; padding:2rem; background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
-    
-    .dashboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.5rem; margin-bottom:2rem; padding:1.5rem; background:#f8f9ff; border-radius:10px; }
-    .stat-card { text-align:center; padding:1rem; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-    .stat-number { font-size:2rem; font-weight:600; color:#0d6efd; }
-    .stat-label { color:#666; font-size:0.9rem; margin-top:0.25rem; }
-    
-    h2 { color:#0d6efd; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
-    .controls { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; margin-bottom:1.5rem; padding:1rem; background:#f0f4f8; border-radius:8px; }
-    .controls input, .controls select { padding:0.6rem 1rem; border:1px solid #ddd; border-radius:6px; font-size:0.95rem; }
-    .btn { padding:0.6rem 1.2rem; border:none; border-radius:6px; cursor:pointer; font-weight:500; transition:all 0.2s; }
+    body {
+      font-family: 'Aptos Display', system-ui, 'Inter', sans-serif;
+      background:#f5f7fa;
+      margin:0;
+    }
+    header {
+      background:#0d6efd;
+      color:#fff;
+      padding:0.75rem 1.5rem;
+    }
+    .header-inner {
+      max-width:1200px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .back-btn {
+      border:none;
+      background:rgba(255,255,255,0.12);
+      color:#fff;
+      padding:0.45rem 0.9rem;
+      border-radius:999px;
+      cursor:pointer;
+    }
+    .header-title {
+      flex:1;
+      text-align:center;
+      font-weight:600;
+      font-size:1.5rem;
+    }
+
+    .container {
+      max-width:1200px;
+      margin:2rem auto;
+      padding:2rem;
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color:#0d6efd;
+      margin-bottom:1rem;
+      display:flex;
+      align-items:center;
+      gap:0.5rem;
+    }
+
+    /* Dashboard stats */
+    .dashboard {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:1.5rem;
+      margin-bottom:2rem;
+      padding:1.25rem;
+      background:#f8f9ff;
+      border-radius:10px;
+    }
+    .stat-card {
+      text-align:center;
+      padding:1rem;
+      background:#fff;
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    .stat-number {
+      font-size:1.8rem;
+      font-weight:600;
+      color:#0d6efd;
+    }
+    .stat-label {
+      color:#666;
+      font-size:0.9rem;
+      margin-top:0.25rem;
+    }
+
+    /* Controls */
+    .controls {
+      display:flex;
+      gap:0.75rem;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:1.25rem;
+      padding:0.9rem;
+      background:#f0f4f8;
+      border-radius:8px;
+    }
+    .controls input, .controls select {
+      padding:0.5rem 0.8rem;
+      border:1px solid #ddd;
+      border-radius:6px;
+      font-size:0.9rem;
+    }
+    .btn {
+      padding:0.5rem 1rem;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:500;
+      font-size:0.9rem;
+      transition:all 0.2s;
+    }
     .btn-primary { background:#0d6efd; color:#fff; }
     .btn-secondary { background:#6c757d; color:#fff; }
-    .btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-    
-    table { width:100%; border-collapse:collapse; margin-top:1rem; }
-    table th, table td { padding:1rem 0.8rem; border-bottom:1px solid #e9ecef; text-align:left; }
-    table th { background:#f8f9fa; font-weight:600; color:#495057; cursor:pointer; user-select:none; position:sticky; top:0; }
-    table th:hover { background:#e9ecef; }
-    table tr:hover { background:#f8f9ff; }
-    
-    .status-badge { padding:0.4rem 0.8rem; border-radius:20px; font-size:0.85rem; font-weight:600; text-transform:uppercase; }
+    .btn:hover {
+      transform:translateY(-1px);
+      box-shadow:0 3px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Table */
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+    th, td {
+      padding:0.75rem 0.7rem;
+      border-bottom:1px solid #e9ecef;
+      text-align:left;
+      font-size:0.9rem;
+    }
+    th {
+      background:#f8f9fa;
+      font-weight:600;
+      color:#495057;
+      cursor:pointer;
+      user-select:none;
+    }
+    tr:hover {
+      background:#f8f9ff;
+    }
+
+    .actions button {
+      margin-right:0.3rem;
+      padding:0.35rem 0.7rem;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-size:0.8rem;
+    }
+    .view-btn { background:#0d6efd; color:#fff; }
+    .delete-btn { background:#dc3545; color:#fff; }
+    .status-btn { background:#28a745; color:#fff; }
+
+    /* Status badges */
+    .status-badge {
+      padding:0.25rem 0.7rem;
+      border-radius:999px;
+      font-size:0.75rem;
+      font-weight:600;
+      text-transform:uppercase;
+    }
     .status-draft { background:#e3f2fd; color:#1976d2; }
     .status-submitted { background:#fff3cd; color:#856404; }
     .status-approved { background:#d4edda; color:#155724; }
     .status-sent { background:#cce5ff; color:#004085; }
-    .status-won { background:#d4edda; color:#155724; font-weight:700; }
+    .status-won { background:#d4edda; color:#155724; }
     .status-lost { background:#f8d7da; color:#721c24; }
-    
-    .actions button { margin-right:0.5rem; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:0.9rem; }
-    .view-btn { background:#0d6efd; color:#fff; }
-    .status-btn { background:#28a745; color:#fff; font-size:0.8rem; padding:0.3rem 0.6rem; }
-    .delete-btn { background:#dc3545; color:#fff; }
-    
-    .quote-details { margin-top:2rem; padding:2rem; background:#f8f9ff; border:1px solid #dee2e6; border-radius:12px; }
-    .status-timeline { margin:2rem 0; padding:1.5rem; background:#fff; border-radius:8px; border-left:4px solid #0d6efd; }
-    .timeline-item { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid #eee; }
-    .timeline-item:last-child { margin-bottom:0; border-bottom:none; }
-    .timeline-dot { width:12px; height:12px; background:#0d6efd; border-radius:50%; margin-top:0.4rem; flex-shrink:0; }
-    .timeline-content h4 { margin:0 0 0.5rem 0; color:#0d6efd; }
-    .timeline-meta { font-size:0.9rem; color:#666; }
-    
+
+    /* Details panel */
+    .quote-details {
+      margin-top:1.75rem;
+      padding:1.5rem;
+      background:#f8f9ff;
+      border-radius:10px;
+      border:1px solid #dee2e6;
+    }
+    .details-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:0.75rem 1.5rem;
+      margin-bottom:1.25rem;
+    }
+    .details-grid p { margin:0; font-size:0.9rem; }
+
+    .status-timeline {
+      margin-top:1.5rem;
+      padding:1rem 1.25rem;
+      background:#fff;
+      border-radius:8px;
+      border-left:3px solid #0d6efd;
+    }
+    .timeline-item {
+      display:flex;
+      gap:0.75rem;
+      padding:0.5rem 0;
+      border-bottom:1px solid #eee;
+    }
+    .timeline-item:last-child { border-bottom:none; }
+    .timeline-dot {
+      width:10px;
+      height:10px;
+      background:#0d6efd;
+      border-radius:50%;
+      margin-top:0.3rem;
+      flex-shrink:0;
+    }
+    .timeline-content h4 {
+      margin:0 0 0.25rem 0;
+      font-size:0.85rem;
+      color:#0d6efd;
+    }
+    .timeline-meta {
+      font-size:0.8rem;
+      color:#666;
+    }
+
     .hidden { display:none; }
+
     @media (max-width:768px) {
       .controls { flex-direction:column; align-items:stretch; }
-      table { font-size:0.9rem; }
-      .actions button { padding:0.4rem 0.6rem; font-size:0.8rem; }
+      th, td { font-size:0.8rem; }
+      .actions button { font-size:0.7rem; padding:0.3rem 0.5rem; }
     }
   </style>
 </head>
 <body>
-<header>📋 ISTOS Medical Quote Repository</header>
+<header>
+  <div class="header-inner">
+    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+    <div class="header-title">ISTOS - Quotes History</div>
+  </div>
+</header>
+
 <div class="container">
-  <!-- Dashboard Stats -->
-  <div class="dashboard" id="dashboardStats">
+  <!-- Dashboard -->
+  <div class="dashboard">
     <div class="stat-card">
-      <div class="stat-number" id="totalQuotes">0</div>
+      <div class="stat-number" id="statTotal">0</div>
       <div class="stat-label">Total Quotes</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number" id="pendingQuotes">0</div>
-      <div class="stat-label">Pending</div>
+      <div class="stat-number" id="statPending">0</div>
+      <div class="stat-label">Pending (Draft/Submitted)</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number" id="wonQuotes">0</div>
+      <div class="stat-number" id="statWon">0</div>
       <div class="stat-label">Won</div>
     </div>
     <div class="stat-card">
-      <div class="stat-number" id="conversionRate">--</div>
+      <div class="stat-number" id="statWinRate">--</div>
       <div class="stat-label">Win Rate</div>
     </div>
   </div>
 
-  <h2>📊 Quote History</h2>
-  
-  <!-- Controls -->
-  <div class="controls">
-    <input id="filterStatus" placeholder="Filter by status..." list="statusList">
-    <input id="filterHospital" placeholder="Filter hospital name...">
-    <input id="filterDate" type="date">
-    <input id="filterQuoteNo" placeholder="Quote number...">
-    <button class="btn btn-secondary" onclick="applyFilters()">🔍 Filter</button>
-    <button class="btn btn-secondary" onclick="clearFilters()">🧹 Clear</button>
-    <button class="btn btn-primary" onclick="exportCSV()">📥 Export CSV</button>
-  </div>
-  
-  <datalist id="statusList">
-    <option value="Draft">
-    <option value="Submitted">
-    <option value="Approved">
-    <option value="Sent">
-    <option value="Won">
-    <option value="Lost">
-  </datalist>
+  <h2>📋 Saved Quotes</h2>
 
+  <!-- Filters -->
+  <div class="controls">
+    <input id="filterQuoteNo" placeholder="Quote No...">
+    <input id="filterHospital" placeholder="Hospital...">
+    <input id="filterStatus" placeholder="Status (Draft, Submitted...)">
+    <input id="filterDate" type="date">
+    <button class="btn btn-secondary" onclick="applyFilters()">Filter</button>
+    <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+    <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <!-- Table -->
   <table id="quoteTable">
     <thead>
       <tr>
-        <th onclick="sortTable('index')">#</th>
-        <th onclick="sortTable('quoteNo')">Quote No <span class="sort-icon" data-sort="quoteNo">↕️</span></th>
-        <th onclick="sortTable('date')">Date <span class="sort-icon" data-sort="date">↕️</span></th>
-        <th onclick="sortTable('hospital')">Hospital <span class="sort-icon" data-sort="hospital">↕️</span></th>
-        <th onclick="sortTable('value')">Total Value (₹) <span class="sort-icon" data-sort="value">↕️</span></th>
-        <th>Status <span class="sort-icon" data-sort="status">↕️</span></th>
+        <th onclick="sortBy('index')">#</th>
+        <th onclick="sortBy('quoteNo')">Quote No</th>
+        <th onclick="sortBy('date')">Date</th>
+        <th onclick="sortBy('hospital')">Hospital</th>
+        <th onclick="sortBy('value')">Total Value (INR)</th>
+        <th onclick="sortBy('status')">Status</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-  
+
+  <!-- Details -->
   <div id="quoteDetails" class="hidden"></div>
 </div>
 
 <script>
-  const tableBody = document.querySelector('#quoteTable tbody');
-  const detailsDiv = document.getElementById('quoteDetails');
+  function goBack() {
+    if (history.length > 1) history.back();
+  }
+
   let quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
   let filteredQuotes = [...quotes];
-  let sortConfig = { key: null, direction: 'asc' };
+  let sortConfig = { key:null, direction:'asc' };
 
-  // Status colors mapping
-  const statusColors = {
-    'draft': 'draft',
-    'submitted': 'submitted', 
-    'approved': 'approved',
-    'sent': 'sent',
-    'won': 'won',
-    'lost': 'lost'
-  };
+  const tbody = document.querySelector('#quoteTable tbody');
+  const detailsDiv = document.getElementById('quoteDetails');
+
+  function moneyINR(value) {
+    const num = Number(value || 0);
+    return num.toLocaleString('en-IN',{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
+  }
 
   function saveQuotes() {
     localStorage.setItem('quotes', JSON.stringify(quotes));
   }
 
+  function getStatusClass(status) {
+    const s = (status || 'draft').toLowerCase();
+    return 'status-' + s;
+  }
+
   function renderTable(data = filteredQuotes) {
-    tableBody.innerHTML = '';
-    data.forEach((q, index) => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${q.header.quoteNo || '-'}</td>
-        <td>${q.header.quoteDate || '-'}</td>
-        <td>${q.header.hospitalName || '-'}</td>
-        <td>₹ ${q.summary.totalValue.toLocaleString('en-IN')}</td>
-        <td><span class="status-badge status-${(q.status || 'draft')}">${q.status || 'Draft'}</span></td>
+    tbody.innerHTML = '';
+    data.forEach((q, i) => {
+      const globalIndex = quotes.indexOf(q); // to map back to master array
+      const tr = document.createElement('tr');
+      const status = q.status || 'Draft';
+
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${q.header?.quoteNo || '-'}</td>
+        <td>${q.header?.quoteDate || '-'}</td>
+        <td>${q.header?.hospitalName || '-'}</td>
+        <td>₹ ${moneyINR(q.summary?.totalValue)}</td>
+        <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
         <td class="actions">
-          <button class="view-btn" onclick="viewQuote(${quotes.indexOf(q)})">👁️ View</button>
-          <button class="status-btn" onclick="updateStatus(${quotes.indexOf(q)}, 'next')">${getNextStatus(q.status || 'draft')}</button>
-          <button class="delete-btn" onclick="deleteQuote(${quotes.indexOf(q)})">🗑️ Delete</button>
+          <button class="view-btn" onclick="viewQuote(${globalIndex})">View</button>
+          <button class="status-btn" onclick="advanceStatus(${globalIndex})">Next</button>
+          <button class="delete-btn" onclick="deleteQuote(${globalIndex})">Delete</button>
         </td>
       `;
-      tableBody.appendChild(row);
+      tbody.appendChild(tr);
     });
-    updateDashboardStats();
+    updateDashboard();
   }
 
-  function getNextStatus(current) {
-    const sequence = ['draft', 'submitted', 'approved', 'sent', 'won', 'lost'];
-    const idx = sequence.indexOf(current);
-    return idx < sequence.length - 1 ? sequence[idx + 1] : 'lost';
-  }
-
-  function updateStatus(index, action) {
-    const quote = quotes[index];
-    const currentStatus = quote.status || 'draft';
-    let newStatus;
-    
-    if (action === 'next') {
-      const sequence = ['draft', 'submitted', 'approved', 'sent', 'won', 'lost'];
-      const idx = sequence.indexOf(currentStatus);
-      newStatus = sequence[Math.min(idx + 1, sequence.length - 1)];
-    }
-    
-    quote.status = newStatus;
-    quote.history = quote.history || [];
-    quote.history.push({
-      status: newStatus,
-      date: new Date().toISOString().slice(0, 10),
-      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    });
-    
-    saveQuotes();
-    filteredQuotes = [...quotes];
-    applyFilters();
-  }
-
-  function viewQuote(index) {
-    const q = quotes[index];
-    detailsDiv.classList.remove('hidden');
-    
-    const lineItemsHTML = `
-      <h3>📄 Quote Details - ${q.header.quoteNo}</h3>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:2rem;">
-        <p><strong>Quote No:</strong> ${q.header.quoteNo}</p>
-        <p><strong>Date:</strong> ${q.header.quoteDate}</p>
-        <p><strong>Hospital:</strong> ${q.header.hospitalName}</p>
-        <p><strong>Status:</strong> <span class="status-badge status-${q.status || 'draft'}">${q.status || 'Draft'}</span></p>
-      </div>
-      
-      <h4>📋 Line Items</h4>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:2rem;">
-        <thead><tr style="background:#f0f4f8;">
-          <th>Item</th><th>Code</th><th>Type</th><th style="text-align:right;">Price (₹)</th>
-        </tr></thead>
-        <tbody>
-    `;
-    
-    q.lineItems.forEach(li => {
-      lineItemsHTML += `
-        <tr>
-          <td>${li.name}</td>
-          <td>${li.code}</td>
-          <td>${li.type}</td>
-          <td style="text-align:right;">₹ ${li.price.toLocaleString('en-IN')}</td>
-        </tr>
-      `;
-    });
-    
-    const historyHTML = q.history && q.history.length ? `
-      <div class="status-timeline">
-        <h4>📈 Status History</h4>
-        ${q.history.map(h => `
-          <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-              <h4>${h.status.toUpperCase()}</h4>
-              <div class="timeline-meta">${h.date} at ${h.time}</div>
-            </div>
-          </div>
-        `).reverse().join('')}
-      </div>
-    ` : '';
-
-    detailsDiv.innerHTML = `
-      <div class="quote-details">
-        ${lineItemsHTML}</tbody></table>
-        <h4>💰 Summary</h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1rem;">
-          <p><strong>Items Total:</strong> ₹ ${q.summary.itemsTotal.toLocaleString('en-IN')}</p>
-          <p><strong>Discount:</strong> ₹ ${q.summary.discount.toLocaleString('en-IN')}</p>
-          <p><strong>After Discount:</strong> ₹ ${q.summary.afterDiscount.toLocaleString('en-IN')}</p>
-          <p><strong>Freight:</strong> ${q.summary.freight}</p>
-          <p><strong>GST @ ${q.summary.gstPercent}%:</strong> ₹ ${q.summary.gstAmount.toLocaleString('en-IN')}</p>
-          <p><strong>Total Value:</strong> ₹ ${q.summary.totalValue.toLocaleString('en-IN')}</p>
-        </div>
-        
-        <div style="margin-top:2rem; text-align:right; font-style:italic; color:#555; padding-top:2rem; border-top:1px solid #ddd;">
-          <p>For ISTOS Medical Private Limited</p>
-        </div>
-        
-        ${historyHTML}
-        
-        <div style="margin-top:2rem; text-align:center;">
-          <button class="btn btn-primary" onclick="printQuote(${index})">🖨️ Print Quote</button>
-          <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">❌ Close</button>
-        </div>
-      </div>
-    `;
-  }
-
-  function deleteQuote(index) {
-    if (confirm('Are you sure you want to delete this quote?')) {
-      quotes.splice(index, 1);
-      saveQuotes();
-      filteredQuotes = [...quotes];
-      renderTable();
-      detailsDiv.classList.add('hidden');
-    }
-  }
-
-  function updateDashboardStats() {
+  function updateDashboard() {
     const total = quotes.length;
-    const pending = quotes.filter(q => !q.status || ['draft', 'submitted'].includes(q.status)).length;
-    const won = quotes.filter(q => q.status === 'won').length;
-    const conversion = total ? Math.round((won / total) * 100) : 0;
-    
-    document.getElementById('totalQuotes').textContent = total;
-    document.getElementById('pendingQuotes').textContent = pending;
-    document.getElementById('wonQuotes').textContent = won;
-    document.getElementById('conversionRate').textContent = `${conversion}%`;
+    const pending = quotes.filter(q => {
+      const s = (q.status || 'draft').toLowerCase();
+      return s === 'draft' || s === 'submitted';
+    }).length;
+    const won = quotes.filter(q => (q.status || '').toLowerCase() === 'won').length;
+    const rate = total ? Math.round((won / total) * 100) : 0;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statWon').textContent = won;
+    document.getElementById('statWinRate').textContent = total ? rate + '%' : '--';
   }
 
   function applyFilters() {
-    const statusFilter = document.getElementById('filterStatus').value.toLowerCase().trim();
-    const hospitalFilter = document.getElementById('filterHospital').value.toLowerCase().trim();
-    const dateFilter = document.getElementById('filterDate').value;
-    const quoteNoFilter = document.getElementById('filterQuoteNo').value.toLowerCase().trim();
+    const fQuote = document.getElementById('filterQuoteNo').value.trim().toLowerCase();
+    const fHospital = document.getElementById('filterHospital').value.trim().toLowerCase();
+    const fStatus = document.getElementById('filterStatus').value.trim().toLowerCase();
+    const fDate = document.getElementById('filterDate').value;
 
     filteredQuotes = quotes.filter(q => {
-      const quoteNo = (q.header.quoteNo || '').toLowerCase();
-      const hospital = (q.header.hospitalName || '').toLowerCase();
+      const quoteNo = (q.header?.quoteNo || '').toLowerCase();
+      const hospital = (q.header?.hospitalName || '').toLowerCase();
       const status = (q.status || 'draft').toLowerCase();
-      const date = q.header.quoteDate || '';
-      
-      return (!statusFilter || status.includes(statusFilter)) &&
-             (!hospitalFilter || hospital.includes(hospitalFilter)) &&
-             (!dateFilter || date.startsWith(dateFilter)) &&
-             (!quoteNoFilter || quoteNo.includes(quoteNoFilter));
+      const date = q.header?.quoteDate || '';
+
+      return (!fQuote || quoteNo.includes(fQuote)) &&
+             (!fHospital || hospital.includes(fHospital)) &&
+             (!fStatus || status.includes(fStatus)) &&
+             (!fDate || date.startsWith(fDate));
     });
-    
+
     renderTable(filteredQuotes);
   }
 
   function clearFilters() {
-    document.getElementById('filterStatus').value = '';
-    document.getElementById('filterHospital').value = '';
-    document.getElementById('filterDate').value = '';
     document.getElementById('filterQuoteNo').value = '';
+    document.getElementById('filterHospital').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterDate').value = '';
     filteredQuotes = [...quotes];
-    renderTable();
+    renderTable(filteredQuotes);
   }
 
-  function sortTable(key) {
+  function sortBy(key) {
     if (sortConfig.key === key) {
       sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
     } else {
@@ -328,72 +391,187 @@
     }
 
     filteredQuotes.sort((a, b) => {
-      let aVal, bVal;
-      
+      let av, bv;
       switch(key) {
-        case 'quoteNo': aVal = a.header.quoteNo || ''; bVal = b.header.quoteNo || ''; break;
-        case 'date': aVal = a.header.quoteDate || ''; bVal = b.header.quoteDate || ''; break;
-        case 'hospital': aVal = a.header.hospitalName || ''; bVal = b.header.hospitalName || ''; break;
-        case 'value': aVal = a.summary.totalValue || 0; bVal = b.summary.totalValue || 0; break;
-        case 'status': aVal = a.status || 'draft'; bVal = b.status || 'draft'; break;
-        default: return 0;
+        case 'quoteNo':
+          av = a.header?.quoteNo || ''; bv = b.header?.quoteNo || ''; break;
+        case 'date':
+          av = a.header?.quoteDate || ''; bv = b.header?.quoteDate || ''; break;
+        case 'hospital':
+          av = a.header?.hospitalName || ''; bv = b.header?.hospitalName || ''; break;
+        case 'value':
+          av = a.summary?.totalValue || 0; bv = b.summary?.totalValue || 0; break;
+        case 'status':
+          av = a.status || 'Draft'; bv = b.status || 'Draft'; break;
+        default:
+          return 0;
       }
-      
-      if (typeof aVal === 'number') {
-        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+
+      if (typeof av === 'number') {
+        return sortConfig.direction === 'asc' ? av - bv : bv - av;
       }
-      return sortConfig.direction === 'asc' ? 
-        String(aVal).localeCompare(String(bVal)) : 
-        String(bVal).localeCompare(String(aVal));
+      return sortConfig.direction === 'asc'
+        ? String(av).localeCompare(String(bv))
+        : String(bv).localeCompare(String(av));
     });
-    
+
     renderTable(filteredQuotes);
   }
 
+  function advanceStatus(index) {
+    const sequence = ['draft','submitted','approved','sent','won','lost'];
+    const q = quotes[index];
+    const current = (q.status || 'draft').toLowerCase();
+    const currentIdx = sequence.indexOf(current);
+    const next = sequence[Math.min(currentIdx + 1, sequence.length - 1)];
+
+    q.status = next;
+    q.history = q.history || [];
+    const now = new Date();
+    q.history.push({
+      status: next,
+      date: now.toISOString().slice(0,10),
+      time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+    });
+
+    saveQuotes();
+    filteredQuotes = [...quotes];
+    applyFilters();
+  }
+
+  function deleteQuote(index) {
+    if (!confirm('Delete this quote from history?')) return;
+    quotes.splice(index, 1);
+    saveQuotes();
+    filteredQuotes = [...quotes];
+    renderTable(filteredQuotes);
+    detailsDiv.classList.add('hidden');
+  }
+
+  function viewQuote(index) {
+    const q = quotes[index];
+    if (!q) return;
+
+    const header = q.header || {};
+    const summary = q.summary || {};
+    const lineItems = q.lineItems || [];
+
+    let html = `
+      <div class="quote-details">
+        <h3>Quote Details - ${header.quoteNo || ''}</h3>
+        <div class="details-grid">
+          <p><strong>Quote No:</strong> ${header.quoteNo || '-'}</p>
+          <p><strong>Date:</strong> ${header.quoteDate || '-'}</p>
+          <p><strong>Hospital:</strong> ${header.hospitalName || '-'}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || 'Draft'}</span></p>
+          <p><strong>Contact:</strong> ${header.contactPerson || '-'}</p>
+          <p><strong>Phone:</strong> ${header.contactPhone || '-'}</p>
+        </div>
+
+        <h4>Line Items</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
+          <thead>
+            <tr style="background:#f0f4f8;">
+              <th>Item</th>
+              <th>Code</th>
+              <th>Type</th>
+              <th style="text-align:right;">Price (INR)</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    lineItems.forEach(li => {
+      html += `
+        <tr>
+          <td>${li.name || ''}</td>
+          <td>${li.code || ''}</td>
+          <td>${li.type || ''}</td>
+          <td style="text-align:right;">₹ ${moneyINR(li.price)}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </tbody>
+        </table>
+
+        <h4>Summary</h4>
+        <div class="details-grid">
+          <p><strong>Items Total:</strong> ₹ ${moneyINR(summary.itemsTotal)}</p>
+          <p><strong>Discount:</strong> ₹ ${moneyINR(summary.discount)}</p>
+          <p><strong>After Discount:</strong> ₹ ${moneyINR(summary.afterDiscount)}</p>
+          <p><strong>Freight:</strong> ${summary.freight || '-'}</p>
+          <p><strong>GST @ ${summary.gstPercent || 0}%:</strong> ₹ ${moneyINR(summary.gstAmount)}</p>
+          <p><strong>Total Value:</strong> ₹ ${moneyINR(summary.totalValue)}</p>
+        </div>
+    `;
+
+    if (q.history && q.history.length) {
+      html += `
+        <div class="status-timeline">
+          <h4>Status History</h4>
+          ${q.history.slice().reverse().map(h => `
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h4>${(h.status || '').toUpperCase()}</h4>
+                <div class="timeline-meta">${h.date || ''} ${h.time || ''}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    html += `
+        <div style="margin-top:1.5rem; text-align:right;">
+          <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">Close</button>
+        </div>
+      </div>
+    `;
+
+    detailsDiv.innerHTML = html;
+    detailsDiv.classList.remove('hidden');
+  }
+
   function exportCSV() {
-    const headers = ['Quote No', 'Date', 'Hospital', 'Total Value', 'Status'];
-    const csvContent = [
-      headers.join(','),
-      ...quotes.map(q => [
-        q.header.quoteNo || '',
-        q.header.quoteDate || '',
-        `"${q.header.hospitalName || ''}"`,
-        q.summary.totalValue || 0,
+    if (!quotes.length) {
+      alert('No quotes to export.');
+      return;
+    }
+
+    const headerRow = ['Quote No','Date','Hospital','Total Value','Status'];
+    const lines = [headerRow.join(',')];
+
+    quotes.forEach(q => {
+      const h = q.header || {};
+      const s = q.summary || {};
+      const row = [
+        `"${(h.quoteNo || '').replace(/"/g,'""')}"`,
+        h.quoteDate || '',
+        `"${(h.hospitalName || '').replace(/"/g,'""')}"`,
+        s.totalValue || 0,
         q.status || 'Draft'
-      ].join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+      ];
+      lines.push(row.join(','));
+    });
+
+    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `quotes-${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = 'quotes-history.csv';
     a.click();
+    URL.revokeObjectURL(url);
   }
 
-  function printQuote(index) {
-    const win = window.open('', '_blank');
-    win.document.write(`
-      <html><head><title>Quote ${quotes[index].header.quoteNo}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        @media print { body { margin: 0; } }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; }
-      </style></head>
-      <body>${detailsDiv.innerHTML}</body></html>
-    `);
-    win.document.close();
-    win.print();
-  }
-
-  // Event listeners for real-time filtering
-  document.getElementById('filterStatus').addEventListener('input', applyFilters);
-  document.getElementById('filterHospital').addEventListener('input', applyFilters);
-  document.getElementById('filterDate').addEventListener('change', applyFilters);
+  // Live filter handlers
   document.getElementById('filterQuoteNo').addEventListener('input', applyFilters);
+  document.getElementById('filterHospital').addEventListener('input', applyFilters);
+  document.getElementById('filterStatus').addEventListener('input', applyFilters);
+  document.getElementById('filterDate').addEventListener('change', applyFilters);
 
-  // Initialize
   renderTable();
 </script>
 </body>
