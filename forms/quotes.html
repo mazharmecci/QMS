@@ -725,7 +725,6 @@ function renderQuoteBuilder() {
     });
   }
 
-  // Additional items
 // Additional items
 const additionalItems = inst.optionalItems || inst.additionalItems || [];
 if (additionalItems.length) {
@@ -742,37 +741,23 @@ if (additionalItems.length) {
     </tr>
   `);
 
-additionalItems.forEach((item, idx) => {
-  const selected = !selection.optional || selection.optional[idx] !== false;
-  if (!selected) return;
+  additionalItems.forEach((item, idx) => {
+    const selected = !selection.optional || selection.optional[idx] !== false;
+    if (!selected) return;
 
-  console.log('Additional Item:', item); // ← add this line
+    const itemCode = String(idx + 1).padStart(3, '0');
+    const qtyNum   = Number(item.qty || 1);
 
-  const itemCode = String(idx + 1).padStart(3, '0');
-  const qtyNum   = Number(item.qty || 1);
-
-  let unitNum = Number(
-    item.price ?? item.unitPrice ?? item.upInr ?? item.tpInr ?? 0
-  );
-  if (Number.isNaN(unitNum)) unitNum = 0;
-
-  if (!unitNum) {
-    const fullText = [
-      item.longDescription,
-      item.description,
-      item.name,
-      item.itemName,
-      item.instrumentName
-    ].filter(Boolean).join(' ');
-
-    const priceMatch = fullText.match(/(?:₹|Rs\.?|INR)\s*([\d,]+)/i);
-    if (priceMatch && priceMatch[1]) {
-      unitNum = parseInt(priceMatch[1].replace(/,/g, ''), 10);
-      if (Number.isNaN(unitNum)) unitNum = 0;
+    // item.price is like "₹ 55,380" → strip non-digits and commas
+    let unitNum = 0;
+    if (item.price) {
+      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+      unitNum = parseInt(cleaned, 10) || 0;
+    } else {
+      unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
     }
-  }
 
-  const totalNum = unitNum * qtyNum;
+    const totalNum = unitNum * qtyNum;
 
     rows.push(`
       <tr>
