@@ -85,16 +85,16 @@
   max-width: 100%;            /* allow wide title */
 }
     
-  /* --- top logo row, spans only right side visually --- */
-  .quote-logo-wrap {
-    text-align:right;
-    margin-bottom:0.5rem;
-  }
-  .quote-logo-wrap img {
-    max-height:70px;
-    width:auto;
-    display:inline-block;
-  }
+/* logo at top-right, minimal bottom margin */
+.quote-logo-wrap {
+  align-self: flex-end;
+  margin-bottom: 0.5rem;
+}
+.quote-logo-wrap img {
+  max-height: 56px;   /* slightly smaller to free space */
+  width: auto;
+  display: inline-block;
+}
 
   /* row with company box and SALES QUOTATION, equal height */
   .quote-top-row {
