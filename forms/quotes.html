@@ -544,9 +544,16 @@ function populateHeader() {
 
   const termsEl = document.getElementById('termsTextBlock');
   if (termsEl) {
-    termsEl.textContent = header.termsText || '';
+    if (header.termsHtml) {
+      // render exactly as saved from quote-setup
+      termsEl.innerHTML = header.termsHtml;
+    } else if (header.termsText) {
+      // fallback for older quotes that only stored plain text
+      termsEl.textContent = header.termsText;
+    } else {
+      termsEl.textContent = '';
+    }
   }
-}
 
 function formatInstrumentCell(inst) {
   const code = inst.catalog || inst.code || '';
