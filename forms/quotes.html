@@ -84,7 +84,17 @@
   white-space: nowrap;        /* force single line */
   max-width: 100%;            /* allow wide title */
 }
-    
+
+/* right column: logo fixed at top, title below with room */
+.quote-right {
+  background: #fff;
+  position: relative;
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* logo at top */
+}
+
 /* logo at top-right, minimal bottom margin */
 .quote-logo-wrap {
   align-self: flex-end;
