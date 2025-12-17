@@ -738,8 +738,21 @@ function renderQuoteBuilder() {
 
       const itemCode = String(idx + 1).padStart(3, '0');
       const qtyNum   = Number(item.qty || 1);
-      const unitRaw  = item.price || item.unitPrice || item.upInr || item.tpInr || 0;
-      const unitNum  = Number(unitRaw);
+
+      // 1) Try numeric fields first
+      let unitNum = Number(
+        item.price || item.unitPrice || item.upInr || item.tpInr || 0
+      );
+
+      // 2) If still 0 or NaN, try to parse from description text like "– ₹ 55,380"
+      if (!unitNum) {
+        const text = String(item.longDescription || item.description || '');
+        const priceMatch = text.match(/₹\s*([\d,]+)/);   // captures 55,380 from "₹ 55,380"
+        if (priceMatch && priceMatch[1]) {
+          unitNum = parseFloat(priceMatch[1].replace(/,/g, ''));
+        }
+      }
+
       const totalNum = unitNum * qtyNum;
 
       rows.push(`
