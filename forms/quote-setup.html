@@ -301,8 +301,9 @@
 
 As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
       </div>
+
 <!-- editable Terms & Conditions -->
-<div id="termsTextBlock">
+<div id="termsTextBlock" contenteditable="true">
   <div class="terms-section">
 
     <!-- Heading -->
@@ -418,7 +419,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     });
   }
 
-  document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
+document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
 document.getElementById('quoteSetupForm').addEventListener('submit', function (e) {
   e.preventDefault();
@@ -453,8 +454,8 @@ document.getElementById('quoteSetupForm').addEventListener('submit', function (e
     officePhone: (document.getElementById('officePhone') || {}).value || '',
     salesNote: (document.getElementById('salesNote') || {}).value || '',
 
-    // use text version of T&C
-    termsText: termsBlock.innerText,
+    // store HTML for Terms & Conditions
+    termsHtml: termsBlock.innerHTML,
 
     selectedInstrumentIndex,
     instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
@@ -465,7 +466,6 @@ document.getElementById('quoteSetupForm').addEventListener('submit', function (e
   localStorage.setItem('quoteHeader', JSON.stringify(headerData));
   window.location.href = 'quotes.html';
 });
-
 
   document.getElementById('quoteNo').value = generateQuoteNo();
   const todayISO = new Date().toISOString().slice(0,10);
