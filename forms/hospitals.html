@@ -92,7 +92,7 @@
   <div class="container">
     <h2>Add / Edit Hospital</h2>
     <form id="hospitalForm">
-      <input type="text" id="clientCode" placeholder="Client Code" required>
+      <input type="text" id="clientCode" placeholder="Client Code" readonly>
       <input type="text" id="clientName" placeholder="Client Name" required>
       <textarea id="address" placeholder="Address" rows="2" required></textarea>
       <input type="text" id="area" placeholder="Area">
@@ -127,30 +127,6 @@
     let hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
     let editIndex = null;
 
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const hospital = {
-        clientCode: document.getElementById('clientCode').value,
-        clientName: document.getElementById('clientName').value,
-        address: document.getElementById('address').value,
-        area: document.getElementById('area').value,
-        mobile: document.getElementById('mobile').value,
-        email: document.getElementById('email').value,
-        pan: document.getElementById('pan').value
-      };
-
-      if (editIndex !== null) {
-        hospitals[editIndex] = hospital;
-        editIndex = null;
-      } else {
-        hospitals.push(hospital);
-      }
-
-      localStorage.setItem('hospitals', JSON.stringify(hospitals));
-      form.reset();
-      renderTable();
-    });
-
     function renderTable() {
       tableBody.innerHTML = '';
       hospitals.forEach((h, index) => {
@@ -173,6 +149,53 @@
       });
     }
 
+    function getNextClientCode() {
+      if (!hospitals.length) return 'HOSP-01';
+
+      const nums = hospitals
+        .map(h => h.clientCode || '')
+        .map(code => {
+          const match = String(code).match(/(\d+)$/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(n => !isNaN(n) && n > 0);
+
+      const maxNum = nums.length ? Math.max(...nums) : 0;
+      const nextNum = maxNum + 1;
+
+      return 'HOSP-' + String(nextNum).padStart(2, '0');
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const isEdit = editIndex !== null;
+
+      const hospital = {
+        clientCode: isEdit
+          ? document.getElementById('clientCode').value
+          : getNextClientCode(),
+        clientName: document.getElementById('clientName').value,
+        address: document.getElementById('address').value,
+        area: document.getElementById('area').value,
+        mobile: document.getElementById('mobile').value,
+        email: document.getElementById('email').value,
+        pan: document.getElementById('pan').value
+      };
+
+      if (isEdit) {
+        hospitals[editIndex] = hospital;
+        editIndex = null;
+      } else {
+        hospitals.push(hospital);
+      }
+
+      localStorage.setItem('hospitals', JSON.stringify(hospitals));
+      form.reset();
+      document.getElementById('clientCode').value = getNextClientCode();
+      renderTable();
+    });
+
     function editHospital(index) {
       const h = hospitals[index];
       document.getElementById('clientCode').value = h.clientCode;
@@ -190,10 +213,14 @@
         hospitals.splice(index, 1);
         localStorage.setItem('hospitals', JSON.stringify(hospitals));
         renderTable();
+        // After delete, update next code for a new record
+        document.getElementById('clientCode').value = getNextClientCode();
       }
     }
 
+    // Initial render and initial code
     renderTable();
+    document.getElementById('clientCode').value = getNextClientCode();
   </script>
 </body>
 </html>
