@@ -164,176 +164,159 @@
       border-color:#0d6efd;
       box-shadow:0 0 0 3px rgba(13,110,253,0.15);
     }
-    
-/* Terms & Conditions block */
-    
-/* Terms heading */
-.terms-heading {
-  font-size: 16px;       /* slightly bigger */
-  font-weight: 700;      /* bold */
-  margin-bottom: 0.5rem;
-  color: #000;
-  border-bottom: 1px solid #ccc; /* optional separator line */
-  padding-bottom: 0.25rem;
-}
 
-/* paragraphs inside terms */
-#termsTextBlock p {
-  margin: 0.5rem 0;
-}
-
-#termsTextBlock {
-  grid-column: span 2;
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #f9f9f9;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #222;
-}
-
-/* section headings */
-#termsTextBlock strong {
-  color: #000;
-  font-weight: 700;
-}
-
-/* indent list */
-.terms-indent {
-  margin: 0.5rem 0 1rem 1.25rem;
-}
-
-/* ordered list styling */
-.terms-indent ol {
-  padding-left: 1rem;
-  margin: 0;
-}
-
-.terms-indent li {
-  margin-bottom: 0.5rem;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-/* optional: add subtle numbering style */
-.terms-indent li::marker {
-  font-weight: 600;
-  color: #444;
-}
-
+    /* Terms & Conditions block */
+    .terms-heading {
+      font-size:16px;
+      font-weight:700;
+      margin-bottom:0.5rem;
+      color:#000;
+      border-bottom:1px solid #ccc;
+      padding-bottom:0.25rem;
+    }
+    #termsTextBlock p {
+      margin:0.5rem 0;
+    }
+    #termsTextBlock {
+      grid-column:span 2;
+      margin-top:1rem;
+      padding:1rem;
+      border:1px solid #ccc;
+      border-radius:6px;
+      background:#f9f9f9;
+      font-size:13px;
+      line-height:1.4;
+      color:#222;
+    }
+    #termsTextBlock strong {
+      color:#000;
+      font-weight:700;
+    }
+    .terms-indent {
+      margin:0.5rem 0 1rem 1.25rem;
+    }
+    .terms-indent ol {
+      padding-left:1rem;
+      margin:0;
+    }
+    .terms-indent li {
+      margin-bottom:0.5rem;
+      font-size:13px;
+      line-height:1.4;
+    }
+    .terms-indent li::marker {
+      font-weight:600;
+      color:#444;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-inner">
-      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
-      <div class="header-title">ISTOS Medical - Quote Setup</div>
-    </div>
-  </header>
+<header>
+  <div class="header-inner">
+    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+    <div class="header-title">ISTOS Medical - Quote Setup</div>
+  </div>
+</header>
 
-  <div class="container">
-    <h2>Quote Builder</h2>
+<div class="container">
+  <h2>Quote Builder</h2>
 
-    <form id="quoteSetupForm">
-      <div class="form-row">
-        <select id="hospitalSelect" required>
-          <option value="">Select Hospital</option>
-        </select>
-
-        <select id="instrumentSelect" required>
-          <option value="">Select Instrument</option>
-        </select>
-      </div>
-
-      <div id="instrumentPreview">
-        <strong>Selected Instrument:</strong>
-        <span id="instrumentDetails"></span>
-      </div>
-
-      <input
-        type="text"
-        id="quoteNo"
-        placeholder="Quote No. (auto)"
-        readonly
-        title="Read-only auto-generated Quote No."
-      >
-
-      <div class="form-row">
-        <div class="date-field">
-          <input type="date" id="quoteDate" required>
-          <div class="tooltip">Quotation Date</div>
-        </div>
-
-        <div class="date-field">
-          <input type="date" id="refDate" required>
-          <div class="tooltip">Reference Date</div>
-        </div>
-      </div>
-
-      <select id="yourReference" required>
-        <option value="">Select Reference Type</option>
-        <option value="Telephonic">Telephonic</option>
-        <option value="Email">Email</option>
+  <form id="quoteSetupForm">
+    <div class="form-row">
+      <select id="hospitalSelect" required>
+        <option value="">Select Hospital</option>
       </select>
 
-      <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
-      <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
-
-      <div class="kind-attn-box">
-        KIND ATTN:
-        <input type="text" id="kindAttn" placeholder="Name" required>
-      </div>
-
-      <input type="text" id="contactPerson" placeholder="Contact Person" required>
-      <input type="text" id="contactPhone" placeholder="Handphone" required>
-      <input type="text" id="officePhone" placeholder="Office Phone" required>
-      <input type="email" id="contactEmail" placeholder="Email" required>
-
-      <!-- personal message textarea -->
-      <div class="sales-note-block">
-        <label for="salesNote" class="sales-note-label">Personal message to customer</label>
-        <textarea
-          id="salesNote"
-          rows="4"
-          placeholder="Dear Sir,
-
-As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
-      </div>
-
-<!-- editable Terms & Conditions -->
-<div id="termsTextBlock" contenteditable="true">
-  <div class="terms-section">   
-    <p>
-      These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong>, (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
-    </p>
-
-    <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
-
-    <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
-
-    <p><strong>Delivery and Title:</strong></p>
-    <div class="terms-indent">
-      <ol>
-        <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
-        <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
-        <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
-        <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
-      </ol>
+      <select id="instrumentSelect" required>
+        <option value="">Select Instrument</option>
+      </select>
     </div>
 
-    <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
+    <div id="instrumentPreview">
+      <strong>Selected Instrument:</strong>
+      <span id="instrumentDetails"></span>
+    </div>
 
-    <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
+    <input
+      type="text"
+      id="quoteNo"
+      placeholder="Quote No. (auto)"
+      readonly
+      title="Read-only auto-generated Quote No."
+    >
 
-    <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
+    <div class="form-row">
+      <div class="date-field">
+        <input type="date" id="quoteDate" required>
+        <div class="tooltip">Quotation Date</div>
+      </div>
 
-  </div>
-</div>
+      <div class="date-field">
+        <input type="date" id="refDate" required>
+        <div class="tooltip">Reference Date</div>
+      </div>
+    </div>
 
-<button type="submit">Proceed to Quote</button>
-</form>
+    <select id="yourReference" required>
+      <option value="">Select Reference Type</option>
+      <option value="Telephonic">Telephonic</option>
+      <option value="Email">Email</option>
+    </select>
+
+    <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
+    <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
+
+    <div class="kind-attn-box">
+      KIND ATTN:
+      <input type="text" id="kindAttn" placeholder="Name" required>
+    </div>
+
+    <input type="text" id="contactPerson" placeholder="Contact Person" required>
+    <input type="text" id="contactPhone" placeholder="Handphone" required>
+    <input type="text" id="officePhone" placeholder="Office Phone" required>
+    <input type="email" id="contactEmail" placeholder="Email" required>
+
+    <div class="sales-note-block">
+      <label for="salesNote" class="sales-note-label">Personal message to customer</label>
+      <textarea
+        id="salesNote"
+        rows="4"
+        placeholder="Dear Sir,
+
+As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
+    </div>
+
+    <!-- editable Terms & Conditions -->
+    <div id="termsTextBlock" contenteditable="true">
+      <div class="terms-section">
+        <p>
+          These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
+        </p>
+
+        <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
+
+        <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
+
+        <p><strong>Delivery and Title:</strong></p>
+        <div class="terms-indent">
+          <ol>
+            <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
+            <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
+            <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
+            <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
+          </ol>
+        </div>
+
+        <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
+
+        <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
+
+        <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
+      </div>
+    </div>
+
+    <button type="submit">Proceed to Quote</button>
+  </form>
 </div>
 
 <script>
@@ -415,53 +398,47 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     });
   }
 
-document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
+  document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
-document.getElementById('quoteSetupForm').addEventListener('submit', function (e) {
-  e.preventDefault();
+  document.getElementById('quoteSetupForm').addEventListener('submit', function (e) {
+    e.preventDefault();
 
-  const instrumentSelectEl = document.getElementById('instrumentSelect');
-  if (!instrumentSelectEl) {
-    console.error('instrumentSelect element not found');
-    return;
-  }
+    const instrumentSelectEl = document.getElementById('instrumentSelect');
+    const selectedInstrumentIndex = instrumentSelectEl.value;
+    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
+    const inst = instruments[selectedInstrumentIndex] || null;
 
-  const selectedInstrumentIndex = instrumentSelectEl.value;
-  const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-  const inst = instruments[selectedInstrumentIndex] || null;
+    const termsBlock = document.getElementById('termsTextBlock');
+    const headerData = {
+      quoteNo: document.getElementById('quoteNo').value || '',
+      quoteDate: document.getElementById('quoteDate').value || '',
+      yourReference: document.getElementById('yourReference').value || '',
+      refDate: document.getElementById('refDate').value || '',
+      hospitalName: document.getElementById('hospitalName').value || '',
+      hospitalAddress: document.getElementById('hospitalAddress').value || '',
+      kindAttn: document.getElementById('kindAttn').value || '',
+      contactPerson: document.getElementById('contactPerson').value || '',
+      contactPhone: document.getElementById('contactPhone').value || '',
+      contactEmail: document.getElementById('contactEmail').value || '',
+      officePhone: document.getElementById('officePhone').value || '',
+      salesNote: document.getElementById('salesNote').value || '',
+      termsHtml: termsBlock.innerHTML,
+      selectedInstrumentIndex,
+      instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
+    };
 
-  const termsBlock = document.getElementById('termsTextBlock');
-  if (!termsBlock) {
-    console.error('termsTextBlock element not found');
-    return;
-  }
+    // initialize quoteLines for quotes.html (one main instrument line)
+    headerData.quoteLines = [{
+      lineType: 'instrument',
+      instrumentIndex: selectedInstrumentIndex !== '' ? Number(selectedInstrumentIndex) : null,
+      quantity: 1,
+      configItems: [],
+      additionalItems: []
+    }];
 
-  const headerData = {
-    quoteNo: (document.getElementById('quoteNo') || {}).value || '',
-    quoteDate: (document.getElementById('quoteDate') || {}).value || '',
-    yourReference: (document.getElementById('yourReference') || {}).value || '',
-    refDate: (document.getElementById('refDate') || {}).value || '',
-    hospitalName: (document.getElementById('hospitalName') || {}).value || '',
-    hospitalAddress: (document.getElementById('hospitalAddress') || {}).value || '',
-    kindAttn: (document.getElementById('kindAttn') || {}).value || '',
-    contactPerson: (document.getElementById('contactPerson') || {}).value || '',
-    contactPhone: (document.getElementById('contactPhone') || {}).value || '',
-    contactEmail: (document.getElementById('contactEmail') || {}).value || '',
-    officePhone: (document.getElementById('officePhone') || {}).value || '',
-    salesNote: (document.getElementById('salesNote') || {}).value || '',
-
-    // store HTML for Terms & Conditions
-    termsHtml: termsBlock.innerHTML,
-
-    selectedInstrumentIndex,
-    instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
-  };
-
-  console.log('headerData before save:', headerData);
-
-  localStorage.setItem('quoteHeader', JSON.stringify(headerData));
-  window.location.href = 'quotes.html';
-});
+    localStorage.setItem('quoteHeader', JSON.stringify(headerData));
+    window.location.href = 'quotes.html';
+  });
 
   document.getElementById('quoteNo').value = generateQuoteNo();
   const todayISO = new Date().toISOString().slice(0,10);
