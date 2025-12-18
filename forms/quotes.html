@@ -78,41 +78,38 @@
       display:block;
     }
 
-    /* Separate the two boxes so they don't share the same padding/behavior */
     .company-box {
-      flex: 0 0 auto;              
+      flex:0 0 auto;
       background:#d0d4d9;
       border-radius:4px;
-      padding:0.4rem 1rem;     
+      padding:0.4rem 1rem;
       display:flex;
       align-items:center;
-      margin-top: 4.85rem; /* 👈 pushes it down slightly */
+      margin-top:4.85rem;
     }
-
     .company-box p {
       margin:0;
-      font-size:10px;      
+      font-size:10px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    
+
     .sales-box {
-      flex: 0 0 auto;
-      background:#d0d4d9;    
+      flex:0 0 auto;
+      background:#d0d4d9;
       border-radius:4px;
-      padding:0.3rem 1rem;         
+      padding:0.3rem 1rem;
       display:flex;
       align-items:center;
-    }   
-
+    }
     .sales-title {
-      margin-left: auto;
-      font-weight: 900;
-      font-size: 18px;
-      line-height: 1;
-      padding-top: 0.1rem; /* optional vertical tweak */
-      letter-spacing: 0.03em;
+      margin-left:auto;
+      font-weight:900;
+      font-size:18px;
+      line-height:1;
+      padding-top:0.1rem;
+      letter-spacing:0.03em;
     }
 
     .hospital-box,
@@ -139,7 +136,6 @@
       column-gap:0.75rem;
       row-gap:0.55rem;
     }
-
     .quote-meta-grid .label {
       font-size:9px;
       font-weight:500;
@@ -153,9 +149,14 @@
       text-align:left;
       white-space:nowrap;
     }
-    .quote-meta-grid .value-small { font-size:13px; font-weight:600; }
+    .quote-meta-grid .value-small {
+      font-size:13px;
+      font-weight:600;
+    }
     .quote-meta-grid .label.right,
-    .quote-meta-grid .value.right { text-align:right; }
+    .quote-meta-grid .value.right {
+      text-align:right;
+    }
 
     #salesNoteBlock {
       margin:0 0 1rem 0;
@@ -198,7 +199,6 @@
       text-transform:capitalize;
       letter-spacing:0.03em;
     }
-
     table.quote-table th:nth-child(4),
     table.quote-table th:nth-child(5),
     table.quote-table td:nth-child(4),
@@ -206,63 +206,49 @@
       text-align:right;
       white-space:nowrap;
     }
-
     table.quote-table td:nth-child(3),
     table.quote-table th:nth-child(3) {
       text-align:center;
       white-space:nowrap;
     }
-
     table.quote-table td:nth-child(1),
     table.quote-table td:nth-child(2) {
       vertical-align:top;
     }
-
     table.quote-table .cat-sub b,
     table.quote-table .cat-sub strong {
       font-weight:500;
     }
 
-    /* Terms & Conditions block */
     #termsBlock {
-      margin-top: 1.5rem;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      font-size: 12px;
-      line-height: 1.4;
+      margin-top:1.5rem;
+      background:#fff;
+      border:1px solid #ccc;
+      border-radius:8px;
+      padding:1rem 1.25rem;
+      font-size:12px;
+      line-height:1.4;
     }
     #termsBlock h2 {
-      margin-top: 0;
-      color: #0d6efd;
-      font-size: 13px;
+      margin-top:0;
+      color:#0d6efd;
+      font-size:13px;
     }
     #termsTextBlock {
-      margin-top: 0.25rem;
+      margin-top:0.25rem;
     }
     #termsTextBlock p {
-      margin: 0.35rem 0;
+      margin:0.35rem 0;
     }
 
     .section-header-label {
       font-weight:700;
     }
-    .section-header-controls {
-      font-weight:400;
-      font-size:11px;
-      float:right;
-    }
-    .section-header-controls label {
-      cursor:pointer;
-    }
 
-    /* === Printable frame with repeating header/footer === */
     .print-footer tr,
     .print-footer td {
       border-top:none !important;
     }
-
     .print-frame {
       width:100%;
       border-collapse:collapse;
@@ -274,7 +260,6 @@
       padding:0;
       border:none;
     }
-
     .footer {
       font-size:10px;
       text-align:right;
@@ -287,51 +272,32 @@
       size:A4;
       margin:15mm 15mm 20mm 15mm;
     }
-
     @media print {
       body {
         margin:0;
         background:#ffffff;
-        -webkit-print-color-adjust: exact;
-        color-adjust: exact;
+        -webkit-print-color-adjust:exact;
+        color-adjust:exact;
       }
-
-      header {
-        display:none !important;
-      }
-
+      header { display:none !important; }
       .container {
         margin:0;
         padding:0;
         box-shadow:none;
         border-radius:0;
       }
-
-      thead.print-header {
-        display:table-header-group;
-      }
-      tfoot.print-footer {
-        display:table-footer-group;
-      }
-
-      .cfg-item-check,
-      .opt-item-check,
-      #cfgSelectAll,
-      #optSelectAll,
-      .section-header-controls {
-        display:none;
-      }
+      thead.print-header { display:table-header-group; }
+      tfoot.print-footer { display:table-footer-group; }
     }
 
-    /* Call-to-action finalize button */
     .btn-finalize {
-      background:#ff7a00;        /* bright orange */
+      background:#ff7a00;
       color:#fff;
-      padding:0.9rem 1.6rem;     /* bigger click area */
+      padding:0.9rem 1.6rem;
       font-size:1rem;
       font-weight:700;
       border:none;
-      border-radius:999px;       /* pill shape */
+      border-radius:999px;
       cursor:pointer;
       box-shadow:0 4px 12px rgba(0,0,0,0.18);
       letter-spacing:0.03em;
@@ -346,7 +312,6 @@
       transform:translateY(0);
       box-shadow:0 3px 8px rgba(0,0,0,0.2);
     }
-
   </style>
 </head>
 <body>
@@ -364,7 +329,6 @@
         <td>
           <div class="quote-header">
             <div class="quote-header-body">
-
               <div class="quote-left">
                 <div class="company-box">
                   <p>
@@ -373,7 +337,6 @@
                     Yelachenahalli, Bangalore - 560062
                   </p>
                 </div>
-
                 <div class="hospital-box">
                   <p>
                     <strong>To:</strong><br>
@@ -382,7 +345,6 @@
                     <span id="toHospitalAddressLine2"></span>
                   </p>
                 </div>
-
                 <div class="attn-box">
                   KIND ATTN: <span id="toAttn"></span>
                 </div>
@@ -392,11 +354,9 @@
                 <div class="quote-logo-wrap">
                   <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
                 </div>
-
                 <div class="sales-box">
                   <div class="sales-title">SALES QUOTATION</div>
                 </div>
-
                 <div class="quote-meta-grid">
                   <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
                   <div class="label right">Quotation Date</div><div class="value value-small right" id="metaQuoteDate"></div>
@@ -512,6 +472,25 @@ function resolveInstrumentForHeader(header){
   return null;
 }
 
+function getPrimaryLine(header) {
+  if (header.quoteLines && header.quoteLines.length) {
+    return header.quoteLines[0];
+  }
+  // backward compatibility: construct from old fields
+  const line = {
+    lineType: 'instrument',
+    instrumentIndex: header.selectedInstrumentIndex !== '' && header.selectedInstrumentIndex != null
+      ? Number(header.selectedInstrumentIndex)
+      : null,
+    quantity: 1,
+    configItems: header.configItems || [],
+    additionalItems: header.additionalItems || []
+  };
+  header.quoteLines = [line];
+  localStorage.setItem('quoteHeader', JSON.stringify(header));
+  return line;
+}
+
 function validateHeader(header) {
   const errors = [];
   if (!header.quoteNo) errors.push("Quote No is missing");
@@ -519,8 +498,6 @@ function validateHeader(header) {
   if (!header.refDate) errors.push("Reference Date is missing");
   if (!header.hospitalName) errors.push("Hospital Name is missing");
   if (!header.hospitalAddress) errors.push("Hospital Address is missing");
-  if (!header.contactPhone) errors.push("Contact Phone is missing");
-  if (!header.contactEmail) errors.push("Contact Email is missing");
   if (errors.length) {
     alert("Validation errors:\n" + errors.join("\n"));
     return false;
@@ -528,23 +505,11 @@ function validateHeader(header) {
   return true;
 }
 
-function getInitialSelection(inst) {
-  const cfgLen = (inst.configurationItems || inst.configItems || []).length;
-  const optLen = (inst.optionalItems || inst.additionalItems || []).length;
-  return {
-    config: Array(cfgLen).fill(true),
-    optional: Array(optLen).fill(true)
-  };
-}
-
 function getQuoteContext(){
   const header = getQuoteHeaderRaw();
   const inst = resolveInstrumentForHeader(header);
-  if (inst && !header.itemSelection) {
-    header.itemSelection = getInitialSelection(inst);
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
-  }
-  return { header, inst };
+  const line = getPrimaryLine(header);
+  return { header, inst, line };
 }
 
 function populateHeader() {
@@ -608,7 +573,6 @@ function formatInstrumentCell(inst) {
   if (inst.hsn)                    meta.push(`HSN Code: ${inst.hsn}`);
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-
   boldLines.forEach(line => {
     html += `<div class="cat-main">${line}</div>`;
   });
@@ -617,19 +581,16 @@ function formatInstrumentCell(inst) {
     html += `<div style="height:8px;"></div>`;
     html += `<div class="cat-sub">` + restDesc.join(' ') + `</div>`;
   }
-
   if (supplied.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div class="cat-sub"><strong>Supplied Complete with:</strong><br>`;
     html += supplied.map(s => ` - ${s}`).join('<br>');
     html += `</div>`;
   }
-
   if (specs.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
   }
-
   if (meta.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
@@ -658,7 +619,6 @@ function formatItemCell(item) {
   if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-
   if (bold1) html += `<div class="cat-main">${bold1}</div>`;
   if (bold2) html += `<div class="cat-main">${bold2}</div>`;
 
@@ -668,12 +628,10 @@ function formatItemCell(item) {
       .map(line => `<div class="cat-sub">- ${line}</div>`)
       .join('');
   }
-
   if (specs.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
   }
-
   if (meta.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
@@ -684,9 +642,10 @@ function formatItemCell(item) {
 }
 
 function renderQuoteBuilder() {
-  const ctx   = getQuoteContext();
+  const ctx    = getQuoteContext();
   const header = ctx.header;
   const inst   = ctx.inst;
+  const line   = ctx.line;
   const body   = document.getElementById('quoteBuilderBody');
 
   if (!inst) {
@@ -694,40 +653,31 @@ function renderQuoteBuilder() {
     return;
   }
 
-  const selection = header.itemSelection || getInitialSelection(inst);
   const rows = [];
 
-  // Main instrument row
+  // main instrument
   rows.push(`
     <tr>
       <td>001</td>
       ${formatInstrumentCell(inst)}
-      <td>01</td>
+      <td>${line.quantity || 1}</td>
       <td>${moneyINR(inst.unitPrice)}</td>
-      <td>${moneyINR(inst.unitPrice)}</td>
+      <td>${moneyINR((inst.unitPrice || 0) * (line.quantity || 1))}</td>
     </tr>
   `);
 
-  // Configuration items
-  const configItems = inst.configurationItems || inst.configItems || [];
+  // CONFIGURATION ITEMS (quote-level)
+  const configItems = line.configItems || [];
   if (configItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
         <td colspan="5" style="font-weight:700;">
           <span class="section-header-label">CONFIGURATION ITEMS</span>
-          <span class="section-header-controls">
-            <label>
-              <input type="checkbox" id="cfgSelectAll"> Select all
-            </label>
-          </span>
         </td>
       </tr>
     `);
 
     configItems.forEach((item, idx) => {
-      const selected = !selection.config || selection.config[idx] !== false;
-      if (!selected) return;
-
       const itemCode = String(idx + 2).padStart(3, '0');
       const qty = item.qty != null ? item.qty : 'Included';
       const upRaw = item.upInr != null ? item.upInr : 'Included';
@@ -737,13 +687,7 @@ function renderQuoteBuilder() {
 
       rows.push(`
         <tr>
-          <td>
-            <input type="checkbox"
-                   class="cfg-item-check"
-                   data-index="${idx}"
-                   ${selected ? 'checked' : ''}>
-            ${itemCode}
-          </td>
+          <td>${itemCode}</td>
           ${formatItemCell(item)}
           <td>${qty}</td>
           <td>${upCell}</td>
@@ -753,131 +697,50 @@ function renderQuoteBuilder() {
     });
   }
 
-// Additional items
-const additionalItems = inst.optionalItems || inst.additionalItems || [];
-if (additionalItems.length) {
-  rows.push(`
-    <tr style="background:#00B0F0; color:#000;">
-      <td colspan="5" style="font-weight:700;">
-        <span class="section-header-label">ADDITIONAL ITEMS</span>
-        <span class="section-header-controls">
-          <label>
-            <input type="checkbox" id="optSelectAll"> Select all
-          </label>
-        </span>
-      </td>
-    </tr>
-  `);
-
-  additionalItems.forEach((item, idx) => {
-    const selected = !selection.optional || selection.optional[idx] !== false;
-    if (!selected) return;
-
-    const itemCode = String(idx + 1).padStart(3, '0');
-    const qtyNum   = Number(item.qty || 1);
-
-    // item.price is like "₹ 55,380" → strip non-digits and commas
-    let unitNum = 0;
-    if (item.price) {
-      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-      unitNum = parseInt(cleaned, 10) || 0;
-    } else {
-      unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
-    }
-
-    const totalNum = unitNum * qtyNum;
-
+  // ADDITIONAL ITEMS (quote-level)
+  const additionalItems = line.additionalItems || [];
+  if (additionalItems.length) {
     rows.push(`
-      <tr>
-        <td>
-          <input type="checkbox"
-                 class="opt-item-check"
-                 data-index="${idx}"
-                 ${selected ? 'checked' : ''}>
-          ${itemCode}
+      <tr style="background:#00B0F0; color:#000;">
+        <td colspan="5" style="font-weight:700;">
+          <span class="section-header-label">ADDITIONAL ITEMS</span>
         </td>
-        ${formatItemCell(item)}
-        <td>${qtyNum.toString().padStart(2, '0')}</td>
-        <td>${moneyINR(unitNum)}</td>
-        <td>${moneyINR(totalNum)}</td>
       </tr>
     `);
-  });
-}
+
+    additionalItems.forEach((item, idx) => {
+      const itemCode = String(idx + 1).padStart(3, '0');
+      const qtyNum = Number(item.qty || 1);
+
+      let unitNum = 0;
+      if (item.price) {
+        const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+        unitNum = parseInt(cleaned, 10) || 0;
+      } else {
+        unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
+      }
+      const totalNum = unitNum * qtyNum;
+
+      rows.push(`
+        <tr>
+          <td>${itemCode}</td>
+          ${formatItemCell(item)}
+          <td>${qtyNum.toString().padStart(2,'0')}</td>
+          <td>${moneyINR(unitNum)}</td>
+          <td>${moneyINR(totalNum)}</td>
+        </tr>
+      `);
+    });
+  }
 
   body.innerHTML = rows.join('');
-  wireSelectionHandlers();
 }
 
-function wireSelectionHandlers() {
-  const ctx   = getQuoteContext();
-  const header = ctx.header;
-  const inst   = ctx.inst;
-  if (!inst) return;
-
-  const cfgChecks = Array.from(document.querySelectorAll('.cfg-item-check'));
-  const optChecks = Array.from(document.querySelectorAll('.opt-item-check'));
-
-  function saveSelection() {
-    const newSelection = {
-      config: [],
-      optional: []
-    };
-
-    const cfgLen = (inst.configurationItems || inst.configItems || []).length;
-    const optLen = (inst.optionalItems || inst.additionalItems || []).length;
-
-    for (let i = 0; i < cfgLen; i++) newSelection.config[i] = false;
-    for (let i = 0; i < optLen; i++) newSelection.optional[i] = false;
-
-    cfgChecks.forEach(ch => {
-      const idx = Number(ch.dataset.index);
-      if (!isNaN(idx)) newSelection.config[idx] = ch.checked;
-    });
-    optChecks.forEach(ch => {
-      const idx = Number(ch.dataset.index);
-      if (!isNaN(idx)) newSelection.optional[idx] = ch.checked;
-    });
-
-    header.itemSelection = newSelection;
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
-    renderQuoteBuilder();
-  }
-
-  cfgChecks.forEach(ch => ch.addEventListener('change', saveSelection));
-  optChecks.forEach(ch => ch.addEventListener('change', saveSelection));
-
-  const cfgAll = document.getElementById('cfgSelectAll');
-  if (cfgAll) {
-    cfgAll.addEventListener('change', () => {
-      cfgChecks.forEach(ch => { ch.checked = cfgAll.checked; });
-      saveSelection();
-    });
-    if (cfgChecks.length && cfgChecks.every(ch => ch.checked)) {
-      cfgAll.checked = true;
-    }
-  }
-
-  const optAll = document.getElementById('optSelectAll');
-  if (optAll) {
-    optAll.addEventListener('change', () => {
-      optChecks.forEach(ch => { ch.checked = optAll.checked; });
-      saveSelection();
-    });
-    if (optChecks.length && optChecks.every(ch => ch.checked)) {
-      optAll.checked = true;
-    }
-  }
-}
-
-  // Build a flat list of line items from the table/body you already render
+// flatten into history line items
 function buildLineItemsFromCurrentQuote() {
+  const { inst, line } = getQuoteContext();
   const items = [];
-  const ctx = getQuoteContext();          // you already have this in your current file
-  const inst = ctx.inst;
-  const header = ctx.header;
 
-  // 1) Main instrument
   if (inst) {
     items.push({
       name: inst.instrumentName || inst.name || '',
@@ -887,31 +750,19 @@ function buildLineItemsFromCurrentQuote() {
     });
   }
 
-  // 2) Config items (only selected ones)
-  const selection = header.itemSelection || getInitialSelection(inst || {});
-  const configItems = inst ? (inst.configurationItems || inst.configItems || []) : [];
-  configItems.forEach((item, idx) => {
-    const selected = !selection.config || selection.config[idx] !== false;
-    if (!selected) return;
-
+  (line.configItems || []).forEach(item => {
     const price = item.tpInr != null
       ? Number(item.tpInr)
       : Number(item.upInr || 0);
-
     items.push({
       name: item.name || item.itemName || '',
       code: item.code || item.catalog || '',
       type: 'Configuration',
-      price: price
+      price
     });
   });
 
-  // 3) Additional items (only selected ones)
-  const additionalItems = inst ? (inst.optionalItems || inst.additionalItems || []) : [];
-  additionalItems.forEach((item, idx) => {
-    const selected = !selection.optional || selection.optional[idx] !== false;
-    if (!selected) return;
-
+  (line.additionalItems || []).forEach(item => {
     let unitNum = 0;
     if (item.price) {
       const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
@@ -919,7 +770,6 @@ function buildLineItemsFromCurrentQuote() {
     } else {
       unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
     }
-
     items.push({
       name: item.name || item.itemName || '',
       code: item.code || item.catalog || '',
@@ -931,7 +781,6 @@ function buildLineItemsFromCurrentQuote() {
   return items;
 }
 
-// Compute summary using your existing header/fields
 function buildSummaryFromHeader(header) {
   const itemsTotal   = Number(header.itemsTotal || header.itemsValueTotal || 0);
   const discount     = Number(header.discount || 0);
@@ -955,7 +804,7 @@ function buildSummaryFromHeader(header) {
 }
 
 function finalizeQuote() {
-  const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+  const header = getQuoteHeaderRaw();
 
   if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
     alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
@@ -965,10 +814,7 @@ function finalizeQuote() {
   const lineItems = buildLineItemsFromCurrentQuote();
   const summary   = buildSummaryFromHeader(header);
 
-  // Load existing quotes from history
   const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
-
-  // Find all versions for this quoteNo and compute next revision
   const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
   const lastRev   = sameQuote.length
     ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
@@ -976,13 +822,12 @@ function finalizeQuote() {
   const nextRev   = lastRev + 1;
 
   const now = new Date();
-
   const quote = {
     header,
     lineItems,
     summary,
-    quoteNo: header.quoteNo,         // redundant but handy
-    revision: nextRev,               // 1, 2, 3...
+    quoteNo: header.quoteNo,
+    revision: nextRev,
     status: 'submitted',
     history: [{
       status: 'submitted',
@@ -993,7 +838,6 @@ function finalizeQuote() {
 
   existing.push(quote);
   localStorage.setItem('quotes', JSON.stringify(existing));
-
   alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
 }
 
