@@ -165,7 +165,6 @@
       box-shadow:0 0 0 3px rgba(13,110,253,0.15);
     }
 
-    /* Terms & Conditions block */
     .terms-heading {
       font-size:16px;
       font-weight:700;
@@ -287,7 +286,6 @@
 As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
     </div>
 
-    <!-- editable Terms & Conditions -->
     <div id="termsTextBlock" contenteditable="true">
       <div class="terms-section">
         <p>
@@ -321,7 +319,9 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 </div>
 
 <script>
-  function goBack(){ if (window.history.length > 1) window.history.back(); }
+  function goBack() {
+    if (window.history.length > 1) window.history.back();
+  }
 
   function generateQuoteNo() {
     const lastNo = localStorage.getItem('lastQuoteNo') || 'EQ/SQ/25-26/00000';
@@ -356,6 +356,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
+  // Dropdown: show ONLY instrumentName
   function populateInstrumentDropdown() {
     const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
     const select = document.getElementById('instrumentSelect');
@@ -363,11 +364,12 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
       const opt = document.createElement('option');
       opt.value = idx;
       const name = inst.instrumentName || inst.description || '';
-      opt.textContent = name; // e.g. "pfm Rotary 3006 EM (Fully-Electronic Microtome)"
+      opt.textContent = name;
       select.appendChild(opt);
     });
   }
 
+  // Preview: show description text only
   function setupInstrumentPreview() {
     const select = document.getElementById('instrumentSelect');
     const preview = document.getElementById('instrumentPreview');
@@ -384,18 +386,19 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
         return;
       }
 
-    const descLines = (inst.longDescription || inst.description || '')
-      .split('\n')
-      .map(l => l.trim())
-      .filter(Boolean);
-    
-    const overview = descLines[0] || '';
-    const extras = descLines.slice(1).join(' ');
-    
-    // show description only, not the title again
-    const fullText = [overview, extras].filter(Boolean).join(' ');
-    preview.style.display = 'block';
-    details.textContent = fullText;
+      const descLines = (inst.longDescription || inst.description || '')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean);
+
+      const overview = descLines[0] || '';
+      const extras = descLines.slice(1).join(' ');
+
+      const fullText = [overview, extras].filter(Boolean).join(' ');
+      preview.style.display = 'block';
+      details.textContent = fullText;
+    });
+  }
 
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
@@ -426,7 +429,6 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
       instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
     };
 
-    // initialize quoteLines for quotes.html (one main instrument line)
     headerData.quoteLines = [{
       lineType: 'instrument',
       instrumentIndex: selectedInstrumentIndex !== '' ? Number(selectedInstrumentIndex) : null,
@@ -440,7 +442,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   });
 
   document.getElementById('quoteNo').value = generateQuoteNo();
-  const todayISO = new Date().toISOString().slice(0,10);
+  const todayISO = new Date().toISOString().slice(0, 10);
   document.getElementById('quoteDate').value = todayISO;
   document.getElementById('refDate').value = todayISO;
 
