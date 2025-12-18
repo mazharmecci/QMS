@@ -25,7 +25,8 @@
       font-size:0.95rem;
       font-family:'Inter',sans-serif;
     }
-    #detailsInput { grid-column:span 2; height:150px; resize:vertical; }
+    /* multi-column fields */
+    #description { grid-column:span 2; height:120px; resize:vertical; }
     #suppliedWithInput { grid-column:span 2; height:140px; resize:vertical; }
     form button[type="submit"] { grid-column:span 2; background:#0d6efd; color:#fff; border:none; cursor:pointer; }
 
@@ -90,28 +91,40 @@
 <div class="container">
   <div class="top-bar">
     <h2>Instrument Master</h2>
-    <button onclick="toggleForm()">Add Instrument</button>
+    <button type="button" onclick="toggleForm()">Add Instrument</button>
   </div>
 
   <form id="instrumentForm">
-<input type="text"
-       id="mainItemName"
-       placeholder="Main item name"
-       required>
+    <input
+      type="text"
+      id="mainItemName"
+      placeholder="Main item name (e.g. pfm Rotary 3005E (Semi-Electronic Microtome))"
+      required
+    >
 
-<textarea id="description"
-          placeholder="Instrument description (details, bullets, etc.)"
-          rows="3"
-          style="width:100%;"></textarea>
+    <input
+      type="text"
+      id="instrumentCode"
+      placeholder="Instrument Code (for quotes)"
+    >
 
-<textarea id="suppliedWithInput" rows="8"
-  placeholder="Supplied Complete with (list items). Then a blank line, then Dimensions / Weight / Power."></textarea>
+    <textarea
+      id="description"
+      placeholder="Instrument description (first line = printed heading, next lines = bullets)"
+      rows="3"
+      style="width:100%;"
+    ></textarea>
+
+    <textarea
+      id="suppliedWithInput"
+      rows="8"
+      placeholder="Supplied Complete with (list items). Then a blank line, then Dimensions / Weight / Power."
+    ></textarea>
 
     <input type="text" id="origin" placeholder="Country Of Origin">
     <input type="text" id="catalog" placeholder="Catalog Reference">
     <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
 
-    <input type="text" id="instrumentCode" placeholder="Instrument Code (for quotes)">
     <input type="text" id="unitPrice" placeholder="Basic / Unit Price (₹)">
     <input type="text" id="gstType" placeholder="GST Type">
     <input type="number" id="gstPercent" placeholder="GST %">
@@ -138,9 +151,9 @@
   </table>
 
   <div class="pagination">
-    <button onclick="prevPage()">Prev</button>
+    <button type="button" onclick="prevPage()">Prev</button>
     <span id="pageInfo"></span>
-    <button onclick="nextPage()">Next</button>
+    <button type="button" onclick="nextPage()">Next</button>
   </div>
 </div>
 
@@ -155,10 +168,12 @@
     requestAnimationFrame(() => el.classList.add('show'));
     setTimeout(() => {
       el.classList.remove('show');
-      setTimeout(() => { if (el.parentNode === container) container.removeChild(el); }, 250);
+      setTimeout(() => {
+        if (el.parentNode === container) container.removeChild(el);
+      }, 250);
     }, duration);
   }
-  
+
   const form = document.getElementById('instrumentForm');
   const tableBody = document.querySelector('#instrumentTable tbody');
   const pageInfo = document.getElementById('pageInfo');
@@ -173,25 +188,33 @@
   const pageSize = 10;
   let editIndex = null;
 
-  function goBack(){ if (window.history.length > 1) window.history.back(); }
-  function toggleForm(){ form.classList.toggle('active'); }
+  function goBack() {
+    if (window.history.length > 1) window.history.back();
+  }
+
+  function toggleForm() {
+    form.classList.toggle('active');
+  }
 
   hsnInput.addEventListener('input', () => {
-    let digits = hsnInput.value.replace(/\D/g,'').slice(0,8);
-    if (digits.length > 4) digits = digits.slice(0,4) + ' ' + digits.slice(4);
+    let digits = hsnInput.value.replace(/\D/g, '').slice(0, 8);
+    if (digits.length > 4) digits = digits.slice(0, 4) + ' ' + digits.slice(4);
     hsnInput.value = digits;
   });
 
   unitPriceInput.addEventListener('input', () => {
-    let digits = unitPriceInput.value.replace(/[^\d]/g,'');
-    if (!digits){ unitPriceInput.value=''; return; }
-    const num = parseInt(digits,10);
+    let digits = unitPriceInput.value.replace(/[^\d]/g, '');
+    if (!digits) {
+      unitPriceInput.value = '';
+      return;
+    }
+    const num = parseInt(digits, 10);
     unitPriceInput.value = '₹ ' + num.toLocaleString('en-IN');
   });
 
-  function parsePriceValue(v){
-    const digits = (v||'').replace(/[^\d]/g,'');
-    return digits ? parseInt(digits,10) : 0;
+  function parsePriceValue(v) {
+    const digits = (v || '').replace(/[^\d]/g, '');
+    return digits ? parseInt(digits, 10) : 0;
   }
 
   function parseDetails(rawText) {
@@ -224,7 +247,7 @@
     };
   }
 
-  function formatPriceDisplay(v){
+  function formatPriceDisplay(v) {
     return '₹ ' + Number(v || 0).toLocaleString('en-IN');
   }
 
@@ -244,20 +267,21 @@
       .filter(Boolean);
 
     const instrument = {
-    description: mainItemNameInput.value,          // what shows in the table Description column
-    details: detailsHTML,                          // HTML for the collapsible details
-    instrumentName: firstLine,                     // from description textarea
-    instrumentShortLine: secondLine,
-    instrumentExtraLines: remainingLines,
-    suppliedWith: suppliedWithLines,
-    origin: document.getElementById('origin').value,
-    catalog: document.getElementById('catalog').value,
-    hsn: hsnInput.value,
-    instrumentCode: document.getElementById('instrumentCode').value,
-    unitPrice: parsePriceValue(unitPriceInput.value),
-    gstType: document.getElementById('gstType').value,
-    gstPercent: document.getElementById('gstPercent').value
-  };
+      // main item name shown in table and used in quote dropdown
+      description: mainItemNameInput.value,
+      instrumentName: firstLine,          // 1st line of description textarea
+      instrumentShortLine: secondLine,
+      instrumentExtraLines: remainingLines,
+      details: detailsHTML,               // HTML for Details column
+      suppliedWith: suppliedWithLines,
+      origin: document.getElementById('origin').value,
+      catalog: document.getElementById('catalog').value,
+      hsn: hsnInput.value,
+      instrumentCode: document.getElementById('instrumentCode').value,
+      unitPrice: parsePriceValue(unitPriceInput.value),
+      gstType: document.getElementById('gstType').value,
+      gstPercent: document.getElementById('gstPercent').value
+    };
 
     if (editIndex !== null) {
       instruments[editIndex] = instrument;
@@ -273,17 +297,17 @@
     showToast('Instrument saved');
   });
 
-  function renderTable(){
+  function renderTable() {
     tableBody.innerHTML = '';
     const start = (currentPage - 1) * pageSize;
-    const end   = start + pageSize;
+    const end = start + pageSize;
 
     instruments.slice(start, end).forEach((inst, i) => {
       const idx = start + i;
 
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${inst.description}</td>
+        <td>${inst.description || ''}</td>
         <td>
           <div class="collapse-toggle" onclick="toggleDetails(this)">Details</div>
           <div class="details-content">${inst.details || ''}</div>
@@ -296,33 +320,35 @@
         <td>${inst.gstType || ''}</td>
         <td>${inst.gstPercent || ''}</td>
         <td class="actions">
-          <button class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
-          <button class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
+          <button type="button" class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
+          <button type="button" class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
         </td>
       `;
       tableBody.appendChild(row);
     });
 
-    pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(instruments.length / pageSize) || 1}`;
+    const totalPages = Math.ceil(instruments.length / pageSize) || 1;
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
   }
 
-  function toggleDetails(el){
+  function toggleDetails(el) {
     const d = el.nextElementSibling;
-    const v = d.style.display === 'block';
-    d.style.display = v ? 'none' : 'block';
-    el.textContent = v ? 'Details' : 'Hide details';
+    const visible = d.style.display === 'block';
+    d.style.display = visible ? 'none' : 'block';
+    el.textContent = visible ? 'Details' : 'Hide details';
   }
 
-  function editInstrument(i){
+  function editInstrument(i) {
     const inst = instruments[i];
-  
-    mainItemNameInput.value = inst.description || ''; // or inst.mainItemName if you stored it separately
+    if (!inst) return;
+
+    mainItemNameInput.value = inst.description || '';
     descriptionTextarea.value = [
       inst.instrumentName || '',
       inst.instrumentShortLine || '',
       inst.instrumentExtraLines || ''
     ].filter(Boolean).join('\n');
-  
+
     document.getElementById('origin').value = inst.origin || '';
     document.getElementById('catalog').value = inst.catalog || '';
     hsnInput.value = inst.hsn || '';
@@ -330,23 +356,43 @@
     unitPriceInput.value = formatPriceDisplay(inst.unitPrice);
     document.getElementById('gstType').value = inst.gstType || '';
     document.getElementById('gstPercent').value = inst.gstPercent || '';
-  
+
     suppliedWithInput.value = (inst.suppliedWith || []).join('\n');
-  
+
     editIndex = i;
     form.classList.add('active');
   }
 
-  function deleteInstrument(i){
-    instruments.splice(i,1);
+  function deleteInstrument(i) {
+    instruments.splice(i, 1);
     localStorage.setItem('instruments', JSON.stringify(instruments));
     const maxPage = Math.max(1, Math.ceil(instruments.length / pageSize));
     if (currentPage > maxPage) currentPage = maxPage;
     renderTable();
   }
 
-  function nextPage(){ if (currentPage * pageSize < instruments.length){ currentPage++; renderTable(); } }
-  function prevPage(){ if (currentPage > 1){ currentPage--; renderTable(); } }
+  function nextPage() {
+    if (currentPage * pageSize < instruments.length) {
+      currentPage++;
+      renderTable();
+    }
+  }
+
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable();
+    }
+  }
+
+  // expose needed functions to inline handlers
+  window.toggleDetails = toggleDetails;
+  window.editInstrument = editInstrument;
+  window.deleteInstrument = deleteInstrument;
+  window.nextPage = nextPage;
+  window.prevPage = prevPage;
+  window.goBack = goBack;
+  window.toggleForm = toggleForm;
 
   renderTable();
 </script>
