@@ -430,19 +430,50 @@
     <form id="itemModalForm" onsubmit="saveItemFromModal(event)">
       <input type="hidden" id="itemModalType" value="config">
       <input type="hidden" id="itemCode" value="">
-      <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
-        <input id="itemCodeInput" type="text" placeholder="Item code (e.g., 030051 / TFB 1100)"
-               style="flex:1; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
-        <input id="itemQty" type="text" placeholder="Qty (or Included)"
-               style="flex:0 0 130px; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
-        <input id="itemPrice" type="text" placeholder="Unit price (INR)"
-               style="flex:0 0 150px; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+
+      <!-- FIXED ROW -->
+      <div style="
+        display:flex;
+        flex-wrap:wrap;
+        gap:0.5rem;
+        margin-bottom:0.5rem;
+      ">
+        <input id="itemCodeInput" type="text"
+               placeholder="Item code (e.g., 030051 / TFB 1100)"
+               style="
+                 flex:1 1 160px;
+                 min-width:0;
+                 padding:0.4rem 0.55rem;
+                 border:1px solid #cbd5e1;
+                 border-radius:6px;
+               ">
+        <input id="itemQty" type="text"
+               placeholder="Qty (or Included)"
+               style="
+                 flex:0 1 110px;
+                 min-width:0;
+                 padding:0.4rem 0.55rem;
+                 border:1px solid #cbd5e1;
+                 border-radius:6px;
+               ">
+        <input id="itemPrice" type="text"
+               placeholder="Unit price (INR)"
+               style="
+                 flex:0 1 140px;
+                 min-width:0;
+                 padding:0.4rem 0.55rem;
+                 border:1px solid #cbd5e1;
+                 border-radius:6px;
+               ">
       </div>
+
       <div style="margin-bottom:0.5rem;">
         <textarea id="itemDetails" rows="5"
-                  placeholder="First line: main item name&#10;Next lines: bullet lines starting with ' - '"
+                  placeholder="First line: main item name
+Next lines: bullet lines starting with ' - '"
                   style="width:100%; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13px;"></textarea>
       </div>
+
       <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:0.6rem;">
         <button type="button" onclick="closeItemModal()"
                 style="border:1px solid #cbd5e1; background:#fff; padding:0.35rem 0.75rem;
@@ -452,6 +483,8 @@
                        border-radius:999px; font-size:12px; cursor:pointer;">Save item</button>
       </div>
     </form>
+  </div>
+</div>
 
     <div id="itemModalList" style="max-height:180px; overflow:auto; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
       <!-- existing items rendered here -->
