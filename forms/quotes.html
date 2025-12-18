@@ -957,7 +957,6 @@ function buildSummaryFromHeader(header) {
 function finalizeQuote() {
   const header = JSON.parse(localStorage.getItem('quoteHeader') || '{}');
 
-  // Basic validation – adjust to match what you already enforce
   if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
     alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
     return;
@@ -966,24 +965,36 @@ function finalizeQuote() {
   const lineItems = buildLineItemsFromCurrentQuote();
   const summary   = buildSummaryFromHeader(header);
 
-  // Build final quote object for history
+  // Load existing quotes from history
+  const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
+
+  // Find all versions for this quoteNo and compute next revision
+  const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+  const lastRev   = sameQuote.length
+    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+    : 0;
+  const nextRev   = lastRev + 1;
+
+  const now = new Date();
+
   const quote = {
-    header,         // full header (hospital, contact, T&C, etc.)
-    lineItems,      // flat list
-    summary,        // totals
+    header,
+    lineItems,
+    summary,
+    quoteNo: header.quoteNo,         // redundant but handy
+    revision: nextRev,               // 1, 2, 3...
     status: 'submitted',
     history: [{
       status: 'submitted',
-      date: new Date().toISOString().slice(0,10),
-      time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+      date: now.toISOString().slice(0,10),
+      time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
     }]
   };
 
-  const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
   existing.push(quote);
   localStorage.setItem('quotes', JSON.stringify(existing));
 
-  alert('Quote has been finalized and saved to history as "Submitted".\nYou can now see it in quotes-history.html.');
+  alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
 }
 
 populateHeader();
