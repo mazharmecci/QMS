@@ -315,15 +315,19 @@
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = '';
     data.forEach((q, i) => {
-      const globalIndex = quotes.indexOf(q); // to map back to master array
+      const globalIndex = quotes.indexOf(q); // map back to master array
       const tr = document.createElement('tr');
       const status = q.status || 'Draft';
+      const header = q.header || {};
 
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>${q.header?.quoteNo || '-'}</td>
-        <td>${q.header?.quoteDate || '-'}</td>
-        <td>${q.header?.hospitalName || '-'}</td>
+        <td>
+          ${header.quoteNo || '-'}
+          ${q.revision ? ` (Rev ${q.revision})` : ''}
+        </td>
+        <td>${header.quoteDate || '-'}</td>
+        <td>${header.hospitalName || '-'}</td>
         <td>₹ ${moneyINR(q.summary?.totalValue)}</td>
         <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
         <td class="actions">
@@ -359,10 +363,11 @@
     const fDate = document.getElementById('filterDate').value;
 
     filteredQuotes = quotes.filter(q => {
-      const quoteNo = (q.header?.quoteNo || '').toLowerCase();
-      const hospital = (q.header?.hospitalName || '').toLowerCase();
+      const header = q.header || {};
+      const quoteNo = (header.quoteNo || '').toLowerCase();
+      const hospital = (header.hospitalName || '').toLowerCase();
       const status = (q.status || 'draft').toLowerCase();
-      const date = q.header?.quoteDate || '';
+      const date = header.quoteDate || '';
 
       return (!fQuote || quoteNo.includes(fQuote)) &&
              (!fHospital || hospital.includes(fHospital)) &&
@@ -393,8 +398,17 @@
     filteredQuotes.sort((a, b) => {
       let av, bv;
       switch(key) {
-        case 'quoteNo':
-          av = a.header?.quoteNo || ''; bv = b.header?.quoteNo || ''; break;
+        case 'quoteNo': {
+          const aq = a.header?.quoteNo || '';
+          const bq = b.header?.quoteNo || '';
+          if (aq === bq) {
+            const ar = Number(a.revision || 1);
+            const br = Number(b.revision || 1);
+            return sortConfig.direction === 'asc' ? ar - br : br - ar;
+          }
+          av = aq; bv = bq;
+          break;
+        }
         case 'date':
           av = a.header?.quoteDate || ''; bv = b.header?.quoteDate || ''; break;
         case 'hospital':
@@ -456,11 +470,17 @@
     const summary = q.summary || {};
     const lineItems = q.lineItems || [];
 
+    const titleNo = header.quoteNo || '';
+    const titleRev = q.revision ? ` (Rev ${q.revision})` : '';
+
     let html = `
       <div class="quote-details">
-        <h3>Quote Details - ${header.quoteNo || ''}</h3>
+        <h3>Quote Details - ${titleNo}${titleRev}</h3>
         <div class="details-grid">
-          <p><strong>Quote No:</strong> ${header.quoteNo || '-'}</p>
+          <p>
+            <strong>Quote No:</strong>
+            ${titleNo || '-'}${titleRev}
+          </p>
           <p><strong>Date:</strong> ${header.quoteDate || '-'}</p>
           <p><strong>Hospital:</strong> ${header.hospitalName || '-'}</p>
           <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || 'Draft'}</span></p>
@@ -541,7 +561,7 @@
       return;
     }
 
-    const headerRow = ['Quote No','Date','Hospital','Total Value','Status'];
+    const headerRow = ['Quote No','Revision','Date','Hospital','Total Value','Status'];
     const lines = [headerRow.join(',')];
 
     quotes.forEach(q => {
@@ -549,6 +569,7 @@
       const s = q.summary || {};
       const row = [
         `"${(h.quoteNo || '').replace(/"/g,'""')}"`,
+        q.revision || 1,
         h.quoteDate || '',
         `"${(h.hospitalName || '').replace(/"/g,'""')}"`,
         s.totalValue || 0,
@@ -574,5 +595,6 @@
 
   renderTable();
 </script>
+
 </body>
 </html>
