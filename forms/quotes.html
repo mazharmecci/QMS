@@ -810,20 +810,15 @@ function renderQuoteBuilder() {
         </td>
       </tr>
     `);
-
+  
     additionalItems.forEach((item, idx) => {
       const itemCode = String(idx + 1).padStart(3, '0');
       const qtyNum = Number(item.qty || 1);
-
-      let unitNum = 0;
-      if (item.price) {
-        const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-        unitNum = parseFloat(cleaned) || 0;
-      } else {
-        unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
-      }
+      
+      // Fixed: Direct number access (matches saveItemFromModal storage)
+      const unitNum = Number(item.price || 0);
       const totalNum = unitNum * qtyNum;
-
+  
       rows.push(`
         <tr>
           <td>${itemCode}</td>
@@ -835,7 +830,7 @@ function renderQuoteBuilder() {
       `);
     });
   }
-
+  
   body.innerHTML = rows.join('');
 }
 
@@ -1084,29 +1079,30 @@ function buildSummaryFromHeader(header) {
 
   function saveItemFromModal(e) {
     e.preventDefault();
+    
     const { header, line } = getQuoteContext();
-
-    const typeEl    = document.getElementById('itemModalType');
-    const codeEl    = document.getElementById('itemCodeInput');
-    const qtyEl     = document.getElementById('itemQty');
-    const priceEl   = document.getElementById('itemPrice');
+    const typeEl = document.getElementById('itemModalType');
+    const codeEl = document.getElementById('itemCodeInput');
+    const qtyEl = document.getElementById('itemQty');
+    const priceEl = document.getElementById('itemPrice');
     const detailsEl = document.getElementById('itemDetails');
-
+    
     const type = typeEl.value;
     const code = (codeEl.value || '').trim();
     const { name } = parseDetailsText(detailsEl.value);
+    
     if (!name) return;
-
+    
     const arrName = type === 'config' ? 'configItems' : 'additionalItems';
     if (!Array.isArray(line[arrName])) line[arrName] = [];
-
+    
     const isEdit = currentEditIndex != null;
     const idx = isEdit ? currentEditIndex : line[arrName].length;
-
+    
     if (type === 'config') {
-      const existingCode = isEdit && line.configItems[idx] ? line.configItems[idx].code : null;
+      const existingCode = isEdit && line.configItems[idx]?.code || null;
       const item = {
-        code: code || existingCode || 'CFG-' + String(line.configItems.length + 1).padStart(2, '0'),
+        code: code || existingCode || `CFG-${String(line.configItems.length + 1).padStart(2, '0')}`,
         name,
         description: detailsEl.value,
         qty: qtyEl.value || 'Included',
@@ -1114,25 +1110,27 @@ function buildSummaryFromHeader(header) {
         tpInr: 'Included'
       };
       line.configItems[idx] = item;
-    } else {
-      const existingCode = isEdit && line.additionalItems[idx] ? line.additionalItems[idx].code : null;
-      const raw = priceEl ? (priceEl.value || '0') : '0';
-      const num = Number(raw.replace(/[^\d.]/g, '') || 0);
-      const formattedPrice = '₹ ' + num.toLocaleString('en-IN', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-
+      
+    } else { // additional items
+      const existingCode = isEdit && line.additionalItems[idx]?.code || null;
+      const rawPrice = priceEl?.value || '0';
+      const cleanedPrice = rawPrice.replace(/[^\d.]/g, '');
+      const priceNum = parseFloat(cleanedPrice) || 0;
+      
       const item = {
-        code: code || existingCode || 'ADD-' + String(line.additionalItems.length + 1).padStart(2, '0'),
+        code: code || existingCode || `ADD-${String(line.additionalItems.length + 1).padStart(2, '0')}`,
         name,
         description: detailsEl.value,
         qty: Number(qtyEl.value || 1),
-        price: formattedPrice
+        price: priceNum,  // Store raw number
+        displayPrice: `₹ ${priceNum.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`
       };
       line.additionalItems[idx] = item;
     }
-
+    
     currentEditIndex = null;
     header.quoteLines[0] = line;
     localStorage.setItem('quoteHeader', JSON.stringify(header));
