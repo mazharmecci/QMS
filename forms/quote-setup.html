@@ -356,47 +356,48 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
-  // Dropdown: show ONLY instrumentName
   function populateInstrumentDropdown() {
     const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
     const select = document.getElementById('instrumentSelect');
     instruments.forEach((inst, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
-      const name = inst.instrumentName || inst.description || '';
-      opt.textContent = name;
+  
+      const title = inst.instrumentName || inst.description || '';
+      opt.textContent = title; // dropdown shows: pfm Rotary 3006 EM (Fully-Electronic Microtome)
+  
       select.appendChild(opt);
     });
   }
 
-  // Preview: show description text only
   function setupInstrumentPreview() {
     const select = document.getElementById('instrumentSelect');
     const preview = document.getElementById('instrumentPreview');
     const details = document.getElementById('instrumentDetails');
-
+  
     select.addEventListener('change', function () {
       const idx = this.value;
       const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
       const inst = instruments[idx];
-
+  
       if (!inst) {
         preview.style.display = 'none';
         details.textContent = '';
         return;
       }
-
+  
+      // full multi-line description from instruments master
       const descLines = (inst.longDescription || inst.description || '')
         .split('\n')
         .map(l => l.trim())
         .filter(Boolean);
-
+  
       const overview = descLines[0] || '';
       const extras = descLines.slice(1).join(' ');
-
+  
       const fullText = [overview, extras].filter(Boolean).join(' ');
       preview.style.display = 'block';
-      details.textContent = fullText;
+      details.textContent = fullText; // shows: The pfm Rotary 3006 EM is a modern, newly-designed...
     });
   }
 
