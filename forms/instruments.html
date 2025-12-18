@@ -636,6 +636,8 @@ Next lines = sub details, each on its own line"></textarea>
       }
     });
 
+    console.log('Optional items selected for this instrument:', optionalItems);
+
     populateExistingAdditionalDropdown();
     renderOptionalMasterList();
     renderOptionalSelectionList();
@@ -753,6 +755,8 @@ Next lines = sub details, each on its own line"></textarea>
       }
     });
 
+    console.log('Config items selected for this instrument:', configurationItems);
+
     populateExistingConfigDropdown();
     renderConfigMasterList();
     renderConfigSelectionList();
@@ -763,7 +767,10 @@ Next lines = sub details, each on its own line"></textarea>
   /* MAIN FORM SAVE */
   form.addEventListener('submit', e=>{
     e.preventDefault();
-
+  
+    console.log('Saving instrument. Current optionalItems:', optionalItems);
+    console.log('Saving instrument. Current configurationItems:', configurationItems);
+  
     const {
       firstLine,
       secondLine,
@@ -798,11 +805,16 @@ Next lines = sub details, each on its own line"></textarea>
 
     if(editIndex!==null){
       instruments[editIndex]=instrument;
+      console.log('Updated instrument at index', editIndex, instrument);
       editIndex=null;
     } else {
       instruments.push(instrument);
+      console.log('Added new instrument at index', instruments.length - 1, instrument);
     }
+  
     localStorage.setItem('instruments', JSON.stringify(instruments));
+    console.log('Instruments after save:', instruments);
+
     form.reset(); unitPriceInput.value='';
     optionalItems=[]; configurationItems=[];
     form.classList.remove('active');
@@ -812,69 +824,86 @@ Next lines = sub details, each on its own line"></textarea>
 
   function formatPriceDisplay(v){ return '₹ '+Number(v||0).toLocaleString('en-IN'); }
 
-  function renderTable(){
-    tableBody.innerHTML='';
-    const start=(currentPage-1)*pageSize, end=start+pageSize;
-    instruments.slice(start,end).forEach((inst,i)=>{
-      const idx = start+i;
-      const hasOptional = inst.additional==='Yes' && inst.optionalItems && inst.optionalItems.length;
-      const hasConfig = inst.configuration==='Yes' && inst.configurationItems && inst.configurationItems.length;
+function renderTable(){
+  tableBody.innerHTML = '';
+  const start = (currentPage - 1) * pageSize;
+  const end   = start + pageSize;
 
-      const row=document.createElement('tr');
-      row.innerHTML=`
-        <td>${inst.description}</td>
-        <td>
-          <div class="collapse-toggle" onclick="toggleDetails(this)">Details</div>
-          <div class="details-content">${inst.details||''}</div>
-        </td>
-        <td>${inst.origin||''}</td>
-        <td>${inst.catalog||''}</td>
-        <td>${inst.hsn||''}</td>
-        <td>${
-          hasOptional
-            ? `<div class="collapse-toggle" onclick="toggleOptional(this)">▶ Additional Items</div>
-               <div class="optional-content">${
-                 inst.optionalItems.map(it=>{
-                   const lines = (it.name || '').split('\n');
-                   const title = lines[0] || 'Item';
-                   const subs  = lines.slice(1);
-                   return `
-                     <div style="margin-bottom:0.3rem;">
-                       <strong>${title}</strong>${it.code?` (${it.code})`:''}${subs.length ? '<br>'+subs.join('<br>') : ''} – ${it.price||''}
-                     </div>`;
-                 }).join('')
-               }</div>`
-            : (inst.additional||'')
-        }</td>
-        <td>${
-          hasConfig
-            ? `<div class="collapse-toggle" onclick="toggleConfig(this)">▶ Configuration Items</div>
-               <div class="config-content">${
-                 inst.configurationItems.map(it=>{
-                   const lines = (it.name || '').split('\n');
-                   const title = lines[0] || 'Item';
-                   const subs  = lines.slice(1);
-                   return `
-                     <div style="margin-bottom:0.3rem;">
-                       <strong>${title}</strong>${it.code?` (${it.code})`:''}${subs.length ? '<br>'+subs.join('<br>') : ''}
-                       – Qty: ${it.qty || 'Included'}, UP: ${it.upInr || 'Included'}, TP: ${it.tpInr || 'Included'}
-                     </div>`;
-                 }).join('')
-               }</div>`
-            : (inst.configuration||'')
-        }</td>
-        <td>${inst.instrumentCode||''}</td>
-        <td class="price-cell">${formatPriceDisplay(inst.unitPrice)}</td>
-        <td>${inst.gstType||''}</td>
-        <td>${inst.gstPercent||''}</td>
-        <td class="actions">
-          <button class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
-          <button class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
-        </td>`;
-      tableBody.appendChild(row);
+  instruments.slice(start, end).forEach((inst, i) => {
+    const idx = start + i;
+
+    // Defensive checks + log for debugging
+    const optArr  = Array.isArray(inst.optionalItems) ? inst.optionalItems : [];
+    const cfgArr  = Array.isArray(inst.configurationItems) ? inst.configurationItems : [];
+    const hasOptional = optArr.length > 0;
+    const hasConfig   = cfgArr.length > 0;
+
+    console.log('Render instrument', idx, {
+      additionalFlag: inst.additional,
+      configurationFlag: inst.configuration,
+      optionalItems: optArr,
+      configurationItems: cfgArr,
+      hasOptional,
+      hasConfig
     });
-    pageInfo.textContent=`Page ${currentPage} of ${Math.ceil(instruments.length/pageSize)||1}`;
-  }
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${inst.description}</td>
+      <td>
+        <div class="collapse-toggle" onclick="toggleDetails(this)">Details</div>
+        <div class="details-content">${inst.details || ''}</div>
+      </td>
+      <td>${inst.origin || ''}</td>
+      <td>${inst.catalog || ''}</td>
+      <td>${inst.hsn || ''}</td>
+      <td>${
+        hasOptional
+          ? `<div class="collapse-toggle" onclick="toggleOptional(this)">▶ Additional Items</div>
+             <div class="optional-content">${
+               optArr.map(it => {
+                 const lines = (it.name || '').split('\n');
+                 const title = lines[0] || 'Item';
+                 const subs  = lines.slice(1);
+                 return `
+                   <div style="margin-bottom:0.3rem;">
+                     <strong>${title}</strong>${it.code ? ` (${it.code})` : ''}${subs.length ? '<br>' + subs.join('<br>') : ''} – ${it.price || ''}
+                   </div>`;
+               }).join('')
+             }</div>`
+          : (inst.additional || '')
+      }</td>
+      <td>${
+        hasConfig
+          ? `<div class="collapse-toggle" onclick="toggleConfig(this)">▶ Configuration Items</div>
+             <div class="config-content">${
+               cfgArr.map(it => {
+                 const lines = (it.name || '').split('\n');
+                 const title = lines[0] || 'Item';
+                 const subs  = lines.slice(1);
+                 return `
+                   <div style="margin-bottom:0.3rem;">
+                     <strong>${title}</strong>${it.code ? ` (${it.code})` : ''}${subs.length ? '<br>' + subs.join('<br>') : ''}
+                     – Qty: ${it.qty || 'Included'}, UP: ${it.upInr || 'Included'}, TP: ${it.tpInr || 'Included'}
+                   </div>`;
+               }).join('')
+             }</div>`
+          : (inst.configuration || '')
+      }</td>
+      <td>${inst.instrumentCode || ''}</td>
+      <td class="price-cell">${formatPriceDisplay(inst.unitPrice)}</td>
+      <td>${inst.gstType || ''}</td>
+      <td>${inst.gstPercent || ''}</td>
+      <td class="actions">
+        <button class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
+        <button class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(instruments.length / pageSize) || 1}`;
+}
 
   function toggleDetails(el){
     const d=el.nextElementSibling;
