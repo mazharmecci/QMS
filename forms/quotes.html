@@ -382,6 +382,14 @@
 
           <div id="quoteBuilder">
             <h3>Quote Builder</h3>
+            
+            <div style="margin-bottom:0.75rem;">
+            <button type="button" onclick="openConfigModal()">Add / Edit Configuration Items</button>
+            <button type="button" onclick="openAdditionalModal()" style="margin-left:0.5rem;">
+    Add / Edit Additional Items
+            </button>
+            </div>
+
             <table class="quote-table">
               <thead>
               <tr>
@@ -839,6 +847,55 @@ function finalizeQuote() {
   existing.push(quote);
   localStorage.setItem('quotes', JSON.stringify(existing));
   alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+}
+
+
+function openConfigModal() {
+  const ctx = getQuoteContext();
+  const header = ctx.header;
+  const line = ctx.line;
+
+  const name = prompt('Configuration item name (e.g., Starter Kit):', '');
+  if (!name) return;
+
+  // Simple one-line add for now
+  const item = {
+    code: 'CFG-' + String((line.configItems || []).length + 1).padStart(2, '0'),
+    name,
+    qty: 'Included',
+    upInr: 'Included',
+    tpInr: 'Included'
+  };
+
+  line.configItems = line.configItems || [];
+  line.configItems.push(item);
+  header.quoteLines[0] = line;
+  localStorage.setItem('quoteHeader', JSON.stringify(header));
+  renderQuoteBuilder();
+}
+
+function openAdditionalModal() {
+  const ctx = getQuoteContext();
+  const header = ctx.header;
+  const line = ctx.line;
+
+  const name = prompt('Additional item name (e.g., UPS 1kVA):', '');
+  if (!name) return;
+  const priceStr = prompt('Unit price in INR (e.g., 55380):', '');
+  const priceNum = Number(priceStr || 0);
+
+  const item = {
+    code: 'ADD-' + String((line.additionalItems || []).length + 1).padStart(2, '0'),
+    name,
+    qty: 1,
+    price: '₹ ' + priceNum.toLocaleString('en-IN')
+  };
+
+  line.additionalItems = line.additionalItems || [];
+  line.additionalItems.push(item);
+  header.quoteLines[0] = line;
+  localStorage.setItem('quoteHeader', JSON.stringify(header));
+  renderQuoteBuilder();
 }
 
 populateHeader();
