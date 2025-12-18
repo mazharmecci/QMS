@@ -362,9 +362,8 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     instruments.forEach((inst, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
-      const code = inst.instrumentCode || inst.catalog || '';
-      const name = inst.instrumentName || '';
-      opt.textContent = `${code} - ${name}`;
+      const name = inst.instrumentName || inst.description || '';
+      opt.textContent = name; // e.g. "pfm Rotary 3006 EM (Fully-Electronic Microtome)"
       select.appendChild(opt);
     });
   }
@@ -385,19 +384,18 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
         return;
       }
 
-      const name = inst.instrumentName || '';
-      const descLines = (inst.longDescription || inst.description || '')
-        .split('\n')
-        .map(l => l.trim())
-        .filter(Boolean);
-      const overview = descLines[0] || '';
-      const extras = descLines.slice(1).join(' ');
-
-      const fullText = [name, overview, extras].filter(Boolean).join(' — ');
-      preview.style.display = 'block';
-      details.textContent = fullText;
-    });
-  }
+    const descLines = (inst.longDescription || inst.description || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+    
+    const overview = descLines[0] || '';
+    const extras = descLines.slice(1).join(' ');
+    
+    // show description only, not the title again
+    const fullText = [overview, extras].filter(Boolean).join(' ');
+    preview.style.display = 'block';
+    details.textContent = fullText;
 
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
