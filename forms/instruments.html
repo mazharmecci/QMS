@@ -94,9 +94,15 @@
   </div>
 
   <form id="instrumentForm">
-  <textarea id="detailsInput" placeholder="First line = main item name"  rows="4"></textarea>
-  
-  <input type="text" id="description" placeholder="Instrument Description" required>
+<input type="text"
+       id="mainItemName"
+       placeholder="Main item name"
+       required>
+
+<textarea id="description"
+          placeholder="Instrument description (details, bullets, etc.)"
+          rows="3"
+          style="width:100%;"></textarea>
 
 <textarea id="suppliedWithInput" rows="8"
   placeholder="Supplied Complete with (list items). Then a blank line, then Dimensions / Weight / Power."></textarea>
