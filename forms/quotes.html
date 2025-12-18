@@ -431,295 +431,364 @@
 </div>
 
 <script>
-function goBack(){ if (window.history.length > 1) window.history.back(); }
-
-function formatISOToDMY(iso){
-  if(!iso) return '';
-  const [y,m,d] = iso.split('-');
-  return `${d}-${m}-${y}`;
-}
-function splitAddress(address){
-  if(!address) return ['',''];
-  const parts = address.split(',');
-  if(parts.length < 2) return [address.trim(), ''];
-  const line2 = parts.slice(-1)[0].trim();
-  const line1 = parts.slice(0, -1).join(',').trim();
-  return [line1, line2];
-}
-function moneyINR(value){
-  const num = Number(value || 0);
-  return num.toLocaleString('en-IN',{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  });
-}
-function parseLines(raw) {
-  if (!raw) return [];
-  return String(raw)
-    .split('\n')
-    .map(l => l.trim())
-    .filter(Boolean);
-}
-
-function getQuoteHeaderRaw(){
-  return JSON.parse(localStorage.getItem('quoteHeader') || '{}');
-}
-function getInstrumentsMaster(){
-  return JSON.parse(localStorage.getItem('instruments') || '[]');
-}
-function resolveInstrumentForHeader(header){
-  const all = getInstrumentsMaster();
-  if (header.selectedInstrumentIndex != null && header.selectedInstrumentIndex !== '') {
-    const idx = Number(header.selectedInstrumentIndex);
-    if (!isNaN(idx) && all[idx]) return all[idx];
-  }
-  if (header.instrumentCode) {
-    const instByCode = all.find(i => (i.instrumentCode || i.catalog || '') === header.instrumentCode);
-    if (instByCode) return instByCode;
-  }
-  return null;
-}
-
-function getPrimaryLine(header) {
-  if (header.quoteLines && header.quoteLines.length) {
-    return header.quoteLines[0];
-  }
-  // backward compatibility: construct from old fields
-  const line = {
-    lineType: 'instrument',
-    instrumentIndex: header.selectedInstrumentIndex !== '' && header.selectedInstrumentIndex != null
-      ? Number(header.selectedInstrumentIndex)
-      : null,
-    quantity: 1,
-    configItems: header.configItems || [],
-    additionalItems: header.additionalItems || []
-  };
-  header.quoteLines = [line];
-  localStorage.setItem('quoteHeader', JSON.stringify(header));
-  return line;
-}
-
-function validateHeader(header) {
-  const errors = [];
-  if (!header.quoteNo) errors.push("Quote No is missing");
-  if (!header.quoteDate) errors.push("Quote Date is missing");
-  if (!header.refDate) errors.push("Reference Date is missing");
-  if (!header.hospitalName) errors.push("Hospital Name is missing");
-  if (!header.hospitalAddress) errors.push("Hospital Address is missing");
-  if (errors.length) {
-    alert("Validation errors:\n" + errors.join("\n"));
-    return false;
-  }
-  return true;
-}
-
-function getQuoteContext(){
-  const header = getQuoteHeaderRaw();
-  const inst = resolveInstrumentForHeader(header);
-  const line = getPrimaryLine(header);
-  return { header, inst, line };
-}
-
-function populateHeader() {
-  const { header } = getQuoteContext();
-  if (!validateHeader(header)) return;
-
-  document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
-  document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
-  document.getElementById('metaYourRef').textContent   = header.yourReference || '';
-  document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
-  document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
-  document.getElementById('metaPhone').textContent     = header.contactPhone || '';
-  document.getElementById('metaEmail').textContent     = header.contactEmail || '';
-  document.getElementById('metaOffice').textContent    = header.officePhone || '';
-
-  document.getElementById('toHospitalNameLine').textContent =
-    header.hospitalName || 'Hospital / Client Name';
-
-  const [line1, line2] = splitAddress(header.hospitalAddress || '');
-  document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
-  document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
-  document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
-
-  const noteEl = document.getElementById('salesNoteBlock');
-  if (noteEl && header.salesNote) {
-    noteEl.textContent = header.salesNote;
+  function goBack() {
+    if (window.history.length > 1) window.history.back();
   }
 
-  const termsEl = document.getElementById('termsTextBlock');
-  if (termsEl) {
-    if (header.termsHtml) {
-      termsEl.innerHTML = header.termsHtml;
-    } else if (header.termsText) {
-      termsEl.textContent = header.termsText;
-    } else {
-      termsEl.textContent = '';
-    }
-  }
-}
-
-function formatInstrumentCell(inst) {
-  const code = inst.catalog || inst.code || '';
-  const name = inst.instrumentName || inst.name || '';
-  const descLines = parseLines(inst.longDescription || inst.description || '');
-
-  const boldLines = [];
-  if (code) boldLines.push(code);
-  if (name) boldLines.push(name);
-  if (descLines[0]) boldLines.push(descLines[0]);
-
-  const restDesc = descLines.slice(1);
-  const supplied = inst.suppliedWith || inst.supplied || [];
-
-  const specs = [];
-  if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
-  if (inst.weight)     specs.push(`Weight: ${inst.weight}`);
-  if (inst.power)      specs.push(`Power: ${inst.power}`);
-
-  const meta = [];
-  if (inst.origin || inst.country) meta.push(`Country of Origin: ${inst.origin || inst.country}`);
-  if (inst.hsn)                    meta.push(`HSN Code: ${inst.hsn}`);
-
-  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-  boldLines.forEach(line => {
-    html += `<div class="cat-main">${line}</div>`;
-  });
-
-  if (restDesc.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub">` + restDesc.join(' ') + `</div>`;
-  }
-  if (supplied.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub"><strong>Supplied Complete with:</strong><br>`;
-    html += supplied.map(s => ` - ${s}`).join('<br>');
-    html += `</div>`;
-  }
-  if (specs.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
-  }
-  if (meta.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+  function formatISOToDMY(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}-${m}-${y}`;
   }
 
-  html += `</td>`;
-  return html;
-}
-
-function formatItemCell(item) {
-  const code = item.code || item.catalog || '';
-  const name = item.name || item.itemName || item.instrumentName || '';
-  const descLines = parseLines(item.longDescription || item.description || '');
-
-  const bold1 = code;
-  const bold2 = name || descLines[0] || '';
-  const featureLines = name ? descLines : descLines.slice(1);
-
-  const specs = [];
-  if (item.dimensions) specs.push(`Dimensions: ${item.dimensions}`);
-  if (item.weight)     specs.push(`Weight: ${item.weight}`);
-  if (item.power)      specs.push(`Power: ${item.power}`);
-
-  const meta = [];
-  if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
-  if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
-
-  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-  if (bold1) html += `<div class="cat-main">${bold1}</div>`;
-  if (bold2) html += `<div class="cat-main">${bold2}</div>`;
-
-  if (featureLines.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += featureLines
-      .map(line => `<div class="cat-sub">- ${line}</div>`)
-      .join('');
-  }
-  if (specs.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
-  }
-  if (meta.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+  function splitAddress(address) {
+    if (!address) return ['', ''];
+    const parts = address.split(',');
+    if (parts.length < 2) return [address.trim(), ''];
+    const line2 = parts.slice(-1)[0].trim();
+    const line1 = parts.slice(0, -1).join(',').trim();
+    return [line1, line2];
   }
 
-  html += `</td>`;
-  return html;
-}
-
-function renderQuoteBuilder() {
-  const ctx    = getQuoteContext();
-  const header = ctx.header;
-  const inst   = ctx.inst;
-  const line   = ctx.line;
-  const body   = document.getElementById('quoteBuilderBody');
-
-  if (!inst) {
-    body.innerHTML = '';
-    return;
-  }
-
-  const rows = [];
-
-  // main instrument
-  rows.push(`
-    <tr>
-      <td>001</td>
-      ${formatInstrumentCell(inst)}
-      <td>${line.quantity || 1}</td>
-      <td>${moneyINR(inst.unitPrice)}</td>
-      <td>${moneyINR((inst.unitPrice || 0) * (line.quantity || 1))}</td>
-    </tr>
-  `);
-
-  // CONFIGURATION ITEMS (quote-level)
-  const configItems = line.configItems || [];
-  if (configItems.length) {
-    rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
-          <span class="section-header-label">CONFIGURATION ITEMS</span>
-        </td>
-      </tr>
-    `);
-
-    configItems.forEach((item, idx) => {
-      const itemCode = String(idx + 2).padStart(3, '0');
-      const qty = item.qty != null ? item.qty : 'Included';
-      const upRaw = item.upInr != null ? item.upInr : 'Included';
-      const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
-      const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
-      const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
-
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${qty}</td>
-          <td>${upCell}</td>
-          <td>${tpCell}</td>
-        </tr>
-      `);
+  function moneyINR(value) {
+    const num = Number(value || 0);
+    return num.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   }
 
-  // ADDITIONAL ITEMS (quote-level)
-  const additionalItems = line.additionalItems || [];
-  if (additionalItems.length) {
+  function parseLines(raw) {
+    if (!raw) return [];
+    return String(raw)
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+  }
+
+  function getQuoteHeaderRaw() {
+    return JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+  }
+
+  function getInstrumentsMaster() {
+    return JSON.parse(localStorage.getItem('instruments') || '[]');
+  }
+
+  function resolveInstrumentForHeader(header) {
+    const all = getInstrumentsMaster();
+
+    if (header.selectedInstrumentIndex != null && header.selectedInstrumentIndex !== '') {
+      const idx = Number(header.selectedInstrumentIndex);
+      if (!isNaN(idx) && all[idx]) return all[idx];
+    }
+
+    if (header.instrumentCode) {
+      const instByCode = all.find(
+        i => (i.instrumentCode || i.catalog || '') === header.instrumentCode
+      );
+      if (instByCode) return instByCode;
+    }
+
+    return null;
+  }
+
+  function getPrimaryLine(header) {
+    if (header.quoteLines && header.quoteLines.length) {
+      return header.quoteLines[0];
+    }
+    const line = {
+      lineType: 'instrument',
+      instrumentIndex:
+        header.selectedInstrumentIndex !== '' && header.selectedInstrumentIndex != null
+          ? Number(header.selectedInstrumentIndex)
+          : null,
+      quantity: 1,
+      configItems: header.configItems || [],
+      additionalItems: header.additionalItems || []
+    };
+    header.quoteLines = [line];
+    localStorage.setItem('quoteHeader', JSON.stringify(header));
+    return line;
+  }
+
+  function validateHeader(header) {
+    const errors = [];
+    if (!header.quoteNo)         errors.push('Quote No is missing');
+    if (!header.quoteDate)       errors.push('Quote Date is missing');
+    if (!header.refDate)         errors.push('Reference Date is missing');
+    if (!header.hospitalName)    errors.push('Hospital Name is missing');
+    if (!header.hospitalAddress) errors.push('Hospital Address is missing');
+
+    if (errors.length) {
+      alert('Validation errors:\n' + errors.join('\n'));
+      return false;
+    }
+    return true;
+  }
+
+  function getQuoteContext() {
+    const header = getQuoteHeaderRaw();
+    const inst   = resolveInstrumentForHeader(header);
+    const line   = getPrimaryLine(header);
+    return { header, inst, line };
+  }
+
+  function populateHeader() {
+    const { header } = getQuoteContext();
+    if (!validateHeader(header)) return;
+
+    document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
+    document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
+    document.getElementById('metaYourRef').textContent   = header.yourReference || '';
+    document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
+    document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
+    document.getElementById('metaPhone').textContent     = header.contactPhone || '';
+    document.getElementById('metaEmail').textContent     = header.contactEmail || '';
+    document.getElementById('metaOffice').textContent    = header.officePhone || '';
+
+    document.getElementById('toHospitalNameLine').textContent =
+      header.hospitalName || 'Hospital / Client Name';
+
+    const [line1, line2] = splitAddress(header.hospitalAddress || '');
+    document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
+    document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
+    document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
+
+    const noteEl = document.getElementById('salesNoteBlock');
+    if (noteEl && header.salesNote) {
+      noteEl.textContent = header.salesNote;
+    }
+
+    const termsEl = document.getElementById('termsTextBlock');
+    if (termsEl) {
+      if (header.termsHtml) {
+        termsEl.innerHTML = header.termsHtml;
+      } else if (header.termsText) {
+        termsEl.textContent = header.termsText;
+      } else {
+        termsEl.textContent = '';
+      }
+    }
+  }
+
+  function formatInstrumentCell(inst) {
+    const code = inst.catalog || inst.code || '';
+    const name = inst.instrumentName || inst.name || '';
+    const descLines = parseLines(inst.longDescription || inst.description || '');
+
+    const boldLines = [];
+    if (code) boldLines.push(code);
+    if (name) boldLines.push(name);
+    if (descLines[0]) boldLines.push(descLines[0]);
+
+    const restDesc = descLines.slice(1);
+    const supplied = inst.suppliedWith || inst.supplied || [];
+
+    const specs = [];
+    if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
+    if (inst.weight)     specs.push(`Weight: ${inst.weight}`);
+    if (inst.power)      specs.push(`Power: ${inst.power}`);
+
+    const meta = [];
+    if (inst.origin || inst.country) meta.push(`Country of Origin: ${inst.origin || inst.country}`);
+    if (inst.hsn)                    meta.push(`HSN Code: ${inst.hsn}`);
+
+    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
+
+    boldLines.forEach(line => {
+      html += `<div class="cat-main">${line}</div>`;
+    });
+
+    if (restDesc.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub">${restDesc.join(' ')}</div>`;
+    }
+
+    if (supplied.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub"><strong>Supplied Complete with:</strong><br>`;
+      html += supplied.map(s => ` - ${s}`).join('<br>');
+      html += `</div>`;
+    }
+
+    if (specs.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
+    }
+
+    if (meta.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+    }
+
+    html += `</td>`;
+    return html;
+  }
+
+  function formatItemCell(item) {
+    const code = item.code || item.catalog || '';
+    const name = item.name || item.itemName || item.instrumentName || '';
+    const descLines = parseLines(item.longDescription || item.description || '');
+
+    const bold1 = code;
+    const bold2 = name || descLines[0] || '';
+    const featureLines = name ? descLines : descLines.slice(1);
+
+    const specs = [];
+    if (item.dimensions) specs.push(`Dimensions: ${item.dimensions}`);
+    if (item.weight)     specs.push(`Weight: ${item.weight}`);
+    if (item.power)      specs.push(`Power: ${item.power}`);
+
+    const meta = [];
+    if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
+    if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
+
+    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
+
+    if (bold1) html += `<div class="cat-main">${bold1}</div>`;
+    if (bold2) html += `<div class="cat-main">${bold2}</div>`;
+
+    if (featureLines.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += featureLines
+        .map(line => `<div class="cat-sub">- ${line}</div>`)
+        .join('');
+    }
+
+    if (specs.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
+    }
+
+    if (meta.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+    }
+
+    html += `</td>`;
+    return html;
+  }
+
+  function renderQuoteBuilder() {
+    const { header, inst, line } = getQuoteContext();
+    const body = document.getElementById('quoteBuilderBody');
+
+    if (!inst) {
+      body.innerHTML = '';
+      return;
+    }
+
+    const rows = [];
+
+    // main instrument
+    const qty = line.quantity || 1;
     rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
-          <span class="section-header-label">ADDITIONAL ITEMS</span>
-        </td>
+      <tr>
+        <td>001</td>
+        ${formatInstrumentCell(inst)}
+        <td>${qty}</td>
+        <td>${moneyINR(inst.unitPrice)}</td>
+        <td>${moneyINR((inst.unitPrice || 0) * qty)}</td>
       </tr>
     `);
 
-    additionalItems.forEach((item, idx) => {
-      const itemCode = String(idx + 1).padStart(3, '0');
-      const qtyNum = Number(item.qty || 1);
+    // configuration items
+    const configItems = line.configItems || [];
+    if (configItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">
+            <span class="section-header-label">CONFIGURATION ITEMS</span>
+          </td>
+        </tr>
+      `);
 
+      configItems.forEach((item, idx) => {
+        const itemCode = String(idx + 2).padStart(3, '0');
+        const q = item.qty != null ? item.qty : 'Included';
+        const upRaw = item.upInr != null ? item.upInr : 'Included';
+        const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
+        const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
+        const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
+
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${q}</td>
+            <td>${upCell}</td>
+            <td>${tpCell}</td>
+          </tr>
+        `);
+      });
+    }
+
+    // additional items
+    const additionalItems = line.additionalItems || [];
+    if (additionalItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">
+            <span class="section-header-label">ADDITIONAL ITEMS</span>
+          </td>
+        </tr>
+      `);
+
+      additionalItems.forEach((item, idx) => {
+        const itemCode = String(idx + 1).padStart(3, '0');
+        const qtyNum = Number(item.qty || 1);
+
+        let unitNum = 0;
+        if (item.price) {
+          const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+          unitNum = parseInt(cleaned, 10) || 0;
+        } else {
+          unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
+        }
+        const totalNum = unitNum * qtyNum;
+
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${qtyNum.toString().padStart(2, '0')}</td>
+            <td>${moneyINR(unitNum)}</td>
+            <td>${moneyINR(totalNum)}</td>
+          </tr>
+        `);
+      });
+    }
+
+    body.innerHTML = rows.join('');
+  }
+
+  function buildLineItemsFromCurrentQuote() {
+    const { inst, line } = getQuoteContext();
+    const items = [];
+
+    if (inst) {
+      items.push({
+        name: inst.instrumentName || inst.name || '',
+        code: inst.catalog || inst.code || '',
+        type: 'Instrument',
+        price: Number(inst.unitPrice || 0)
+      });
+    }
+
+    (line.configItems || []).forEach(item => {
+      const price = item.tpInr != null
+        ? Number(item.tpInr)
+        : Number(item.upInr || 0);
+
+      items.push({
+        name: item.name || item.itemName || '',
+        code: item.code || item.catalog || '',
+        type: 'Configuration',
+        price
+      });
+    });
+
+    (line.additionalItems || []).forEach(item => {
       let unitNum = 0;
       if (item.price) {
         const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
@@ -727,180 +796,129 @@ function renderQuoteBuilder() {
       } else {
         unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
       }
-      const totalNum = unitNum * qtyNum;
 
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${qtyNum.toString().padStart(2,'0')}</td>
-          <td>${moneyINR(unitNum)}</td>
-          <td>${moneyINR(totalNum)}</td>
-        </tr>
-      `);
+      items.push({
+        name: item.name || item.itemName || '',
+        code: item.code || item.catalog || '',
+        type: 'Additional',
+        price: unitNum
+      });
     });
+
+    return items;
   }
 
-  body.innerHTML = rows.join('');
-}
+  function buildSummaryFromHeader(header) {
+    const itemsTotal = Number(header.itemsTotal || header.itemsValueTotal || 0);
+    const discount   = Number(header.discount || 0);
+    const afterDisc  = Number(header.afterDiscount || (itemsTotal - discount));
+    const freight    = header.freight || 'As applicable';
+    const gstPercent = Number(header.gstPercent || 0);
+    const gstAmount  = Number(header.gstAmount || (afterDisc * gstPercent) / 100);
+    const totalValue = Number(header.totalValue || (afterDisc + gstAmount));
+    const roundOff   = Number(header.roundOff || 0);
 
-// flatten into history line items
-function buildLineItemsFromCurrentQuote() {
-  const { inst, line } = getQuoteContext();
-  const items = [];
-
-  if (inst) {
-    items.push({
-      name: inst.instrumentName || inst.name || '',
-      code: inst.catalog || inst.code || '',
-      type: 'Instrument',
-      price: Number(inst.unitPrice || 0)
-    });
+    return {
+      itemsTotal,
+      discount,
+      afterDiscount: afterDisc,
+      freight,
+      gstPercent,
+      gstAmount,
+      totalValue,
+      roundOff
+    };
   }
 
-  (line.configItems || []).forEach(item => {
-    const price = item.tpInr != null
-      ? Number(item.tpInr)
-      : Number(item.upInr || 0);
-    items.push({
-      name: item.name || item.itemName || '',
-      code: item.code || item.catalog || '',
-      type: 'Configuration',
-      price
-    });
-  });
+  function finalizeQuote() {
+    const header = getQuoteHeaderRaw();
 
-  (line.additionalItems || []).forEach(item => {
-    let unitNum = 0;
-    if (item.price) {
-      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-      unitNum = parseInt(cleaned, 10) || 0;
-    } else {
-      unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
+    if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
+      alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
+      return;
     }
-    items.push({
-      name: item.name || item.itemName || '',
-      code: item.code || item.catalog || '',
-      type: 'Additional',
-      price: unitNum
-    });
-  });
 
-  return items;
-}
+    const lineItems = buildLineItemsFromCurrentQuote();
+    const summary   = buildSummaryFromHeader(header);
+    const existing  = JSON.parse(localStorage.getItem('quotes') || '[]');
 
-function buildSummaryFromHeader(header) {
-  const itemsTotal   = Number(header.itemsTotal || header.itemsValueTotal || 0);
-  const discount     = Number(header.discount || 0);
-  const afterDisc    = Number(header.afterDiscount || (itemsTotal - discount));
-  const freight      = header.freight || 'As applicable';
-  const gstPercent   = Number(header.gstPercent || 0);
-  const gstAmount    = Number(header.gstAmount || ((afterDisc * gstPercent) / 100));
-  const totalValue   = Number(header.totalValue || (afterDisc + gstAmount));
-  const roundOff     = Number(header.roundOff || 0);
+    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+    const lastRev   = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
+    const nextRev   = lastRev + 1;
 
-  return {
-    itemsTotal,
-    discount,
-    afterDiscount: afterDisc,
-    freight,
-    gstPercent,
-    gstAmount,
-    totalValue,
-    roundOff
-  };
-}
+    const now = new Date();
+    const quote = {
+      header,
+      lineItems,
+      summary,
+      quoteNo: header.quoteNo,
+      revision: nextRev,
+      status: 'submitted',
+      history: [{
+        status: 'submitted',
+        date: now.toISOString().slice(0, 10),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]
+    };
 
-function finalizeQuote() {
-  const header = getQuoteHeaderRaw();
-
-  if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
-    alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
-    return;
+    existing.push(quote);
+    localStorage.setItem('quotes', JSON.stringify(existing));
+    alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
   }
 
-  const lineItems = buildLineItemsFromCurrentQuote();
-  const summary   = buildSummaryFromHeader(header);
+  function openConfigModal() {
+    const { header, line } = getQuoteContext();
 
-  const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
-  const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
-  const lastRev   = sameQuote.length
-    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-    : 0;
-  const nextRev   = lastRev + 1;
+    const name = prompt('Configuration item name (e.g., Starter Kit):', '');
+    if (!name) return;
 
-  const now = new Date();
-  const quote = {
-    header,
-    lineItems,
-    summary,
-    quoteNo: header.quoteNo,
-    revision: nextRev,
-    status: 'submitted',
-    history: [{
-      status: 'submitted',
-      date: now.toISOString().slice(0,10),
-      time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-    }]
-  };
+    const item = {
+      code: 'CFG-' + String((line.configItems || []).length + 1).padStart(2, '0'),
+      name,
+      qty: 'Included',
+      upInr: 'Included',
+      tpInr: 'Included'
+    };
 
-  existing.push(quote);
-  localStorage.setItem('quotes', JSON.stringify(existing));
-  alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
-}
+    if (!Array.isArray(line.configItems)) line.configItems = [];
+    line.configItems.push(item);
 
+    header.quoteLines[0] = line;
+    localStorage.setItem('quoteHeader', JSON.stringify(header));
+    renderQuoteBuilder();
+  }
 
-function openConfigModal() {
-  const ctx = getQuoteContext();
-  const header = ctx.header;
-  const line = ctx.line;
+  function openAdditionalModal() {
+    const { header, line } = getQuoteContext();
 
-  const name = prompt('Configuration item name (e.g., Starter Kit):', '');
-  if (!name) return;
+    const name = prompt('Additional item name (e.g., UPS 1kVA):', '');
+    if (!name) return;
 
-  // Simple one-line add for now
-  const item = {
-    code: 'CFG-' + String((line.configItems || []).length + 1).padStart(2, '0'),
-    name,
-    qty: 'Included',
-    upInr: 'Included',
-    tpInr: 'Included'
-  };
+    const priceStr = prompt('Unit price in INR (e.g., 55380):', '');
+    if (priceStr === null || priceStr.trim() === '') return;
+    const priceNum = Number(priceStr.replace(/[^\d]/g, '') || 0);
 
-  line.configItems = line.configItems || [];
-  line.configItems.push(item);
-  header.quoteLines[0] = line;
-  localStorage.setItem('quoteHeader', JSON.stringify(header));
+    const item = {
+      code: 'ADD-' + String((line.additionalItems || []).length + 1).padStart(2, '0'),
+      name,
+      qty: 1,
+      price: '₹ ' + priceNum.toLocaleString('en-IN')
+    };
+
+    if (!Array.isArray(line.additionalItems)) line.additionalItems = [];
+    line.additionalItems.push(item);
+
+    header.quoteLines[0] = line;
+    localStorage.setItem('quoteHeader', JSON.stringify(header));
+    renderQuoteBuilder();
+  }
+
+  populateHeader();
   renderQuoteBuilder();
-}
-
-function openAdditionalModal() {
-  const ctx = getQuoteContext();
-  const header = ctx.header;
-  const line = ctx.line;
-
-  const name = prompt('Additional item name (e.g., UPS 1kVA):', '');
-  if (!name) return;
-  const priceStr = prompt('Unit price in INR (e.g., 55380):', '');
-  const priceNum = Number(priceStr || 0);
-
-  const item = {
-    code: 'ADD-' + String((line.additionalItems || []).length + 1).padStart(2, '0'),
-    name,
-    qty: 1,
-    price: '₹ ' + priceNum.toLocaleString('en-IN')
-  };
-
-  line.additionalItems = line.additionalItems || [];
-  line.additionalItems.push(item);
-  header.quoteLines[0] = line;
-  localStorage.setItem('quoteHeader', JSON.stringify(header));
-  renderQuoteBuilder();
-}
-
-populateHeader();
-renderQuoteBuilder();
 </script>
+
 
 <button type="button" class="btn-finalize" onclick="finalizeQuote()">
   ✅ Finalize &amp; Save to History
