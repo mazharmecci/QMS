@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>QMS - Hospitals</title>
+  <title>Hospitals</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
@@ -85,10 +85,45 @@
       background: #dc3545;
       color: white;
     }
+
+     .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .back-btn {
+      border: none;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+
   </style>
 </head>
 <body>
-  <header>QMS - Hospitals</header>
+  <header>
+    <div class="header-inner">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div class="header-title">ISTOS Medical</div>
+    </div>
+  </header>
   <div class="container">
     <h2>Add / Edit Hospital</h2>
     <form id="hospitalForm">
@@ -120,8 +155,18 @@
       <tbody></tbody>
     </table>
   </div>
+  
 
   <script>
+
+   function goBack() {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = 'index.html';
+    }
+  }
+
     const form = document.getElementById('hospitalForm');
     const tableBody = document.querySelector('#hospitalTable tbody');
     let hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
