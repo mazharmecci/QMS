@@ -803,36 +803,38 @@ Next lines: bullet lines starting with ' - '"
     html += `</td>`;
     return html;
   }
-
+  
   function formatItemCell(item) {
     const code = item.code || item.catalog || '';
     const descSource = item.description || item.longDescription || item.description || '';
     const lines = parseLines(descSource);
     const name = item.name || lines[0] || '';
     const rest = lines.slice(1);
-
+  
+    // meta for country + HSN
+    const meta = [];
+    if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
+    if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
+  
     let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-
+  
     if (code) html += `<div class="cat-main">${code}</div>`;
     if (name) html += `<div class="cat-main">${name}</div>`;
-
+  
     if (rest.length) {
       html += `<div style="height:8px;"></div>`;
       html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
     }
-
+  
+    // vertical white space before country / HSN
+    if (meta.length) {
+      html += `<div style="height:8px;"></div>`;               // the gap
+      html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+    }
+  
     html += `</td>`;
     return html;
   }
-
-  function renderQuoteBuilder() {
-    const { inst, line } = getQuoteContext();
-    const body = document.getElementById('quoteBuilderBody');
-
-    if (!inst) {
-      body.innerHTML = '';
-      return;
-    }
 
     const rows = [];
 
