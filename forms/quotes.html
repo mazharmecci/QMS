@@ -838,74 +838,74 @@ function renderQuoteBuilder() {
 
   body.innerHTML = rows.join('');
 }
-  
-  function buildLineItemsFromCurrentQuote() {
-    const { inst, line } = getQuoteContext();
-    const items = [];
 
-    if (inst) {
-      items.push({
-        name: inst.instrumentName || inst.name || '',
-        code: inst.catalog || inst.code || '',
-        type: 'Instrument',
-        price: Number(inst.unitPrice || 0)
-      });
+function buildLineItemsFromCurrentQuote() {
+  const { inst, line } = getQuoteContext();
+  const items = [];
+
+  if (inst) {
+    items.push({
+      name: inst.instrumentName || inst.name || '',
+      code: inst.catalog || inst.code || '',
+      type: 'Instrument',
+      price: Number(inst.unitPrice || 0)
+    });
+  }
+
+  (line.configItems || []).forEach(item => {
+    const price = item.tpInr != null
+      ? Number(item.tpInr)
+      : Number(item.upInr || 0);
+
+    items.push({
+      name: item.name || item.itemName || '',
+      code: item.code || item.catalog || '',
+      type: 'Configuration',
+      price
+    });
+  });
+
+  (line.additionalItems || []).forEach(item => {
+    let unitNum = 0;
+    if (item.price) {
+      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+      unitNum = parseFloat(cleaned) || 0;
+    } else {
+      unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
     }
 
-    (line.configItems || []).forEach(item => {
-      const price = item.tpInr != null
-        ? Number(item.tpInr)
-        : Number(item.upInr || 0);
-
-      items.push({
-        name: item.name || item.itemName || '',
-        code: item.code || item.catalog || '',
-        type: 'Configuration',
-        price
-      });
+    items.push({
+      name: item.name || item.itemName || '',
+      code: item.code || item.catalog || '',
+      type: 'Additional',
+      price: unitNum
     });
+  });
 
-    (line.additionalItems || []).forEach(item => {
-      let unitNum = 0;
-      if (item.price) {
-        const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-        unitNum = parseFloat(cleaned) || 0;
-      } else {
-        unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
-      }
+  return items;
+}
 
-      items.push({
-        name: item.name || item.itemName || '',
-        code: item.code || item.catalog || '',
-        type: 'Additional',
-        price: unitNum
-      });
-    });
+function buildSummaryFromHeader(header) {
+  const itemsTotal = Number(header.itemsTotal || header.itemsValueTotal || 0);
+  const discount   = Number(header.discount || 0);
+  const afterDisc  = Number(header.afterDiscount || (itemsTotal - discount));
+  const freight    = header.freight || 'As applicable';
+  const gstPercent = Number(header.gstPercent || 0);
+  const gstAmount  = Number(header.gstAmount || (afterDisc * gstPercent) / 100);
+  const totalValue = Number(header.totalValue || (afterDisc + gstAmount));
+  const roundOff   = Number(header.roundOff || 0);
 
-    return items;
-  }
-
-  function buildSummaryFromHeader(header) {
-    const itemsTotal = Number(header.itemsTotal || header.itemsValueTotal || 0);
-    const discount   = Number(header.discount || 0);
-    const afterDisc  = Number(header.afterDiscount || (itemsTotal - discount));
-    const freight    = header.freight || 'As applicable';
-    const gstPercent = Number(header.gstPercent || 0);
-    const gstAmount  = Number(header.gstAmount || (afterDisc * gstPercent) / 100);
-    const totalValue = Number(header.totalValue || (afterDisc + gstAmount));
-    const roundOff   = Number(header.roundOff || 0);
-
-    return {
-      itemsTotal,
-      discount,
-      afterDiscount: afterDisc,
-      freight,
-      gstPercent,
-      gstAmount,
-      totalValue,
-      roundOff
-    };
-  }
+  return {
+    itemsTotal,
+    discount,
+    afterDiscount: afterDisc,
+    freight,
+    gstPercent,
+    gstAmount,
+    totalValue,
+    roundOff
+  };
+}
 
   function finalizeQuote() {
     const header = getQuoteHeaderRaw();
