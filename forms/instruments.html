@@ -46,7 +46,6 @@
     .details-content { display:none; font-size:0.9rem; margin-top:0.5rem; }
     .price-cell { font-weight:600; white-space:nowrap; }
 
-    /* Toast notification */
     .toast-container {
       position:fixed;
       bottom:20px;
@@ -245,7 +244,7 @@ Power: 115-230 Vac – 50/60 Hz"></textarea>
     const suppliedWithLines = (suppliedWithInput.value || '')
       .split('\n')
       .map(l => l.trim())
-      .filter(Boolean); [web:139]
+      .filter(Boolean);
 
     const instrument = {
       description: document.getElementById('description').value,
