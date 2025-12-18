@@ -948,12 +948,12 @@
   function renderItemModalList(line, type) {
     const listEl = document.getElementById('itemModalList');
     const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
-
+  
     if (!arr.length) {
       listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this quote.</div>';
       return;
     }
-
+  
     listEl.innerHTML = arr.map((item, idx) => {
       const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
       const price = type === 'config'
@@ -966,14 +966,43 @@
             <div style="font-weight:600;">${item.name || ''}</div>
             <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
           </div>
-          <button type="button" onclick="removeItemFromModal('${type}', ${idx})"
-                  style="border:none; background:#fee2e2; color:#b91c1c;
-                         font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
-            Remove
-          </button>
+          <div style="display:flex; gap:0.25rem;">
+            <button type="button" onclick="editItemFromModal('${type}', ${idx})"
+                    style="border:none; background:#e0f2fe; color:#0369a1;
+                           font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
+              Edit
+            </button>
+            <button type="button" onclick="removeItemFromModal('${type}', ${idx})"
+                    style="border:none; background:#fee2e2; color:#b91c1c;
+                           font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
+              Remove
+            </button>
+          </div>
         </div>
       `;
     }).join('');
+  }
+  
+    let currentEditIndex = null;
+  
+  function editItemFromModal(type, idx) {
+    const { line } = getQuoteContext();
+    const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
+    const item = arr[idx];
+    if (!item) return;
+  
+    currentEditIndex = idx;
+    document.getElementById('itemModalType').value = type;
+    document.getElementById('itemName').value = item.name || '';
+    document.getElementById('itemQty').value =
+      item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
+    document.getElementById('itemPrice').value =
+      type === 'config'
+        ? (typeof item.upInr === 'number' ? item.upInr.toString() : '')
+        : (item.price ? String(item.price).replace(/[^\d]/g, '') : '');
+  
+    document.getElementById('itemModalTitle').textContent =
+      type === 'config' ? 'Edit Configuration Item' : 'Edit Additional Item';
   }
 
   function removeItemFromModal(type, idx) {
@@ -987,44 +1016,52 @@
     renderQuoteBuilder();
     renderItemModalList(line, type);
   }
-
+  
   function saveItemFromModal(e) {
     e.preventDefault();
     const { header, line } = getQuoteContext();
-
+  
     const typeEl  = document.getElementById('itemModalType');
     const nameEl  = document.getElementById('itemName');
     const qtyEl   = document.getElementById('itemQty');
     const priceEl = document.getElementById('itemPrice');
-
+  
     const type = typeEl.value;
     const name = nameEl.value.trim();
     if (!name) return;
-
+  
     const arrName = type === 'config' ? 'configItems' : 'additionalItems';
     if (!Array.isArray(line[arrName])) line[arrName] = [];
-
+  
+    const isEdit = currentEditIndex != null;
+    const idx = isEdit ? currentEditIndex : line[arrName].length;
+  
     if (type === 'config') {
       const item = {
-        code: 'CFG-' + String(line.configItems.length + 1).padStart(2, '0'),
+        code: isEdit
+          ? line.configItems[idx].code
+          : 'CFG-' + String(line.configItems.length + 1).padStart(2, '0'),
         name,
         qty: qtyEl.value || 'Included',
         upInr: 'Included',
         tpInr: 'Included'
       };
-      line.configItems.push(item);
+      line.configItems[idx] = item;
     } else {
       const raw = priceEl.value || '0';
       const num = Number(raw.replace(/[^\d]/g, '') || 0);
       const item = {
-        code: 'ADD-' + String(line.additionalItems.length + 1).padStart(2, '0'),
+        code: isEdit
+          ? line.additionalItems[idx].code
+          : 'ADD-' + String(line.additionalItems.length + 1).padStart(2, '0'),
         name,
         qty: Number(qtyEl.value || 1),
         price: '₹ ' + num.toLocaleString('en-IN')
       };
-      line.additionalItems.push(item);
+      line.additionalItems[idx] = item;
     }
-
+  
+    currentEditIndex = null;
     header.quoteLines[0] = line;
     localStorage.setItem('quoteHeader', JSON.stringify(header));
     renderQuoteBuilder();
