@@ -456,15 +456,6 @@
                  border:1px solid #cbd5e1;
                  border-radius:6px;
                ">
-        <input id="itemPrice" type="text"
-               placeholder="Unit price (INR)"
-               style="
-                 flex:0 1 140px;
-                 min-width:0;
-                 padding:0.4rem 0.55rem;
-                 border:1px solid #cbd5e1;
-                 border-radius:6px;
-               ">
       </div>
 
       <div style="margin-bottom:0.5rem;">
@@ -1037,35 +1028,35 @@ Next lines: bullet lines starting with ' - '"
   function openAdditionalModal() {
     openItemModal('additional');
   }
-
+  
   function openItemModal(type) {
     const { line } = getQuoteContext();
     const overlay = document.getElementById('itemModalOverlay');
     const titleEl = document.getElementById('itemModalTitle');
     const typeEl  = document.getElementById('itemModalType');
-
-    const codeEl    = document.getElementById('itemCodeInput');
-    const qtyEl     = document.getElementById('itemQty');
-    const priceEl   = document.getElementById('itemPrice');
-    const detailsEl = document.getElementById('itemDetails');
-
+  
+    const codeEl      = document.getElementById('itemCodeInput');
+    const qtyEl       = document.getElementById('itemQty');
+    const priceEl     = document.getElementById('itemPrice');
+    const priceGroup  = document.getElementById('itemPriceGroup');
+    const detailsEl   = document.getElementById('itemDetails');
+  
     currentEditIndex = null;
-
+  
     typeEl.value = type;
     titleEl.textContent = type === 'config'
       ? 'Configuration Items for this Quote'
       : 'Additional Items for this Quote';
-
+  
     codeEl.value    = '';
     qtyEl.value     = type === 'config' ? 'Included' : '1';
-    // hide / ignore price for config
-    if (type === 'config') {
-      if (priceEl) priceEl.value = '';
-    } else {
-      if (priceEl) priceEl.value = '';
-    }
     detailsEl.value = '';
-
+  
+    if (priceGroup) {
+      priceGroup.style.display = (type === 'config') ? 'none' : 'block';
+    }
+    if (priceEl) priceEl.value = '';
+  
     renderItemModalList(line, type);
     overlay.style.display = 'flex';
   }
@@ -1120,22 +1111,26 @@ Next lines: bullet lines starting with ' - '"
     const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
     const item = arr[idx];
     if (!item) return;
-
+  
     currentEditIndex = idx;
-
+  
     document.getElementById('itemModalType').value = type;
     document.getElementById('itemModalTitle').textContent =
       type === 'config' ? 'Edit Configuration Item' : 'Edit Additional Item';
-
-    const codeEl    = document.getElementById('itemCodeInput');
-    const qtyEl     = document.getElementById('itemQty');
-    const priceEl   = document.getElementById('itemPrice');
-    const detailsEl = document.getElementById('itemDetails');
-
+  
+    const codeEl      = document.getElementById('itemCodeInput');
+    const qtyEl       = document.getElementById('itemQty');
+    const priceEl     = document.getElementById('itemPrice');
+    const priceGroup  = document.getElementById('itemPriceGroup');
+    const detailsEl   = document.getElementById('itemDetails');
+  
     codeEl.value = item.code || '';
-    qtyEl.value  =
-      item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
-
+    qtyEl.value  = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
+  
+    if (priceGroup) {
+      priceGroup.style.display = (type === 'config') ? 'none' : 'block';
+    }
+  
     if (type === 'config') {
       if (priceEl) priceEl.value = '';
     } else {
@@ -1146,11 +1141,9 @@ Next lines: bullet lines starting with ' - '"
         priceEl.value = '';
       }
     }
-
+  
     detailsEl.value = item.description || '';
-
-    const overlay = document.getElementById('itemModalOverlay');
-    overlay.style.display = 'flex';
+    document.getElementById('itemModalOverlay').style.display = 'flex';
   }
 
   function removeItemFromModal(type, idx) {
