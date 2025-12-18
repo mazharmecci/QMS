@@ -745,18 +745,18 @@ Next lines: bullet lines starting with ' - '"
     html += `</td>`;
     return html;
   }
-
+  
   function renderQuoteBuilder() {
     const { inst, line } = getQuoteContext();
     const body = document.getElementById('quoteBuilderBody');
-
+  
     if (!inst) {
       body.innerHTML = '';
       return;
     }
-
+  
     const rows = [];
-
+  
     const qty = line.quantity || 1;
     rows.push(`
       <tr>
@@ -767,7 +767,7 @@ Next lines: bullet lines starting with ' - '"
         <td>${moneyINR((inst.unitPrice || 0) * qty)}</td>
       </tr>
     `);
-
+  
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -777,7 +777,7 @@ Next lines: bullet lines starting with ' - '"
           </td>
         </tr>
       `);
-
+  
       configItems.forEach((item, idx) => {
         const itemCode = String(idx + 2).padStart(3, '0');
         const q = item.qty != null ? item.qty : 'Included';
@@ -785,7 +785,7 @@ Next lines: bullet lines starting with ' - '"
         const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
         const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
         const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
-
+  
         rows.push(`
           <tr>
             <td>${itemCode}</td>
@@ -797,6 +797,45 @@ Next lines: bullet lines starting with ' - '"
         `);
       });
     }
+  
+    const additionalItems = line.additionalItems || [];
+    if (additionalItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">
+            <span class="section-header-label">ADDITIONAL ITEMS</span>
+          </td>
+        </tr>
+      `);
+  
+      additionalItems.forEach((item, idx) => {
+        const itemCode = String(idx + 1).padStart(3, '0');
+        const qtyNum = Number(item.qty || 1);
+  
+        let unitNum = 0;
+        if (item.price) {
+          const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+          unitNum = parseFloat(cleaned) || 0;
+        } else {
+          unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
+        }
+        const totalNum = unitNum * qtyNum;
+  
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${qtyNum.toString().padStart(2, '0')}</td>
+            <td>${moneyINR(unitNum)}</td>
+            <td>${moneyINR(totalNum)}</td>
+          </tr>
+        `);
+      });
+    }
+  
+    body.innerHTML = rows.join('');
+  }
+
 
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
