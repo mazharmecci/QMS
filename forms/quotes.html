@@ -322,6 +322,46 @@
   </div>
 </header>
 
+<!-- Modal -->
+<div id="itemModalOverlay" style="display:none;
+  position:fixed; inset:0; background:rgba(15,23,42,0.45);
+  z-index:2000; align-items:center; justify-content:center;">
+  <div id="itemModal" style="
+    width:520px; max-width:95%; background:#fff; border-radius:10px;
+    box-shadow:0 18px 45px rgba(15,23,42,0.35); padding:1.25rem 1.5rem;
+    font-family:'Inter',sans-serif; font-size:13px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+      <h3 id="itemModalTitle" style="margin:0; font-size:15px; color:#0d6efd;"></h3>
+      <button type="button" onclick="closeItemModal()"
+              style="border:none; background:transparent; font-size:18px; cursor:pointer;">×</button>
+    </div>
+
+    <form id="itemModalForm" onsubmit="saveItemFromModal(event)">
+      <input type="hidden" id="itemModalType" value="config">
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+        <input id="itemName" type="text" placeholder="Item name" required
+               style="flex:2; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+        <input id="itemQty" type="text" placeholder="Qty (or Included)"
+               style="flex:1; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+        <input id="itemPrice" type="text" placeholder="Unit price (INR)"
+               style="flex:1; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:0.6rem;">
+        <button type="button" onclick="closeItemModal()"
+                style="border:1px solid #cbd5e1; background:#fff; padding:0.35rem 0.75rem;
+                       border-radius:999px; font-size:12px; cursor:pointer;">Cancel</button>
+        <button type="submit"
+                style="border:none; background:#0d6efd; color:#fff; padding:0.35rem 0.9rem;
+                       border-radius:999px; font-size:12px; cursor:pointer;">Add item</button>
+      </div>
+    </form>
+
+    <div id="itemModalList" style="max-height:180px; overflow:auto; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
+      <!-- existing items rendered here -->
+    </div>
+  </div>
+</div>
+
 <div class="container">
   <table class="print-frame">
     <thead class="print-header">
@@ -382,23 +422,22 @@
 
           <div id="quoteBuilder">
             <h3>Quote Builder</h3>
-            
             <div style="margin-bottom:0.75rem;">
-            <button type="button" onclick="openConfigModal()">Add / Edit Configuration Items</button>
-            <button type="button" onclick="openAdditionalModal()" style="margin-left:0.5rem;">
-    Add / Edit Additional Items
-            </button>
+              <button type="button" onclick="openConfigModal()">Add / Edit Configuration Items</button>
+              <button type="button" onclick="openAdditionalModal()" style="margin-left:0.5rem;">
+                Add / Edit Additional Items
+              </button>
             </div>
 
             <table class="quote-table">
               <thead>
-              <tr>
-                <th>Item</th>
-                <th>Cat / Material No.<br>Description</th>
-                <th>Quantity</th>
-                <th>Unit Price (INR)</th>
-                <th>Total Price (INR)</th>
-              </tr>
+                <tr>
+                  <th>Item</th>
+                  <th>Cat / Material No.<br>Description</th>
+                  <th>Quantity</th>
+                  <th>Unit Price (INR)</th>
+                  <th>Total Price (INR)</th>
+                </tr>
               </thead>
               <tbody id="quoteBuilderBody"></tbody>
             </table>
@@ -428,6 +467,12 @@
       </tr>
     </tfoot>
   </table>
+
+  <div style="margin-top:1.5rem; text-align:right;">
+    <button type="button" class="btn-finalize" onclick="finalizeQuote()">
+      ✅ Finalize &amp; Save to History
+    </button>
+  </div>
 </div>
 
 <script>
@@ -670,7 +715,7 @@
   }
 
   function renderQuoteBuilder() {
-    const { header, inst, line } = getQuoteContext();
+    const { inst, line } = getQuoteContext();
     const body = document.getElementById('quoteBuilderBody');
 
     if (!inst) {
@@ -680,7 +725,6 @@
 
     const rows = [];
 
-    // main instrument
     const qty = line.quantity || 1;
     rows.push(`
       <tr>
@@ -692,7 +736,6 @@
       </tr>
     `);
 
-    // configuration items
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -723,7 +766,6 @@
       });
     }
 
-    // additional items
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -869,59 +911,128 @@
   }
 
   function openConfigModal() {
-    const { header, line } = getQuoteContext();
-
-    const name = prompt('Configuration item name (e.g., Starter Kit):', '');
-    if (!name) return;
-
-    const item = {
-      code: 'CFG-' + String((line.configItems || []).length + 1).padStart(2, '0'),
-      name,
-      qty: 'Included',
-      upInr: 'Included',
-      tpInr: 'Included'
-    };
-
-    if (!Array.isArray(line.configItems)) line.configItems = [];
-    line.configItems.push(item);
-
-    header.quoteLines[0] = line;
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
-    renderQuoteBuilder();
+    openItemModal('config');
   }
 
   function openAdditionalModal() {
+    openItemModal('additional');
+  }
+
+  function openItemModal(type) {
+    const { line } = getQuoteContext();
+    const overlay = document.getElementById('itemModalOverlay');
+    const titleEl = document.getElementById('itemModalTitle');
+    const typeEl  = document.getElementById('itemModalType');
+    const nameEl  = document.getElementById('itemName');
+    const qtyEl   = document.getElementById('itemQty');
+    const priceEl = document.getElementById('itemPrice');
+
+    typeEl.value = type;
+    titleEl.textContent = type === 'config'
+      ? 'Configuration Items for this Quote'
+      : 'Additional Items for this Quote';
+
+    nameEl.value  = '';
+    qtyEl.value   = type === 'config' ? 'Included' : '1';
+    priceEl.value = '';
+
+    renderItemModalList(line, type);
+    overlay.style.display = 'flex';
+  }
+
+  function closeItemModal() {
+    const overlay = document.getElementById('itemModalOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  function renderItemModalList(line, type) {
+    const listEl = document.getElementById('itemModalList');
+    const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
+
+    if (!arr.length) {
+      listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this quote.</div>';
+      return;
+    }
+
+    listEl.innerHTML = arr.map((item, idx) => {
+      const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
+      const price = type === 'config'
+        ? (item.upInr != null ? item.upInr : 'Included')
+        : (item.price || item.unitPrice || item.upInr || item.tpInr || '');
+      return `
+        <div style="display:flex; align-items:center; justify-content:space-between;
+                    padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
+          <div style="flex:1; font-size:12px;">
+            <div style="font-weight:600;">${item.name || ''}</div>
+            <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
+          </div>
+          <button type="button" onclick="removeItemFromModal('${type}', ${idx})"
+                  style="border:none; background:#fee2e2; color:#b91c1c;
+                         font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
+            Remove
+          </button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function removeItemFromModal(type, idx) {
+    const { header, line } = getQuoteContext();
+    const arrName = type === 'config' ? 'configItems' : 'additionalItems';
+    const arr = line[arrName] || [];
+    arr.splice(idx, 1);
+    line[arrName] = arr;
+    header.quoteLines[0] = line;
+    localStorage.setItem('quoteHeader', JSON.stringify(header));
+    renderQuoteBuilder();
+    renderItemModalList(line, type);
+  }
+
+  function saveItemFromModal(e) {
+    e.preventDefault();
     const { header, line } = getQuoteContext();
 
-    const name = prompt('Additional item name (e.g., UPS 1kVA):', '');
+    const typeEl  = document.getElementById('itemModalType');
+    const nameEl  = document.getElementById('itemName');
+    const qtyEl   = document.getElementById('itemQty');
+    const priceEl = document.getElementById('itemPrice');
+
+    const type = typeEl.value;
+    const name = nameEl.value.trim();
     if (!name) return;
 
-    const priceStr = prompt('Unit price in INR (e.g., 55380):', '');
-    if (priceStr === null || priceStr.trim() === '') return;
-    const priceNum = Number(priceStr.replace(/[^\d]/g, '') || 0);
+    const arrName = type === 'config' ? 'configItems' : 'additionalItems';
+    if (!Array.isArray(line[arrName])) line[arrName] = [];
 
-    const item = {
-      code: 'ADD-' + String((line.additionalItems || []).length + 1).padStart(2, '0'),
-      name,
-      qty: 1,
-      price: '₹ ' + priceNum.toLocaleString('en-IN')
-    };
-
-    if (!Array.isArray(line.additionalItems)) line.additionalItems = [];
-    line.additionalItems.push(item);
+    if (type === 'config') {
+      const item = {
+        code: 'CFG-' + String(line.configItems.length + 1).padStart(2, '0'),
+        name,
+        qty: qtyEl.value || 'Included',
+        upInr: 'Included',
+        tpInr: 'Included'
+      };
+      line.configItems.push(item);
+    } else {
+      const raw = priceEl.value || '0';
+      const num = Number(raw.replace(/[^\d]/g, '') || 0);
+      const item = {
+        code: 'ADD-' + String(line.additionalItems.length + 1).padStart(2, '0'),
+        name,
+        qty: Number(qtyEl.value || 1),
+        price: '₹ ' + num.toLocaleString('en-IN')
+      };
+      line.additionalItems.push(item);
+    }
 
     header.quoteLines[0] = line;
     localStorage.setItem('quoteHeader', JSON.stringify(header));
     renderQuoteBuilder();
+    renderItemModalList(line, type);
   }
 
   populateHeader();
   renderQuoteBuilder();
 </script>
-
-<button type="button" class="btn-finalize" onclick="finalizeQuote()">
-  ✅ Finalize &amp; Save to History
-</button>
-
 </body>
 </html>
