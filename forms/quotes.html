@@ -1058,7 +1058,12 @@ Next lines: bullet lines starting with ' - '"
 
     codeEl.value    = '';
     qtyEl.value     = type === 'config' ? 'Included' : '1';
-    priceEl.value   = '';
+    // hide / ignore price for config
+    if (type === 'config') {
+      if (priceEl) priceEl.value = '';
+    } else {
+      if (priceEl) priceEl.value = '';
+    }
     detailsEl.value = '';
 
     renderItemModalList(line, type);
@@ -1082,7 +1087,7 @@ Next lines: bullet lines starting with ' - '"
     listEl.innerHTML = arr.map((item, idx) => {
       const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
       const price = type === 'config'
-        ? (item.upInr != null ? item.upInr : 'Included')
+        ? 'Included'
         : (item.price || item.unitPrice || item.upInr || item.tpInr || '');
       return `
         <div style="display:flex; align-items:center; justify-content:space-between;
@@ -1132,12 +1137,12 @@ Next lines: bullet lines starting with ' - '"
       item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
 
     if (type === 'config') {
-      priceEl.value = '';
+      if (priceEl) priceEl.value = '';
     } else {
-      if (item.price) {
+      if (item.price && priceEl) {
         const cleaned = String(item.price).replace(/[^\d.]/g, '');
         priceEl.value = cleaned;
-      } else {
+      } else if (priceEl) {
         priceEl.value = '';
       }
     }
@@ -1172,7 +1177,7 @@ Next lines: bullet lines starting with ' - '"
 
     const type = typeEl.value;
     const code = (codeEl.value || '').trim();
-    const { name, rest } = parseDetailsText(detailsEl.value);
+    const { name } = parseDetailsText(detailsEl.value);
     if (!name) return;
 
     const arrName = type === 'config' ? 'configItems' : 'additionalItems';
