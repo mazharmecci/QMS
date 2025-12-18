@@ -801,44 +801,39 @@ function renderQuoteBuilder() {
   }
 
   // Additional items
-  const additionalItems = line.additionalItems || [];
-  if (additionalItems.length) {
+const additionalItems = line.additionalItems || [];
+if (additionalItems.length) {
+  rows.push(`
+    <tr style="background:#00B0F0; color:#000;">
+      <td colspan="5" style="font-weight:700;">
+        <span class="section-header-label">ADDITIONAL ITEMS</span>
+      </td>
+    </tr>
+  `);
+
+  additionalItems.forEach((item, idx) => {
+    const itemCode = String(idx + 1).padStart(3, '0');
+    const qtyNum = Number(item.qty || 1);
+    
+    // Fixed: Direct number access (matches saveItemFromModal storage)
+    const unitNum = Number(item.price || 0);
+    const totalNum = unitNum * qtyNum;
+
     rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
-          <span class="section-header-label">ADDITIONAL ITEMS</span>
-        </td>
+      <tr>
+        <td>${itemCode}</td>
+        ${formatItemCell(item)}
+        <td>${qtyNum.toString().padStart(2, '0')}</td>
+        <td>${moneyINR(unitNum)}</td>
+        <td>${moneyINR(totalNum)}</td>
       </tr>
     `);
-
-    additionalItems.forEach((item, idx) => {
-      const itemCode = String(idx + 1).padStart(3, '0');
-      const qtyNum = Number(item.qty || 1);
-
-      let unitNum = 0;
-      if (item.price) {
-        const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-        unitNum = parseFloat(cleaned) || 0;
-      } else {
-        unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
-      }
-      const totalNum = unitNum * qtyNum;
-
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${qtyNum.toString().padStart(2, '0')}</td>
-          <td>${moneyINR(unitNum)}</td>
-          <td>${moneyINR(totalNum)}</td>
-        </tr>
-      `);
-    });
-  }
-
-  body.innerHTML = rows.join('');
+  });
 }
 
+body.innerHTML = rows.join('');
+}
+  
 function buildLineItemsFromCurrentQuote() {
   const { inst, line } = getQuoteContext();
   const items = [];
