@@ -338,13 +338,19 @@
 
     <form id="itemModalForm" onsubmit="saveItemFromModal(event)">
       <input type="hidden" id="itemModalType" value="config">
+      <input type="hidden" id="itemCode" value="">
       <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
-        <input id="itemName" type="text" placeholder="Item name" required
-               style="flex:2; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+        <input id="itemCodeInput" type="text" placeholder="Item code (e.g., 030051 / TFB 1100)"
+               style="flex:1; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
         <input id="itemQty" type="text" placeholder="Qty (or Included)"
-               style="flex:1; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+               style="flex:0 0 130px; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
         <input id="itemPrice" type="text" placeholder="Unit price (INR)"
-               style="flex:1; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+               style="flex:0 0 150px; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;">
+      </div>
+      <div style="margin-bottom:0.5rem;">
+        <textarea id="itemDetails" rows="5"
+                  placeholder="First line: main item name&#10;Next lines: bullet lines starting with ' - '"
+                  style="width:100%; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:13px;"></textarea>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:0.6rem;">
         <button type="button" onclick="closeItemModal()"
@@ -352,7 +358,7 @@
                        border-radius:999px; font-size:12px; cursor:pointer;">Cancel</button>
         <button type="submit"
                 style="border:none; background:#0d6efd; color:#fff; padding:0.35rem 0.9rem;
-                       border-radius:999px; font-size:12px; cursor:pointer;">Add item</button>
+                       border-radius:999px; font-size:12px; cursor:pointer;">Save item</button>
       </div>
     </form>
 
@@ -509,6 +515,16 @@
       .split('\n')
       .map(l => l.trim())
       .filter(Boolean);
+  }
+
+  function parseDetailsText(raw) {
+    const lines = String(raw || '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+    const name = lines[0] || '';
+    const rest = lines.slice(1);
+    return { name, rest };
   }
 
   function getQuoteHeaderRaw() {
@@ -672,42 +688,19 @@
 
   function formatItemCell(item) {
     const code = item.code || item.catalog || '';
-    const name = item.name || item.itemName || item.instrumentName || '';
-    const descLines = parseLines(item.longDescription || item.description || '');
-
-    const bold1 = code;
-    const bold2 = name || descLines[0] || '';
-    const featureLines = name ? descLines : descLines.slice(1);
-
-    const specs = [];
-    if (item.dimensions) specs.push(`Dimensions: ${item.dimensions}`);
-    if (item.weight)     specs.push(`Weight: ${item.weight}`);
-    if (item.power)      specs.push(`Power: ${item.power}`);
-
-    const meta = [];
-    if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
-    if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
+    const descSource = item.description || item.longDescription || item.description || '';
+    const lines = parseLines(descSource);
+    const name = item.name || lines[0] || '';
+    const rest = lines.slice(1);
 
     let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
 
-    if (bold1) html += `<div class="cat-main">${bold1}</div>`;
-    if (bold2) html += `<div class="cat-main">${bold2}</div>`;
+    if (code) html += `<div class="cat-main">${code}</div>`;
+    if (name) html += `<div class="cat-main">${name}</div>`;
 
-    if (featureLines.length) {
+    if (rest.length) {
       html += `<div style="height:8px;"></div>`;
-      html += featureLines
-        .map(line => `<div class="cat-sub">- ${line}</div>`)
-        .join('');
-    }
-
-    if (specs.length) {
-      html += `<div style="height:8px;"></div>`;
-      html += `<div class="cat-sub">${specs.join('<br>')}</div>`;
-    }
-
-    if (meta.length) {
-      html += `<div style="height:8px;"></div>`;
-      html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+      html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
     }
 
     html += `</td>`;
@@ -783,7 +776,7 @@
         let unitNum = 0;
         if (item.price) {
           const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-          unitNum = parseInt(cleaned, 10) || 0;
+          unitNum = parseFloat(cleaned) || 0;
         } else {
           unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
         }
@@ -834,7 +827,7 @@
       let unitNum = 0;
       if (item.price) {
         const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-        unitNum = parseInt(cleaned, 10) || 0;
+        unitNum = parseFloat(cleaned) || 0;
       } else {
         unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
       }
@@ -923,18 +916,23 @@
     const overlay = document.getElementById('itemModalOverlay');
     const titleEl = document.getElementById('itemModalTitle');
     const typeEl  = document.getElementById('itemModalType');
-    const nameEl  = document.getElementById('itemName');
-    const qtyEl   = document.getElementById('itemQty');
-    const priceEl = document.getElementById('itemPrice');
+
+    const codeEl    = document.getElementById('itemCodeInput');
+    const qtyEl     = document.getElementById('itemQty');
+    const priceEl   = document.getElementById('itemPrice');
+    const detailsEl = document.getElementById('itemDetails');
+
+    currentEditIndex = null;
 
     typeEl.value = type;
     titleEl.textContent = type === 'config'
       ? 'Configuration Items for this Quote'
       : 'Additional Items for this Quote';
 
-    nameEl.value  = '';
-    qtyEl.value   = type === 'config' ? 'Included' : '1';
-    priceEl.value = '';
+    codeEl.value    = '';
+    qtyEl.value     = type === 'config' ? 'Included' : '1';
+    priceEl.value   = '';
+    detailsEl.value = '';
 
     renderItemModalList(line, type);
     overlay.style.display = 'flex';
@@ -948,12 +946,12 @@
   function renderItemModalList(line, type) {
     const listEl = document.getElementById('itemModalList');
     const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
-  
+
     if (!arr.length) {
       listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this quote.</div>';
       return;
     }
-  
+
     listEl.innerHTML = arr.map((item, idx) => {
       const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
       const price = type === 'config'
@@ -963,7 +961,7 @@
         <div style="display:flex; align-items:center; justify-content:space-between;
                     padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
           <div style="flex:1; font-size:12px;">
-            <div style="font-weight:600;">${item.name || ''}</div>
+            <div style="font-weight:600;">${item.code || ''} ${item.name || ''}</div>
             <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
           </div>
           <div style="display:flex; gap:0.25rem;">
@@ -982,27 +980,45 @@
       `;
     }).join('');
   }
-  
-    let currentEditIndex = null;
-  
+
+  let currentEditIndex = null;
+
   function editItemFromModal(type, idx) {
     const { line } = getQuoteContext();
     const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
     const item = arr[idx];
     if (!item) return;
-  
+
     currentEditIndex = idx;
+
     document.getElementById('itemModalType').value = type;
-    document.getElementById('itemName').value = item.name || '';
-    document.getElementById('itemQty').value =
-      item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
-    document.getElementById('itemPrice').value =
-      type === 'config'
-        ? (typeof item.upInr === 'number' ? item.upInr.toString() : '')
-        : (item.price ? String(item.price).replace(/[^\d]/g, '') : '');
-  
     document.getElementById('itemModalTitle').textContent =
       type === 'config' ? 'Edit Configuration Item' : 'Edit Additional Item';
+
+    const codeEl    = document.getElementById('itemCodeInput');
+    const qtyEl     = document.getElementById('itemQty');
+    const priceEl   = document.getElementById('itemPrice');
+    const detailsEl = document.getElementById('itemDetails');
+
+    codeEl.value = item.code || '';
+    qtyEl.value  =
+      item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
+
+    if (type === 'config') {
+      priceEl.value = '';
+    } else {
+      if (item.price) {
+        const cleaned = String(item.price).replace(/[^\d.]/g, '');
+        priceEl.value = cleaned;
+      } else {
+        priceEl.value = '';
+      }
+    }
+
+    detailsEl.value = item.description || '';
+
+    const overlay = document.getElementById('itemModalOverlay');
+    overlay.style.display = 'flex';
   }
 
   function removeItemFromModal(type, idx) {
@@ -1016,51 +1032,58 @@
     renderQuoteBuilder();
     renderItemModalList(line, type);
   }
-  
+
   function saveItemFromModal(e) {
     e.preventDefault();
     const { header, line } = getQuoteContext();
-  
-    const typeEl  = document.getElementById('itemModalType');
-    const nameEl  = document.getElementById('itemName');
-    const qtyEl   = document.getElementById('itemQty');
-    const priceEl = document.getElementById('itemPrice');
-  
+
+    const typeEl    = document.getElementById('itemModalType');
+    const codeEl    = document.getElementById('itemCodeInput');
+    const qtyEl     = document.getElementById('itemQty');
+    const priceEl   = document.getElementById('itemPrice');
+    const detailsEl = document.getElementById('itemDetails');
+
     const type = typeEl.value;
-    const name = nameEl.value.trim();
+    const code = (codeEl.value || '').trim();
+    const { name, rest } = parseDetailsText(detailsEl.value);
     if (!name) return;
-  
+
     const arrName = type === 'config' ? 'configItems' : 'additionalItems';
     if (!Array.isArray(line[arrName])) line[arrName] = [];
-  
+
     const isEdit = currentEditIndex != null;
     const idx = isEdit ? currentEditIndex : line[arrName].length;
-  
+
     if (type === 'config') {
+      const existingCode = isEdit && line.configItems[idx] ? line.configItems[idx].code : null;
       const item = {
-        code: isEdit
-          ? line.configItems[idx].code
-          : 'CFG-' + String(line.configItems.length + 1).padStart(2, '0'),
+        code: code || existingCode || 'CFG-' + String(line.configItems.length + 1).padStart(2, '0'),
         name,
+        description: detailsEl.value,
         qty: qtyEl.value || 'Included',
         upInr: 'Included',
         tpInr: 'Included'
       };
       line.configItems[idx] = item;
     } else {
+      const existingCode = isEdit && line.additionalItems[idx] ? line.additionalItems[idx].code : null;
       const raw = priceEl.value || '0';
-      const num = Number(raw.replace(/[^\d]/g, '') || 0);
+      const num = Number(raw.replace(/[^\d.]/g, '') || 0);
+      const formattedPrice = '₹ ' + num.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
       const item = {
-        code: isEdit
-          ? line.additionalItems[idx].code
-          : 'ADD-' + String(line.additionalItems.length + 1).padStart(2, '0'),
+        code: code || existingCode || 'ADD-' + String(line.additionalItems.length + 1).padStart(2, '0'),
         name,
+        description: detailsEl.value,
         qty: Number(qtyEl.value || 1),
-        price: '₹ ' + num.toLocaleString('en-IN')
+        price: formattedPrice
       };
       line.additionalItems[idx] = item;
     }
-  
+
     currentEditIndex = null;
     header.quoteLines[0] = line;
     localStorage.setItem('quoteHeader', JSON.stringify(header));
@@ -1071,5 +1094,6 @@
   populateHeader();
   renderQuoteBuilder();
 </script>
+
 </body>
 </html>
