@@ -86,6 +86,7 @@
     .card:nth-child(3) { animation-delay: 0.19s; }
     .card:nth-child(4) { animation-delay: 0.26s; }
     .card:nth-child(5) { animation-delay: 0.33s; }
+    .card:nth-child(6) { animation-delay: 0.40s; } /* backup card */
 
     .card::before {
       content: "";
@@ -117,6 +118,17 @@
     .emoji-badge {
       font-size: 1.5rem;
       line-height: 1;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .emoji-icon {
+      width:26px;
+      height:26px;
+      display:inline-block;
+      vertical-align:middle;
+      object-fit:contain;
     }
 
     .card-pill {
@@ -167,6 +179,12 @@
       transform: translateX(4px);
     }
 
+    /* Slightly different pill color for utility actions like backup */
+    .card-pill--utility {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
     @keyframes fadeInUp {
       0% {
         opacity: 0;
@@ -191,21 +209,6 @@
         padding: 1.4rem 1.35rem;
       }
     }
-
-    .emoji-badge {
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-    
-    .emoji-icon {
-      width:26px;      /* fingertip size */
-      height:26px;
-      display:inline-block;
-      vertical-align:middle;
-      object-fit:contain;
-    }
-
   </style>
 </head>
 <body>
@@ -241,7 +244,7 @@
 
     <div class="card" onclick="navigate('hospitals.html')">
       <div class="card-header-line">
-       <span class="emoji-badge"><img src="./images/Hospital.PNG" alt="Icon" class="emoji-icon"></span>
+        <span class="emoji-badge"><img src="./images/Hospital.PNG" alt="Icon" class="emoji-icon"></span>
         <span class="card-pill">Master</span>
       </div>
       <h2>Hospitals</h2>
@@ -277,11 +280,46 @@
         <span class="chevron">➜</span>
       </div>
     </div>
+
+    <!-- Backup card -->
+    <div class="card" onclick="exportBackup()">
+      <div class="card-header-line">
+        <span class="emoji-badge"><img src="images/server.png" alt="Icon" class="emoji-icon"></span>
+        <span class="card-pill card-pill--utility">Utility</span>
+      </div>
+      <h2>Backup data</h2>
+      <p>Download a JSON backup of hospitals, instruments, and quotes stored in your browser.</p>
+      <div class="card-footer">
+        <span>Export local data</span>
+        <span class="chevron">⬇</span>
+      </div>
+    </div>
   </main>
 
   <script>
     function navigate(page) {
       window.location.href = `forms/${page}`;
+    }
+
+    function exportBackup() {
+      const data = {
+        hospitals: JSON.parse(localStorage.getItem('hospitals') || '[]'),
+        instruments: JSON.parse(localStorage.getItem('instruments') || '[]'),
+        quotes: JSON.parse(localStorage.getItem('quotes') || '[]'),
+        quoteHeader: JSON.parse(localStorage.getItem('quoteHeader') || '{}')
+      };
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qms-backup-' + new Date().toISOString().slice(0,10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
