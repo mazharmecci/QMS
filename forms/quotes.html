@@ -1281,8 +1281,9 @@ function renderSummaryRows() {
     });
   }
 
-  // decide class for discount row
+  // decide classes based on discount
   const discountRowClass = discount > 0 ? '' : 'no-print';
+  const priceAfterRowClass = discount > 0 ? '' : 'no-print';
 
   summaryBody.innerHTML = `
     <tr>
@@ -1290,6 +1291,7 @@ function renderSummaryRows() {
       <td style="text-align:right;"><strong>${moneyINR(itemsValueTotal)}</strong></td>
     </tr>
 
+    <!-- Discount row: editable on screen, prints only when discount > 0 -->
     <tr class="${discountRowClass}">
       <td colspan="4" style="text-align:right;"><strong>Special Discount</strong></td>
       <td style="text-align:right;">
@@ -1311,10 +1313,12 @@ function renderSummaryRows() {
       </td>
     </tr>
 
-    <tr>
+    <!-- Price after Discount: prints only when discount > 0 -->
+    <tr class="${priceAfterRowClass}">
       <td colspan="4" style="text-align:right;"><strong>Price after Discount</strong></td>
       <td style="text-align:right;"><strong>${moneyINR(priceAfterDiscount)}</strong></td>
     </tr>
+
     <tr>
       <td colspan="4" style="text-align:right;"><strong>Freight Costs INR</strong></td>
       <td style="text-align:right;"><strong>Included</strong></td>
@@ -1363,7 +1367,7 @@ function renderSummaryRows() {
       header.discount = val;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
 
-      // re-render so class switches between no-print / normal
+      // re-render to update classes for discount / price-after rows
       renderSummaryRows();
     });
   }
