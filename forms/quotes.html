@@ -1260,12 +1260,8 @@ function renderSummaryRows() {
     roundedTotal
   } = calculateSummaryFromLine(line, inst);
 
-  // helper to format as 10,000.00 while typing
   function formatDiscount(val) {
-    const num = Number(
-      String(val || '')
-        .replace(/[^\d.]/g, '') // remove non-numerics
-    );
+    const num = Number(String(val || '').replace(/[^\d.]/g, ''));
     if (!num) return '';
     return num.toLocaleString('en-IN', {
       minimumFractionDigits: 2,
@@ -1273,92 +1269,93 @@ function renderSummaryRows() {
     });
   }
 
-summaryBody.innerHTML = `
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Items Value Total INR</strong></td>
-    <td style="text-align:right;"><strong>${moneyINR(itemsValueTotal)}</strong></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Special Discount</strong></td>
-    <td style="text-align:right;">
-      <input
-        type="text"
-        class="discount-input"
-        value="${formatDiscount(discount)}"
-        style="
-          width:120px;
-          text-align:right;
-          font-weight:bold;
-          border:none;
-          outline:none;
-          background:#e6f4ff;
-          border-radius:4px;
-          padding:2px 6px;
-        "
-      />
-    </td>
-  </tr>
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Price after Discount</strong></td>
-    <td style="text-align:right;"><strong>${moneyINR(priceAfterDiscount)}</strong></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Freight Costs INR</strong></td>
-    <td style="text-align:right;"><strong>Included</strong></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Goods and Services Tax INR @ 18%</strong></td>
-    <td style="text-align:right;"><strong>${moneyINR(gst)}</strong></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Total Value INR</strong></td>
-    <td style="text-align:right;"><strong>${moneyINR(totalValue)}</strong></td>
-  </tr>
-  <tr>
-    <td colspan="4" style="text-align:right;"><strong>Rounded off to</strong></td>
-    <td style="text-align:right;"><strong>${moneyINR(roundedTotal)}</strong></td>
-  </tr>
-`;
+  let html = `
+    <tr>
+      <td colspan="4" style="text-align:right;"><strong>Items Value Total INR</strong></td>
+      <td style="text-align:right;"><strong>${moneyINR(itemsValueTotal)}</strong></td>
+    </tr>
+  `;
 
- const input = summaryBody.querySelector('.discount-input');
+  // Only show discount row when there is a discount
+  if (discount > 0) {
+    html += `
+      <tr>
+        <td colspan="4" style="text-align:right;"><strong>Special Discount</strong></td>
+        <td style="text-align:right;">
+          <input
+            type="text"
+            class="discount-input"
+            value="${formatDiscount(discount)}"
+            style="
+              width:120px;
+              text-align:right;
+              font-weight:bold;
+              border:none;
+              outline:none;
+              background:#e6f4ff;
+              border-radius:4px;
+              padding:2px 6px;
+            "
+          />
+        </td>
+      </tr>
+    `;
+  } else {
+    // If you still want the field when editing on screen,
+    // you could show it only in screen mode, see section 2.
+  }
+
+  html += `
+    <tr>
+      <td colspan="4" style="text-align:right;"><strong>Price after Discount</strong></td>
+      <td style="text-align:right;"><strong>${moneyINR(priceAfterDiscount)}</strong></td>
+    </tr>
+    <tr>
+      <td colspan="4" style="text-align:right;"><strong>Freight Costs INR</strong></td>
+      <td style="text-align:right;"><strong>Included</strong></td>
+    </tr>
+    <tr>
+      <td colspan="4" style="text-align:right;"><strong>Goods and Services Tax INR @ 18%</strong></td>
+      <td style="text-align:right;"><strong>${moneyINR(gst)}</strong></td>
+    </tr>
+    <tr>
+      <td colspan="4" style="text-align:right;"><strong>Total Value INR</strong></td>
+      <td style="text-align:right;"><strong>${moneyINR(totalValue)}</strong></td>
+    </tr>
+    <tr>
+      <td colspan="4" style="text-align:right;"><strong>Rounded off to</strong></td>
+      <td style="text-align:right;"><strong>${moneyINR(roundedTotal)}</strong></td>
+    </tr>
+  `;
+
+  summaryBody.innerHTML = html;
+
+  // Attach handlers only if discount row exists
+  const input = summaryBody.querySelector('.discount-input');
   if (input) {
     input.addEventListener('input', (e) => {
       const raw = e.target.value;
-
-      // strip to digits + dot
       const cleaned = raw.replace(/[^\d.]/g, '');
-
-      // parse once
       const num = Number(cleaned);
       const header = getQuoteHeaderRaw();
 
-      // store numeric value in header
       header.discountInr = num || 0;
       header.discount = num || 0;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
 
-      // reflect formatted value back to the input
-      if (!cleaned) {
-        e.target.value = '';
-      } else {
-        e.target.value = num.toLocaleString('en-IN', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
-      }
+      e.target.value = cleaned
+        ? num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '';
     });
 
     input.addEventListener('blur', (e) => {
       const header = getQuoteHeaderRaw();
-      const val = Number(
-        String(e.target.value || '').replace(/[^\d.]/g, '')
-      ) || 0;
+      const val = Number(String(e.target.value || '').replace(/[^\d.]/g, '')) || 0;
 
       header.discountInr = val;
       header.discount = val;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
 
-      // re-render summary once user finishes editing
       renderSummaryRows();
     });
   }
