@@ -477,6 +477,7 @@ Next lines: bullet lines starting with ' - '"
               </tr>
             </thead>
             <tbody id="quoteBuilderBody"></tbody>
+            <tbody id="quoteSummaryBody"></tbody>
           </table>
 
           <div id="termsBlock">
@@ -770,6 +771,9 @@ function renderQuoteBuilder() {
 
   if (!inst) {
     body.innerHTML = '';
+    if (document.getElementById('quoteSummaryBody')) {
+      document.getElementById('quoteSummaryBody').innerHTML = '';
+    }
     return;
   }
 
@@ -848,6 +852,9 @@ function renderQuoteBuilder() {
   }
 
   body.innerHTML = rows.join('');
+
+    // NEW: render summary rows after line items
+  renderSummaryRows();
 }
 
 function buildLineItemsFromCurrentQuote() {
@@ -918,43 +925,57 @@ function buildSummaryFromHeader(header) {
   };
 }
 
-  function finalizeQuote() {
-    const header = getQuoteHeaderRaw();
+function finalizeQuote() {
+  const header = getQuoteHeaderRaw();
 
-    if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
-      alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
-      return;
-    }
-
-    const lineItems = buildLineItemsFromCurrentQuote();
-    const summary   = buildSummaryFromHeader(header);
-    const existing  = JSON.parse(localStorage.getItem('quotes') || '[]');
-
-    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
-    const lastRev   = sameQuote.length
-      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-      : 0;
-    const nextRev   = lastRev + 1;
-
-    const now = new Date();
-    const quote = {
-      header,
-      lineItems,
-      summary,
-      quoteNo: header.quoteNo,
-      revision: nextRev,
-      status: 'submitted',
-      history: [{
-        status: 'submitted',
-        date: now.toISOString().slice(0, 10),
-        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]
-    };
-
-    existing.push(quote);
-    localStorage.setItem('quotes', JSON.stringify(existing));
-    alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+  if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
+    alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
+    return;
   }
+
+  const { inst, line } = getQuoteContext();
+  const lineItems = buildLineItemsFromCurrentQuote();
+
+  // Use the same calculation used for on-screen summary
+  const calc = calculateSummaryFromLine(line, inst);
+  const summary = {
+    itemsTotal: calc.itemsValueTotal,
+    discount: calc.discount,
+    afterDiscount: calc.priceAfterDiscount,
+    freight: 'Included',
+    gstPercent: 18,
+    gstAmount: calc.gst,
+    totalValue: calc.totalValue,
+    roundOff: calc.roundedTotal
+  };
+
+  const existing  = JSON.parse(localStorage.getItem('quotes') || '[]');
+
+  const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+  const lastRev   = sameQuote.length
+    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+    : 0;
+  const nextRev   = lastRev + 1;
+
+  const now = new Date();
+  const quote = {
+    header,
+    lineItems,
+    summary,
+    quoteNo: header.quoteNo,
+    revision: nextRev,
+    status: 'submitted',
+    history: [{
+      status: 'submitted',
+      date: now.toISOString().slice(0, 10),
+      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }]
+  };
+
+  existing.push(quote);
+  localStorage.setItem('quotes', JSON.stringify(existing));
+  alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+}
 
   function openConfigModal() {
     openItemModal('config');
@@ -1153,6 +1174,132 @@ function buildSummaryFromHeader(header) {
     renderQuoteBuilder();
     renderItemModalList(line, type);
   }
+
+  // --- Summary calculations for bottom rows ---
+
+function calculateSummaryFromLine(line, inst) {
+  const configItems = line.configItems || [];
+  const additionalItems = line.additionalItems || [];
+
+  // Instrument total
+  const qty = line.quantity || 1;
+  const instrumentTotal = inst ? (Number(inst.unitPrice || 0) * qty) : 0;
+
+  // Configuration items: use tpInr if numeric, else 0
+  const configTotal = configItems.reduce((sum, item) => {
+    const val = typeof item.tpInr === 'number'
+      ? item.tpInr
+      : typeof item.upInr === 'number'
+      ? item.upInr * (item.qty || 1)
+      : 0;
+    return sum + val;
+  }, 0);
+
+  // Additional items: numeric price * qty
+  const additionalTotal = additionalItems.reduce((sum, item) => {
+    const qtyNum = Number(item.qty || 1);
+    const priceNum = Number(item.price || item.unitPrice || item.upInr || item.tpInr || 0);
+    return sum + qtyNum * priceNum;
+  }, 0);
+
+  // Items Value Total INR = all items sum
+  const itemsValueTotal = instrumentTotal + configTotal + additionalTotal;
+
+  // Special Discount read from header (inline editable value)
+  const header = getQuoteHeaderRaw();
+  const discount = Number(header.discountInr || header.discount || 0);
+
+  // Price after discount
+  const priceAfterDiscount = itemsValueTotal - discount;
+
+  // GST base per your rule
+  const hasDiscount = discount > 0;
+  const gstBase = hasDiscount ? priceAfterDiscount : itemsValueTotal;
+
+  // GST @ 18%
+  const gst = gstBase * 0.18; // 18% GST [web:23][web:25]
+
+  // Total Value INR (depends on discount)
+  const totalValue = hasDiscount ? priceAfterDiscount + gst : itemsValueTotal + gst;
+
+  // Rounded off to
+  const roundedTotal = Math.round(totalValue); // nearest integer [web:27][web:30]
+
+  return {
+    itemsValueTotal,
+    discount,
+    priceAfterDiscount,
+    gst,
+    totalValue,
+    roundedTotal
+  };
+}
+
+function renderSummaryRows() {
+  const { inst, line } = getQuoteContext();
+  const summaryBody = document.getElementById('quoteSummaryBody');
+  if (!summaryBody) return;
+
+  const {
+    itemsValueTotal,
+    discount,
+    priceAfterDiscount,
+    gst,
+    totalValue,
+    roundedTotal
+  } = calculateSummaryFromLine(line, inst);
+
+  summaryBody.innerHTML = `
+    <tr>
+      <td colspan="4">Items Value Total INR</td>
+      <td>${moneyINR(itemsValueTotal)}</td>
+    </tr>
+    <tr>
+      <td colspan="4">Special Discount</td>
+      <td>
+        <input
+          type="number"
+          class="discount-input"
+          value="${discount}"
+          style="width:100px; text-align:right;"
+        />
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">Price after Discount</td>
+      <td>${moneyINR(priceAfterDiscount)}</td>
+    </tr>
+    <tr>
+      <td colspan="4">Freight Costs INR</td>
+      <td>Included</td>
+    </tr>
+    <tr>
+      <td colspan="4">Goods and Services Tax INR @ 18%</td>
+      <td>${moneyINR(gst)}</td>
+    </tr>
+    <tr>
+      <td colspan="4">Total Value INR</td>
+      <td>${moneyINR(totalValue)}</td>
+    </tr>
+    <tr>
+      <td colspan="4">Rounded off to</td>
+      <td>${moneyINR(roundedTotal)}</td>
+    </tr>
+  `;
+
+  // Wire inline editing: update header + re-render on change
+  const input = summaryBody.querySelector('.discount-input');
+  if (input) {
+    input.addEventListener('input', (e) => {
+      const header = getQuoteHeaderRaw();
+      const val = Number(e.target.value) || 0;
+      header.discountInr = val;
+      header.discount = val; // keep backward compatibility with buildSummaryFromHeader
+      localStorage.setItem('quoteHeader', JSON.stringify(header));
+      renderSummaryRows();
+    });
+  }
+}
 
   populateHeader();
   renderQuoteBuilder();
