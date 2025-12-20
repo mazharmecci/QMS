@@ -733,9 +733,7 @@ function formatItemCell(item) {
   const descSource = item.description || item.longDescription || '';
   const lines      = parseLines(descSource);
 
-  // First line is the bold title
   const title = lines[0] || '';
-  // All remaining lines (only these go in the body)
   const rest  = lines.slice(1);
 
   const meta = [];
@@ -747,14 +745,15 @@ function formatItemCell(item) {
   if (code)  html += `<div class="cat-main">${code}</div>`;
   if (title) html += `<div class="cat-main"><strong>${title}</strong></div>`;
 
-  // Only print remaining lines, not the first line again
+  // Remaining description lines
   if (rest.length) {
     html += `<div style="height:8px;"></div>`;
     html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
   }
 
+  // One vertical gap before Country of Origin / HSN
   if (meta.length) {
-    html += `<div style="height:8px;"></div>`;
+    html += `<div style="height:8px;"></div>`;   // ← this creates the blank line
     html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
   }
 
