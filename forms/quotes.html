@@ -694,8 +694,7 @@ Next lines: bullet lines starting with ' - '"
 
   // Supplied items
   if (supplied.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div><strong>Supplied Complete with:</strong><br>`;
+    html += `<div style="height:8px;"></div>`;    
     html += supplied.map(s => ` - ${s}`).join('<br>');
     html += `</div>`;
   }
