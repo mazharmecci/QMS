@@ -1261,6 +1261,50 @@ summaryBody.innerHTML = `
   </tr>
 `;
 
+ const input = summaryBody.querySelector('.discount-input');
+  if (input) {
+    input.addEventListener('input', (e) => {
+      const raw = e.target.value;
+
+      // strip to digits + dot
+      const cleaned = raw.replace(/[^\d.]/g, '');
+
+      // parse once
+      const num = Number(cleaned);
+      const header = getQuoteHeaderRaw();
+
+      // store numeric value in header
+      header.discountInr = num || 0;
+      header.discount = num || 0;
+      localStorage.setItem('quoteHeader', JSON.stringify(header));
+
+      // reflect formatted value back to the input
+      if (!cleaned) {
+        e.target.value = '';
+      } else {
+        e.target.value = num.toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+    });
+
+    input.addEventListener('blur', (e) => {
+      const header = getQuoteHeaderRaw();
+      const val = Number(
+        String(e.target.value || '').replace(/[^\d.]/g, '')
+      ) || 0;
+
+      header.discountInr = val;
+      header.discount = val;
+      localStorage.setItem('quoteHeader', JSON.stringify(header));
+
+      // re-render summary once user finishes editing
+      renderSummaryRows();
+    });
+  }
+}
+
   populateHeader();
   renderQuoteBuilder();
 </script>
