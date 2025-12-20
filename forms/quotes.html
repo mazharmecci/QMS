@@ -663,19 +663,13 @@ function populateHeader() {
 }
 
 function formatInstrumentCell(inst) {
-  const code       = inst.catalog || inst.code || '';
-  const name       = inst.instrumentName || inst.name || '';
-  const descLines  = parseLines(inst.longDescription || inst.description || '');
-  const suppliedRaw = inst.suppliedWith || inst.supplied || [];
+  const code      = inst.catalog || inst.code || '';
+  const descLines = parseLines(inst.longDescription || inst.description || '');
+  const supplied  = inst.suppliedWith || inst.supplied || [];
 
-  // Assume your longDescription is structured like:
-  // 0: pfm Rotary 3006 EM ...
-  // 1: The pfm Rotary 3006 EM is a modern...
-  // 2: Supplied complete with:
-  // 3+: other free text (if any)
-  const title1 = descLines[0] || ''; // pfm Rotary...
-  const title2 = descLines[1] || ''; // The pfm Rotary...
-  const rest   = descLines.slice(2); // may include "Supplied complete with:" line if you kept it there
+  const title1 = descLines[0] || ''; // pfm Rotary 3006 EM ...
+  const title2 = descLines[1] || ''; // main sentence
+  const rest   = descLines.slice(2); // any extra free text (if any)
 
   const specs = [];
   if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
@@ -688,23 +682,34 @@ function formatInstrumentCell(inst) {
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
 
-  // Cat / Material No. – NOT bold
+  // Cat / Material No. (NOT bold)
   if (code) html += `<div class="cat-main">${code}</div>`;
 
-  // First two lines in bold (name + main sentence)
+  // First two lines bold
   if (title1) html += `<div><strong>${title1}</strong></div>`;
   if (title2) html += `<div><strong>${title2}</strong></div>`;
 
-  // Remaining description lines (including "Supplied complete with:" if present there)
+  // Remaining description (if any)
   if (rest.length) {
     html += `<div style="height:8px;"></div>`;
     html += rest.map(line => `<div>${line}</div>`).join('');
   }
 
-  // Supplied items from array – ONLY bullets, no heading text here
-  if (suppliedRaw.length) {
+  // Supplied block: heading WITHOUT hyphen, bullets WITH hyphen
+  if (supplied.length) {
     html += `<div style="height:8px;"></div>`;
-    html += suppliedRaw.map(s => `- ${s}`).join('<br>');
+
+    supplied.forEach((s, idx) => {
+      const text = String(s).trim();
+
+      if (idx === 0) {
+        // First entry is the heading line – no hyphen, no indent
+        html += `<div>${text}</div>`;
+      } else {
+        // Subsequent entries as bullets
+        html += `<div>- ${text}</div>`;
+      }
+    });
   }
 
   // Specs
