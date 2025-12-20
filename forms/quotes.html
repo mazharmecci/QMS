@@ -407,6 +407,22 @@
       gap: 8px;
       margin-top: 10px;
     }
+
+    .quote-actions-cell {
+      text-align: right;
+      white-space: nowrap;
+    }
+    
+    .row-remove-btn {
+      border: none;
+      background: transparent;
+      color: #b42318;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .row-remove-btn:hover {
+      color: #7f1110;
+    }
   </style>
 </head>
 <body>
@@ -1049,15 +1065,14 @@ function renderQuoteBuilder() {
 
   if (!inst) {
     body.innerHTML = '';
-    if (document.getElementById('quoteSummaryBody')) {
-      document.getElementById('quoteSummaryBody').innerHTML = '';
-    }
+    const summaryBody = document.getElementById('quoteSummaryBody');
+    if (summaryBody) summaryBody.innerHTML = '';
     return;
   }
 
   const rows = [];
 
-  // Instrument row
+  // Instrument row (no remove button for main instrument)
   const qty = line.quantity || 1;
   rows.push(`
     <tr>
@@ -1066,15 +1081,16 @@ function renderQuoteBuilder() {
       <td>${qty}</td>
       <td>${moneyINR(inst.unitPrice)}</td>
       <td>${moneyINR((inst.unitPrice || 0) * qty)}</td>
+      <td></td>
     </tr>
   `);
 
-  // Configuration items
+  // CONFIGURATION ITEMS
   const configItems = line.configItems || [];
   if (configItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
+        <td colspan="6" style="font-weight:700;">
           <span class="section-header-label">CONFIGURATION ITEMS</span>
         </td>
       </tr>
@@ -1095,17 +1111,25 @@ function renderQuoteBuilder() {
           <td>${q}</td>
           <td>${upCell}</td>
           <td>${tpCell}</td>
+          <td class="quote-actions-cell">
+            <button type="button"
+                    class="row-remove-btn"
+                    title="Remove this configuration item"
+                    onclick="removeConfigItem(${idx})">
+              ✖
+            </button>
+          </td>
         </tr>
       `);
     });
   }
 
-  // Additional items
+  // ADDITIONAL ITEMS
   const additionalItems = line.additionalItems || [];
   if (additionalItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
+        <td colspan="6" style="font-weight:700;">
           <span class="section-header-label">ADDITIONAL ITEMS</span>
         </td>
       </tr>
@@ -1124,6 +1148,14 @@ function renderQuoteBuilder() {
           <td>${qtyNum.toString().padStart(2, '0')}</td>
           <td>${moneyINR(unitNum)}</td>
           <td>${moneyINR(totalNum)}</td>
+          <td class="quote-actions-cell">
+            <button type="button"
+                    class="row-remove-btn"
+                    title="Remove this additional item"
+                    onclick="removeAdditionalItem(${idx})">
+              ✖
+            </button>
+          </td>
         </tr>
       `);
     });
@@ -1131,8 +1163,26 @@ function renderQuoteBuilder() {
 
   body.innerHTML = rows.join('');
 
-    // NEW: render summary rows after line items
+  // Summary rows
   renderSummaryRows();
+}
+
+// NEW: remove helpers
+function removeConfigItem(index) {
+  const { line } = getQuoteContext();
+  if (!line || !Array.isArray(line.configItems)) return;
+  // Optional confirmation:
+  // if (!confirm("Remove this configuration item from the quote?")) return;
+  line.configItems.splice(index, 1);
+  renderQuoteBuilder();
+}
+
+function removeAdditionalItem(index) {
+  const { line } = getQuoteContext();
+  if (!line || !Array.isArray(line.additionalItems)) return;
+  // if (!confirm("Remove this additional item from the quote?")) return;
+  line.additionalItems.splice(index, 1);
+  renderQuoteBuilder();
 }
 
 function buildLineItemsFromCurrentQuote() {
@@ -1154,7 +1204,7 @@ function buildLineItemsFromCurrentQuote() {
       : Number(item.upInr || 0);
 
     items.push({
-      name: item.name || item.itemName || '',
+      name: item.name || item.itemName || item.description || '',
       code: item.code || item.catalog || '',
       type: 'Configuration',
       price
@@ -1164,14 +1214,16 @@ function buildLineItemsFromCurrentQuote() {
   (line.additionalItems || []).forEach(item => {
     let unitNum = 0;
     if (item.price) {
-      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
+      const cleaned = String(item.price)
+        .replace(/[^\d,]/g, '')
+        .replace(/,/g, '');
       unitNum = parseFloat(cleaned) || 0;
     } else {
       unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
     }
 
     items.push({
-      name: item.name || item.itemName || '',
+      name: item.name || item.itemName || item.description || '',
       code: item.code || item.catalog || '',
       type: 'Additional',
       price: unitNum
