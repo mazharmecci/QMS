@@ -668,7 +668,15 @@ function formatInstrumentCell(inst) {
   const descLines = parseLines(inst.longDescription || inst.description || '');
 
   const restDesc = descLines.slice(1);
-  const supplied = inst.suppliedWith || inst.supplied || [];
+
+  // Original supplied array
+  let supplied = inst.suppliedWith || inst.supplied || [];
+
+  // Remove any “Supplied Complete with:” style label from the list
+  supplied = supplied.filter(s => {
+    const t = String(s).trim().toLowerCase();
+    return t !== 'supplied complete with:' && t !== '- supplied complete with:';
+  });
 
   const specs = [];
   if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
@@ -681,36 +689,26 @@ function formatInstrumentCell(inst) {
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
 
-  // Catalog/code (plain text, not bold)
-  if (code) html += `<div>${code}</div>`;
-
-  // Instrument name (bold)
-  if (name) html += `<div><strong>${name}</strong></div>`;
-
-  // First description line (bold)
+  if (code)       html += `<div><strong>${code}</strong></div>`;
+  if (name)       html += `<div><strong>${name}</strong></div>`;
   if (descLines[0]) html += `<div><strong>${descLines[0]}</strong></div>`;
 
-  // Remaining description lines (normal text)
   if (restDesc.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div>${restDesc.join(' ')}</div>`;
   }
 
-  // Supplied items
+  // Supplied items (no duplicate label now)
   if (supplied.length) {
     html += `<div style="height:8px;"></div>`;
-    html += `<div><strong>Supplied Complete with:</strong><br>`;
     html += supplied.map(s => ` - ${s}`).join('<br>');
-    html += `</div>`;
   }
 
-  // Specs
   if (specs.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div>${specs.join('<br>')}</div>`;
   }
 
-  // Meta info
   if (meta.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div>${meta.join('<br>')}</div>`;
