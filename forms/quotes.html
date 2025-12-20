@@ -720,7 +720,7 @@ function formatItemCell(item) {
   const descSource = item.description || item.longDescription || '';
   const lines = parseLines(descSource);
   const name = item.name || lines[0] || '';
-  const rest = lines.slice(1);
+  const rest = lines.slice(name ? 0 : 1); // if you always use item.name, rest = all desc lines
 
   const meta = [];
   if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
@@ -731,15 +731,9 @@ function formatItemCell(item) {
   if (code) html += `<div class="cat-main">${code}</div>`;
   if (name) html += `<div class="cat-main"><strong>${name}</strong></div>`;
 
-  if (rest.length) {
+  if (lines.length) {
     html += `<div style="height:8px;"></div>`;
-    html += rest
-      .map((line, idx) =>
-        idx === 0
-          ? `<div class="cat-sub"><strong>${line}</strong></div>`
-          : `<div class="cat-sub">${line}</div>`
-      )
-      .join('');
+    html += lines.map(line => `<div class="cat-sub">${line}</div>`).join('');
   }
 
   if (meta.length) {
