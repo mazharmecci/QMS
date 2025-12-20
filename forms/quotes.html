@@ -664,6 +664,7 @@ function populateHeader() {
 
 function formatInstrumentCell(inst) {
   const code      = inst.catalog || inst.code || '';
+  const nameProp  = inst.instrumentName || inst.name || '';
   const descLines = parseLines(inst.longDescription || inst.description || '');
   const supplied  = inst.suppliedWith || inst.supplied || [];
 
