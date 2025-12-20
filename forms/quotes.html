@@ -1354,11 +1354,14 @@ function renderSummaryRows() {
             text-align:right;
             font-weight:bold;
             border:none;
-            outline:none;
-            background:#e6f4ff;
-            border-radius:4px;
-            padding:2px 6px;
+            background:transparent;
+            padding:0;
+            border-bottom:1px dashed #999;
+            cursor:pointer;
           "
+          onfocus="this.style.outline='none';"
+          onmouseover="this.style.borderBottom='1px solid #333';"
+          onmouseout="this.style.borderBottom='1px dashed #999';"
         />
       </td>
     </tr>
