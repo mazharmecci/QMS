@@ -351,78 +351,6 @@
         display:none !important;
       }
     }
-
-        /* Minimal styles for picker rows – adjust to your design */
-    .quote-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    .quote-actions-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .quote-actions-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #5c5c5c;
-    }
-    .btn-quote-tertiary {
-      background: transparent;
-      border: 1px dashed rgba(0,0,0,0.18);
-      color: #444;
-    }
-    
-    .picker-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 260px;
-      overflow-y: auto;
-    }
-    .picker-row {
-      display: grid;
-      grid-template-columns: auto 90px 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #e5e5e5;
-      font-size: 13px;
-    }
-    .picker-code {
-      font-weight: 600;
-    }
-    .picker-desc {
-      color: #555;
-    }
-    .picker-price {
-      font-variant-numeric: tabular-nums;
-      color: #222;
-    }
-    .picker-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .quote-actions-cell {
-      text-align: right;
-      white-space: nowrap;
-    }
-    
-    .row-remove-btn {
-      border: none;
-      background: transparent;
-      color: #b42318;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .row-remove-btn:hover {
-      color: #7f1110;
-    }
   </style>
 </head>
 <body>
@@ -538,38 +466,17 @@ Next lines: bullet lines starting with ' - '"
         <td>
           <div id="salesNoteBlock"></div>
 
-        <!-- Actions -->
-        <div class="quote-actions no-print">
-          <!-- Configuration block -->
-          <div class="quote-actions-group">
-            <div class="quote-actions-label">Configuration items</div>
-            <button type="button"
-                    class="btn-quote"
-                    onclick="openConfigPicker()">
-              ➕ Add from library
-            </button>
-            <button type="button"
-                    class="btn-quote btn-quote-secondary"
-                    onclick="openConfigModal(null)">
-              ✍️ Add custom config
-            </button>
+          <div id="quoteBuilder" class="no-print">
+            <h3 class="no-print">Quote Builder</h3>
+            <div class="quote-actions no-print">
+              <button type="button" class="btn-quote" onclick="openConfigModal()">
+                Add / Edit Configuration Items
+              </button>
+              <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal()">
+                Add / Edit Additional Items
+              </button>
+            </div>
           </div>
-        
-          <!-- Additional items block -->
-          <div class="quote-actions-group">
-            <div class="quote-actions-label">Additional items</div>
-            <button type="button"
-                    class="btn-quote"
-                    onclick="openAdditionalPicker()">
-              ➕ Add from library
-            </button>
-            <button type="button"
-                    class="btn-quote btn-quote-secondary"
-                    onclick="openAdditionalModal(null)">
-              ✍️ Add custom item
-            </button>
-          </div>
-        </div>
 
           <table class="quote-table">
             <thead>
@@ -882,200 +789,21 @@ function formatItemCell(item) {
   return html;
 }
 
-/* ------------------------------------------------------------------
-   1) LIBRARIES (reusable items for pickers)
------------------------------------------------------------------- */
-
-const configLibrary = [
-  { code: "CFG01", description: "Standard installation", qty: "Included", upInr: "Included", tpInr: "Included" },
-  { code: "CFG02", description: "Extended warranty (2 years)", qty: "Included", upInr: "Included", tpInr: "Included" }
-  // add more...
-];
-
-const additionalLibrary = [
-  { code: "ADD01", description: "On-site training (1 day)", qty: 1, price: 15000 },
-  { code: "ADD02", description: "Extra reagent kit", qty: 1, price: 8000 }
-  // add more...
-];
-
-/* ------------------------------------------------------------------
-   2) CUSTOM ADD / EDIT MODALS (existing flow)
------------------------------------------------------------------- */
-
-// Open config modal for add / edit (pass an index when editing a row)
-function openConfigModal(mode, index = null) {
-  const modalState = getModalState();
-  modalState.editIndex = mode === 'edit' ? index : null;
-  // TODO: prefill fields if editIndex != null
-  showConfigModal();
-}
-
-function saveConfigItemFromModal() {
-  const item = {
-    code: getValue('#configCodeInput'),
-    description: getValue('#configDescInput'),
-    qty: 'Included',
-    upInr: 'Included',
-    tpInr: 'Included'
-  };
-
-  const ctx = getQuoteContext();
-  if (!ctx || !ctx.line) return;
-  const line = ctx.line;
-  if (!Array.isArray(line.configItems)) line.configItems = [];
-
-  const idx = getModalState().editIndex;
-
-  if (idx != null && idx >= 0 && idx < line.configItems.length) {
-    line.configItems[idx] = item; // edit existing
-  } else {
-    line.configItems.push(item);  // add new custom item
-  }
-
-  closeModal();
-  renderQuoteBuilder();
-}
-
-// Open additional modal for add / edit
-function openAdditionalModal(mode, index = null) {
-  const modalState = getModalState();
-  modalState.editIndex = mode === 'edit' ? index : null;
-  // TODO: prefill fields if editIndex != null
-  showAdditionalModal();
-}
-
-function saveAdditionalItemFromModal() {
-  const item = {
-    code: getValue('#additionalCodeInput'),
-    description: getValue('#additionalDescInput'),
-    qty: Number(getValue('#additionalQtyInput') || 1),
-    price: Number(getValue('#additionalPriceInput') || 0)
-  };
-
-  const ctx = getQuoteContext();
-  if (!ctx || !ctx.line) return;
-  const line = ctx.line;
-  if (!Array.isArray(line.additionalItems)) line.additionalItems = [];
-
-  const idx = getModalState().editIndex;
-
-  if (idx != null && idx >= 0 && idx < line.additionalItems.length) {
-    line.additionalItems[idx] = item;
-  } else {
-    line.additionalItems.push(item);
-  }
-
-  closeModal();
-  renderQuoteBuilder();
-}
-
-/* ------------------------------------------------------------------
-   3) PICKER MODALS (select from library with checkboxes)
------------------------------------------------------------------- */
-
-// CONFIG picker: open modal + render checkbox list
-function openConfigPicker() {
-  const container = document.getElementById('configPickerList');
-  if (!container) return;
-
-  container.innerHTML = configLibrary.map((item, index) => `
-    <label class="picker-row">
-      <input type="checkbox"
-             class="config-picker-checkbox"
-             data-index="${index}">
-      <span class="picker-code">${item.code}</span>
-      <span class="picker-desc">${item.description}</span>
-    </label>
-  `).join('');
-
-  openModalElement('configPickerModal');
-}
-
-// Add all checked config items from library into current line
-function addSelectedConfigItems() {
-  const checkboxes = document.querySelectorAll('.config-picker-checkbox:checked');
-  const ctx = getQuoteContext();
-  if (!ctx || !ctx.line) {
-    closeModalElement('configPickerModal');
-    return;
-  }
-  const line = ctx.line;
-  if (!Array.isArray(line.configItems)) line.configItems = [];
-
-  checkboxes.forEach(cb => {
-    const idx = Number(cb.dataset.index);
-    const source = configLibrary[idx];
-    if (!source) return;
-    const copy = { ...source }; // shallow clone
-    line.configItems.push(copy);
-  });
-
-  closeModalElement('configPickerModal');
-  renderQuoteBuilder();
-}
-
-// ADDITIONAL picker: open modal + render checkbox list
-function openAdditionalPicker() {
-  const container = document.getElementById('additionalPickerList');
-  if (!container) return;
-
-  container.innerHTML = additionalLibrary.map((item, index) => `
-    <label class="picker-row">
-      <input type="checkbox"
-             class="additional-picker-checkbox"
-             data-index="${index}">
-      <span class="picker-code">${item.code}</span>
-      <span class="picker-desc">${item.description}</span>
-      <span class="picker-price">${item.price.toLocaleString()}</span>
-    </label>
-  `).join('');
-
-  openModalElement('additionalPickerModal');
-}
-
-// Add all checked additional items from library into current line
-function addSelectedAdditionalItems() {
-  const checkboxes = document.querySelectorAll('.additional-picker-checkbox:checked');
-  const ctx = getQuoteContext();
-  if (!ctx || !ctx.line) {
-    closeModalElement('additionalPickerModal');
-    return;
-  }
-  const line = ctx.line;
-  if (!Array.isArray(line.additionalItems)) line.additionalItems = [];
-
-  checkboxes.forEach(cb => {
-    const idx = Number(cb.dataset.index);
-    const source = additionalLibrary[idx];
-    if (!source) return;
-    const copy = { ...source };
-    line.additionalItems.push(copy);
-  });
-
-  closeModalElement('additionalPickerModal');
-  renderQuoteBuilder();
-}
-
-/* ------------------------------------------------------------------
-   4) QUOTE TABLE RENDER + REMOVE BUTTONS
------------------------------------------------------------------- */
-
 function renderQuoteBuilder() {
-  const ctx = getQuoteContext();
-  const inst = ctx && ctx.inst;
-  const line = ctx && ctx.line;
+  const { inst, line } = getQuoteContext();
   const body = document.getElementById('quoteBuilderBody');
 
-  if (!inst || !line || !body) {
-    if (body) body.innerHTML = '';
-    const summaryBody = document.getElementById('quoteSummaryBody');
-    if (summaryBody) summaryBody.innerHTML = '';
+  if (!inst) {
+    body.innerHTML = '';
+    if (document.getElementById('quoteSummaryBody')) {
+      document.getElementById('quoteSummaryBody').innerHTML = '';
+    }
     return;
   }
 
   const rows = [];
 
-  // Instrument row (no remove button for main instrument)
+  // Instrument row
   const qty = line.quantity || 1;
   rows.push(`
     <tr>
@@ -1084,16 +812,15 @@ function renderQuoteBuilder() {
       <td>${qty}</td>
       <td>${moneyINR(inst.unitPrice)}</td>
       <td>${moneyINR((inst.unitPrice || 0) * qty)}</td>
-      <td></td>
     </tr>
   `);
 
-  // CONFIGURATION ITEMS
+  // Configuration items
   const configItems = line.configItems || [];
   if (configItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
-        <td colspan="6" style="font-weight:700;">
+        <td colspan="5" style="font-weight:700;">
           <span class="section-header-label">CONFIGURATION ITEMS</span>
         </td>
       </tr>
@@ -1114,25 +841,17 @@ function renderQuoteBuilder() {
           <td>${q}</td>
           <td>${upCell}</td>
           <td>${tpCell}</td>
-          <td class="quote-actions-cell">
-            <button type="button"
-                    class="row-remove-btn"
-                    title="Remove this configuration item"
-                    onclick="removeConfigItem(${idx})">
-              ✖
-            </button>
-          </td>
         </tr>
       `);
     });
   }
 
-  // ADDITIONAL ITEMS
+  // Additional items
   const additionalItems = line.additionalItems || [];
   if (additionalItems.length) {
     rows.push(`
       <tr style="background:#00B0F0; color:#000;">
-        <td colspan="6" style="font-weight:700;">
+        <td colspan="5" style="font-weight:700;">
           <span class="section-header-label">ADDITIONAL ITEMS</span>
         </td>
       </tr>
@@ -1151,14 +870,6 @@ function renderQuoteBuilder() {
           <td>${qtyNum.toString().padStart(2, '0')}</td>
           <td>${moneyINR(unitNum)}</td>
           <td>${moneyINR(totalNum)}</td>
-          <td class="quote-actions-cell">
-            <button type="button"
-                    class="row-remove-btn"
-                    title="Remove this additional item"
-                    onclick="removeAdditionalItem(${idx})">
-              ✖
-            </button>
-          </td>
         </tr>
       `);
     });
@@ -1166,37 +877,12 @@ function renderQuoteBuilder() {
 
   body.innerHTML = rows.join('');
 
+    // NEW: render summary rows after line items
   renderSummaryRows();
 }
 
-// REMOVE HELPERS
-
-function removeConfigItem(index) {
-  const ctx = getQuoteContext();
-  if (!ctx || !ctx.line || !Array.isArray(ctx.line.configItems)) return;
-  if (index < 0 || index >= ctx.line.configItems.length) return;
-
-  ctx.line.configItems.splice(index, 1);
-  renderQuoteBuilder();
-}
-
-function removeAdditionalItem(index) {
-  const ctx = getQuoteContext();
-  if (!ctx || !ctx.line || !Array.isArray(ctx.line.additionalItems)) return;
-  if (index < 0 || index >= ctx.line.additionalItems.length) return;
-
-  ctx.line.additionalItems.splice(index, 1);
-  renderQuoteBuilder();
-}
-
-/* ------------------------------------------------------------------
-   5) SUMMARY BUILDER (unchanged)
------------------------------------------------------------------- */
-
 function buildLineItemsFromCurrentQuote() {
-  const ctx = getQuoteContext();
-  const inst = ctx && ctx.inst;
-  const line = ctx && ctx.line;
+  const { inst, line } = getQuoteContext();
   const items = [];
 
   if (inst) {
@@ -1208,32 +894,30 @@ function buildLineItemsFromCurrentQuote() {
     });
   }
 
-  (line && line.configItems || []).forEach(item => {
+  (line.configItems || []).forEach(item => {
     const price = item.tpInr != null
       ? Number(item.tpInr)
       : Number(item.upInr || 0);
 
     items.push({
-      name: item.name || item.itemName || item.description || '',
+      name: item.name || item.itemName || '',
       code: item.code || item.catalog || '',
       type: 'Configuration',
       price
     });
   });
 
-  (line && line.additionalItems || []).forEach(item => {
+  (line.additionalItems || []).forEach(item => {
     let unitNum = 0;
     if (item.price) {
-      const cleaned = String(item.price)
-        .replace(/[^\d,]/g, '')
-        .replace(/,/g, '');
+      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
       unitNum = parseFloat(cleaned) || 0;
     } else {
       unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
     }
 
     items.push({
-      name: item.name || item.itemName || item.description || '',
+      name: item.name || item.itemName || '',
       code: item.code || item.catalog || '',
       type: 'Additional',
       price: unitNum
