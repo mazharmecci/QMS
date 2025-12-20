@@ -368,13 +368,17 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   function populateInstrumentDropdown() {
     const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
     const select = document.getElementById('instrumentSelect');
+  
     instruments.forEach((inst, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
   
-      const title = inst.instrumentName || inst.description || '';
-      opt.textContent = title; // dropdown shows: pfm Rotary 3006 EM (Fully-Electronic Microtome)
+      // Dropdown label: strictly prefer main equipment name
+      const name = inst.instrumentName || inst.name || '';
+      const fallback = inst.catalog || inst.instrumentCode || '';
+      const label = name || fallback || 'Unnamed Instrument';
   
+      opt.textContent = label; // e.g. "pfm Rotary 3006 EM (Fully-Electronic Microtome)"
       select.appendChild(opt);
     });
   }
@@ -395,7 +399,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
         return;
       }
   
-      // full multi-line description from instruments master
+      // Build description strictly from longDescription/description
       const descLines = (inst.longDescription || inst.description || '')
         .split('\n')
         .map(l => l.trim())
@@ -405,8 +409,8 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
       const extras = descLines.slice(1).join(' ');
   
       const fullText = [overview, extras].filter(Boolean).join(' ');
-      preview.style.display = 'block';
-      details.textContent = fullText; // shows: The pfm Rotary 3006 EM is a modern, newly-designed...
+      preview.style.display = fullText ? 'block' : 'none';
+      details.textContent = fullText; // e.g. "The pfm Rotary 3006 EM is a modern, newly-designed..."
     });
   }
 
