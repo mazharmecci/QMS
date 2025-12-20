@@ -351,6 +351,62 @@
         display:none !important;
       }
     }
+
+        /* Minimal styles for picker rows – adjust to your design */
+    .quote-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .quote-actions-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .quote-actions-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5c5c5c;
+    }
+    .btn-quote-tertiary {
+      background: transparent;
+      border: 1px dashed rgba(0,0,0,0.18);
+      color: #444;
+    }
+    
+    .picker-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .picker-row {
+      display: grid;
+      grid-template-columns: auto 90px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #e5e5e5;
+      font-size: 13px;
+    }
+    .picker-code {
+      font-weight: 600;
+    }
+    .picker-desc {
+      color: #555;
+    }
+    .picker-price {
+      font-variant-numeric: tabular-nums;
+      color: #222;
+    }
+    .picker-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
