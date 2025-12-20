@@ -466,20 +466,48 @@ Next lines: bullet lines starting with ' - '"
         <td>
           <div id="salesNoteBlock"></div>
 
-        <div class="quote-actions no-print">
-          <button type="button" class="btn-quote" onclick="openConfigModal(null)">
-            ➕ Add Configuration Item
-          </button>
-          <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal(null)">
-            ➕ Add Additional Item
-          </button>
-          <button type="button" class="btn-quote" onclick="openConfigModal('edit')">
-            ✏️ Edit Configuration Items
-          </button>
-          <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal('edit')">
-            ✏️ Edit Additional Items
-          </button>
-        </div>
+          <div class="quote-actions no-print">
+          
+            <!-- Configuration block -->
+            <div class="quote-actions-group">
+              <div class="quote-actions-label">Configuration items</div>
+              <button type="button"
+                      class="btn-quote"
+                      onclick="openConfigPicker()">
+                ➕ Add from library
+              </button>
+              <button type="button"
+                      class="btn-quote btn-quote-secondary"
+                      onclick="openConfigModal(null)">
+                ✍️ Add custom config
+              </button>
+              <button type="button"
+                      class="btn-quote btn-quote-tertiary"
+                      onclick="openConfigEditMode()">
+                ✏️ Edit items in quote
+              </button>
+            </div>
+          
+            <!-- Additional items block -->
+            <div class="quote-actions-group">
+              <div class="quote-actions-label">Additional items</div>
+              <button type="button"
+                      class="btn-quote"
+                      onclick="openAdditionalPicker()">
+                ➕ Add from library
+              </button>
+              <button type="button"
+                      class="btn-quote btn-quote-secondary"
+                      onclick="openAdditionalModal(null)">
+                ✍️ Add custom item
+              </button>
+              <button type="button"
+                      class="btn-quote btn-quote-tertiary"
+                      onclick="openAdditionalEditMode()">
+                ✏️ Edit items in quote
+              </button>
+            </div>
+          </div>
 
           <table class="quote-table">
             <thead>
@@ -792,9 +820,31 @@ function formatItemCell(item) {
   return html;
 }
 
-function openConfigModal(mode) {
+/* ------------------------------------------------------------------
+   1) LIBRARIES (reusable items for pickers)
+------------------------------------------------------------------ */
+
+const configLibrary = [
+  { code: "CFG01", description: "Standard installation", qty: "Included", upInr: "Included", tpInr: "Included" },
+  { code: "CFG02", description: "Extended warranty (2 years)", qty: "Included", upInr: "Included", tpInr: "Included" }
+  // add more...
+];
+
+const additionalLibrary = [
+  { code: "ADD01", description: "On-site training (1 day)", qty: 1, price: 15000 },
+  { code: "ADD02", description: "Extra reagent kit", qty: 1, price: 8000 }
+  // add more...
+];
+
+/* ------------------------------------------------------------------
+   2) CUSTOM ADD / EDIT MODALS (your existing flow, slightly cleaned)
+------------------------------------------------------------------ */
+
+// Open config modal for add / edit (pass an index when editing a row)
+function openConfigModal(mode, index = null) {
   const modalState = getModalState();
-  modalState.editIndex = mode === 'edit' ? 0 : null;
+  modalState.editIndex = mode === 'edit' ? index : null;
+  // TODO: prefill fields if editIndex != null
   showConfigModal();
 }
 
@@ -811,21 +861,25 @@ function saveConfigItemFromModal() {
   const idx = getModalState().editIndex;
 
   if (idx != null) {
-    line.configItems[idx] = item; // edit mode
+    // edit existing
+    line.configItems[idx] = item;
   } else {
-    line.configItems.push(item); // add mode
+    // add new custom item
+    line.configItems.push(item);
   }
 
   closeModal();
   renderQuoteTable();
 }
 
-function openAdditionalModal(mode) {
+// Open additional modal for add / edit
+function openAdditionalModal(mode, index = null) {
   const modalState = getModalState();
-  modalState.editIndex = mode === 'edit' ? 0 : null;
+  modalState.editIndex = mode === 'edit' ? index : null;
+  // TODO: prefill fields if editIndex != null
   showAdditionalModal();
 }
-  
+
 function saveAdditionalItemFromModal() {
   const item = {
     code: getValue('#additionalCodeInput'),
@@ -844,6 +898,92 @@ function saveAdditionalItemFromModal() {
   }
 
   closeModal();
+  renderQuoteTable();
+}
+
+/* ------------------------------------------------------------------
+   3) PICKER MODALS (select from library with checkboxes)
+------------------------------------------------------------------ */
+
+// CONFIG picker: open modal + render checkbox list
+function openConfigPicker() {
+  const container = document.getElementById('configPickerList');
+  if (!container) return;
+
+  container.innerHTML = configLibrary.map((item, index) => `
+    <label class="picker-row">
+      <input type="checkbox"
+             class="config-picker-checkbox"
+             data-index="${index}">
+      <span class="picker-code">${item.code}</span>
+      <span class="picker-desc">${item.description}</span>
+    </label>
+  `).join('');
+
+  // You can reuse your existing modal system, or a separate one:
+  openModalElement('configPickerModal');
+}
+
+// Add all checked config items from library into current line
+function addSelectedConfigItems() {
+  const checkboxes = document.querySelectorAll('.config-picker-checkbox:checked');
+  if (!checkboxes.length) {
+    closeModalElement('configPickerModal');
+    return;
+  }
+
+  const line = getQuoteContext().line;
+
+  checkboxes.forEach(cb => {
+    const idx = Number(cb.dataset.index);
+    const source = configLibrary[idx];
+    if (!source) return;
+    const copy = { ...source }; // shallow clone
+    line.configItems.push(copy);
+  });
+
+  closeModalElement('configPickerModal');
+  renderQuoteTable();
+}
+
+// ADDITIONAL picker: open modal + render checkbox list
+function openAdditionalPicker() {
+  const container = document.getElementById('additionalPickerList');
+  if (!container) return;
+
+  container.innerHTML = additionalLibrary.map((item, index) => `
+    <label class="picker-row">
+      <input type="checkbox"
+             class="additional-picker-checkbox"
+             data-index="${index}">
+      <span class="picker-code">${item.code}</span>
+      <span class="picker-desc">${item.description}</span>
+      <span class="picker-price">${item.price.toLocaleString()}</span>
+    </label>
+  `).join('');
+
+  openModalElement('additionalPickerModal');
+}
+
+// Add all checked additional items from library into current line
+function addSelectedAdditionalItems() {
+  const checkboxes = document.querySelectorAll('.additional-picker-checkbox:checked');
+  if (!checkboxes.length) {
+    closeModalElement('additionalPickerModal');
+    return;
+  }
+
+  const line = getQuoteContext().line;
+
+  checkboxes.forEach(cb => {
+    const idx = Number(cb.dataset.index);
+    const source = additionalLibrary[idx];
+    if (!source) return;
+    const copy = { ...source };
+    line.additionalItems.push(copy);
+  });
+
+  closeModalElement('additionalPickerModal');
   renderQuoteTable();
 }
 
