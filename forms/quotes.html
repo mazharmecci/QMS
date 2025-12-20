@@ -1187,6 +1187,65 @@ function finalizeQuote() {
     renderItemModalList(line, type);
   }
 
+// --- Summary calculations for bottom rows ---
+function calculateSummaryFromLine(line, inst) {
+  const configItems = line.configItems || [];
+  const additionalItems = line.additionalItems || [];
+
+  // Instrument total
+  const qty = line.quantity || 1;
+  const instrumentTotal = inst ? (Number(inst.unitPrice || 0) * qty) : 0;
+
+  // Configuration items: use tpInr if numeric, else 0
+  const configTotal = configItems.reduce((sum, item) => {
+    const val = typeof item.tpInr === 'number'
+      ? item.tpInr
+      : typeof item.upInr === 'number'
+      ? item.upInr * (item.qty || 1)
+      : 0;
+    return sum + val;
+  }, 0);
+
+  // Additional items: numeric price * qty
+  const additionalTotal = additionalItems.reduce((sum, item) => {
+    const qtyNum = Number(item.qty || 1);
+    const priceNum = Number(item.price || item.unitPrice || item.upInr || item.tpInr || 0);
+    return sum + qtyNum * priceNum;
+  }, 0);
+
+  // Items Value Total INR = all items sum
+  const itemsValueTotal = instrumentTotal + configTotal + additionalTotal;
+
+  // Special Discount read from header (inline editable value)
+  const header = getQuoteHeaderRaw();
+  const discount = Number(header.discountInr || header.discount || 0);
+
+  // Price after discount
+  const priceAfterDiscount = itemsValueTotal - discount;
+
+  // GST base per your rule
+  const hasDiscount = discount > 0;
+  const gstBase = hasDiscount ? priceAfterDiscount : itemsValueTotal;
+
+  // GST @ 18%
+  const gst = gstBase * 0.18;
+
+  // Total Value INR (depends on discount)
+  const totalValue = hasDiscount ? priceAfterDiscount + gst : itemsValueTotal + gst;
+
+  // Rounded off to
+  const roundedTotal = Math.round(totalValue);
+
+  return {
+    itemsValueTotal,
+    discount,
+    priceAfterDiscount,
+    gst,
+    totalValue,
+    roundedTotal
+  };
+}
+
 function renderSummaryRows() {
   const { inst, line } = getQuoteContext();
   const summaryBody = document.getElementById('quoteSummaryBody');
