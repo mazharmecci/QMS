@@ -96,13 +96,12 @@
 
   <form id="instrumentForm">
 
-    <textarea
-      id="description"
-      placeholder="Instrument description (first line = printed heading, next lines = bullets)"
-      rows="3"
-      style="width:100%;"
-    ></textarea>
-    
+    <input
+      type="text"
+      id="instrumentCode"
+      placeholder="Instrument Code (for quotes)"
+    >
+
     <input
       type="text"
       id="mainItemName"
@@ -110,12 +109,13 @@
       required
     >
 
-    <input
-      type="text"
-      id="instrumentCode"
-      placeholder="Instrument Code (for quotes)"
-    >
-
+    <textarea
+      id="description"
+      placeholder="Instrument description (complete description of the instrument)"
+      rows="3"
+      style="width:100%;"
+    ></textarea>    
+    
     <textarea
       id="suppliedWithInput"
       rows="8"
