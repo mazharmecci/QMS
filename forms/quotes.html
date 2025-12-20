@@ -339,6 +339,18 @@
         display:none !important;
       }
     }
+
+    /* Visible on screen, hidden in PDF/print */
+    .no-print {
+      display: table-row; /* or block, depending on usage */
+    }
+    
+    @media print {
+      .no-print,
+      .no-print * {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
