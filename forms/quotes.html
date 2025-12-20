@@ -583,84 +583,84 @@ Next lines: bullet lines starting with ' - '"
     return null;
   }
 
-  function getPrimaryLine(header) {
-    if (header.quoteLines && header.quoteLines.length) {
-      return header.quoteLines[0];
-    }
-    const line = {
-      lineType: 'instrument',
-      instrumentIndex:
-        header.selectedInstrumentIndex !== '' && header.selectedInstrumentIndex != null
-          ? Number(header.selectedInstrumentIndex)
-          : null,
-      quantity: 1,
-      configItems: header.configItems || [],
-      additionalItems: header.additionalItems || []
-    };
-    header.quoteLines = [line];
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
-    return line;
+function getPrimaryLine(header) {
+  if (header.quoteLines && header.quoteLines.length) {
+    return header.quoteLines[0];
+  }
+  const line = {
+    lineType: 'instrument',
+    instrumentIndex:
+      header.selectedInstrumentIndex !== '' && header.selectedInstrumentIndex != null
+        ? Number(header.selectedInstrumentIndex)
+        : null,
+    quantity: 1,
+    configItems: header.configItems || [],
+    additionalItems: header.additionalItems || []
+  };
+  header.quoteLines = [line];
+  localStorage.setItem('quoteHeader', JSON.stringify(header));
+  return line;
+}
+
+function validateHeader(header) {
+  const errors = [];
+  if (!header.quoteNo)         errors.push('Quote No is missing');
+  if (!header.quoteDate)       errors.push('Quote Date is missing');
+  if (!header.refDate)         errors.push('Reference Date is missing');
+  if (!header.hospitalName)    errors.push('Hospital Name is missing');
+  if (!header.hospitalAddress) errors.push('Hospital Address is missing');
+
+  if (errors.length) {
+    alert('Validation errors:\n' + errors.join('\n'));
+    return false;
+  }
+  return true;
+}
+
+function getQuoteContext() {
+  const header = getQuoteHeaderRaw();
+  const inst   = resolveInstrumentForHeader(header);
+  const line   = getPrimaryLine(header);
+  return { header, inst, line };
+}
+
+function populateHeader() {
+  const { header } = getQuoteContext();
+  if (!validateHeader(header)) return;
+
+  document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
+  document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
+  document.getElementById('metaYourRef').textContent   = header.yourReference || '';
+  document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
+  document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
+  document.getElementById('metaPhone').textContent     = header.contactPhone || '';
+  document.getElementById('metaEmail').textContent     = header.contactEmail || '';
+  document.getElementById('metaOffice').textContent    = header.officePhone || '';
+
+  document.getElementById('toHospitalNameLine').textContent =
+    header.hospitalName || 'Hospital / Client Name';
+
+  const [line1, line2] = splitAddress(header.hospitalAddress || '');
+  document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
+  document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
+  document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
+
+  const noteEl = document.getElementById('salesNoteBlock');
+  if (noteEl && header.salesNote) {
+    noteEl.textContent = header.salesNote;
   }
 
-  function validateHeader(header) {
-    const errors = [];
-    if (!header.quoteNo)         errors.push('Quote No is missing');
-    if (!header.quoteDate)       errors.push('Quote Date is missing');
-    if (!header.refDate)         errors.push('Reference Date is missing');
-    if (!header.hospitalName)    errors.push('Hospital Name is missing');
-    if (!header.hospitalAddress) errors.push('Hospital Address is missing');
-
-    if (errors.length) {
-      alert('Validation errors:\n' + errors.join('\n'));
-      return false;
-    }
-    return true;
-  }
-
-  function getQuoteContext() {
-    const header = getQuoteHeaderRaw();
-    const inst   = resolveInstrumentForHeader(header);
-    const line   = getPrimaryLine(header);
-    return { header, inst, line };
-  }
-
-  function populateHeader() {
-    const { header } = getQuoteContext();
-    if (!validateHeader(header)) return;
-
-    document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
-    document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
-    document.getElementById('metaYourRef').textContent   = header.yourReference || '';
-    document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
-    document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
-    document.getElementById('metaPhone').textContent     = header.contactPhone || '';
-    document.getElementById('metaEmail').textContent     = header.contactEmail || '';
-    document.getElementById('metaOffice').textContent    = header.officePhone || '';
-
-    document.getElementById('toHospitalNameLine').textContent =
-      header.hospitalName || 'Hospital / Client Name';
-
-    const [line1, line2] = splitAddress(header.hospitalAddress || '');
-    document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
-    document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
-    document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
-
-    const noteEl = document.getElementById('salesNoteBlock');
-    if (noteEl && header.salesNote) {
-      noteEl.textContent = header.salesNote;
-    }
-
-    const termsEl = document.getElementById('termsTextBlock');
-    if (termsEl) {
-      if (header.termsHtml) {
-        termsEl.innerHTML = header.termsHtml;
-      } else if (header.termsText) {
-        termsEl.textContent = header.termsText;
-      } else {
-        termsEl.textContent = '';
-      }
+  const termsEl = document.getElementById('termsTextBlock');
+  if (termsEl) {
+    if (header.termsHtml) {
+      termsEl.innerHTML = header.termsHtml;
+    } else if (header.termsText) {
+      termsEl.textContent = header.termsText;
+    } else {
+      termsEl.textContent = '';
     }
   }
+}
 
   function formatInstrumentCell(inst) {
   const code = inst.catalog || inst.code || '';
