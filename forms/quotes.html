@@ -1330,28 +1330,28 @@ function renderSummaryRows() {
 
     <tr class="${discount > 0 ? '' : 'no-print'}">
       <td colspan="4" style="text-align:right;"><strong>Special Discount</strong></td>
-    <td style="text-align:right;">
-      <input
-        type="text"
-        class="discount-input"
-        value="${discount || ''}"
-        style="
-          width:120px;
-          text-align:right;
-          font-weight:bold;
-          font-size:13px;
-          line-height:1.4;
-          border:none;
-          outline:none;
-          background:#e6f4ff;
-          border-radius:4px;
-          padding:0 6px;      /* no vertical padding */
-          box-sizing:border-box;
-          height:20px;        /* matches table cell height closely */
-          vertical-align:middle;
-        "
-      />
-    </td>
+      <td style="text-align:right;">
+        <input
+          type="text"
+          class="discount-input"
+          value="${discount ? discount.toFixed(2) : ''}"
+          style="
+            width:120px;
+            text-align:right;
+            font-weight:bold;
+            font-size:13px;
+            line-height:1.4;
+            border:none;
+            outline:none;
+            background:#e6f4ff;
+            border-radius:4px;
+            padding:0 6px;
+            box-sizing:border-box;
+            height:20px;
+            vertical-align:middle;
+          "
+        />
+      </td>
     </tr>
 
     <tr class="${discount > 0 ? '' : 'no-print'}">
@@ -1382,21 +1382,20 @@ function renderSummaryRows() {
 
   const input = summaryBody.querySelector('.discount-input');
   if (input) {
-    // While typing: numeric only, no commas, no re-render
+    // While typing: digits only, no commas/₹, no re-render
     input.addEventListener('input', (e) => {
       const raw = e.target.value;
-      const cleaned = raw.replace(/[^\d.]/g, '');
+      const cleaned = raw.replace(/[^\d.]/g, ''); // allow digits + dot
+      e.target.value = cleaned;
+
       const num = Number(cleaned);
-
-      e.target.value = cleaned; // keep caret stable
-
       const header = getQuoteHeaderRaw();
       header.discountInr = num || 0;
       header.discount = num || 0;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
     });
 
-    // On blur: normalize, store, and re-render (summary shows ₹ + commas via moneyINR)
+    // On blur: normalize, store, and re-render; summary cells use ₹ + commas
     input.addEventListener('blur', (e) => {
       const header = getQuoteHeaderRaw();
       const cleaned = String(e.target.value || '').replace(/[^\d.]/g, '');
@@ -1406,6 +1405,17 @@ function renderSummaryRows() {
       header.discount = val;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
 
+      // Show formatted in the input itself (₹ + Indian commas + 2 decimals)
+      if (val) {
+        e.target.value = `₹ ${val.toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}`;
+      } else {
+        e.target.value = '';
+      }
+
+      // Re-render so all summary rows use the updated value
       renderSummaryRows();
     });
   }
