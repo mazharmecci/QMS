@@ -664,13 +664,19 @@ function populateHeader() {
 
 function formatInstrumentCell(inst) {
   const code      = inst.catalog || inst.code || '';
-  const name       = inst.instrumentName || inst.name || '';
+  const nameProp  = inst.instrumentName || inst.name || '';
   const descLines = parseLines(inst.longDescription || inst.description || '');
-  const supplied  = inst.suppliedWith || inst.supplied || [];
 
-  const title1 = descLines[0] || ''; // pfm Rotary 3006 EM ...
-  const title2 = descLines[1] || ''; // main sentence
-  const rest   = descLines.slice(2); // any extra free text (if any)
+  // Decide title lines:
+  // If a name property exists, use that as the first bold line.
+  // Then take the first description line (if any) as the second bold line.
+  const title1 = nameProp || (descLines[0] || '');
+  const title2 = nameProp ? (descLines[0] || '') : (descLines[1] || '');
+
+  // Remaining description after the two title lines
+  const rest = nameProp ? descLines.slice(1) : descLines.slice(2);
+
+  const supplied = inst.suppliedWith || inst.supplied || [];
 
   const specs = [];
   if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
@@ -683,43 +689,39 @@ function formatInstrumentCell(inst) {
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
 
-  // Cat / Material No. (NOT bold)
+  // Cat / Material No. (normal, not bold)
   if (code) html += `<div class="cat-main">${code}</div>`;
 
-  // First two lines bold
+  // Main top line: instrument name
   if (title1) html += `<div><strong>${title1}</strong></div>`;
+
+  // Second bold line: first description sentence
   if (title2) html += `<div><strong>${title2}</strong></div>`;
 
-  // Remaining description (if any)
+  // Remaining description (normal text)
   if (rest.length) {
     html += `<div style="height:8px;"></div>`;
     html += rest.map(line => `<div>${line}</div>`).join('');
   }
 
-  // Supplied block: heading WITHOUT hyphen, bullets WITH hyphen
+  // Supplied block: first entry as heading, rest as bullets
   if (supplied.length) {
     html += `<div style="height:8px;"></div>`;
-
     supplied.forEach((s, idx) => {
       const text = String(s).trim();
-
       if (idx === 0) {
-        // First entry is the heading line – no hyphen, no indent
         html += `<div>${text}</div>`;
       } else {
-        // Subsequent entries as bullets
         html += `<div>- ${text}</div>`;
       }
     });
   }
 
-  // Specs
   if (specs.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div>${specs.join('<br>')}</div>`;
   }
 
-  // Meta
   if (meta.length) {
     html += `<div style="height:8px;"></div>`;
     html += `<div>${meta.join('<br>')}</div>`;
