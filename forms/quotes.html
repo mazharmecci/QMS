@@ -1261,6 +1261,19 @@ function renderSummaryRows() {
     roundedTotal
   } = calculateSummaryFromLine(line, inst);
 
+  // helper to format as 10,000.00 while typing
+  function formatDiscount(val) {
+    const num = Number(
+      String(val || '')
+        .replace(/[^\d.]/g, '') // remove non-numerics
+    );
+    if (!num) return '';
+    return num.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
   summaryBody.innerHTML = `
     <tr>
       <td colspan="4">Items Value Total INR</td>
@@ -1270,10 +1283,10 @@ function renderSummaryRows() {
       <td colspan="4">Special Discount</td>
       <td>
         <input
-          type="number"
+          type="text"
           class="discount-input"
-          value="${discount}"
-          style="width:100px; text-align:right;"
+          value="${formatDiscount(discount)}"
+          style="width:120px; text-align:right;"
         />
       </td>
     </tr>
@@ -1301,22 +1314,44 @@ function renderSummaryRows() {
 
   const input = summaryBody.querySelector('.discount-input');
   if (input) {
-    // keep typing smooth: just store value on every key
     input.addEventListener('input', (e) => {
+      const raw = e.target.value;
+
+      // strip to digits + dot
+      const cleaned = raw.replace(/[^\d.]/g, '');
+
+      // parse once
+      const num = Number(cleaned);
       const header = getQuoteHeaderRaw();
-      header.discountInr = e.target.value;  // keep as string while typing
-      header.discount = e.target.value;
+
+      // store numeric value in header
+      header.discountInr = num || 0;
+      header.discount = num || 0;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
+
+      // reflect formatted value back to the input
+      if (!cleaned) {
+        e.target.value = '';
+      } else {
+        e.target.value = num.toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
     });
 
-    // when user leaves the field, normalize and re-render summary
     input.addEventListener('blur', (e) => {
       const header = getQuoteHeaderRaw();
-      const val = Number(e.target.value) || 0;
+      const val = Number(
+        String(e.target.value || '').replace(/[^\d.]/g, '')
+      ) || 0;
+
       header.discountInr = val;
       header.discount = val;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
-      renderSummaryRows();  // safe: happens once when focus leaves
+
+      // re-render summary once user finishes editing
+      renderSummaryRows();
     });
   }
 }
