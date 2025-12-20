@@ -466,17 +466,20 @@ Next lines: bullet lines starting with ' - '"
         <td>
           <div id="salesNoteBlock"></div>
 
-          <div id="quoteBuilder" class="no-print">
-            <h3 class="no-print">Quote Builder</h3>
-            <div class="quote-actions no-print">
-              <button type="button" class="btn-quote" onclick="openConfigModal()">
-                Add / Edit Configuration Items
-              </button>
-              <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal()">
-                Add / Edit Additional Items
-              </button>
-            </div>
-          </div>
+        <div class="quote-actions no-print">
+          <button type="button" class="btn-quote" onclick="openConfigModal(null)">
+            ➕ Add Configuration Item
+          </button>
+          <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal(null)">
+            ➕ Add Additional Item
+          </button>
+          <button type="button" class="btn-quote" onclick="openConfigModal('edit')">
+            ✏️ Edit Configuration Items
+          </button>
+          <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal('edit')">
+            ✏️ Edit Additional Items
+          </button>
+        </div>
 
           <table class="quote-table">
             <thead>
@@ -787,6 +790,61 @@ function formatItemCell(item) {
 
   html += `</td>`;
   return html;
+}
+
+function openConfigModal(mode) {
+  const modalState = getModalState();
+  modalState.editIndex = mode === 'edit' ? 0 : null;
+  showConfigModal();
+}
+
+function saveConfigItemFromModal() {
+  const item = {
+    code: getValue('#configCodeInput'),
+    description: getValue('#configDescInput'),
+    qty: 'Included',
+    upInr: 'Included',
+    tpInr: 'Included'
+  };
+
+  const line = getQuoteContext().line;
+  const idx = getModalState().editIndex;
+
+  if (idx != null) {
+    line.configItems[idx] = item; // edit mode
+  } else {
+    line.configItems.push(item); // add mode
+  }
+
+  closeModal();
+  renderQuoteTable();
+}
+
+function openAdditionalModal(mode) {
+  const modalState = getModalState();
+  modalState.editIndex = mode === 'edit' ? 0 : null;
+  showAdditionalModal();
+}
+  
+function saveAdditionalItemFromModal() {
+  const item = {
+    code: getValue('#additionalCodeInput'),
+    description: getValue('#additionalDescInput'),
+    qty: Number(getValue('#additionalQtyInput') || 1),
+    price: Number(getValue('#additionalPriceInput') || 0)
+  };
+
+  const line = getQuoteContext().line;
+  const idx = getModalState().editIndex;
+
+  if (idx != null) {
+    line.additionalItems[idx] = item;
+  } else {
+    line.additionalItems.push(item);
+  }
+
+  closeModal();
+  renderQuoteTable();
 }
 
 function renderQuoteBuilder() {
