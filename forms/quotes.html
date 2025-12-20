@@ -1325,7 +1325,7 @@ function renderSummaryRows() {
   summaryBody.innerHTML = `
     <tr>
       <td colspan="4" style="text-align:right;"><strong>Items Value Total INR</strong></td>
-      <td style="text-align:right;"><strong>${moneyINR(itemsValueTotal)}</strong></td>
+      <td style="text-align:right;"><strong>₹ ${moneyINR(itemsValueTotal)}</strong></td>
     </tr>
 
     <tr class="${discount > 0 ? '' : 'no-print'}">
@@ -1351,36 +1351,39 @@ function renderSummaryRows() {
 
     <tr class="${discount > 0 ? '' : 'no-print'}">
       <td colspan="4" style="text-align:right;"><strong>Price after Discount</strong></td>
-      <td style="text-align:right;"><strong>${moneyINR(priceAfterDiscount)}</strong></td>
+      <td style="text-align:right;"><strong>₹ ${moneyINR(priceAfterDiscount)}</strong></td>
     </tr>
+
     <tr>
       <td colspan="4" style="text-align:right;"><strong>Freight Costs INR</strong></td>
       <td style="text-align:right;"><strong>Included</strong></td>
     </tr>
+
     <tr>
       <td colspan="4" style="text-align:right;"><strong>Goods and Services Tax INR @ 18%</strong></td>
-      <td style="text-align:right;"><strong>${moneyINR(gst)}</strong></td>
+      <td style="text-align:right;"><strong>₹ ${moneyINR(gst)}</strong></td>
     </tr>
+
     <tr>
       <td colspan="4" style="text-align:right;"><strong>Total Value INR</strong></td>
-      <td style="text-align:right;"><strong>${moneyINR(totalValue)}</strong></td>
+      <td style="text-align:right;"><strong>₹ ${moneyINR(totalValue)}</strong></td>
     </tr>
+
     <tr>
       <td colspan="4" style="text-align:right;"><strong>Rounded off to</strong></td>
-      <td style="text-align:right;"><strong>${moneyINR(roundedTotal)}</strong></td>
+      <td style="text-align:right;"><strong>₹ ${moneyINR(roundedTotal)}</strong></td>
     </tr>
   `;
 
   const input = summaryBody.querySelector('.discount-input');
   if (input) {
-    // While typing: store numeric value, no re-render, no formatting
+    // While typing: numeric only, no commas, no re-render
     input.addEventListener('input', (e) => {
       const raw = e.target.value;
       const cleaned = raw.replace(/[^\d.]/g, '');
       const num = Number(cleaned);
 
-      // keep what user typed in the box (but strip illegal chars)
-      e.target.value = cleaned;
+      e.target.value = cleaned; // keep caret stable
 
       const header = getQuoteHeaderRaw();
       header.discountInr = num || 0;
@@ -1388,7 +1391,7 @@ function renderSummaryRows() {
       localStorage.setItem('quoteHeader', JSON.stringify(header));
     });
 
-    // On blur: normalize, format with commas, and re-render summary once
+    // On blur: normalize, store, and re-render (summary shows ₹ + commas via moneyINR)
     input.addEventListener('blur', (e) => {
       const header = getQuoteHeaderRaw();
       const cleaned = String(e.target.value || '').replace(/[^\d.]/g, '');
@@ -1398,8 +1401,6 @@ function renderSummaryRows() {
       header.discount = val;
       localStorage.setItem('quoteHeader', JSON.stringify(header));
 
-      // This will re-run calculateSummaryFromLine and rebuild the row,
-      // but only once after editing is finished, so focus is no longer needed
       renderSummaryRows();
     });
   }
