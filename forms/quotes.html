@@ -1048,43 +1048,93 @@ function finalizeQuote() {
     if (overlay) overlay.style.display = 'none';
   }
 
-  function renderItemModalList(line, type) {
-    const listEl = document.getElementById('itemModalList');
-    const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
+function renderItemModalList(line, type) {
+  const listEl = document.getElementById('itemModalList');
+  const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
 
-    if (!arr.length) {
-      listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this quote.</div>';
-      return;
-    }
-
-    listEl.innerHTML = arr.map((item, idx) => {
-      const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
-      const price = type === 'config'
-        ? 'Included'
-        : (item.price || item.unitPrice || item.upInr || item.tpInr || '');
-      return `
-        <div style="display:flex; align-items:center; justify-content:space-between;
-                    padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
-          <div style="flex:1; font-size:12px;">
-            <div style="font-weight:600;">${item.code || ''} ${item.name || ''}</div>
-            <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
-          </div>
-          <div style="display:flex; gap:0.25rem;">
-            <button type="button" onclick="editItemFromModal('${type}', ${idx})"
-                    style="border:none; background:#e0f2fe; color:#0369a1;
-                           font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
-              Edit
-            </button>
-            <button type="button" onclick="removeItemFromModal('${type}', ${idx})"
-                    style="border:none; background:#fee2e2; color:#b91c1c;
-                           font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
-              Remove
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
+  if (!arr.length) {
+    listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this quote.</div>';
+    return;
   }
+
+  listEl.innerHTML = arr.map((item, idx) => {
+    const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
+    const price = type === 'config'
+      ? 'Included'
+      : (item.price || item.unitPrice || item.upInr || item.tpInr || '');
+
+    return `
+      <div style="display:flex; align-items:center; justify-content:space-between;
+                  padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
+
+        <!-- Left: checkbox + Add button -->
+        <div style="display:flex; align-items:center; gap:0.4rem; margin-right:0.5rem;">
+          <input
+            type="checkbox"
+            class="reuse-checkbox"
+            data-type="${type}"
+            data-index="${idx}"
+            style="cursor:pointer;"
+          />
+          <button
+            type="button"
+            onclick="addItemFromLibrary('${type}', ${idx})"
+            style="
+              border:none;
+              background:#dcfce7;
+              color:#166534;
+              font-size:11px;
+              padding:0.15rem 0.55rem;
+              border-radius:999px;
+              cursor:pointer;
+              white-space:nowrap;
+            "
+          >
+            Add
+          </button>
+        </div>
+
+        <!-- Middle: item details -->
+        <div style="flex:1; font-size:12px;">
+          <div style="font-weight:600;">${item.code || ''} ${item.name || ''}</div>
+          <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
+        </div>
+
+        <!-- Right: Edit / Remove -->
+        <div style="display:flex; gap:0.25rem;">
+          <button type="button" onclick="editItemFromModal('${type}', ${idx})"
+                  style="border:none; background:#e0f2fe; color:#0369a1;
+                         font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
+            Edit
+          </button>
+          <button type="button" onclick="removeItemFromModal('${type}', ${idx})"
+                  style="border:none; background:#fee2e2; color:#b91c1c;
+                         font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function addItemFromLibrary(type, idx) {
+  const { header, line } = getQuoteContext();
+  const sourceArr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
+  const item = sourceArr[idx];
+  if (!item) return;
+
+  const targetArrName = type === 'config' ? 'configItems' : 'additionalItems';
+  if (!Array.isArray(line[targetArrName])) line[targetArrName] = [];
+
+  // Clone the item so edits don’t affect the library copy
+  const newItem = JSON.parse(JSON.stringify(item));
+
+  line[targetArrName].push(newItem);
+  header.quoteLines[0] = line;
+  localStorage.setItem('quoteHeader', JSON.stringify(header));
+  renderQuoteBuilder();
+}
 
   function editItemFromModal(type, idx) {
     const { line } = getQuoteContext();
