@@ -369,10 +369,19 @@
     /* Hide overlays in print */
     .overlay { display: none !important; }
   
-    /* Hide discount rows only in print when discount is zero */
-    .discount-zero .discount-row,
-    .discount-zero .after-discount-row { display: none; }
-  }
+    /* Screen: rows always visible */
+    .discount-row,
+    .after-discount-row {
+      display: table-row; /* ensure they show by default */
+    }
+    
+    @media print {
+      /* Hide only in print when discount is zero */
+      .discount-zero .discount-row,
+      .discount-zero .after-discount-row {
+        display: none !important;
+      }
+    }
   
   /* Overlay (screen only) */
   .overlay {
