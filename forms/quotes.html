@@ -1059,7 +1059,7 @@ Next lines: bullet lines starting with ' - '"
     const sb = document.getElementById('quoteSummaryBody');
     if (!sb) return;
   
-    const header = getQuoteHeaderRaw();          // read current header
+    const header = getQuoteHeaderRaw();
     const gstPercent = 18;
     const discount = Number(header.discount || 0);
   
@@ -1069,28 +1069,29 @@ Next lines: bullet lines starting with ' - '"
     const roundedTotal = Math.round(totalValue);
     const roundOff = roundedTotal - totalValue;
   
+    // Build discount + after-discount rows only if discount > 0
+    const discountBlock = (discount > 0)
+      ? `
+        <tr class="discount-row">
+          <td colspan="3"></td>
+          <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+          <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+        </tr>
+        <tr class="after-discount-row">
+          <td colspan="3"></td>
+          <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+          <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
+        </tr>
+      `
+      : '';
+  
     sb.innerHTML = `
       <tr>
         <td colspan="3"></td>
         <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
         <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
       </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-        <td style="text-align:right; font-weight:600;">
-          <input type="text"
-                 id="discountInput"
-                 value="${discount}"
-                 style="width:90px; text-align:right; font-size:12px; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px;"
-                 onblur="updateDiscountFromInput()">
-        </td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
-      </tr>
+      ${discountBlock}
       <tr>
         <td colspan="3"></td>
         <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
