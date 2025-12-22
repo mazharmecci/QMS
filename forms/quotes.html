@@ -824,160 +824,160 @@
     }
   }
 
-  /* ========= Cell formatters ========= */
+/* ========= Cell formatters ========= */
 
-  function formatInstrumentCell(inst, lineIdx) {
-    const code     = inst.catalog || inst.instrumentCode || inst.code || '';
-    const name     = inst.instrumentName || inst.name || '';
-    const descText = inst.longDescription || inst.description || '';
-  
-    const descLines = parseLines(descText);
-  
-    // Supplied Complete with (string or array)
-    let suppliedRaw =
-      inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || '';
-    let suppliedLines;
-    if (Array.isArray(suppliedRaw)) {
-      suppliedLines = suppliedRaw.map(String).filter(Boolean);
-    } else {
-      suppliedLines = parseLines(String(suppliedRaw || ''));
-    }
-  
-    // Meta: Country of Origin + HSN
-    const origin = inst.origin || inst.country || inst.countryOfOrigin || '';
-    const hsn    = inst.hsn || inst.hsnCode || '';
-  
-    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
-  
-    // Cat / Material No.
-    if (code) {
-      html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
-    }
-  
-    // Main instrument name
-    if (name) {
-      html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
-    }
-  
-    // Description
-    if (descLines.length) {
-      html += descLines.map(l => `<div>${l}</div>`).join('');
-      html += `<div style="height:8px;"></div>`;
-    }
-  
-    // Supplied Complete with block (indented bullets)
-    if (suppliedLines.length) {
-      html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
-      suppliedLines.forEach(line => {
-        html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
-      });
-    }
-  
-       // One vertical gap before meta
-    if (origin || hsn) {
-      html += `<div style="height:8px;"></div>`;
-    }
-  
-    if (origin) {
-      html += `<div>Country of Origin: ${origin}</div>`;
-    }
-    if (hsn) {
-      html += `<div>HSN Code: ${hsn}</div>`;
-    }
-  
-    // Per-instrument actions: config / additional items
-    html += `
-      <div style="margin-top:8px; display:flex; gap:0.4rem; flex-wrap:wrap;">
-        <button type="button"
-                class="btn-quote"
-                onclick="openConfigModal(${lineIdx})">
-          Config Items
-        </button>
-        <button type="button"
-                class="btn-quote btn-quote-secondary"
-                onclick="openAdditionalModal(${lineIdx})">
-          Additional Items
-        </button>
-      </div>
-    `;
-  
-    html += `</td>`;
-    return html;
-  }
-  
-  function formatItemCell(item) {
-    const code       = item.code || item.catalog || '';
-    const descSource = item.description || item.longDescription || '';
-    const lines      = parseLines(descSource); // same helper as instruments
-  
-    const title = lines[0] || '';
-    const rest  = lines.slice(1);
-  
-    // Supplied lines
-    let suppliedRaw =
-      item.suppliedCompleteWith ||
-      item.suppliedWith ||
-      item.supplied ||
-      rest.join('\n');
-  
-    let suppliedLines;
-    if (Array.isArray(suppliedRaw)) {
-      suppliedLines = suppliedRaw.map(String).filter(Boolean);
-    } else {
-      suppliedLines = parseLines(String(suppliedRaw || ''));
-    }
-  
-    const origin = item.origin || item.country || item.countryOfOrigin || '';
-    const hsn    = item.hsn || item.hsnCode || '';
-  
-    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
-  
-    // ItemCat / Material number
-    if (code) {
-      html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
-    }
-  
-    // Main name
-    if (title) {
-      html += `<div style="font-weight:600; margin-bottom:4px;">${title}</div>`;
-    }
-  
-    // Supplied Complete with (bulleted, indented)
-    if (suppliedLines.length) {
-      html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
-      suppliedLines.forEach(line => {
-        html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
-      });
-    }
-  
-    // Vertical gap before meta
-    if (origin || hsn) {
-      html += `<div style="height:8px;"></div>`;
-    }
-  
-    // Meta WITHOUT indentation or bullets
-    if (origin) {
-      html += `<div>Country of Origin: ${origin}</div>`;
-    }
-    if (hsn) {
-      html += `<div>HSN Code: ${hsn}</div>`;
-    }
-  
-    html += `</td>`;
-    return html;
+function formatInstrumentCell(inst, lineIdx) {
+  const code     = inst.catalog || inst.instrumentCode || inst.code || "";
+  const name     = inst.instrumentName || inst.name || "";
+  const descText = inst.longDescription || inst.description || "";
+
+  const descLines = parseLines(descText);
+
+  // Supplied Complete with (string or array)
+  let suppliedRaw =
+    inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || "";
+  let suppliedLines;
+  if (Array.isArray(suppliedRaw)) {
+    suppliedLines = suppliedRaw.map(String).filter(Boolean);
+  } else {
+    suppliedLines = parseLines(String(suppliedRaw || ""));
   }
 
-  /* ========= Render main quote items ========= */
+  // Meta: Country of Origin + HSN
+  const origin = inst.origin || inst.country || inst.countryOfOrigin || "";
+  const hsn    = inst.hsn || inst.hsnCode || "";
+
+  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+
+  // Cat / Material No.
+  if (code) {
+    html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
+  }
+
+  // Main instrument name
+  if (name) {
+    html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
+  }
+
+  // Description
+  if (descLines.length) {
+    html += descLines.map(l => `<div>${l}</div>`).join("");
+    html += `<div style="height:8px;"></div>`;
+  }
+
+  // Supplied Complete with block (indented bullets)
+  if (suppliedLines.length) {
+    html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
+    suppliedLines.forEach(line => {
+      html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
+    });
+  }
+
+  // One vertical gap before meta
+  if (origin || hsn) {
+    html += `<div style="height:8px;"></div>`;
+  }
+
+  if (origin) {
+    html += `<div>Country of Origin: ${origin}</div>`;
+  }
+  if (hsn) {
+    html += `<div>HSN Code: ${hsn}</div>`;
+  }
+
+  // Per-instrument actions: config / additional items
+  html += `
+    <div style="margin-top:8px; display:flex; gap:0.4rem; flex-wrap:wrap;">
+      <button type="button"
+              class="btn-quote"
+              onclick="openConfigModal(${lineIdx})">
+        Config Items
+      </button>
+      <button type="button"
+              class="btn-quote btn-quote-secondary"
+              onclick="openAdditionalModal(${lineIdx})">
+        Additional Items
+      </button>
+    </div>
+  `;
+
+  html += `</td>`;
+  return html;
+}
+
+function formatItemCell(item) {
+  const code       = item.code || item.catalog || "";
+  const descSource = item.description || item.longDescription || "";
+  const lines      = parseLines(descSource);
+
+  const title = lines[0] || "";
+  const rest  = lines.slice(1);
+
+  // Supplied lines
+  let suppliedRaw =
+    item.suppliedCompleteWith ||
+    item.suppliedWith ||
+    item.supplied ||
+    rest.join("\n");
+
+  let suppliedLines;
+  if (Array.isArray(suppliedRaw)) {
+    suppliedLines = suppliedRaw.map(String).filter(Boolean);
+  } else {
+    suppliedLines = parseLines(String(suppliedRaw || ""));
+  }
+
+  const origin = item.origin || item.country || item.countryOfOrigin || "";
+  const hsn    = item.hsn || item.hsnCode || "";
+
+  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+
+  // ItemCat / Material number
+  if (code) {
+    html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
+  }
+
+  // Main name
+  if (title) {
+    html += `<div style="font-weight:600; margin-bottom:4px;">${title}</div>`;
+  }
+
+  // Supplied Complete with (bulleted, indented)
+  if (suppliedLines.length) {
+    html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
+    suppliedLines.forEach(line => {
+      html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
+    });
+  }
+
+  // Vertical gap before meta
+  if (origin || hsn) {
+    html += `<div style="height:8px;"></div>`;
+  }
+
+  // Meta WITHOUT indentation or bullets
+  if (origin) {
+    html += `<div>Country of Origin: ${origin}</div>`;
+  }
+  if (hsn) {
+    html += `<div>HSN Code: ${hsn}</div>`;
+  }
+
+  html += `</td>`;
+  return html;
+}
+
+/* ========= Render main quote items ========= */
 
 function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
-  const body = document.getElementById('quoteBuilderBody');
+  const body = document.getElementById("quoteBuilderBody");
   if (!body) return;
 
   if (!lines.length) {
-    body.innerHTML = '';
-    const sb = document.getElementById('quoteSummaryBody');
-    if (sb) sb.innerHTML = '';
+    body.innerHTML = "";
+    const sb = document.getElementById("quoteSummaryBody");
+    if (sb) sb.innerHTML = "";
     return;
   }
 
@@ -990,7 +990,7 @@ function renderQuoteBuilder() {
     if (!inst) return;
 
     const qty = Number(line.quantity || 1);
-    const codeText = String(runningItemCode).padStart(3, '0');
+    const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
     const instUnit = Number(inst.unitPrice || 0);
@@ -1003,10 +1003,10 @@ function renderQuoteBuilder() {
         <td>${codeText}</td>
         ${formatInstrumentCell(inst, lineIdx)}
         <td>${qty}</td>
-        <td>${moneyINR(instUnit)}</td>
-        <td>${moneyINR(instTotal)}</td>
+        <td>₹ ${moneyINR(instUnit)}</td>
+        <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
-    `); // <- correct closing, no extra }
+    `);
 
     // 2) configuration rows directly after this instrument
     const configItems = line.configItems || [];
@@ -1020,14 +1020,14 @@ function renderQuoteBuilder() {
       `);
 
       configItems.forEach(item => {
-        const itemCode = String(runningItemCode).padStart(3, '0');
+        const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
 
-        const q      = item.qty != null ? item.qty : 'Included';
-        const upRaw  = item.upInr != null ? item.upInr : 'Included';
-        const tpRaw  = item.tpInr != null ? item.tpInr : 'Included';
-        const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
-        const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
+        const q      = item.qty != null ? item.qty : "Included";
+        const upRaw  = item.upInr != null ? item.upInr : "Included";
+        const tpRaw  = item.tpInr != null ? item.tpInr : "Included";
+        const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
+        const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
 
         rows.push(`
           <tr>
@@ -1053,7 +1053,7 @@ function renderQuoteBuilder() {
       `);
 
       additionalItems.forEach(item => {
-        const itemCode = String(runningItemCode).padStart(3, '0');
+        const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
 
         const qtyNum  = Number(item.qty || 1);
@@ -1065,39 +1065,39 @@ function renderQuoteBuilder() {
           <tr>
             <td>${itemCode}</td>
             ${formatItemCell(item)}
-            <td>${qtyNum.toString().padStart(2, '0')}</td>
-            <td>${moneyINR(unitNum)}</td>
-            <td>${moneyINR(totalNum)}</td>
+            <td>${qtyNum.toString().padStart(2, "0")}</td>
+            <td>₹ ${moneyINR(unitNum)}</td>
+            <td>₹ ${moneyINR(totalNum)}</td>
           </tr>
         `);
       });
     }
   });
 
-  body.innerHTML = rows.join('');
+  body.innerHTML = rows.join("");
   renderSummaryRows(itemsTotal);
 }
 
 // Helper: toggle discount visibility (for print)
 function updateDiscountVisibility(discountValue) {
-  const table = document.getElementById('quoteSummaryTable');
+  const table = document.getElementById("quoteSummaryTable");
   if (!table) return;
 
-  const header   = typeof getQuoteHeaderRaw === 'function' ? getQuoteHeaderRaw() : {};
+  const header   = typeof getQuoteHeaderRaw === "function" ? getQuoteHeaderRaw() : {};
   const discount = discountValue != null
     ? Number(discountValue)
     : Number(header.discount || 0);
 
   if (discount === 0) {
-    table.classList.add('discount-zero');
+    table.classList.add("discount-zero");
   } else {
-    table.classList.remove('discount-zero');
+    table.classList.remove("discount-zero");
   }
 }
 
 // Main rendering function
 function renderSummaryRows(itemsTotal) {
-  const sb = document.getElementById('quoteSummaryBody');
+  const sb = document.getElementById("quoteSummaryBody");
   if (!sb) return;
 
   const header     = getQuoteHeaderRaw();
@@ -1114,7 +1114,7 @@ function renderSummaryRows(itemsTotal) {
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
     </tr>
     <tr class="discount-row">
       <td colspan="3"></td>
@@ -1131,27 +1131,27 @@ function renderSummaryRows(itemsTotal) {
     <tr class="after-discount-row">
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
     </tr>
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(gstAmount)}</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
     </tr>
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(totalValue)}</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
     </tr>
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(roundOff)}</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
     </tr>
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
-      <td style="text-align:right; font-weight:700;">${moneyINR(roundedTotal)}</td>
+      <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
     </tr>
   `;
 
