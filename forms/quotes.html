@@ -890,15 +890,17 @@ Next lines: bullet lines starting with ' - '"
   function formatItemCell(item) {
     const code       = item.code || item.catalog || '';
     const descSource = item.description || item.longDescription || '';
-    const lines      = parseLines(descSource);  // same helper as instruments
+    const lines      = parseLines(descSource); // same helper as instruments
   
     const title = lines[0] || '';
     const rest  = lines.slice(1);
   
-    // Treat any lines after the title as the “supplied” block
-    // or read explicitly from supplied* fields if you add them later.
+    // Supplied lines
     let suppliedRaw =
-      item.suppliedCompleteWith || item.suppliedWith || item.supplied || rest.join('\n');
+      item.suppliedCompleteWith ||
+      item.suppliedWith ||
+      item.supplied ||
+      rest.join('\n');
   
     let suppliedLines;
     if (Array.isArray(suppliedRaw)) {
@@ -912,17 +914,17 @@ Next lines: bullet lines starting with ' - '"
   
     let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
   
-    // Cat / Material No.
+    // ItemCat / Material number
     if (code) {
       html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
     }
   
-    // Main item name
+    // Main name
     if (title) {
       html += `<div style="font-weight:600; margin-bottom:4px;">${title}</div>`;
     }
   
-    // Supplied Complete with block (indented bullets)
+    // Supplied Complete with (bulleted, indented)
     if (suppliedLines.length) {
       html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
       suppliedLines.forEach(line => {
@@ -930,11 +932,12 @@ Next lines: bullet lines starting with ' - '"
       });
     }
   
-    // One vertical gap before meta
+    // Vertical gap before meta
     if (origin || hsn) {
       html += `<div style="height:8px;"></div>`;
     }
   
+    // Meta WITHOUT indentation or bullets
     if (origin) {
       html += `<div>Country of Origin: ${origin}</div>`;
     }
