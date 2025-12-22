@@ -382,7 +382,6 @@
   overflow-y:auto;
   margin-top:0.25rem;
 }
-
   </style>
 </head>
 <body>
@@ -393,10 +392,10 @@
   </div>
 </header>
 
-<!-- Main instrument modal -->
+<!-- ========= Instruments modals ========= -->
 
-<!-- Instrument list modal -->
-<div id="instrumentModalOverlay" class="overlay">
+<!-- Instruments for this quote (list) -->
+<div id="instrumentModalOverlay" class="overlay" style="display:none;">
   <div class="overlay-panel">
     <div class="overlay-header">
       <h3 class="overlay-title">Instruments for this Quote</h3>
@@ -404,8 +403,7 @@
     </div>
 
     <div style="margin-bottom:0.5rem;">
-      <button type="button" onclick="openInstrumentPicker()"
-              class="btn-quote">
+      <button type="button" onclick="openInstrumentPicker()" class="btn-quote">
         + Add Instrument
       </button>
     </div>
@@ -429,7 +427,20 @@
   </div>
 </div>
 
-<!-- Shared item modal (config / additional) -->
+<!-- Instrument picker (from instruments master) -->
+<div id="instrumentPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Select Instrument from Master</h3>
+      <button type="button" class="overlay-close" onclick="closeInstrumentPicker()">✕</button>
+    </div>
+    <div id="instrumentPickerList" class="overlay-body">
+      <!-- populated by openInstrumentPicker() -->
+    </div>
+  </div>
+</div>
+
+<!-- ========= Shared item modal (config / additional) ========= -->
 <div id="itemModalOverlay"
      style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:2000; align-items:center; justify-content:center;">
   <div id="itemModal"
@@ -477,6 +488,35 @@ Next lines: bullet lines starting with ' - '"
     <div id="itemModalList"
          style="max-height:180px; overflow:auto; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
       <!-- existing items rendered here -->
+    </div>
+  </div>
+</div>
+
+<!-- Optional pickers for future config/additional masters -->
+<div id="configPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Select Configuration Item</h3>
+      <button type="button" class="overlay-close" onclick="closeConfigPicker()">✕</button>
+    </div>
+    <div id="configPickerList" class="overlay-body">
+      <div style="font-size:12px; color:#64748b;">
+        Configuration item master is not implemented yet. Use the form to add items manually.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="additionalPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Select Additional Item</h3>
+      <button type="button" class="overlay-close" onclick="closeAdditionalPicker()">✕</button>
+    </div>
+    <div id="additionalPickerList" class="overlay-body">
+      <div style="font-size:12px; color:#64748b;">
+        Additional item master is not implemented yet. Use the form to add items manually.
+      </div>
     </div>
   </div>
 </div>
@@ -538,7 +578,7 @@ Next lines: bullet lines starting with ' - '"
         <td>
           <div id="salesNoteBlock"></div>
 
-          <!-- Builder wrapper, instrument + config/additional controls will sit here -->
+          <!-- Builder wrapper -->
           <div id="quoteBuilder" class="no-print">
             <h3 class="no-print">Quote Builder</h3>
 
@@ -546,7 +586,6 @@ Next lines: bullet lines starting with ' - '"
               <button type="button" class="btn-quote" onclick="openInstrumentModal()">
                 Manage Instruments
               </button>
-            
               <button type="button" class="btn-quote" onclick="openConfigModal()">
                 Add / Edit Configuration Items
               </button>
