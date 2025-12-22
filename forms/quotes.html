@@ -525,7 +525,8 @@
       </div>
 
       <textarea id="itemDetails" rows="5"
-                placeholder="First line: main item name&#10;Next lines: bullet lines starting with ' - '"
+                placeholder="First line: main item name
+Next lines: bullet lines starting with ' - '"
                 style="width:100%; padding:0.4rem 0.55rem; border:1px solid #cbd5e1; border-radius:6px;"></textarea>
 
       <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:0.6rem;">
@@ -537,100 +538,6 @@
     <div id="itemModalList"
          style="max-height:180px; overflow:auto; border-top:1px solid #e2e8f0; padding-top:0.4rem;"></div>
   </div>
-</div>
-
-<!-- Optional pickers -->
-<div id="configPickerOverlay" style="display:none;">
-  <button onclick="closeConfigPicker()">✕</button>
-</div>
-
-<div id="additionalPickerOverlay" style="display:none;">
-  <button onclick="closeAdditionalPicker()">✕</button>
-</div>
-
-<!-- ================= REQUIRED GLOBAL FUNCTIONS ================= -->
-<script>
-  /* Modal controls – MUST be global for inline onclick */
-
-  window.openInstrumentModal = function () {
-    const overlay = document.getElementById('instrumentModalOverlay');
-    if (!overlay) return;
-    if (typeof renderInstrumentModalList === "function") {
-      renderInstrumentModalList();
-    }
-    overlay.style.display = 'flex';
-  };
-
-  window.closeItemModal = function () {
-    const el = document.getElementById('itemModalOverlay');
-    if (el) el.style.display = 'none';
-  };
-
-  window.closeConfigPicker = function () {
-    const el = document.getElementById('configPickerOverlay');
-    if (el) el.style.display = 'none';
-  };
-
-  window.closeAdditionalPicker = function () {
-    const el = document.getElementById('additionalPickerOverlay');
-    if (el) el.style.display = 'none';
-  };
-
-    window.closeInstrumentModal = function () {
-    const overlay = document.getElementById('instrumentModalOverlay');
-    if (overlay) {
-      overlay.style.display = 'none';
-    }
-  };
-
-    window.goBack = function () {
-    window.history.back();
-  };
-</script>
-
-<!-- Optional pickers -->
-<div id="configPickerOverlay" style="display:none;">
-  <button onclick="closeConfigPicker()">✕</button>
-</div>
-
-<div id="additionalPickerOverlay" style="display:none;">
-  <button onclick="closeAdditionalPicker()">✕</button>
-</div>
-
-<!-- ================= REQUIRED GLOBAL FUNCTIONS ================= -->
-<script>
-  /* Modal controls – MUST be global for inline onclick */
-
-  window.openInstrumentModal = function () {
-    const overlay = document.getElementById('instrumentModalOverlay');
-    if (!overlay) return;
-    if (typeof renderInstrumentModalList === "function") {
-      renderInstrumentModalList();
-    }
-    overlay.style.display = 'flex';
-  };
-
-  window.closeItemModal = function () {
-    const el = document.getElementById('itemModalOverlay');
-    if (el) el.style.display = 'none';
-  };
-
-  window.closeConfigPicker = function () {
-    const el = document.getElementById('configPickerOverlay');
-    if (el) el.style.display = 'none';
-  };
-
-  window.closeAdditionalPicker = function () {
-    const el = document.getElementById('additionalPickerOverlay');
-    if (el) el.style.display = 'none';
-  };
-
-  window.openInstrumentPicker = function () {
-    // Reuse the same instrument modal
-    window.openInstrumentModal();
-  };
-</script>
-  
 </div>
 
 <!-- Optional pickers for future config/additional masters -->
@@ -661,6 +568,74 @@
     </div>
   </div>
 </div>
+
+<!-- ================= REQUIRED GLOBAL FUNCTIONS ================= -->
+<script>
+  /* Modal controls – MUST be global for inline onclick */
+
+  window.openInstrumentPicker = function () {
+    const overlay = document.getElementById('instrumentPickerOverlay');
+    if (!overlay) return;
+    if (typeof renderInstrumentPickerList === "function") {
+      renderInstrumentPickerList();
+    }
+    overlay.style.display = 'flex';
+  };
+
+  window.closeInstrumentPicker = function () {
+    const overlay = document.getElementById('instrumentPickerOverlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+  };
+
+  window.closeItemModal = function () {
+    const el = document.getElementById('itemModalOverlay');
+    if (el) el.style.display = 'none';
+  };
+
+  window.closeConfigPicker = function () {
+    const el = document.getElementById('configPickerOverlay');
+    if (el) el.style.display = 'none';
+  };
+
+  window.closeAdditionalPicker = function () {
+    const el = document.getElementById('additionalPickerOverlay');
+    if (el) el.style.display = 'none';
+  };
+
+  window.goBack = function () {
+    window.history.back();
+  };
+
+  window.finalizeQuote = async function () {
+    try {
+      console.log("Finalize quote clicked");
+
+      // 1. Build header & quote objects from existing state
+      // (Assuming these already exist in your app)
+      if (typeof buildQuoteHeader !== "function" || typeof buildQuoteObject !== "function") {
+        console.error("Quote builder functions missing");
+        return;
+      }
+
+      const header = buildQuoteHeader();
+      const quote = buildQuoteObject();
+
+      // 2. Save to Supabase if available
+      if (typeof saveQuoteToSupabase === "function") {
+        await saveQuoteToSupabase(header, quote);
+      } else {
+        console.warn("saveQuoteToSupabase not defined");
+      }
+
+      alert("Quote finalized and saved successfully");
+    } catch (err) {
+      console.error("Finalize quote failed:", err);
+      alert("Failed to finalize quote. Check console.");
+    }
+  };
+</script>
 
 <div class="container">
   <table class="print-frame">
