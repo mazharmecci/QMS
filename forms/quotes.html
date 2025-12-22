@@ -1011,15 +1011,17 @@ Next lines: bullet lines starting with ' - '"
   function renderSummaryRows(itemsTotal) {
     const sb = document.getElementById('quoteSummaryBody');
     if (!sb) return;
-
+  
+    const header = getQuoteHeaderRaw();          // read current header
     const gstPercent = 18;
-    const discount = 0;
+    const discount = Number(header.discount || 0);
+  
     const afterDisc = itemsTotal - discount;
     const gstAmount = (afterDisc * gstPercent) / 100;
     const totalValue = afterDisc + gstAmount;
     const roundedTotal = Math.round(totalValue);
     const roundOff = roundedTotal - totalValue;
-
+  
     sb.innerHTML = `
       <tr>
         <td colspan="3"></td>
@@ -1029,7 +1031,13 @@ Next lines: bullet lines starting with ' - '"
       <tr>
         <td colspan="3"></td>
         <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+        <td style="text-align:right; font-weight:600;">
+          <input type="text"
+                 id="discountInput"
+                 value="${discount}"
+                 style="width:90px; text-align:right; font-size:12px; padding:2px 4px; border:1px solid #cbd5e1; border-radius:4px;"
+                 onblur="updateDiscountFromInput()">
+        </td>
       </tr>
       <tr>
         <td colspan="3"></td>
@@ -1057,6 +1065,38 @@ Next lines: bullet lines starting with ' - '"
         <td style="text-align:right; font-weight:700;">${moneyINR(roundedTotal)}</td>
       </tr>
     `;
+  }
+
+    function updateDiscountFromInput() {
+    const input = document.getElementById('discountInput');
+    if (!input) return;
+  
+    const raw = input.value || '0';
+    const cleaned = raw.replace(/[^\d.]/g, '');
+    const discount = parseFloat(cleaned) || 0;
+  
+    const header = getQuoteHeaderRaw();
+    header.discount = discount;
+    saveQuoteHeader(header);       // you already have this
+  
+    // Recompute using the new discount
+    const { instruments, lines } = getQuoteContext();
+    let itemsTotal = 0;
+  
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        const qty = Number(line.quantity || 1);
+        itemsTotal += Number(inst.unitPrice || 0) * qty;
+      }
+      (line.additionalItems || []).forEach(item => {
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        itemsTotal += qtyNum * unitNum;
+      });
+    });
+  
+    renderSummaryRows(itemsTotal);
   }
 
   /* ========= Instruments modal (frame) ========= */
