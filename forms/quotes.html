@@ -10,6 +10,7 @@
       background:#f5f7fa;
       margin:0;
     }
+
     header {
       background:#0d6efd;
       color:#fff;
@@ -36,6 +37,7 @@
       font-weight:600;
       font-size:1.5rem;
     }
+
     .container {
       max-width:1200px;
       margin:2rem auto;
@@ -44,6 +46,8 @@
       border-radius:12px;
       box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
+
+    /* Quote header (letterhead) */
     .quote-header {
       margin-bottom:1.5rem;
       border:1px solid #ccc;
@@ -116,6 +120,7 @@
       color:#000;
       font-size:14px;
     }
+
     .quote-meta-grid {
       margin-top:0.5rem;
       background:#fff;
@@ -147,6 +152,8 @@
     .quote-meta-grid .value.right {
       text-align:right;
     }
+
+    /* Sales note and builder wrapper */
     #salesNoteBlock {
       margin:0 0 1rem 0;
       font-size:13px;
@@ -165,6 +172,8 @@
       margin-bottom:0.75rem;
       color:#0d6efd;
     }
+
+    /* Quote table */
     table.quote-table {
       width:100%;
       border-collapse:collapse;
@@ -205,6 +214,8 @@
     table.quote-table .cat-sub strong {
       font-weight:500;
     }
+
+    /* Buttons (finalize, config/additional) */
     .btn-finalize {
       display:inline-flex;
       align-items:center;
@@ -234,51 +245,7 @@
       box-shadow:0 3px 10px rgba(0, 0, 0, 0.28);
       filter:brightness(0.98);
     }
-    #termsBlock {
-      margin-top:1.5rem;
-      background:#fff;
-      border:1px solid #ccc;
-      border-radius:8px;
-      padding:1rem 1.25rem;
-      font-size:12px;
-      line-height:1.4;
-    }
-    #termsBlock h2 {
-      margin-top:0;
-      color:#0d6efd;
-      font-size:13px;
-    }
-    #termsTextBlock {
-      margin-top:0.25rem;
-    }
-    #termsTextBlock p {
-      margin:0.35rem 0;
-    }
-    .section-header-label {
-      font-weight:700;
-    }
-    .print-footer tr,
-    .print-footer td {
-      border-top:none !important;
-    }
-    .print-frame {
-      width:100%;
-      border-collapse:collapse;
-      border:none;
-    }
-    .print-header td,
-    .print-body td,
-    .print-footer td {
-      padding:0;
-      border:none;
-    }
-    .footer {
-      font-size:10px;
-      text-align:right;
-      border-top:1px solid #ccc;
-      padding-top:4px;
-      margin-top:4px;
-    }
+
     .quote-actions {
       margin-bottom:0.75rem;
     }
@@ -312,9 +279,59 @@
     .btn-quote-secondary {
       background:linear-gradient(135deg, #eef4ff, #dde7ff);
     }
-    .no-print {
-      display:block;
+
+    /* Terms block */
+    #termsBlock {
+      margin-top:1.5rem;
+      background:#fff;
+      border:1px solid #ccc;
+      border-radius:8px;
+      padding:1rem 1.25rem;
+      font-size:12px;
+      line-height:1.4;
     }
+    #termsBlock h2 {
+      margin-top:0;
+      color:#0d6efd;
+      font-size:13px;
+    }
+    #termsTextBlock {
+      margin-top:0.25rem;
+    }
+    #termsTextBlock p {
+      margin:0.35rem 0;
+    }
+
+    .section-header-label {
+      font-weight:700;
+    }
+
+    /* Print helpers */
+    .print-footer tr,
+    .print-footer td {
+      border-top:none !important;
+    }
+    .print-frame {
+      width:100%;
+      border-collapse:collapse;
+      border:none;
+    }
+    .print-header td,
+    .print-body td,
+    .print-footer td {
+      padding:0;
+      border:none;
+    }
+    .footer {
+      font-size:10px;
+      text-align:right;
+      border-top:1px solid #ccc;
+      padding-top:4px;
+      margin-top:4px;
+    }
+
+    .no-print { display:block; }
+
     @page {
       size:A4;
       margin:15mm 15mm 20mm 15mm;
@@ -339,18 +356,6 @@
         display:none !important;
       }
     }
-
-    /* Visible on screen, hidden in PDF/print */
-    .no-print {
-      display: table-row; /* or block, depending on usage */
-    }
-    
-    @media print {
-      .no-print,
-      .no-print * {
-        display:none !important;
-      }
-    }
   </style>
 </head>
 <body>
@@ -361,17 +366,21 @@
   </div>
 </header>
 
-<!-- Modal -->
-<div id="itemModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:2000; align-items:center; justify-content:center;">
-  <div id="itemModal" style="width:520px; max-width:95%; background:#fff; border-radius:10px; box-shadow:0 18px 45px rgba(15,23,42,0.35); padding:1.25rem 1.5rem; font-family:'Inter',sans-serif; font-size:13px;">
+<!-- Shared item modal (config / additional) -->
+<div id="itemModalOverlay"
+     style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.45); z-index:2000; align-items:center; justify-content:center;">
+  <div id="itemModal"
+       style="width:520px; max-width:95%; background:#fff; border-radius:10px; box-shadow:0 18px 45px rgba(15,23,42,0.35); padding:1.25rem 1.5rem; font-family:'Inter',sans-serif; font-size:13px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
       <h3 id="itemModalTitle" style="margin:0; font-size:15px; color:#0d6efd;"></h3>
-      <button type="button" onclick="closeItemModal()" style="border:none; background:transparent; font-size:18px; cursor:pointer;">×</button>
+      <button type="button" onclick="closeItemModal()"
+              style="border:none; background:transparent; font-size:18px; cursor:pointer;">×</button>
     </div>
 
     <form id="itemModalForm" onsubmit="saveItemFromModal(event)">
       <input type="hidden" id="itemModalType" value="config">
       <input type="hidden" id="itemCode" value="">
+      <input type="hidden" id="itemLineIndex" value=""> <!-- which instrument line -->
 
       <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
         <input id="itemCodeInput" type="text"
@@ -402,7 +411,8 @@ Next lines: bullet lines starting with ' - '"
       </div>
     </form>
 
-    <div id="itemModalList" style="max-height:180px; overflow:auto; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
+    <div id="itemModalList"
+         style="max-height:180px; overflow:auto; border-top:1px solid #e2e8f0; padding-top:0.4rem;">
       <!-- existing items rendered here -->
     </div>
   </div>
@@ -454,7 +464,6 @@ Next lines: bullet lines starting with ' - '"
                   <div class="label right">Office</div><div class="value value-small right" id="metaOffice"></div>
                 </div>
               </div>
-
             </div>
           </div>
         </td>
@@ -466,9 +475,12 @@ Next lines: bullet lines starting with ' - '"
         <td>
           <div id="salesNoteBlock"></div>
 
+          <!-- Builder wrapper, instrument + config/additional controls will sit here -->
           <div id="quoteBuilder" class="no-print">
             <h3 class="no-print">Quote Builder</h3>
+
             <div class="quote-actions no-print">
+              <!-- you will add the Manage Instruments button from the second half here -->
               <button type="button" class="btn-quote" onclick="openConfigModal()">
                 Add / Edit Configuration Items
               </button>
@@ -493,16 +505,16 @@ Next lines: bullet lines starting with ' - '"
           </table>
 
           <table style="width:100%; margin-top:1.5rem; border-collapse:collapse;">
-          <tr>
-            <td style="font-size:13px; line-height:1.5;">
-              We will be happy to furnish any further information or assistance you may need and trust that you call on us to fill your order, which will receive our prompt and careful attention.
-              <br><br><br>
-              For ISTOS Medical Private Limited
-              <br><br><br>
-              Naushad
-            </td>
-          </tr>
-        </table>
+            <tr>
+              <td style="font-size:13px; line-height:1.5;">
+                We will be happy to furnish any further information or assistance you may need and trust that you call on us to fill your order, which will receive our prompt and careful attention.
+                <br><br><br>
+                For ISTOS Medical Private Limited
+                <br><br><br>
+                Naushad
+              </td>
+            </tr>
+          </table>
 
           <div id="termsBlock">
             <h2>Terms and Conditions of Sale</h2>
@@ -537,6 +549,8 @@ Next lines: bullet lines starting with ' - '"
 </div>
 
 <script>
+  /* ========= Basic helpers ========= */
+
   function goBack() {
     if (window.history.length > 1) window.history.back();
   }
@@ -582,440 +596,487 @@ Next lines: bullet lines starting with ' - '"
     return { name, rest };
   }
 
+  /* ========= Storage and context ========= */
+
   function getQuoteHeaderRaw() {
     return JSON.parse(localStorage.getItem('quoteHeader') || '{}');
+  }
+
+  function saveQuoteHeader(header) {
+    localStorage.setItem('quoteHeader', JSON.stringify(header));
   }
 
   function getInstrumentsMaster() {
     return JSON.parse(localStorage.getItem('instruments') || '[]');
   }
 
-  function resolveInstrumentForHeader(header) {
-    const all = getInstrumentsMaster();
+  function validateHeader(header) {
+    const errors = [];
+    if (!header.quoteNo)         errors.push('Quote No is missing');
+    if (!header.quoteDate)       errors.push('Quote Date is missing');
+    if (!header.refDate)         errors.push('Reference Date is missing');
+    if (!header.hospitalName)    errors.push('Hospital Name is missing');
+    if (!header.hospitalAddress) errors.push('Hospital Address is missing');
 
-    if (header.selectedInstrumentIndex != null && header.selectedInstrumentIndex !== '') {
-      const idx = Number(header.selectedInstrumentIndex);
-      if (!isNaN(idx) && all[idx]) return all[idx];
+    if (errors.length) {
+      alert('Validation errors:\n' + errors.join('\n'));
+      return false;
+    }
+    return true;
+  }
+
+  function getQuoteContext() {
+    const header = getQuoteHeaderRaw();
+    const instruments = getInstrumentsMaster();
+    if (!Array.isArray(header.quoteLines)) header.quoteLines = [];
+    return { header, instruments, lines: header.quoteLines };
+  }
+
+  /* ========= Populate letterhead from header ========= */
+
+  function populateHeader() {
+    const header = getQuoteHeaderRaw();
+    if (!validateHeader(header)) return;
+
+    document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
+    document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
+    document.getElementById('metaYourRef').textContent   = header.yourReference || '';
+    document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
+    document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
+    document.getElementById('metaPhone').textContent     = header.contactPhone || '';
+    document.getElementById('metaEmail').textContent     = header.contactEmail || '';
+    document.getElementById('metaOffice').textContent    = header.officePhone || '';
+
+    document.getElementById('toHospitalNameLine').textContent =
+      header.hospitalName || 'Hospital / Client Name';
+
+    const [line1, line2] = splitAddress(header.hospitalAddress || '');
+    document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
+    document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
+    document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
+
+    const noteEl = document.getElementById('salesNoteBlock');
+    if (noteEl && header.salesNote) {
+      noteEl.textContent = header.salesNote;
     }
 
-    if (header.instrumentCode) {
-      const instByCode = all.find(
-        i => (i.instrumentCode || i.catalog || '') === header.instrumentCode
-      );
-      if (instByCode) return instByCode;
-    }
-
-    return null;
-  }
-
-function getPrimaryLine(header) {
-  if (header.quoteLines && header.quoteLines.length) {
-    return header.quoteLines[0];
-  }
-  const line = {
-    lineType: 'instrument',
-    instrumentIndex:
-      header.selectedInstrumentIndex !== '' && header.selectedInstrumentIndex != null
-        ? Number(header.selectedInstrumentIndex)
-        : null,
-    quantity: 1,
-    configItems: header.configItems || [],
-    additionalItems: header.additionalItems || []
-  };
-  header.quoteLines = [line];
-  localStorage.setItem('quoteHeader', JSON.stringify(header));
-  return line;
-}
-
-function validateHeader(header) {
-  const errors = [];
-  if (!header.quoteNo)         errors.push('Quote No is missing');
-  if (!header.quoteDate)       errors.push('Quote Date is missing');
-  if (!header.refDate)         errors.push('Reference Date is missing');
-  if (!header.hospitalName)    errors.push('Hospital Name is missing');
-  if (!header.hospitalAddress) errors.push('Hospital Address is missing');
-
-  if (errors.length) {
-    alert('Validation errors:\n' + errors.join('\n'));
-    return false;
-  }
-  return true;
-}
-
-function getQuoteContext() {
-  const header = getQuoteHeaderRaw();
-  const inst   = resolveInstrumentForHeader(header);
-  const line   = getPrimaryLine(header);
-  return { header, inst, line };
-}
-
-function populateHeader() {
-  const { header } = getQuoteContext();
-  if (!validateHeader(header)) return;
-
-  document.getElementById('metaQuoteNo').textContent   = header.quoteNo || '';
-  document.getElementById('metaQuoteDate').textContent = formatISOToDMY(header.quoteDate);
-  document.getElementById('metaYourRef').textContent   = header.yourReference || '';
-  document.getElementById('metaRefDate').textContent   = formatISOToDMY(header.refDate);
-  document.getElementById('metaContactPerson').textContent = header.contactPerson || '';
-  document.getElementById('metaPhone').textContent     = header.contactPhone || '';
-  document.getElementById('metaEmail').textContent     = header.contactEmail || '';
-  document.getElementById('metaOffice').textContent    = header.officePhone || '';
-
-  document.getElementById('toHospitalNameLine').textContent =
-    header.hospitalName || 'Hospital / Client Name';
-
-  const [line1, line2] = splitAddress(header.hospitalAddress || '');
-  document.getElementById('toHospitalAddressLine1').textContent = line1 || '';
-  document.getElementById('toHospitalAddressLine2').textContent = line2 || '';
-  document.getElementById('toAttn').textContent = header.kindAttn || 'Attention';
-
-  const noteEl = document.getElementById('salesNoteBlock');
-  if (noteEl && header.salesNote) {
-    noteEl.textContent = header.salesNote;
-  }
-
-  const termsEl = document.getElementById('termsTextBlock');
-  if (termsEl) {
-    if (header.termsHtml) {
-      termsEl.innerHTML = header.termsHtml;
-    } else if (header.termsText) {
-      termsEl.textContent = header.termsText;
-    } else {
-      termsEl.textContent = '';
-    }
-  }
-}
-
-function formatInstrumentCell(inst) {
-  const code      = inst.catalog || inst.code || '';
-  const nameProp  = inst.instrumentName || inst.name || '';
-  const descLines = parseLines(inst.longDescription || inst.description || '');
-
-  // Decide title lines:
-  // If a name property exists, use that as the first bold line.
-  // Then take the first description line (if any) as the second bold line.
-  const title1 = nameProp || (descLines[0] || '');
-  const title2 = nameProp ? (descLines[0] || '') : (descLines[1] || '');
-
-  // Remaining description after the two title lines
-  const rest = nameProp ? descLines.slice(1) : descLines.slice(2);
-
-  const supplied = inst.suppliedWith || inst.supplied || [];
-
-  const specs = [];
-  if (inst.dimensions) specs.push(`Dimensions: ${inst.dimensions}`);
-  if (inst.weight)     specs.push(`Weight: ${inst.weight}`);
-  if (inst.power)      specs.push(`Power: ${inst.power}`);
-
-  const meta = [];
-  if (inst.origin || inst.country) meta.push(`Country of Origin: ${inst.origin || inst.country}`);
-  if (inst.hsn)                    meta.push(`HSN Code: ${inst.hsn}`);
-
-  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-
-  // Cat / Material No. (normal, not bold)
-  if (code) html += `<div class="cat-main">${code}</div>`;
-
-  // Main top line: instrument name
-  if (title1) html += `<div><strong>${title1}</strong></div>`;
-
-  // Second bold line: first description sentence
-  if (title2) html += `<div><strong>${title2}</strong></div>`;
-
-  // Remaining description (normal text)
-  if (rest.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += rest.map(line => `<div>${line}</div>`).join('');
-  }
-
-  // Supplied block: first entry as heading, rest as bullets
-  if (supplied.length) {
-    html += `<div style="height:8px;"></div>`;
-    supplied.forEach((s, idx) => {
-      const text = String(s).trim();
-      if (idx === 0) {
-        html += `<div>${text}</div>`;
+    const termsEl = document.getElementById('termsTextBlock');
+    if (termsEl) {
+      if (header.termsHtml) {
+        termsEl.innerHTML = header.termsHtml;
+      } else if (header.termsText) {
+        termsEl.textContent = header.termsText;
       } else {
-        html += `<div>- ${text}</div>`;
+        termsEl.textContent = '';
+      }
+    }
+  }
+
+  /* ========= Cell formatters ========= */
+
+  function formatInstrumentCell(inst, lineIdx) {
+    const name = inst.instrumentName || inst.name || 'Unnamed Instrument';
+    const code = inst.catalog || inst.instrumentCode || '';
+    const desc = inst.description || inst.longDescription || '';
+    const shortDesc = desc.replace(/\s+/g, ' ').slice(0, 160) + (desc.length > 160 ? '…' : '');
+
+    return `
+      <td>
+        <div style="font-weight:600; font-size:12px;">${code} ${name}</div>
+        <div style="font-size:11px; color:#64748b; margin-top:2px;">
+          ${shortDesc}
+        </div>
+        <div style="margin-top:4px; display:flex; gap:0.25rem; flex-wrap:wrap;">
+          <button type="button"
+                  class="btn-quote"
+                  onclick="openConfigModal(${lineIdx})">
+            Config Items
+          </button>
+          <button type="button"
+                  class="btn-quote btn-quote-secondary"
+                  onclick="openAdditionalModal(${lineIdx})">
+            Additional Items
+          </button>
+        </div>
+      </td>
+    `;
+  }
+
+  function formatItemCell(item) {
+    const code       = item.code || item.catalog || '';
+    const descSource = item.description || item.longDescription || '';
+    const lines      = parseLines(descSource);
+
+    const title = lines[0] || '';
+    const rest  = lines.slice(1);
+
+    const meta = [];
+    if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
+    if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
+
+    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
+
+    if (code)  html += `<div class="cat-main">${code}</div>`;
+    if (title) html += `<div class="cat-main"><strong>${title}</strong></div>`;
+
+    if (rest.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
+    }
+
+    if (meta.length) {
+      html += `<div style="height:8px;"></div>`;
+      html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+    }
+
+    html += `</td>`;
+    return html;
+  }
+
+  /* ========= Render main quote items ========= */
+
+  function renderQuoteBuilder() {
+    const { instruments, lines } = getQuoteContext();
+    const body = document.getElementById('quoteBuilderBody');
+    if (!body) return;
+
+    if (!lines.length) {
+      body.innerHTML = '';
+      const sb = document.getElementById('quoteSummaryBody');
+      if (sb) sb.innerHTML = '';
+      return;
+    }
+
+    const rows = [];
+    let runningItemCode = 1;
+    let itemsTotal = 0;
+
+    lines.forEach((line, lineIdx) => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (!inst) return;
+
+      const qty = Number(line.quantity || 1);
+      const codeText = String(runningItemCode).padStart(3, '0');
+      runningItemCode += 1;
+
+      const instUnit = Number(inst.unitPrice || 0);
+      const instTotal = instUnit * qty;
+      itemsTotal += instTotal;
+
+      // main instrument
+      rows.push(`
+        <tr>
+          <td>${codeText}</td>
+          ${formatInstrumentCell(inst, lineIdx)}
+          <td>${qty}</td>
+          <td>${moneyINR(instUnit)}</td>
+          <td>${moneyINR(instTotal)}</td>
+        </tr>
+      `);
+
+      // configuration
+      const configItems = line.configItems || [];
+      if (configItems.length) {
+        rows.push(`
+          <tr style="background:#00B0F0; color:#000;">
+            <td colspan="5" style="font-weight:700;">
+              CONFIGURATION ITEMS – Instrument #${lineIdx + 1}
+            </td>
+          </tr>
+        `);
+
+        configItems.forEach(item => {
+          const itemCode = String(runningItemCode).padStart(3, '0');
+          runningItemCode += 1;
+          const q = item.qty != null ? item.qty : 'Included';
+          const upRaw = item.upInr != null ? item.upInr : 'Included';
+          const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
+          const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
+          const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
+
+          rows.push(`
+            <tr>
+              <td>${itemCode}</td>
+              ${formatItemCell(item)}
+              <td>${q}</td>
+              <td>${upCell}</td>
+              <td>${tpCell}</td>
+            </tr>
+          `);
+        });
+      }
+
+      // additional
+      const additionalItems = line.additionalItems || [];
+      if (additionalItems.length) {
+        rows.push(`
+          <tr style="background:#00B0F0; color:#000;">
+            <td colspan="5" style="font-weight:700;">
+              ADDITIONAL ITEMS – Instrument #${lineIdx + 1}
+            </td>
+          </tr>
+        `);
+
+        additionalItems.forEach(item => {
+          const itemCode = String(runningItemCode).padStart(3, '0');
+          runningItemCode += 1;
+
+          const qtyNum = Number(item.qty || 1);
+          const unitNum = Number(item.price || item.unitPrice || 0);
+          const totalNum = unitNum * qtyNum;
+          itemsTotal += totalNum;
+
+          rows.push(`
+            <tr>
+              <td>${itemCode}</td>
+              ${formatItemCell(item)}
+              <td>${qtyNum.toString().padStart(2, '0')}</td>
+              <td>${moneyINR(unitNum)}</td>
+              <td>${moneyINR(totalNum)}</td>
+            </tr>
+          `);
+        });
       }
     });
+
+    body.innerHTML = rows.join('');
+    renderSummaryRows(itemsTotal);
   }
 
-  if (specs.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div>${specs.join('<br>')}</div>`;
+  function renderSummaryRows(itemsTotal) {
+    const sb = document.getElementById('quoteSummaryBody');
+    if (!sb) return;
+
+    const gstPercent = 18;
+    const discount = 0;
+    const afterDisc = itemsTotal - discount;
+    const gstAmount = (afterDisc * gstPercent) / 100;
+    const totalValue = afterDisc + gstAmount;
+    const roundedTotal = Math.round(totalValue);
+    const roundOff = roundedTotal - totalValue;
+
+    sb.innerHTML = `
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(gstAmount)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(totalValue)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(roundOff)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
+        <td style="text-align:right; font-weight:700;">${moneyINR(roundedTotal)}</td>
+      </tr>
+    `;
   }
 
-  if (meta.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += `<div>${meta.join('<br>')}</div>`;
+  /* ========= Instruments modal (frame) ========= */
+
+  function openInstrumentModal() {
+    const overlay = document.getElementById('instrumentModalOverlay');
+    if (!overlay) return;
+    renderInstrumentModalList();
+    overlay.style.display = 'flex';
   }
 
-  html += `</td>`;
-  return html;
-}
-
-function formatItemCell(item) {
-  const code       = item.code || item.catalog || '';
-  const descSource = item.description || item.longDescription || '';
-  const lines      = parseLines(descSource);
-
-  const title = lines[0] || '';
-  const rest  = lines.slice(1);
-
-  const meta = [];
-  if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
-  if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
-
-  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-
-  if (code)  html += `<div class="cat-main">${code}</div>`;
-  if (title) html += `<div class="cat-main"><strong>${title}</strong></div>`;
-
-  // Remaining description lines
-  if (rest.length) {
-    html += `<div style="height:8px;"></div>`;
-    html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
+  function closeInstrumentModal() {
+    const overlay = document.getElementById('instrumentModalOverlay');
+    if (overlay) overlay.style.display = 'none';
   }
 
-  // One vertical gap before Country of Origin / HSN
-  if (meta.length) {
-    html += `<div style="height:8px;"></div>`;   // ← this creates the blank line
-    html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
-  }
+  function renderInstrumentModalList() {
+    const listEl = document.getElementById('instrumentModalList');
+    const { instruments, lines } = getQuoteContext();
 
-  html += `</td>`;
-  return html;
-}
-
-function renderQuoteBuilder() {
-  const { inst, line } = getQuoteContext();
-  const body = document.getElementById('quoteBuilderBody');
-
-  if (!inst) {
-    body.innerHTML = '';
-    if (document.getElementById('quoteSummaryBody')) {
-      document.getElementById('quoteSummaryBody').innerHTML = '';
+    if (!lines.length) {
+      listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No instruments added yet for this quote.</div>';
+      return;
     }
-    return;
+
+    listEl.innerHTML = lines.map((line, idx) => {
+      const inst = instruments[line.instrumentIndex] || {};
+      const name = inst.instrumentName || inst.name || 'Unnamed Instrument';
+      const code = inst.catalog || inst.instrumentCode || '';
+      const qty  = line.quantity || 1;
+      return `
+        <div style="
+          border:1px solid #e2e8f0;
+          border-radius:8px;
+          padding:0.5rem 0.75rem;
+          margin-bottom:0.4rem;
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:0.5rem;
+          background:#f8fafc;">
+          
+          <div style="font-size:12px; flex:1;">
+            <div style="font-weight:600;">${code} ${name}</div>
+            <div style="color:#64748b; margin-top:2px;">Qty: ${qty}</div>
+          </div>
+
+          <div style="display:flex; gap:0.25rem; flex-wrap:wrap;">
+            <button type="button"
+                    class="btn-quote"
+                    onclick="editInstrumentLine(${idx})">
+              Edit
+            </button>
+            <button type="button"
+                    class="btn-quote btn-quote-secondary"
+                    onclick="removeInstrumentLine(${idx})">
+              Remove
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
-  const rows = [];
-
-  // Instrument row
-  const qty = line.quantity || 1;
-  rows.push(`
-    <tr>
-      <td>001</td>
-      ${formatInstrumentCell(inst)}
-      <td>${qty}</td>
-      <td>${moneyINR(inst.unitPrice)}</td>
-      <td>${moneyINR((inst.unitPrice || 0) * qty)}</td>
-    </tr>
-  `);
-
-  // Configuration items
-  const configItems = line.configItems || [];
-  if (configItems.length) {
-    rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
-          <span class="section-header-label">CONFIGURATION ITEMS</span>
-        </td>
-      </tr>
-    `);
-
-    configItems.forEach((item, idx) => {
-      const itemCode = String(idx + 2).padStart(3, '0');
-      const q = item.qty != null ? item.qty : 'Included';
-      const upRaw = item.upInr != null ? item.upInr : 'Included';
-      const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
-      const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
-      const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
-
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${q}</td>
-          <td>${upCell}</td>
-          <td>${tpCell}</td>
-        </tr>
-      `);
-    });
+  function removeInstrumentLine(idx) {
+    const { header } = getQuoteContext();
+    if (!Array.isArray(header.quoteLines)) return;
+    header.quoteLines.splice(idx, 1);
+    saveQuoteHeader(header);
+    renderQuoteBuilder();
+    renderInstrumentModalList();
   }
 
-  // Additional items
-  const additionalItems = line.additionalItems || [];
-  if (additionalItems.length) {
-    rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">
-          <span class="section-header-label">ADDITIONAL ITEMS</span>
-        </td>
-      </tr>
-    `);
+  // Simple edit (quantity); can be extended to pick a different instrument
+  function editInstrumentLine(idx) {
+    const { header } = getQuoteContext();
+    if (!Array.isArray(header.quoteLines) || !header.quoteLines[idx]) return;
 
-    additionalItems.forEach((item, idx) => {
-      const itemCode = String(idx + 1).padStart(3, '0');
-      const qtyNum = Number(item.qty || 1);
-      const unitNum = Number(item.price || 0);
-      const totalNum = unitNum * qtyNum;
+    const currentQty = Number(header.quoteLines[idx].quantity || 1);
+    const newQtyStr = prompt('Update quantity for this instrument:', String(currentQty));
+    if (newQtyStr == null) return;
+    const newQty = Math.max(1, Number(newQtyStr) || 1);
 
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${qtyNum.toString().padStart(2, '0')}</td>
-          <td>${moneyINR(unitNum)}</td>
-          <td>${moneyINR(totalNum)}</td>
-        </tr>
-      `);
-    });
+    header.quoteLines[idx].quantity = newQty;
+    saveQuoteHeader(header);
+    renderQuoteBuilder();
+    renderInstrumentModalList();
   }
 
-  body.innerHTML = rows.join('');
+  /* ========= Instrument picker (from master) ========= */
 
-    // NEW: render summary rows after line items
-  renderSummaryRows();
-}
+  function openInstrumentPicker() {
+    const overlay = document.getElementById('instrumentPickerOverlay');
+    if (!overlay) return;
 
-function buildLineItemsFromCurrentQuote() {
-  const { inst, line } = getQuoteContext();
-  const items = [];
+    const listEl = document.getElementById('instrumentPickerList');
+    const instruments = getInstrumentsMaster();
 
-  if (inst) {
-    items.push({
-      name: inst.instrumentName || inst.name || '',
-      code: inst.catalog || inst.code || '',
-      type: 'Instrument',
-      price: Number(inst.unitPrice || 0)
-    });
-  }
-
-  (line.configItems || []).forEach(item => {
-    const price = item.tpInr != null
-      ? Number(item.tpInr)
-      : Number(item.upInr || 0);
-
-    items.push({
-      name: item.name || item.itemName || '',
-      code: item.code || item.catalog || '',
-      type: 'Configuration',
-      price
-    });
-  });
-
-  (line.additionalItems || []).forEach(item => {
-    let unitNum = 0;
-    if (item.price) {
-      const cleaned = String(item.price).replace(/[^\d,]/g, '').replace(/,/g, '');
-      unitNum = parseFloat(cleaned) || 0;
+    if (!instruments.length) {
+      listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No instruments in master. Please create instruments first.</div>';
     } else {
-      unitNum = Number(item.unitPrice || item.upInr || item.tpInr || 0);
+      listEl.innerHTML = instruments.map((inst, idx) => {
+        const name = inst.instrumentName || inst.name || 'Unnamed Instrument';
+        const code = inst.catalog || inst.instrumentCode || '';
+        const desc = inst.description || inst.longDescription || '';
+        const shortDesc = desc.replace(/\s+/g, ' ').slice(0, 160) + (desc.length > 160 ? '…' : '');
+        return `
+          <div style="
+            border-bottom:1px dashed #e2e8f0;
+            padding:0.4rem 0;
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:0.5rem;">
+            
+            <div style="font-size:12px; flex:1;">
+              <div style="font-weight:600;">${code} ${name}</div>
+              <div style="color:#64748b; margin-top:2px; font-size:11px;">
+                ${shortDesc}
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.25rem;">
+              <input type="number" min="1" value="1"
+                     id="instQty_${idx}"
+                     style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
+              <button type="button"
+                      class="btn-quote"
+                      onclick="addInstrumentToQuote(${idx})">
+                Add
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    items.push({
-      name: item.name || item.itemName || '',
-      code: item.code || item.catalog || '',
-      type: 'Additional',
-      price: unitNum
+    overlay.style.display = 'flex';
+  }
+
+  function closeInstrumentPicker() {
+    const overlay = document.getElementById('instrumentPickerOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  function addInstrumentToQuote(instIndex) {
+    const header = getQuoteHeaderRaw();
+    const qtyInput = document.getElementById(`instQty_${instIndex}`);
+    const qty = Math.max(1, Number(qtyInput?.value || 1));
+
+    if (!Array.isArray(header.quoteLines)) header.quoteLines = [];
+
+    header.quoteLines.push({
+      lineType: 'instrument',
+      instrumentIndex: instIndex,
+      quantity: qty,
+      configItems: [],
+      additionalItems: []
     });
-  });
 
-  return items;
-}
-
-function buildSummaryFromHeader(header) {
-  const itemsTotal = Number(header.itemsTotal || header.itemsValueTotal || 0);
-  const discount   = Number(header.discount || 0);
-  const afterDisc  = Number(header.afterDiscount || (itemsTotal - discount));
-  const freight    = header.freight || 'As applicable';
-  const gstPercent = Number(header.gstPercent || 0);
-  const gstAmount  = Number(header.gstAmount || (afterDisc * gstPercent) / 100);
-  const totalValue = Number(header.totalValue || (afterDisc + gstAmount));
-  const roundOff   = Number(header.roundOff || 0);
-
-  return {
-    itemsTotal,
-    discount,
-    afterDiscount: afterDisc,
-    freight,
-    gstPercent,
-    gstAmount,
-    totalValue,
-    roundOff
-  };
-}
-
-function finalizeQuote() {
-  const header = getQuoteHeaderRaw();
-
-  if (!header.quoteNo || !header.quoteDate || !header.hospitalName) {
-    alert('Missing key details (Quote No / Date / Hospital). Please complete the header first.');
-    return;
+    saveQuoteHeader(header);
+    renderQuoteBuilder();
+    renderInstrumentModalList();
   }
 
-  const { inst, line } = getQuoteContext();
-  const lineItems = buildLineItemsFromCurrentQuote();
-
-  // Use the same calculation used for on-screen summary
-  const calc = calculateSummaryFromLine(line, inst);
-  const summary = {
-    itemsTotal: calc.itemsValueTotal,
-    discount: calc.discount,
-    afterDiscount: calc.priceAfterDiscount,
-    freight: 'Included',
-    gstPercent: 18,
-    gstAmount: calc.gst,
-    totalValue: calc.totalValue,
-    roundOff: calc.roundedTotal
-  };
-
-  const existing  = JSON.parse(localStorage.getItem('quotes') || '[]');
-
-  const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
-  const lastRev   = sameQuote.length
-    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-    : 0;
-  const nextRev   = lastRev + 1;
-
-  const now = new Date();
-  const quote = {
-    header,
-    lineItems,
-    summary,
-    quoteNo: header.quoteNo,
-    revision: nextRev,
-    status: 'submitted',
-    history: [{
-      status: 'submitted',
-      date: now.toISOString().slice(0, 10),
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]
-  };
-
-  existing.push(quote);
-  localStorage.setItem('quotes', JSON.stringify(existing));
-  alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
-}
-
-  function openConfigModal() {
-    openItemModal('config');
-  }
-
-  function openAdditionalModal() {
-    openItemModal('additional');
-  }
+  /* ========= Config / additional modal wiring ========= */
 
   let currentEditIndex = null;
 
-  function openItemModal(type) {
-    const { line } = getQuoteContext();
+  function openConfigModal(lineIndex) {
+    openItemModal('config', lineIndex);
+  }
+
+  function openAdditionalModal(lineIndex) {
+    openItemModal('additional', lineIndex);
+  }
+
+  function openItemModal(type, lineIndex) {
+    const { header } = getQuoteContext();
+    const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
+
     const overlay = document.getElementById('itemModalOverlay');
     const titleEl = document.getElementById('itemModalTitle');
     const typeEl  = document.getElementById('itemModalType');
+    const lineEl  = document.getElementById('itemLineIndex');
 
     const codeEl      = document.getElementById('itemCodeInput');
     const qtyEl       = document.getElementById('itemQty');
@@ -1024,19 +1085,17 @@ function finalizeQuote() {
     const detailsEl   = document.getElementById('itemDetails');
 
     currentEditIndex = null;
-
     typeEl.value = type;
+    lineEl.value = String(lineIndex);
+
     titleEl.textContent = type === 'config'
-      ? 'Configuration Items for this Quote'
-      : 'Additional Items for this Quote';
+      ? 'Configuration Items for this Instrument'
+      : 'Additional Items for this Instrument';
 
     codeEl.value    = '';
     qtyEl.value     = type === 'config' ? 'Included' : '1';
     detailsEl.value = '';
-
-    if (priceGroup) {
-      priceGroup.style.display = (type === 'config') ? 'none' : 'block';
-    }
+    if (priceGroup) priceGroup.style.display = (type === 'config') ? 'none' : 'block';
     if (priceEl) priceEl.value = '';
 
     renderItemModalList(line, type);
@@ -1046,98 +1105,51 @@ function finalizeQuote() {
   function closeItemModal() {
     const overlay = document.getElementById('itemModalOverlay');
     if (overlay) overlay.style.display = 'none';
+    currentEditIndex = null;
   }
 
-function renderItemModalList(line, type) {
-  const listEl = document.getElementById('itemModalList');
-  const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
+  function renderItemModalList(line, type) {
+    const listEl = document.getElementById('itemModalList');
+    const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
 
-  if (!arr.length) {
-    listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this quote.</div>';
-    return;
+    if (!arr.length) {
+      listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this instrument.</div>';
+      return;
+    }
+
+    listEl.innerHTML = arr.map((item, idx) => {
+      const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
+      const price = type === 'config'
+        ? 'Included'
+        : (item.price || item.unitPrice || item.upInr || item.tpInr || '');
+      return `
+        <div style="display:flex; align-items:center; justify-content:space-between;
+                    padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
+          <div style="flex:1; font-size:12px;">
+            <div style="font-weight:600;">${item.code || ''} ${item.name || ''}</div>
+            <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
+          </div>
+          <div style="display:flex; gap:0.25rem;">
+            <button type="button"
+                    class="btn-quote"
+                    onclick="editItemFromModal('${type}', ${idx})">
+              Edit
+            </button>
+            <button type="button"
+                    class="btn-quote btn-quote-secondary"
+                    onclick="removeItemFromModal('${type}', ${idx})">
+              Remove
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
-
-  listEl.innerHTML = arr.map((item, idx) => {
-    const qty = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
-    const price = type === 'config'
-      ? 'Included'
-      : (item.price || item.unitPrice || item.upInr || item.tpInr || '');
-
-    return `
-      <div style="display:flex; align-items:center; justify-content:space-between;
-                  padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
-
-        <!-- Left: checkbox + Add button -->
-        <div style="display:flex; align-items:center; gap:0.4rem; margin-right:0.5rem;">
-          <input
-            type="checkbox"
-            class="reuse-checkbox"
-            data-type="${type}"
-            data-index="${idx}"
-            style="cursor:pointer;"
-          />
-          <button
-            type="button"
-            onclick="addItemFromLibrary('${type}', ${idx})"
-            style="
-              border:none;
-              background:#dcfce7;
-              color:#166534;
-              font-size:11px;
-              padding:0.15rem 0.55rem;
-              border-radius:999px;
-              cursor:pointer;
-              white-space:nowrap;
-            "
-          >
-            Add
-          </button>
-        </div>
-
-        <!-- Middle: item details -->
-        <div style="flex:1; font-size:12px;">
-          <div style="font-weight:600;">${item.code || ''} ${item.name || ''}</div>
-          <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
-        </div>
-
-        <!-- Right: Edit / Remove -->
-        <div style="display:flex; gap:0.25rem;">
-          <button type="button" onclick="editItemFromModal('${type}', ${idx})"
-                  style="border:none; background:#e0f2fe; color:#0369a1;
-                         font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
-            Edit
-          </button>
-          <button type="button" onclick="removeItemFromModal('${type}', ${idx})"
-                  style="border:none; background:#fee2e2; color:#b91c1c;
-                         font-size:11px; padding:0.15rem 0.45rem; border-radius:999px; cursor:pointer;">
-            Remove
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function addItemFromLibrary(type, idx) {
-  const { header, line } = getQuoteContext();
-  const sourceArr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
-  const item = sourceArr[idx];
-  if (!item) return;
-
-  const targetArrName = type === 'config' ? 'configItems' : 'additionalItems';
-  if (!Array.isArray(line[targetArrName])) line[targetArrName] = [];
-
-  // Clone the item so edits don’t affect the library copy
-  const newItem = JSON.parse(JSON.stringify(item));
-
-  line[targetArrName].push(newItem);
-  header.quoteLines[0] = line;
-  localStorage.setItem('quoteHeader', JSON.stringify(header));
-  renderQuoteBuilder();
-}
 
   function editItemFromModal(type, idx) {
-    const { line } = getQuoteContext();
+    const { header } = getQuoteContext();
+    const lineIndex = Number(document.getElementById('itemLineIndex').value || 0);
+    const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
     const arr = type === 'config' ? (line.configItems || []) : (line.additionalItems || []);
     const item = arr[idx];
     if (!item) return;
@@ -1145,31 +1157,27 @@ function addItemFromLibrary(type, idx) {
     currentEditIndex = idx;
 
     document.getElementById('itemModalType').value = type;
-    document.getElementById('itemModalTitle').textContent =
-      type === 'config' ? 'Edit Configuration Item' : 'Edit Additional Item';
 
-    const codeEl      = document.getElementById('itemCodeInput');
-    const qtyEl       = document.getElementById('itemQty');
-    const priceEl     = document.getElementById('itemPrice');
-    const priceGroup  = document.getElementById('itemPriceGroup');
-    const detailsEl   = document.getElementById('itemDetails');
+    const titleEl = document.getElementById('itemModalTitle');
+    titleEl.textContent = type === 'config' ? 'Edit Configuration Item' : 'Edit Additional Item';
+
+    const codeEl     = document.getElementById('itemCodeInput');
+    const qtyEl      = document.getElementById('itemQty');
+    const priceEl    = document.getElementById('itemPrice');
+    const priceGroup = document.getElementById('itemPriceGroup');
+    const detailsEl  = document.getElementById('itemDetails');
 
     codeEl.value = item.code || '';
     qtyEl.value  = item.qty != null ? item.qty : (type === 'config' ? 'Included' : '1');
 
-    if (priceGroup) {
-      priceGroup.style.display = (type === 'config') ? 'none' : 'block';
-    }
+    if (priceGroup) priceGroup.style.display = (type === 'config') ? 'none' : 'block';
 
     if (type === 'config') {
       if (priceEl) priceEl.value = '';
     } else {
-      if (item.price && priceEl) {
-        const cleaned = String(item.price).replace(/[^\d.]/g, '');
-        priceEl.value = cleaned;
-      } else if (priceEl) {
-        priceEl.value = '';
-      }
+      let raw = item.price || item.unitPrice || item.upInr || item.tpInr || '';
+      raw = String(raw).replace(/[^\d.]/g, '');
+      if (priceEl) priceEl.value = raw;
     }
 
     detailsEl.value = item.description || '';
@@ -1177,39 +1185,45 @@ function addItemFromLibrary(type, idx) {
   }
 
   function removeItemFromModal(type, idx) {
-    const { header, line } = getQuoteContext();
+    const { header } = getQuoteContext();
+    const lineIndex = Number(document.getElementById('itemLineIndex').value || 0);
+    const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
+
     const arrName = type === 'config' ? 'configItems' : 'additionalItems';
     const arr = line[arrName] || [];
     arr.splice(idx, 1);
     line[arrName] = arr;
-    header.quoteLines[0] = line;
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
+
+    header.quoteLines[lineIndex] = line;
+    saveQuoteHeader(header);
+
     renderQuoteBuilder();
     renderItemModalList(line, type);
   }
 
   function saveItemFromModal(e) {
     e.preventDefault();
-    
-    const { header, line } = getQuoteContext();
-    const typeEl = document.getElementById('itemModalType');
-    const codeEl = document.getElementById('itemCodeInput');
-    const qtyEl = document.getElementById('itemQty');
-    const priceEl = document.getElementById('itemPrice');
+
+    const { header } = getQuoteContext();
+    const typeEl    = document.getElementById('itemModalType');
+    const lineIndex = Number(document.getElementById('itemLineIndex').value || 0);
+    const codeEl    = document.getElementById('itemCodeInput');
+    const qtyEl     = document.getElementById('itemQty');
+    const priceEl   = document.getElementById('itemPrice');
     const detailsEl = document.getElementById('itemDetails');
-    
+
     const type = typeEl.value;
     const code = (codeEl.value || '').trim();
     const { name } = parseDetailsText(detailsEl.value);
-    
     if (!name) return;
-    
+
+    const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
     const arrName = type === 'config' ? 'configItems' : 'additionalItems';
     if (!Array.isArray(line[arrName])) line[arrName] = [];
-    
+
     const isEdit = currentEditIndex != null;
     const idx = isEdit ? currentEditIndex : line[arrName].length;
-    
+
     if (type === 'config') {
       const existingCode = isEdit && line.configItems[idx]?.code || null;
       const item = {
@@ -1221,208 +1235,154 @@ function addItemFromLibrary(type, idx) {
         tpInr: 'Included'
       };
       line.configItems[idx] = item;
-      
-    } else { // additional items
+
+    } else {
       const existingCode = isEdit && line.additionalItems[idx]?.code || null;
       const rawPrice = priceEl?.value || '0';
       const cleanedPrice = rawPrice.replace(/[^\d.]/g, '');
       const priceNum = parseFloat(cleanedPrice) || 0;
-      
+
       const item = {
         code: code || existingCode || `ADD-${String(line.additionalItems.length + 1).padStart(2, '0')}`,
         name,
         description: detailsEl.value,
         qty: Number(qtyEl.value || 1),
-        price: priceNum,  // Store raw number
-        displayPrice: `₹ ${priceNum.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })}`
+        price: priceNum
       };
       line.additionalItems[idx] = item;
     }
-    
+
     currentEditIndex = null;
-    header.quoteLines[0] = line;
-    localStorage.setItem('quoteHeader', JSON.stringify(header));
+    header.quoteLines[lineIndex] = line;
+    saveQuoteHeader(header);
     renderQuoteBuilder();
     renderItemModalList(line, type);
   }
 
-// --- Summary calculations for bottom rows ---
-function calculateSummaryFromLine(line, inst) {
-  const configItems = line.configItems || [];
-  const additionalItems = line.additionalItems || [];
+  /* ========= Finalize quote ========= */
 
-  // Instrument total
-  const qty = line.quantity || 1;
-  const instrumentTotal = inst ? (Number(inst.unitPrice || 0) * qty) : 0;
+  function buildLineItemsFromCurrentQuote() {
+    const { instruments, lines } = getQuoteContext();
+    const items = [];
 
-  // Configuration items: use tpInr if numeric, else 0
-  const configTotal = configItems.reduce((sum, item) => {
-    const val = typeof item.tpInr === 'number'
-      ? item.tpInr
-      : typeof item.upInr === 'number'
-      ? item.upInr * (item.qty || 1)
-      : 0;
-    return sum + val;
-  }, 0);
-
-  // Additional items: numeric price * qty
-  const additionalTotal = additionalItems.reduce((sum, item) => {
-    const qtyNum = Number(item.qty || 1);
-    const priceNum = Number(item.price || item.unitPrice || item.upInr || item.tpInr || 0);
-    return sum + qtyNum * priceNum;
-  }, 0);
-
-  // Items Value Total INR = all items sum
-  const itemsValueTotal = instrumentTotal + configTotal + additionalTotal;
-
-  // Special Discount read from header (inline editable value)
-  const header = getQuoteHeaderRaw();
-  const discount = Number(header.discountInr || header.discount || 0);
-
-  // Price after discount
-  const priceAfterDiscount = itemsValueTotal - discount;
-
-  // GST base per your rule
-  const hasDiscount = discount > 0;
-  const gstBase = hasDiscount ? priceAfterDiscount : itemsValueTotal;
-
-  // GST @ 18%
-  const gst = gstBase * 0.18;
-
-  // Total Value INR (depends on discount)
-  const totalValue = hasDiscount ? priceAfterDiscount + gst : itemsValueTotal + gst;
-
-  // Rounded off to
-  const roundedTotal = Math.round(totalValue);
-
-  return {
-    itemsValueTotal,
-    discount,
-    priceAfterDiscount,
-    gst,
-    totalValue,
-    roundedTotal
-  };
-}
-
-function renderSummaryRows() {
-  const { inst, line } = getQuoteContext();
-  const summaryBody = document.getElementById('quoteSummaryBody');
-  if (!summaryBody) return;
-
-  const {
-    itemsValueTotal,
-    discount,
-    priceAfterDiscount,
-    gst,
-    totalValue,
-    roundedTotal
-  } = calculateSummaryFromLine(line, inst);
-
-  summaryBody.innerHTML = `
-    <tr>
-      <td colspan="4" style="text-align:right;"><strong>Items Value Total INR</strong></td>
-      <td style="text-align:right;"><strong>₹ ${moneyINR(itemsValueTotal)}</strong></td>
-    </tr>
-
-    <tr class="${discount > 0 ? '' : 'no-print'}">
-      <td colspan="4" style="text-align:right;"><strong>Special Discount</strong></td>
-      <td style="text-align:right;">
-        <input
-          type="text"
-          class="discount-input"
-          value="${discount ? discount.toFixed(2) : ''}"
-          style="
-            width:120px;
-            text-align:right;
-            font-weight:bold;
-            font-size:13px;
-            line-height:1.4;
-            border:none;
-            outline:none;
-            background:#e6f4ff;
-            border-radius:4px;
-            padding:0 6px;
-            box-sizing:border-box;
-            height:20px;
-            vertical-align:middle;
-          "
-        />
-      </td>
-    </tr>
-
-    <tr class="${discount > 0 ? '' : 'no-print'}">
-      <td colspan="4" style="text-align:right;"><strong>Price after Discount</strong></td>
-      <td style="text-align:right;"><strong>₹ ${moneyINR(priceAfterDiscount)}</strong></td>
-    </tr>
-
-    <tr>
-      <td colspan="4" style="text-align:right;"><strong>Freight Costs INR</strong></td>
-      <td style="text-align:right;"><strong>Included</strong></td>
-    </tr>
-
-    <tr>
-      <td colspan="4" style="text-align:right;"><strong>Goods and Services Tax INR @ 18%</strong></td>
-      <td style="text-align:right;"><strong>₹ ${moneyINR(gst)}</strong></td>
-    </tr>
-
-    <tr>
-      <td colspan="4" style="text-align:right;"><strong>Total Value INR</strong></td>
-      <td style="text-align:right;"><strong>₹ ${moneyINR(totalValue)}</strong></td>
-    </tr>
-
-    <tr>
-      <td colspan="4" style="text-align:right;"><strong>Rounded off to</strong></td>
-      <td style="text-align:right;"><strong>₹ ${moneyINR(roundedTotal)}</strong></td>
-    </tr>
-  `;
-
-  const input = summaryBody.querySelector('.discount-input');
-  if (input) {
-    // While typing: digits only, no commas/₹, no re-render
-    input.addEventListener('input', (e) => {
-      const raw = e.target.value;
-      const cleaned = raw.replace(/[^\d.]/g, ''); // allow digits + dot
-      e.target.value = cleaned;
-
-      const num = Number(cleaned);
-      const header = getQuoteHeaderRaw();
-      header.discountInr = num || 0;
-      header.discount = num || 0;
-      localStorage.setItem('quoteHeader', JSON.stringify(header));
-    });
-
-    // On blur: normalize, store, and re-render; summary cells use ₹ + commas
-    input.addEventListener('blur', (e) => {
-      const header = getQuoteHeaderRaw();
-      const cleaned = String(e.target.value || '').replace(/[^\d.]/g, '');
-      const val = Number(cleaned) || 0;
-
-      header.discountInr = val;
-      header.discount = val;
-      localStorage.setItem('quoteHeader', JSON.stringify(header));
-
-      // Show formatted in the input itself (₹ + Indian commas + 2 decimals)
-      if (val) {
-        e.target.value = `₹ ${val.toLocaleString('en-IN', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })}`;
-      } else {
-        e.target.value = '';
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        items.push({
+          name: inst.instrumentName || inst.name || '',
+          code: inst.catalog || inst.instrumentCode || '',
+          type: 'Instrument',
+          price: Number(inst.unitPrice || 0)
+        });
       }
 
-      // Re-render so all summary rows use the updated value
-      renderSummaryRows();
-    });
-  }
-}
+      (line.configItems || []).forEach(item => {
+        const price = item.tpInr != null
+          ? Number(item.tpInr)
+          : Number(item.upInr || 0);
+        items.push({
+          name: item.name || item.itemName || '',
+          code: item.code || item.catalog || '',
+          type: 'Configuration',
+          price
+        });
+      });
 
-  populateHeader();
-  renderQuoteBuilder();
+      (line.additionalItems || []).forEach(item => {
+        const unitNum = Number(item.price || item.unitPrice || item.upInr || item.tpInr || 0);
+        items.push({
+          name: item.name || item.itemName || '',
+          code: item.code || item.catalog || '',
+          type: 'Additional',
+          price: unitNum
+        });
+      });
+    });
+
+    return items;
+  }
+
+  function finalizeQuote() {
+    const header = getQuoteHeaderRaw();
+    if (!validateHeader(header)) return;
+
+    const { instruments, lines } = getQuoteContext();
+    if (!lines.length) {
+      alert('No instruments in this quote. Please add at least one instrument.');
+      return;
+    }
+
+    let itemsTotal = 0;
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        const qty = Number(line.quantity || 1);
+        itemsTotal += (Number(inst.unitPrice || 0) * qty);
+      }
+      (line.additionalItems || []).forEach(item => {
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        itemsTotal += qtyNum * unitNum;
+      });
+    });
+
+    const gstPercent = 18;
+    const discount = 0;
+    const afterDisc = itemsTotal - discount;
+    const gstAmount = (afterDisc * gstPercent) / 100;
+    const totalValue = afterDisc + gstAmount;
+    const roundedTotal = Math.round(totalValue);
+
+    const summary = {
+      itemsTotal,
+      discount,
+      afterDiscount: afterDisc,
+      freight: 'Included',
+      gstPercent,
+      gstAmount,
+      totalValue,
+      roundOff: roundedTotal - totalValue
+    };
+
+    const lineItems = buildLineItemsFromCurrentQuote();
+    const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
+
+    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
+    const nextRev = lastRev + 1;
+
+    const now = new Date();
+    const quote = {
+      header,
+      lineItems,
+      summary,
+      quoteNo: header.quoteNo,
+      revision: nextRev,
+      status: 'submitted',
+      history: [{
+        status: 'submitted',
+        date: now.toISOString().slice(0, 10),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]
+    };
+
+    existing.push(quote);
+    localStorage.setItem('quotes', JSON.stringify(existing));
+    alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+  }
+
+  /* ========= Init ========= */
+
+  document.addEventListener('DOMContentLoaded', function () {
+    populateHeader();
+    renderQuoteBuilder();
+  });
 </script>
+</body>
+</html>
+
+
 </body>
 </html>
