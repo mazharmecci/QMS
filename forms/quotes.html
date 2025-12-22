@@ -1075,28 +1075,37 @@ function renderSummaryRows(itemsTotal) {
   const gstPercent = 18;
   const discount = Number(header.discount || 0);
 
-  const afterDisc   = itemsTotal - discount;
-  const gstAmount   = (afterDisc * gstPercent) / 100;
-  const totalValue  = afterDisc + gstAmount;
+  const afterDisc    = itemsTotal - discount;
+  const gstAmount    = (afterDisc * gstPercent) / 100;
+  const totalValue   = afterDisc + gstAmount;
   const roundedTotal = Math.round(totalValue);
-  const roundOff    = roundedTotal - totalValue;
+  const roundOff     = roundedTotal - totalValue;
 
-  sb.innerHTML = `
+  let rows = `
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
       <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
     </tr>
-    <tr class="discount-row">
-      <td colspan="3"></td>
-      <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
-    </tr>
-    <tr class="after-discount-row">
-      <td colspan="3"></td>
-      <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
-    </tr>
+  `;
+
+  // ✅ Only render discount rows if discount > 0
+  if (discount > 0) {
+    rows += `
+      <tr class="discount-row">
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+      </tr>
+      <tr class="after-discount-row">
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+        <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
+      </tr>
+    `;
+  }
+
+  rows += `
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
@@ -1119,6 +1128,9 @@ function renderSummaryRows(itemsTotal) {
     </tr>
   `;
 
+  sb.innerHTML = rows;
+
+  // Optional: keep CSS toggle if you want style-based control
   updateDiscountVisibility(discount);
 }
 
@@ -1158,9 +1170,10 @@ function updateDiscountVisibility(discountValue) {
   const table = document.getElementById('quoteSummaryTable');
   if (!table) return;
 
-  const discount = Number(
-    discountValue != null ? discountValue : (getQuoteHeaderRaw().discount || 0)
-  );
+  const header = getQuoteHeaderRaw?.() || {};
+  const discount = discountValue != null 
+    ? Number(discountValue) 
+    : Number(header.discount || 0);
 
   if (discount === 0) {
     table.classList.add('discount-zero');
