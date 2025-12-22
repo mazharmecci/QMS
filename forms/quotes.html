@@ -399,11 +399,18 @@
   <div class="overlay-panel">
     <div class="overlay-header">
       <h3 class="overlay-title">Instruments for this Quote</h3>
-      <button type="button" class="overlay-close" onclick="closeInstrumentModal()">✕</button>
+      <button type="button"
+              class="overlay-close"
+              onclick="closeInstrumentModal()">✕</button>
     </div>
 
-    <div style="margin-bottom:0.5rem;">
-      <button type="button" onclick="openInstrumentPicker()" class="btn-quote">
+    <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:12px; color:#64748b;">
+        Manage all instruments included in this quotation.
+      </div>
+      <button type="button"
+              class="btn-quote"
+              onclick="openInstrumentPicker()">
         + Add Instrument
       </button>
     </div>
@@ -423,6 +430,14 @@
         </thead>
         <tbody id="instrumentModalList"></tbody>
       </table>
+    </div>
+
+    <div style="margin-top:0.75rem; text-align:right;">
+      <button type="button"
+              class="btn-quote btn-quote-secondary"
+              onclick="closeInstrumentModal()">
+        Close
+      </button>
     </div>
   </div>
 </div>
@@ -585,12 +600,6 @@ Next lines: bullet lines starting with ' - '"
             <div class="quote-actions no-print">
               <button type="button" class="btn-quote" onclick="openInstrumentModal()">
                 Manage Instruments
-              </button>
-              <button type="button" class="btn-quote" onclick="openConfigModal()">
-                Add / Edit Configuration Items
-              </button>
-              <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal()">
-                Add / Edit Additional Items
               </button>
             </div>
           </div>
