@@ -1,44 +1,53 @@
-// Initialize Supabase client
-const supabaseUrl = 'https://kkzvniasiqfoswdatjvm.supabase.co';
-const supabaseKey = '4t-uExEPlZ81VgcZoZp43w_NusdpCDj';
-const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+if (!window.supabaseClient) {
+  window.supabaseClient = supabase.createClient(
+    'https://kkzvniasiqfoswdatjvm.supabase.co', // Replace with your Supabase URL
+    '4t-uExEPlZ81VgcZoZp43w_NusdpCDj'     // Replace with your Supabase anon/public key
+  );
+}
+
+// Export supabase for other scripts
+const supabaseClient = window.supabaseClient;
 
 /**
- * Fetch all quotes from Supabase
+ * Save a quote object to Supabase 'quotes' table
+ * @param {Object} quote - The quote object to save
+ * @returns {Promise<Object>} - Returns { data, error }
  */
-async function fetchQuotes() {
+async function saveQuoteToSupabase(quote) {
   try {
-    const { data, error } = await supabase.from('quotes').select('*');
+    const { data, error } = await supabaseClient
+      .from('quotes')
+      .insert([quote]); // insert expects an array
     if (error) {
-      console.error("Supabase fetch error:", error);
-      return [];
+      console.error('Supabase save failed:', error);
+      return { data: null, error };
     }
-    console.log("Fetched quotes:", data);
-    return data;
+    console.log('Quote saved successfully to Supabase:', data);
+    return { data, error: null };
   } catch (err) {
-    console.error("Unexpected fetch error:", err);
-    return [];
+    console.error('Unexpected error saving quote to Supabase:', err);
+    return { data: null, error: err };
   }
 }
 
 /**
- * Save a quote object to Supabase
- * @param {Object} quoteObj - Full quote object
+ * Fetch all quotes from Supabase 'quotes' table
+ * @returns {Promise<Object>} - Returns { data, error }
  */
-async function saveQuoteToSupabase(quoteObj) {
+async function fetchQuotesFromSupabase() {
   try {
-    const { data, error } = await supabase.from('quotes').insert([quoteObj]);
+    const { data, error } = await supabaseClient
+      .from('quotes')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (error) {
-      console.error("Supabase insert error:", error);
-      alert("Unexpected error occurred while saving to Supabase. Check console.");
-      return null;
+      console.error('Supabase fetch failed:', error);
+      return { data: null, error };
     }
-    console.log("Quote saved successfully:", data);
-    alert(`Quote saved successfully to Supabase as ${quoteObj.header.quoteNo} (Rev ${quoteObj.revision})`);
-    return data;
+    console.log('Fetched quotes from Supabase:', data);
+    return { data, error: null };
   } catch (err) {
-    console.error("Unexpected insert error:", err);
-    alert("Unexpected error occurred while saving to Supabase. Check console.");
-    return null;
+    console.error('Unexpected error fetching quotes from Supabase:', err);
+    return { data: null, error: err };
   }
 }
