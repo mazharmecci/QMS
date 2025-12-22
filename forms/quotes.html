@@ -575,6 +575,13 @@
     const el = document.getElementById('additionalPickerOverlay');
     if (el) el.style.display = 'none';
   };
+
+    window.closeInstrumentModal = function () {
+    const overlay = document.getElementById('instrumentModalOverlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+  };
 </script>
 
 <!-- Optional pickers -->
