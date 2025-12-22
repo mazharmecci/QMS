@@ -1679,20 +1679,17 @@ function renderInstrumentModalList() {
       }]
     };
     
-<!-- Load Supabase library -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<!-- Load your Supabase client config (defines window.supabase) -->
 <script src="../js/supabase.js"></script>
 
-<!-- Load your quote logic (defines populateHeader, renderQuoteBuilder, etc.) -->
 <script src="../js/quote.js"></script>
 
-<!-- Main logic -->
 <script>
   async function saveQuoteToSupabase(header, quote) {
     try {
-      // 1. Insert / fetch quote master
+     
       const { data: quoteRow, error: quoteError } = await supabase
         .from("quotes")
         .select("id")
@@ -1717,7 +1714,7 @@ function renderInstrumentModalList() {
         quoteId = newQuote.id;
       }
 
-      // 2. Insert version
+      
       await supabase.from("quote_versions").insert([{
         quote_id: quoteId,
         version_number: quote.rev,
@@ -1730,13 +1727,13 @@ function renderInstrumentModalList() {
     }
   }
 
-  // Init after DOM is ready
+ 
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof populateHeader === "function") populateHeader();
     if (typeof renderQuoteBuilder === "function") renderQuoteBuilder();
   });
 
-  // Simple back navigation
+  
   function goBack() {
     window.history.back();
   }
