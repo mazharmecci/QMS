@@ -890,28 +890,56 @@ Next lines: bullet lines starting with ' - '"
   function formatItemCell(item) {
     const code       = item.code || item.catalog || '';
     const descSource = item.description || item.longDescription || '';
-    const lines      = parseLines(descSource);
+    const lines      = parseLines(descSource);  // same helper as instruments
   
     const title = lines[0] || '';
     const rest  = lines.slice(1);
   
-    const meta = [];
-    if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
-    if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
+    // Treat any lines after the title as the “supplied” block
+    // or read explicitly from supplied* fields if you add them later.
+    let suppliedRaw =
+      item.suppliedCompleteWith || item.suppliedWith || item.supplied || rest.join('\n');
   
-    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-  
-    if (code)  html += `<div class="cat-main">${code}</div>`;
-    if (title) html += `<div class="cat-main"><strong>${title}</strong></div>`;
-  
-    if (rest.length) {
-      html += `<div style="height:8px;"></div>`;
-      html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
+    let suppliedLines;
+    if (Array.isArray(suppliedRaw)) {
+      suppliedLines = suppliedRaw.map(String).filter(Boolean);
+    } else {
+      suppliedLines = parseLines(String(suppliedRaw || ''));
     }
   
-    if (meta.length) {
+    const origin = item.origin || item.country || item.countryOfOrigin || '';
+    const hsn    = item.hsn || item.hsnCode || '';
+  
+    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+  
+    // Cat / Material No.
+    if (code) {
+      html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
+    }
+  
+    // Main item name
+    if (title) {
+      html += `<div style="font-weight:600; margin-bottom:4px;">${title}</div>`;
+    }
+  
+    // Supplied Complete with block (indented bullets)
+    if (suppliedLines.length) {
+      html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
+      suppliedLines.forEach(line => {
+        html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
+      });
+    }
+  
+    // One vertical gap before meta
+    if (origin || hsn) {
       html += `<div style="height:8px;"></div>`;
-      html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
+    }
+  
+    if (origin) {
+      html += `<div>Country of Origin: ${origin}</div>`;
+    }
+    if (hsn) {
+      html += `<div>HSN Code: ${hsn}</div>`;
     }
   
     html += `</td>`;
