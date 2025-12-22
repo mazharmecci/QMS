@@ -369,8 +369,7 @@
     /* Hide overlays in print */
     .overlay { display: none !important; }
   
-    /* Screen: rows always visible */
-    /* Ensure rows are always visible on screen */
+    /* Always visible on screen */
     .discount-row,
     .after-discount-row {
       display: table-row;
@@ -383,7 +382,6 @@
         display: none !important;
       }
     }
-
   
   /* Overlay (screen only) */
   .overlay {
@@ -1069,7 +1067,7 @@ function renderQuoteBuilder() {
   renderSummaryRows(itemsTotal);
 }
 
-// ✅ First define the helper function
+// Helper: toggle discount visibility
 function updateDiscountVisibility(discountValue) {
   const table = document.getElementById('quoteSummaryTable');
   if (!table) return;
@@ -1081,12 +1079,14 @@ function updateDiscountVisibility(discountValue) {
 
   if (discount === 0) {
     table.classList.add('discount-zero');
+    console.log("Discount is zero → added .discount-zero class");
   } else {
     table.classList.remove('discount-zero');
+    console.log("Discount > 0 → removed .discount-zero class");
   }
 }
 
-// ✅ Then define the main rendering function
+// Main rendering function
 function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById('quoteSummaryBody');
   if (!sb) return;
@@ -1101,7 +1101,7 @@ function renderSummaryRows(itemsTotal) {
   const roundedTotal = Math.round(totalValue);
   const roundOff     = roundedTotal - totalValue;
 
-  // ✅ Debug log to inspect values
+  // Debug log
   console.log({
     itemsTotal,
     discount,
@@ -1121,7 +1121,12 @@ function renderSummaryRows(itemsTotal) {
     <tr class="discount-row">
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-      <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+      <td style="text-align:right; font-weight:600;">
+        <input id="discountInput" type="number" 
+               value="${discount}" 
+               style="width:100px; text-align:right;" 
+               oninput="updateDiscountFromInput()" />
+      </td>
     </tr>
     <tr class="after-discount-row">
       <td colspan="3"></td>
@@ -1152,10 +1157,11 @@ function renderSummaryRows(itemsTotal) {
 
   sb.innerHTML = rows;
 
-  // ✅ Call helper after rendering
+  // Toggle visibility class
   updateDiscountVisibility(discount);
 }
 
+// Inline editing handler
 function updateDiscountFromInput() {
   const input = document.getElementById('discountInput');
   if (!input) return;
@@ -1187,7 +1193,6 @@ function updateDiscountFromInput() {
 
   renderSummaryRows(itemsTotal);
 }
-
 
   /* ========= Instruments modal (frame) ========= */
 
