@@ -372,11 +372,11 @@
     /* Screen: rows always visible */
     .discount-row,
     .after-discount-row {
-      display: table-row; /* ensure they show by default */
+      display: table-row;
     }
     
     @media print {
-      /* Hide only in print when discount is zero */
+      /* Hide discount rows only in print when discount is zero */
       .discount-zero .discount-row,
       .discount-zero .after-discount-row {
         display: none !important;
@@ -1087,25 +1087,16 @@ function renderSummaryRows(itemsTotal) {
       <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
       <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
     </tr>
-  `;
-
-  // ✅ Only render discount rows if discount > 0
-  if (Number(discount) > 0) {
-    rows += `
-      <tr class="discount-row">
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
-      </tr>
-      <tr class="after-discount-row">
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
-      </tr>
-    `;
-  }
-
-  rows += `
+    <tr class="discount-row">
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+    </tr>
+    <tr class="after-discount-row">
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
+    </tr>
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
@@ -1130,7 +1121,7 @@ function renderSummaryRows(itemsTotal) {
 
   sb.innerHTML = rows;
 
-  // Optional: keep CSS toggle if you want style-based control
+  // Toggle class for print visibility
   updateDiscountVisibility(discount);
 }
 
@@ -1166,21 +1157,6 @@ function updateDiscountFromInput() {
   renderSummaryRows(itemsTotal);
 }
 
-function updateDiscountVisibility(discountValue) {
-  const table = document.getElementById('quoteSummaryTable');
-  if (!table) return;
-
-  const header = getQuoteHeaderRaw?.() || {};
-  const discount = discountValue != null 
-    ? Number(discountValue) 
-    : Number(header.discount || 0);
-
-  if (discount === 0) {
-    table.classList.add('discount-zero');
-  } else {
-    table.classList.remove('discount-zero');
-  }
-}
 
   /* ========= Instruments modal (frame) ========= */
 
