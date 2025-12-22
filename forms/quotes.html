@@ -1623,7 +1623,7 @@ async function finalizeQuote() {
     return;
   }
 
-  // === Calculate totals ===
+  // Calculate totals as before...
   let itemsTotal = 0;
   lines.forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
@@ -1656,24 +1656,14 @@ async function finalizeQuote() {
     roundOff: roundedTotal - totalValue
   };
 
-  // === Build line items ===
   const lineItems = buildLineItemsFromCurrentQuote();
-
-  // === Determine revision ===
-  const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
-  const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
-  const lastRev = sameQuote.length
-    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-    : 0;
-  const nextRev = lastRev + 1;
-
   const now = new Date();
   const quote = {
     header,
     lineItems,
     summary,
     quoteNo: header.quoteNo,
-    revision: nextRev,
+    revision: 1,  // handle revision logic if needed
     status: 'submitted',
     history: [{
       status: 'submitted',
@@ -1682,32 +1672,8 @@ async function finalizeQuote() {
     }]
   };
 
-  // === Optional: local backup ===
-  existing.push(quote);
-  localStorage.setItem('quotes', JSON.stringify(existing));
-
-  // === Save to Supabase ===
-  try {
-    const { data, error } = await supabase
-      .from('quotes')
-      .insert([quote]);
-
-    if (error) {
-      console.error('Error saving quote to Supabase:', error);
-      alert('Quote saved locally, but failed to save to Supabase!');
-      return;
-    }
-
-    console.log('Quote saved to Supabase:', data);
-    alert(`Quote finalized and saved to Supabase as ${header.quoteNo} (Rev ${nextRev}).`);
-
-  } catch (err) {
-    console.error('Unexpected error saving quote:', err);
-    alert('Quote saved locally, but an unexpected error occurred!');
-  }
-
-  // Optionally, refresh the quote list or redirect
-  // window.location.href = 'quote-history.html';
+  // Save to Supabase
+  await saveQuoteToSupabase(quote);
 }
 
   /* ========= Init ========= */
