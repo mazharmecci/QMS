@@ -995,7 +995,7 @@ function renderQuoteBuilder() {
         <td>${moneyINR(instUnit)}</td>
         <td>${moneyINR(instTotal)}</td>
       </tr>
-    });
+    `); // <- correct closing, no extra }
 
     // 2) configuration rows directly after this instrument
     const configItems = line.configItems || [];
@@ -1030,7 +1030,7 @@ function renderQuoteBuilder() {
       });
     }
 
-    // 3) additional rows directly after this instrument (and its config)
+    // 3) additional rows directly after this instrument
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
