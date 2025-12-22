@@ -784,6 +784,7 @@
     return { header, instruments, lines: header.quoteLines };
   }
 
+ <script>
   /* ========= Populate letterhead from header ========= */
 
   function populateHeader() {
@@ -873,7 +874,7 @@
       });
     }
   
-       // One vertical gap before meta
+    // One vertical gap before meta
     if (origin || hsn) {
       html += `<div style="height:8px;"></div>`;
     }
@@ -908,7 +909,7 @@
   function formatItemCell(item) {
     const code       = item.code || item.catalog || '';
     const descSource = item.description || item.longDescription || '';
-    const lines      = parseLines(descSource); // same helper as instruments
+    const lines      = parseLines(descSource);
   
     const title = lines[0] || '';
     const rest  = lines.slice(1);
@@ -969,236 +970,235 @@
 
   /* ========= Render main quote items ========= */
 
-function renderQuoteBuilder() {
-  const { instruments, lines } = getQuoteContext();
-  const body = document.getElementById('quoteBuilderBody');
-  if (!body) return;
+  function renderQuoteBuilder() {
+    const { instruments, lines } = getQuoteContext();
+    const body = document.getElementById('quoteBuilderBody');
+    if (!body) return;
 
-  if (!lines.length) {
-    body.innerHTML = '';
-    const sb = document.getElementById('quoteSummaryBody');
-    if (sb) sb.innerHTML = '';
-    return;
-  }
-
-  const rows = [];
-  let runningItemCode = 1;
-  let itemsTotal = 0;
-
-  lines.forEach((line, lineIdx) => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (!inst) return;
-
-    const qty = Number(line.quantity || 1);
-    const codeText = String(runningItemCode).padStart(3, '0');
-    runningItemCode += 1;
-
-    const instUnit = Number(inst.unitPrice || 0);
-    const instTotal = instUnit * qty;
-    itemsTotal += instTotal;
-
-    // 1) main instrument row
-    rows.push(`
-      <tr>
-        <td>${codeText}</td>
-        ${formatInstrumentCell(inst, lineIdx)}
-        <td>${qty}</td>
-        <td>${moneyINR(instUnit)}</td>
-        <td>${moneyINR(instTotal)}</td>
-      </tr>
-    `); // <- correct closing, no extra }
-
-    // 2) configuration rows directly after this instrument
-    const configItems = line.configItems || [];
-    if (configItems.length) {
-      rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">
-            Configuration Items
-          </td>
-        </tr>
-      `);
-
-      configItems.forEach(item => {
-        const itemCode = String(runningItemCode).padStart(3, '0');
-        runningItemCode += 1;
-
-        const q      = item.qty != null ? item.qty : 'Included';
-        const upRaw  = item.upInr != null ? item.upInr : 'Included';
-        const tpRaw  = item.tpInr != null ? item.tpInr : 'Included';
-        const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
-        const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
-
-        rows.push(`
-          <tr>
-            <td>${itemCode}</td>
-            ${formatItemCell(item)}
-            <td>${q}</td>
-            <td>${upCell}</td>
-            <td>${tpCell}</td>
-          </tr>
-        `);
-      });
+    if (!lines.length) {
+      body.innerHTML = '';
+      const sb = document.getElementById('quoteSummaryBody');
+      if (sb) sb.innerHTML = '';
+      return;
     }
 
-    // 3) additional rows directly after this instrument
-    const additionalItems = line.additionalItems || [];
-    if (additionalItems.length) {
+    const rows = [];
+    let runningItemCode = 1;
+    let itemsTotal = 0;
+
+    lines.forEach((line, lineIdx) => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (!inst) return;
+
+      const qty = Number(line.quantity || 1);
+      const codeText = String(runningItemCode).padStart(3, '0');
+      runningItemCode += 1;
+
+      const instUnit = Number(inst.unitPrice || 0);
+      const instTotal = instUnit * qty;
+      itemsTotal += instTotal;
+
+      // 1) main instrument row
       rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">
-            Additional Items
-          </td>
+        <tr>
+          <td>${codeText}</td>
+          ${formatInstrumentCell(inst, lineIdx)}
+          <td>${qty}</td>
+          <td>${moneyINR(instUnit)}</td>
+          <td>${moneyINR(instTotal)}</td>
         </tr>
       `);
 
-      additionalItems.forEach(item => {
-        const itemCode = String(runningItemCode).padStart(3, '0');
-        runningItemCode += 1;
+      // 2) configuration rows directly after this instrument
+      const configItems = line.configItems || [];
+      if (configItems.length) {
+        rows.push(`
+          <tr style="background:#00B0F0; color:#000;">
+            <td colspan="5" style="font-weight:700;">
+              Configuration Items
+            </td>
+          </tr>
+        `);
 
+        configItems.forEach(item => {
+          const itemCode = String(runningItemCode).padStart(3, '0');
+          runningItemCode += 1;
+
+          const q      = item.qty != null ? item.qty : 'Included';
+          const upRaw  = item.upInr != null ? item.upInr : 'Included';
+          const tpRaw  = item.tpInr != null ? item.tpInr : 'Included';
+          const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
+          const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
+
+          rows.push(`
+            <tr>
+              <td>${itemCode}</td>
+              ${formatItemCell(item)}
+              <td>${q}</td>
+              <td>${upCell}</td>
+              <td>${tpCell}</td>
+            </tr>
+          `);
+        });
+      }
+
+      // 3) additional rows directly after this instrument
+      const additionalItems = line.additionalItems || [];
+      if (additionalItems.length) {
+        rows.push(`
+          <tr style="background:#00B0F0; color:#000;">
+            <td colspan="5" style="font-weight:700;">
+              Additional Items
+            </td>
+          </tr>
+        `);
+
+        additionalItems.forEach(item => {
+          const itemCode = String(runningItemCode).padStart(3, '0');
+          runningItemCode += 1;
+
+          const qtyNum  = Number(item.qty || 1);
+          const unitNum = Number(item.price || item.unitPrice || 0);
+          const totalNum = unitNum * qtyNum;
+          itemsTotal += totalNum;
+
+          rows.push(`
+            <tr>
+              <td>${itemCode}</td>
+              ${formatItemCell(item)}
+              <td>${qtyNum.toString().padStart(2, '0')}</td>
+              <td>${moneyINR(unitNum)}</td>
+              <td>${moneyINR(totalNum)}</td>
+            </tr>
+          `);
+        });
+      }
+    });
+
+    body.innerHTML = rows.join('');
+    renderSummaryRows(itemsTotal);
+  }
+
+  // Helper: toggle discount visibility (for print)
+  function updateDiscountVisibility(discountValue) {
+    const table = document.getElementById('quoteSummaryTable');
+    if (!table) return;
+
+    const header   = typeof getQuoteHeaderRaw === 'function' ? getQuoteHeaderRaw() : {};
+    const discount = discountValue != null
+      ? Number(discountValue)
+      : Number(header.discount || 0);
+
+    if (discount === 0) {
+      table.classList.add('discount-zero');
+    } else {
+      table.classList.remove('discount-zero');
+    }
+  }
+
+  // Main rendering function
+  function renderSummaryRows(itemsTotal) {
+    const sb = document.getElementById('quoteSummaryBody');
+    if (!sb) return;
+
+    const header     = getQuoteHeaderRaw();
+    const gstPercent = 18;
+    const discount   = Number(header.discount || 0);
+
+    const afterDisc    = itemsTotal - discount;
+    const gstAmount    = (afterDisc * gstPercent) / 100;
+    const totalValue   = afterDisc + gstAmount;
+    const roundedTotal = Math.round(totalValue);
+    const roundOff     = roundedTotal - totalValue;
+
+    sb.innerHTML = `
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
+        <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
+      </tr>
+      <tr class="discount-row">
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+        <td style="text-align:right; font-weight:600;">
+          <input id="discountInput"
+                 type="number"
+                 value="${discount}"
+                 style="width:100px; text-align:right;"
+                 oninput="discountInputChanged(this.value)"
+                 onblur="discountInputCommitted()" />
+        </td>
+      </tr>
+      <tr class="after-discount-row">
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+        <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
+      </tr>
+      <tr class="freight-row">
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Freight Cost (INR)</td>
+        <td style="text-align:right; font-weight:600;">Included</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
+        <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
+        <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
+        <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
+      </tr>
+      <tr>
+        <td colspan="3"></td>
+        <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
+        <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
+      </tr>
+    `;
+
+    updateDiscountVisibility(discount);
+  }
+
+  // local draft value to avoid re-render on each keystroke
+  let discountDraft = null;
+
+  // Called on input: only track the draft value
+  function discountInputChanged(val) {
+    discountDraft = Number(val || 0);
+  }
+
+  // Called on blur (or manually) to commit and re-render
+  function discountInputCommitted() {
+    const value = discountDraft != null ? discountDraft : 0;
+
+    const header = getQuoteHeaderRaw();
+    header.discount = value;
+    saveQuoteHeader(header);
+
+    const { instruments, lines } = getQuoteContext();
+    let itemsTotal = 0;
+
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        const qty = Number(line.quantity || 1);
+        itemsTotal += Number(inst.unitPrice || 0) * qty;
+      }
+
+      (line.additionalItems || []).forEach(item => {
         const qtyNum  = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
-        const totalNum = unitNum * qtyNum;
-        itemsTotal += totalNum;
-
-        rows.push(`
-          <tr>
-            <td>${itemCode}</td>
-            ${formatItemCell(item)}
-            <td>${qtyNum.toString().padStart(2, '0')}</td>
-            <td>${moneyINR(unitNum)}</td>
-            <td>${moneyINR(totalNum)}</td>
-          </tr>
-        `);
+        itemsTotal += qtyNum * unitNum;
       });
-    }
-  });
-
-  body.innerHTML = rows.join('');
-  renderSummaryRows(itemsTotal);
-}
-
-// Helper: toggle discount visibility (for print)
-function updateDiscountVisibility(discountValue) {
-  const table = document.getElementById('quoteSummaryTable');
-  if (!table) return;
-
-  const header   = typeof getQuoteHeaderRaw === 'function' ? getQuoteHeaderRaw() : {};
-  const discount = discountValue != null
-    ? Number(discountValue)
-    : Number(header.discount || 0);
-
-  if (discount === 0) {
-    table.classList.add('discount-zero');
-  } else {
-    table.classList.remove('discount-zero');
-  }
-}
-
-// Main rendering function
-function renderSummaryRows(itemsTotal) {
-  const sb = document.getElementById('quoteSummaryBody');
-  if (!sb) return;
-
-  const header     = getQuoteHeaderRaw();
-  const gstPercent = 18;
-  const discount   = Number(header.discount || 0);
-
-  const afterDisc    = itemsTotal - discount;
-  const gstAmount    = (afterDisc * gstPercent) / 100;
-  const totalValue   = afterDisc + gstAmount;
-  const roundedTotal = Math.round(totalValue);
-  const roundOff     = roundedTotal - totalValue;
-
-sb.innerHTML = `
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
-  </tr>
-  <tr class="discount-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-    <td style="text-align:right; font-weight:600;">
-      <input id="discountInput"
-             type="number"
-             value="${discount}"
-             style="width:100px; text-align:right;"
-             oninput="discountInputChanged(this.value)"
-             onblur="discountInputCommitted()" />
-    </td>
-  </tr>
-  <tr class="after-discount-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
-  </tr>
-  <!-- NEW Freight row -->
-  <tr class="freight-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Freight Cost (INR)</td>
-    <td style="text-align:right; font-weight:600;">Included</td>
-  </tr>
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
-  </tr>
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
-  </tr>
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
-  </tr>
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
-    <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
-  </tr>
-`;
-
-updateDiscountVisibility(discount);
-
-
-// local draft value to avoid re-render on each keystroke
-let discountDraft = null;
-
-// Called on input: only track the draft value
-function discountInputChanged(val) {
-  discountDraft = Number(val || 0);
-}
-
-// Called on blur (or manually) to commit and re-render
-function discountInputCommitted() {
-  const value = discountDraft != null ? discountDraft : 0;
-
-  const header = getQuoteHeaderRaw();
-  header.discount = value;
-  saveQuoteHeader(header);
-
-  const { instruments, lines } = getQuoteContext();
-  let itemsTotal = 0;
-
-  lines.forEach(line => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (inst) {
-      const qty = Number(line.quantity || 1);
-      itemsTotal += Number(inst.unitPrice || 0) * qty;
-    }
-
-    (line.additionalItems || []).forEach(item => {
-      const qtyNum  = Number(item.qty || 1);
-      const unitNum = Number(item.price || item.unitPrice || 0);
-      itemsTotal += qtyNum * unitNum;
     });
-  });
 
-  renderSummaryRows(itemsTotal);
-}
+    renderSummaryRows(itemsTotal);
+  }
 
   /* ========= Instruments modal (frame) ========= */
 
@@ -1214,64 +1214,64 @@ function discountInputCommitted() {
     if (overlay) overlay.style.display = 'none';
   }
 
-function renderInstrumentModalList() {
-  const listEl = document.getElementById('instrumentModalList');
-  const { instruments, lines } = getQuoteContext();
+  function renderInstrumentModalList() {
+    const listEl = document.getElementById('instrumentModalList');
+    const { instruments, lines } = getQuoteContext();
 
-  if (!lines.length) {
-    listEl.innerHTML = `
-      <tr>
-        <td colspan="7" style="padding:0.4rem; font-size:12px; color:#64748b; text-align:center;">
-          No instruments added yet for this quote.
-        </td>
-      </tr>`;
-    return;
+    if (!lines.length) {
+      listEl.innerHTML = `
+        <tr>
+          <td colspan="7" style="padding:0.4rem; font-size:12px; color:#64748b; text-align:center;">
+            No instruments added yet for this quote.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    let rows = '';
+    lines.forEach((line, idx) => {
+      const inst = instruments[line.instrumentIndex] || {};
+      const itemNo = String(idx + 1).padStart(2, '0');
+      const code   = inst.catalog || inst.instrumentCode || '';
+      const name   = inst.instrumentName || inst.name || 'Unnamed Instrument';
+      const desc   = inst.description || inst.longDescription || '';
+      const shortDesc = desc.replace(/\s+/g, ' ').slice(0, 80) + (desc.length > 80 ? '…' : '');
+
+      const qty  = Number(line.quantity || 1);
+      const unit = Number(inst.unitPrice || 0);
+      const total = qty * unit;
+
+      rows += `
+        <tr>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:center;">${itemNo}</td>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">${code}</td>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
+            <div style="font-weight:600;">${name}</div>
+            <div style="font-size:11px; color:#64748b;">${shortDesc}</div>
+          </td>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:center;">${qty}</td>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(unit)}</td>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(total)}</td>
+          <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
+            <button type="button"
+                    class="btn-quote"
+                    style="font-size:11px; padding:0.2rem 0.6rem; margin-right:0.25rem;"
+                    onclick="editInstrumentLine(${idx})">
+              Edit
+            </button>
+            <button type="button"
+                    class="btn-quote btn-quote-secondary"
+                    style="font-size:11px; padding:0.2rem 0.6rem;"
+                    onclick="removeInstrumentLine(${idx})">
+              Remove
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    listEl.innerHTML = rows;
   }
-
-  let rows = '';
-  lines.forEach((line, idx) => {
-    const inst = instruments[line.instrumentIndex] || {};
-    const itemNo = String(idx + 1).padStart(2, '0');
-    const code   = inst.catalog || inst.instrumentCode || '';
-    const name   = inst.instrumentName || inst.name || 'Unnamed Instrument';
-    const desc   = inst.description || inst.longDescription || '';
-    const shortDesc = desc.replace(/\s+/g, ' ').slice(0, 80) + (desc.length > 80 ? '…' : '');
-
-    const qty  = Number(line.quantity || 1);
-    const unit = Number(inst.unitPrice || 0);
-    const total = qty * unit;
-
-    rows += `
-      <tr>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:center;">${itemNo}</td>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">${code}</td>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
-          <div style="font-weight:600;">${name}</div>
-          <div style="font-size:11px; color:#64748b;">${shortDesc}</div>
-        </td>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:center;">${qty}</td>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(unit)}</td>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(total)}</td>
-        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
-          <button type="button"
-                  class="btn-quote"
-                  style="font-size:11px; padding:0.2rem 0.6rem; margin-right:0.25rem;"
-                  onclick="editInstrumentLine(${idx})">
-            Edit
-          </button>
-          <button type="button"
-                  class="btn-quote btn-quote-secondary"
-                  style="font-size:11px; padding:0.2rem 0.6rem;"
-                  onclick="removeInstrumentLine(${idx})">
-            Remove
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-
-  listEl.innerHTML = rows;
-}
 
   function removeInstrumentLine(idx) {
     const { header } = getQuoteContext();
@@ -1282,7 +1282,6 @@ function renderInstrumentModalList() {
     renderInstrumentModalList();
   }
 
-  // Simple edit (quantity); can be extended to pick a different instrument
   function editInstrumentLine(idx) {
     const { header } = getQuoteContext();
     if (!Array.isArray(header.quoteLines) || !header.quoteLines[idx]) return;
@@ -1694,11 +1693,10 @@ function renderInstrumentModalList() {
   document.addEventListener('DOMContentLoaded', function () {
     populateHeader();
     renderQuoteBuilder();
-  });  
+  });
 </script>
-  
+
 </body>
 </html>
-
 
 
