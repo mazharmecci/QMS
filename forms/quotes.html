@@ -1678,7 +1678,21 @@ function renderInstrumentModalList() {
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]
     };
-    
+
+    existing.push(quote);
+    localStorage.setItem('quotes', JSON.stringify(existing));
+    alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+  }
+
+  /* ========= Init ========= */
+
+  document.addEventListener('DOMContentLoaded', function () {
+    populateHeader();
+    renderQuoteBuilder();
+  });
 </script>
+
+
+
 </body>
 </html>
