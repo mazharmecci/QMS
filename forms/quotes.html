@@ -1679,70 +1679,74 @@ function renderInstrumentModalList() {
       }]
     };
 
-    existing.push(quote);
-    localStorage.setItem('quotes', JSON.stringify(existing));
-    
-    // NEW: background save to Supabase
-    saveQuoteToSupabase(header, quote);
-    
-    alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
-
 
  /* ========= Save the quote to supabase ========= */
   
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
+<script>
+  // Initialize Supabase client once
+  const supabase = supabase.createClient("https://YOUR_PROJECT.supabase.co", "YOUR_ANON_KEY");
+
   async function saveQuoteToSupabase(header, quote) {
-  try {
-    // 1. Insert / fetch quote master
-    const { data: quoteRow, error: quoteError } = await supabase
-      .from("quotes")
-      .select("id")
-      .eq("quote_number", header.quoteNo)
-      .single();
-
-    let quoteId;
-
-    if (quoteRow) {
-      quoteId = quoteRow.id;
-    } else {
-      const { data: newQuote, error: newQuoteError } = await supabase
+    try {
+      // 1. Insert / fetch quote master
+      const { data: quoteRow, error: quoteError } = await supabase
         .from("quotes")
-        .insert([{
-          quote_number: header.quoteNo,
-          customer_name: header.customerName || ""
-        }])
-        .select()
+        .select("id")
+        .eq("quote_number", header.quoteNo)
         .single();
 
-      if (newQuoteError) throw newQuoteError;
-      quoteId = newQuote.id;
+      let quoteId;
+
+      if (quoteRow) {
+        quoteId = quoteRow.id;
+      } else {
+        const { data: newQuote, error: newQuoteError } = await supabase
+          .from("quotes")
+          .insert([{
+            quote_number: header.quoteNo,
+            customer_name: header.customerName || ""
+          }])
+          .select()
+          .single();
+
+        if (newQuoteError) throw newQuoteError;
+        quoteId = newQuote.id;
+      }
+
+      // 2. Insert version
+      await supabase.from("quote_versions").insert([{
+        quote_id: quoteId,
+        version_number: quote.rev,
+        quote_json: quote
+      }]);
+
+      console.log("Saved to Supabase:", header.quoteNo, "Rev", quote.rev);
+    } catch (err) {
+      console.error("Supabase save failed:", err);
     }
-
-    // 2. Insert version
-    await supabase.from("quote_versions").insert([{
-      quote_id: quoteId,
-      version_number: quote.rev,
-      quote_json: quote
-    }]);
-
-    console.log("Saved to Supabase:", header.quoteNo, "Rev", quote.rev);
-  } catch (err) {
-    console.error("Supabase save failed:", err);
   }
-}
 
-  /* ========= Init ========= */
+  // Example usage
+  existing.push(quote);
+  localStorage.setItem('quotes', JSON.stringify(existing));
+  saveQuoteToSupabase(header, quote);
+  alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
 
+  // Init
   document.addEventListener('DOMContentLoaded', function () {
     populateHeader();
     renderQuoteBuilder();
   });
+
+  // Fix goBack
+  function goBack() {
+    window.history.back();
+  }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="../js/supabase.js"></script>
 <script src="../js/quote.js"></script>
-  
-<!-- <script src="../js/test-connection.js"></script> -->
 
 </body>
 </html>
