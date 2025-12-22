@@ -1083,6 +1083,17 @@ function renderSummaryRows(itemsTotal) {
   const roundedTotal = Math.round(totalValue);
   const roundOff     = roundedTotal - totalValue;
 
+  // ✅ Debug log to inspect values
+  console.log({
+    itemsTotal,
+    discount,
+    afterDisc,
+    gstAmount,
+    totalValue,
+    roundedTotal,
+    roundOff
+  });
+
   let rows = `
     <tr>
       <td colspan="3"></td>
@@ -1123,7 +1134,6 @@ function renderSummaryRows(itemsTotal) {
 
   sb.innerHTML = rows;
 
-  // Toggle class for print visibility
   updateDiscountVisibility(discount);
 }
 
