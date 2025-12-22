@@ -1682,8 +1682,11 @@ function renderInstrumentModalList() {
 <!-- Load Supabase library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<!-- Load your Supabase client config -->
+<!-- Load your Supabase client config (defines window.supabase) -->
 <script src="../js/supabase.js"></script>
+
+<!-- Load your quote logic (defines populateHeader, renderQuoteBuilder, etc.) -->
+<script src="../js/quote.js"></script>
 
 <!-- Main logic -->
 <script>
@@ -1727,20 +1730,17 @@ function renderInstrumentModalList() {
     }
   }
 
-  // Init
-  document.addEventListener('DOMContentLoaded', function () {
-    populateHeader();
-    renderQuoteBuilder();
+  // Init after DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof populateHeader === "function") populateHeader();
+    if (typeof renderQuoteBuilder === "function") renderQuoteBuilder();
   });
 
-  // Fix goBack
+  // Simple back navigation
   function goBack() {
     window.history.back();
   }
 </script>
-
-<!-- Load your quote logic -->
-<script src="../js/quote.js"></script>
 
 </body>
 </html>
