@@ -835,6 +835,18 @@ Next lines: bullet lines starting with ' - '"
       });
     }
   
+       // One vertical gap before meta
+    if (origin || hsn) {
+      html += `<div style="height:8px;"></div>`;
+    }
+  
+    if (origin) {
+      html += `<div>Country of Origin: ${origin}</div>`;
+    }
+    if (hsn) {
+      html += `<div>HSN Code: ${hsn}</div>`;
+    }
+  
     // Per-instrument actions: config / additional items
     html += `
       <div style="margin-top:8px; display:flex; gap:0.4rem; flex-wrap:wrap;">
@@ -850,18 +862,6 @@ Next lines: bullet lines starting with ' - '"
         </button>
       </div>
     `;
-  
-    // One vertical gap before meta
-    if (origin || hsn) {
-      html += `<div style="height:8px;"></div>`;
-    }
-  
-    if (origin) {
-      html += `<div>Country of Origin: ${origin}</div>`;
-    }
-    if (hsn) {
-      html += `<div>HSN Code: ${hsn}</div>`;
-    }
   
     html += `</td>`;
     return html;
