@@ -434,7 +434,7 @@
   <!-- ========= This code is used so that quotes.html doesn't look blank ========= -->
 <script>
   if (!localStorage.getItem('quoteHeader')) {
-    window.location.href = '/forms/quote-setup.html';
+    window.location.href = 'forms/quote-setup.html';
   }
 </script>
 
@@ -1811,7 +1811,7 @@ alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
 
     if (!raw) {
       console.warn('No quoteHeader found, redirecting back');
-      window.location.href = '/forms/quote-setup.html';
+      window.location.href = 'forms/quote-setup.html';
       return;
     }
 
