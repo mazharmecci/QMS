@@ -431,6 +431,13 @@
   </div>
 </header>
 
+  <!-- ========= This code is used so that quotes.html doesn't look blank ========= -->
+<script>
+  if (!localStorage.getItem('quoteHeader')) {
+    window.location.href = 'quote-setup.html';
+  }
+</script>
+
 <!-- ========= Instruments modals ========= -->
 
 <!-- Instruments for this quote (list) -->
@@ -1798,6 +1805,50 @@ saveQuoteToSupabase(header, quote);
 
 alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
 
+<script>
+  (function hydrateQuoteFromSetup() {
+    const raw = localStorage.getItem('quoteHeader');
+
+    if (!raw) {
+      console.warn('No quoteHeader found, redirecting back');
+      window.location.href = 'quote-setup.html';
+      return;
+    }
+
+    const data = JSON.parse(raw);
+
+    // Header fields
+    document.getElementById('metaQuoteNo').textContent = data.quoteNo || '';
+    document.getElementById('metaQuoteDate').textContent = data.quoteDate || '';
+    document.getElementById('metaYourRef').textContent = data.yourReference || '';
+    document.getElementById('metaRefDate').textContent = data.refDate || '';
+    document.getElementById('metaContactPerson').textContent = data.contactPerson || '';
+    document.getElementById('metaPhone').textContent = data.contactPhone || '';
+    document.getElementById('metaEmail').textContent = data.contactEmail || '';
+    document.getElementById('metaOffice').textContent = data.officePhone || '';
+
+    // Customer block
+    document.getElementById('toHospitalNameLine').textContent = data.hospitalName || '';
+    document.getElementById('toHospitalAddressLine1').textContent = data.hospitalAddress || '';
+    document.getElementById('toAttn').textContent = data.kindAttn || '';
+
+    // Sales note
+    if (data.salesNote) {
+      document.getElementById('salesNoteBlock').innerText = data.salesNote;
+    }
+
+    // Terms
+    if (data.termsHtml) {
+      document.getElementById('termsTextBlock').innerHTML = data.termsHtml;
+    }
+
+    // Initialize quote state
+    window.currentQuoteItems = data.quoteLines || [];
+    window.currentQuoteTotals = {};
+
+    console.log('Quote hydrated successfully');
+  })();
+</script>
 
 </body>
 </html>
