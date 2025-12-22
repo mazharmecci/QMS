@@ -582,6 +582,15 @@ Next lines: bullet lines starting with ' - '"
     overlay.style.display = 'flex';
   };
 
+  window.closeInstrumentModal = function () {
+    const overlay = document.getElementById('instrumentModalOverlay');
+    if (!overlay) {
+      console.warn('instrumentModalOverlay not found');
+      return;
+    }
+    overlay.style.display = 'none';
+  };
+  
   window.closeInstrumentPicker = function () {
     const overlay = document.getElementById('instrumentPickerOverlay');
     if (overlay) {
