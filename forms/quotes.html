@@ -970,8 +970,7 @@ function renderQuoteBuilder() {
     return;
   }
 
-  const mainRows = [];
-  const extraRows = [];
+  const rows = [];
   let runningItemCode = 1;
   let itemsTotal = 0;
 
@@ -987,8 +986,8 @@ function renderQuoteBuilder() {
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    // 1) main instrument rows
-    mainRows.push(`
+    // 1) main instrument row
+    rows.push(`
       <tr>
         <td>${codeText}</td>
         ${formatInstrumentCell(inst, lineIdx)}
@@ -996,28 +995,30 @@ function renderQuoteBuilder() {
         <td>${moneyINR(instUnit)}</td>
         <td>${moneyINR(instTotal)}</td>
       </tr>
-    `);
+    });
 
-    // 2) configuration and additional rows buffered into extraRows
+    // 2) configuration rows directly after this instrument
     const configItems = line.configItems || [];
     if (configItems.length) {
-      extraRows.push(`
+      rows.push(`
         <tr style="background:#00B0F0; color:#000;">
           <td colspan="5" style="font-weight:700;">
             Configuration Items
           </td>
         </tr>
       `);
+
       configItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, '0');
         runningItemCode += 1;
-        const q = item.qty != null ? item.qty : 'Included';
-        const upRaw = item.upInr != null ? item.upInr : 'Included';
-        const tpRaw = item.tpInr != null ? item.tpInr : 'Included';
+
+        const q      = item.qty != null ? item.qty : 'Included';
+        const upRaw  = item.upInr != null ? item.upInr : 'Included';
+        const tpRaw  = item.tpInr != null ? item.tpInr : 'Included';
         const upCell = typeof upRaw === 'number' ? moneyINR(upRaw) : upRaw;
         const tpCell = typeof tpRaw === 'number' ? moneyINR(tpRaw) : tpRaw;
 
-        extraRows.push(`
+        rows.push(`
           <tr>
             <td>${itemCode}</td>
             ${formatItemCell(item)}
@@ -1029,25 +1030,27 @@ function renderQuoteBuilder() {
       });
     }
 
+    // 3) additional rows directly after this instrument (and its config)
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
-      extraRows.push(`
+      rows.push(`
         <tr style="background:#00B0F0; color:#000;">
           <td colspan="5" style="font-weight:700;">
             Additional Items
           </td>
         </tr>
       `);
+
       additionalItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, '0');
         runningItemCode += 1;
 
-        const qtyNum = Number(item.qty || 1);
+        const qtyNum  = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
         const totalNum = unitNum * qtyNum;
         itemsTotal += totalNum;
 
-        extraRows.push(`
+        rows.push(`
           <tr>
             <td>${itemCode}</td>
             ${formatItemCell(item)}
@@ -1060,8 +1063,7 @@ function renderQuoteBuilder() {
     }
   });
 
-  // main instruments first, then all config/additional rows
-  body.innerHTML = mainRows.concat(extraRows).join('');
+  body.innerHTML = rows.join('');
   renderSummaryRows(itemsTotal);
 }
 
