@@ -1790,58 +1790,44 @@ function renderInstrumentModalList() {
     };
     
 
-existing.push(quote);
-localStorage.setItem('quotes', JSON.stringify(existing));
+(function hydrateQuoteFromSetup() {
+  const raw = localStorage.getItem('quoteHeader');
 
-// NEW: background save to Supabase
-saveQuoteToSupabase(header, quote);
+  if (!raw) {
+    console.warn('No quoteHeader found, redirecting back');
+    window.location.href = 'forms/quote-setup.html';
+    return;
+  }
 
-alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+  const data = JSON.parse(raw);
 
-<script>
-  (function hydrateQuoteFromSetup() {
-    const raw = localStorage.getItem('quoteHeader');
+  document.getElementById('metaQuoteNo').textContent = data.quoteNo || '';
+  document.getElementById('metaQuoteDate').textContent = data.quoteDate || '';
+  document.getElementById('metaYourRef').textContent = data.yourReference || '';
+  document.getElementById('metaRefDate').textContent = data.refDate || '';
+  document.getElementById('metaContactPerson').textContent = data.contactPerson || '';
+  document.getElementById('metaPhone').textContent = data.contactPhone || '';
+  document.getElementById('metaEmail').textContent = data.contactEmail || '';
+  document.getElementById('metaOffice').textContent = data.officePhone || '';
 
-    if (!raw) {
-      console.warn('No quoteHeader found, redirecting back');
-      window.location.href = 'forms/quotes.html';
-      return;
-    }
+  document.getElementById('toHospitalNameLine').textContent = data.hospitalName || '';
+  document.getElementById('toHospitalAddressLine1').textContent = data.hospitalAddress || '';
+  document.getElementById('toAttn').textContent = data.kindAttn || '';
 
-    const data = JSON.parse(raw);
+  if (data.salesNote) {
+    document.getElementById('salesNoteBlock').innerText = data.salesNote;
+  }
 
-    // Header fields
-    document.getElementById('metaQuoteNo').textContent = data.quoteNo || '';
-    document.getElementById('metaQuoteDate').textContent = data.quoteDate || '';
-    document.getElementById('metaYourRef').textContent = data.yourReference || '';
-    document.getElementById('metaRefDate').textContent = data.refDate || '';
-    document.getElementById('metaContactPerson').textContent = data.contactPerson || '';
-    document.getElementById('metaPhone').textContent = data.contactPhone || '';
-    document.getElementById('metaEmail').textContent = data.contactEmail || '';
-    document.getElementById('metaOffice').textContent = data.officePhone || '';
+  if (data.termsHtml) {
+    document.getElementById('termsTextBlock').innerHTML = data.termsHtml;
+  }
 
-    // Customer block
-    document.getElementById('toHospitalNameLine').textContent = data.hospitalName || '';
-    document.getElementById('toHospitalAddressLine1').textContent = data.hospitalAddress || '';
-    document.getElementById('toAttn').textContent = data.kindAttn || '';
+  window.currentQuoteItems = data.quoteLines || [];
+  window.currentQuoteTotals = {};
 
-    // Sales note
-    if (data.salesNote) {
-      document.getElementById('salesNoteBlock').innerText = data.salesNote;
-    }
+  console.log('Quote hydrated successfully');
+})();
 
-    // Terms
-    if (data.termsHtml) {
-      document.getElementById('termsTextBlock').innerHTML = data.termsHtml;
-    }
-
-    // Initialize quote state
-    window.currentQuoteItems = data.quoteLines || [];
-    window.currentQuoteTotals = {};
-
-    console.log('Quote hydrated successfully');
-  })();
-</script>
 
 </body>
 </html>
