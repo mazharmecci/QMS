@@ -789,31 +789,52 @@ Next lines: bullet lines starting with ' - '"
   /* ========= Cell formatters ========= */
 
   function formatInstrumentCell(inst, lineIdx) {
-    const name = inst.instrumentName || inst.name || 'Unnamed Instrument';
-    const code = inst.catalog || inst.instrumentCode || '';
-    const desc = inst.description || inst.longDescription || '';
-    const shortDesc = desc.replace(/\s+/g, ' ').slice(0, 160) + (desc.length > 160 ? '…' : '');
-
-    return `
-      <td>
-        <div style="font-weight:600; font-size:12px;">${code} ${name}</div>
-        <div style="font-size:11px; color:#64748b; margin-top:2px;">
-          ${shortDesc}
-        </div>
-        <div style="margin-top:4px; display:flex; gap:0.25rem; flex-wrap:wrap;">
-          <button type="button"
-                  class="btn-quote"
-                  onclick="openConfigModal(${lineIdx})">
-            Config Items
-          </button>
-          <button type="button"
-                  class="btn-quote btn-quote-secondary"
-                  onclick="openAdditionalModal(${lineIdx})">
-            Additional Items
-          </button>
-        </div>
-      </td>
-    `;
+    // Core fields
+    const code     = inst.catalog || inst.instrumentCode || inst.code || '';
+    const name     = inst.instrumentName || inst.name || '';
+    const descText = inst.longDescription || inst.description || '';
+  
+    // Description lines
+    const descLines = parseLines(descText); // your helper: splits on \n, trims
+  
+    // Supplied complete with: can be in different shapes
+    let suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || '';
+    let suppliedLines;
+  
+    if (Array.isArray(suppliedRaw)) {
+      suppliedLines = suppliedRaw.map(String).filter(Boolean);
+    } else {
+      suppliedLines = parseLines(String(suppliedRaw || ''));
+    }
+  
+    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+  
+    // Cat / Material No.
+    if (code) {
+      html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
+    }
+  
+    // Main instrument name
+    if (name) {
+      html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
+    }
+  
+    // Instrument description
+    if (descLines.length) {
+      html += descLines.map(l => `<div>${l}</div>`).join('');
+      html += `<div style="height:8px;"></div>`;
+    }
+  
+    // Supplied Complete with block
+    if (suppliedLines.length) {
+      html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
+      suppliedLines.forEach(line => {
+        html += `<div>${line}</div>`;
+      });
+    }
+  
+    html += `</td>`;
+    return html;
   }
 
   function formatItemCell(item) {
