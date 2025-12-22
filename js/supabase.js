@@ -3,7 +3,7 @@
   // Initialize Supabase client
   const supabase = supabase.createClient(
     'https://kkzvniasiqfoswdatjvm.supabase.co', 
-    'sb_publishable_4t-uExEPlZ81VgcZoZp43w_NusdpCDj'
+    '4t-uExEPlZ81VgcZoZp43w_NusdpCDj'
   );
 
   // Example: fetch quotes from your 'quotes' table
