@@ -356,6 +356,33 @@
         display:none !important;
       }
     }
+
+ .overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.55);
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.overlay-panel {
+  background:#fff;
+  border-radius:10px;
+  padding:1rem 1.25rem;
+  max-width:900px;
+  width:90%;
+  max-height:80vh;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 10px 30px rgba(15,23,42,0.35);
+}
+.overlay-body {
+  flex:1;
+  overflow-y:auto;
+  margin-top:0.25rem;
+}
+
   </style>
 </head>
 <body>
@@ -365,6 +392,42 @@
     <div class="header-title">ISTOS Medical Private Limited</div>
   </div>
 </header>
+
+<!-- Main instrument modal -->
+
+<!-- Instrument list modal -->
+<div id="instrumentModalOverlay" class="overlay">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Instruments for this Quote</h3>
+      <button type="button" class="overlay-close" onclick="closeInstrumentModal()">✕</button>
+    </div>
+
+    <div style="margin-bottom:0.5rem;">
+      <button type="button" onclick="openInstrumentPicker()"
+              class="btn-quote">
+        + Add Instrument
+      </button>
+    </div>
+
+    <div class="overlay-body">
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead>
+          <tr style="background:#e5f0ff;">
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0; width:50px;">Item#</th>
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0; width:140px;">Cat / Material No.</th>
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0;">Description</th>
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0; width:70px; text-align:center;">Qty</th>
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0; width:110px; text-align:right;">Unit Price (INR)</th>
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0; width:120px; text-align:right;">Total Price (INR)</th>
+            <th style="padding:0.35rem 0.4rem; border:1px solid #e2e8f0; width:120px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="instrumentModalList"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 <!-- Shared item modal (config / additional) -->
 <div id="itemModalOverlay"
@@ -480,7 +543,10 @@ Next lines: bullet lines starting with ' - '"
             <h3 class="no-print">Quote Builder</h3>
 
             <div class="quote-actions no-print">
-              <!-- you will add the Manage Instruments button from the second half here -->
+              <button type="button" class="btn-quote" onclick="openInstrumentModal()">
+                Manage Instruments
+              </button>
+            
               <button type="button" class="btn-quote" onclick="openConfigModal()">
                 Add / Edit Configuration Items
               </button>
@@ -908,53 +974,64 @@ Next lines: bullet lines starting with ' - '"
     if (overlay) overlay.style.display = 'none';
   }
 
-  function renderInstrumentModalList() {
-    const listEl = document.getElementById('instrumentModalList');
-    const { instruments, lines } = getQuoteContext();
+function renderInstrumentModalList() {
+  const listEl = document.getElementById('instrumentModalList');
+  const { instruments, lines } = getQuoteContext();
 
-    if (!lines.length) {
-      listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No instruments added yet for this quote.</div>';
-      return;
-    }
-
-    listEl.innerHTML = lines.map((line, idx) => {
-      const inst = instruments[line.instrumentIndex] || {};
-      const name = inst.instrumentName || inst.name || 'Unnamed Instrument';
-      const code = inst.catalog || inst.instrumentCode || '';
-      const qty  = line.quantity || 1;
-      return `
-        <div style="
-          border:1px solid #e2e8f0;
-          border-radius:8px;
-          padding:0.5rem 0.75rem;
-          margin-bottom:0.4rem;
-          display:flex;
-          align-items:flex-start;
-          justify-content:space-between;
-          gap:0.5rem;
-          background:#f8fafc;">
-          
-          <div style="font-size:12px; flex:1;">
-            <div style="font-weight:600;">${code} ${name}</div>
-            <div style="color:#64748b; margin-top:2px;">Qty: ${qty}</div>
-          </div>
-
-          <div style="display:flex; gap:0.25rem; flex-wrap:wrap;">
-            <button type="button"
-                    class="btn-quote"
-                    onclick="editInstrumentLine(${idx})">
-              Edit
-            </button>
-            <button type="button"
-                    class="btn-quote btn-quote-secondary"
-                    onclick="removeInstrumentLine(${idx})">
-              Remove
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
+  if (!lines.length) {
+    listEl.innerHTML = `
+      <tr>
+        <td colspan="7" style="padding:0.4rem; font-size:12px; color:#64748b; text-align:center;">
+          No instruments added yet for this quote.
+        </td>
+      </tr>`;
+    return;
   }
+
+  let rows = '';
+  lines.forEach((line, idx) => {
+    const inst = instruments[line.instrumentIndex] || {};
+    const itemNo = String(idx + 1).padStart(2, '0');
+    const code   = inst.catalog || inst.instrumentCode || '';
+    const name   = inst.instrumentName || inst.name || 'Unnamed Instrument';
+    const desc   = inst.description || inst.longDescription || '';
+    const shortDesc = desc.replace(/\s+/g, ' ').slice(0, 80) + (desc.length > 80 ? '…' : '');
+
+    const qty  = Number(line.quantity || 1);
+    const unit = Number(inst.unitPrice || 0);
+    const total = qty * unit;
+
+    rows += `
+      <tr>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:center;">${itemNo}</td>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">${code}</td>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
+          <div style="font-weight:600;">${name}</div>
+          <div style="font-size:11px; color:#64748b;">${shortDesc}</div>
+        </td>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:center;">${qty}</td>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(unit)}</td>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(total)}</td>
+        <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
+          <button type="button"
+                  class="btn-quote"
+                  style="font-size:11px; padding:0.2rem 0.6rem; margin-right:0.25rem;"
+                  onclick="editInstrumentLine(${idx})">
+            Edit
+          </button>
+          <button type="button"
+                  class="btn-quote btn-quote-secondary"
+                  style="font-size:11px; padding:0.2rem 0.6rem;"
+                  onclick="removeInstrumentLine(${idx})">
+            Remove
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  listEl.innerHTML = rows;
+}
 
   function removeInstrumentLine(idx) {
     const { header } = getQuoteContext();
