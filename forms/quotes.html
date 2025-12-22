@@ -637,6 +637,29 @@ Next lines: bullet lines starting with ' - '"
   };
 </script>
 
+<script>
+  window.buildQuoteHeader = function () {
+    return {
+      quoteNo: document.getElementById('metaQuoteNo')?.textContent?.trim() || '',
+      customerName: document.getElementById('toHospitalNameLine')?.textContent?.trim() || '',
+      quoteDate: document.getElementById('metaQuoteDate')?.textContent?.trim() || '',
+      contactPerson: document.getElementById('metaContactPerson')?.textContent?.trim() || '',
+      email: document.getElementById('metaEmail')?.textContent?.trim() || '',
+      phone: document.getElementById('metaPhone')?.textContent?.trim() || ''
+    };
+  };
+
+  window.buildQuoteObject = function () {
+    // This assumes you already maintain quote data in JS memory
+    // Replace this with your real quote builder state
+    return {
+      rev: 1,
+      items: window.currentQuoteItems || [],
+      totals: window.currentQuoteTotals || {}
+    };
+  };
+</script>
+
 <div class="container">
   <table class="print-frame">
     <thead class="print-header">
