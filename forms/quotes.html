@@ -789,23 +789,25 @@ Next lines: bullet lines starting with ' - '"
   /* ========= Cell formatters ========= */
 
   function formatInstrumentCell(inst, lineIdx) {
-    // Core fields
     const code     = inst.catalog || inst.instrumentCode || inst.code || '';
     const name     = inst.instrumentName || inst.name || '';
     const descText = inst.longDescription || inst.description || '';
   
-    // Description lines
-    const descLines = parseLines(descText); // your helper: splits on \n, trims
+    const descLines = parseLines(descText);
   
-    // Supplied complete with: can be in different shapes
-    let suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || '';
+    // Supplied Complete with (string or array)
+    let suppliedRaw =
+      inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || '';
     let suppliedLines;
-  
     if (Array.isArray(suppliedRaw)) {
       suppliedLines = suppliedRaw.map(String).filter(Boolean);
     } else {
       suppliedLines = parseLines(String(suppliedRaw || ''));
     }
+  
+    // Meta: Country of Origin + HSN
+    const origin = inst.origin || inst.country || inst.countryOfOrigin || '';
+    const hsn    = inst.hsn || inst.hsnCode || '';
   
     let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
   
@@ -819,18 +821,30 @@ Next lines: bullet lines starting with ' - '"
       html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
     }
   
-    // Instrument description
+    // Description
     if (descLines.length) {
       html += descLines.map(l => `<div>${l}</div>`).join('');
       html += `<div style="height:8px;"></div>`;
     }
   
-    // Supplied Complete with block
+    // Supplied Complete with block (indented bullets)
     if (suppliedLines.length) {
       html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
       suppliedLines.forEach(line => {
-        html += `<div>${line}</div>`;
+        html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
       });
+    }
+  
+    // One vertical gap before meta
+    if (origin || hsn) {
+      html += `<div style="height:8px;"></div>`;
+    }
+  
+    if (origin) {
+      html += `<div>Country of Origin: ${origin}</div>`;
+    }
+    if (hsn) {
+      html += `<div>HSN Code: ${hsn}</div>`;
     }
   
     html += `</td>`;
