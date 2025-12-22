@@ -1069,6 +1069,24 @@ function renderQuoteBuilder() {
   renderSummaryRows(itemsTotal);
 }
 
+// ✅ First define the helper function
+function updateDiscountVisibility(discountValue) {
+  const table = document.getElementById('quoteSummaryTable');
+  if (!table) return;
+
+  const header = getQuoteHeaderRaw?.() || {};
+  const discount = discountValue != null 
+    ? Number(discountValue) 
+    : Number(header.discount || 0);
+
+  if (discount === 0) {
+    table.classList.add('discount-zero');
+  } else {
+    table.classList.remove('discount-zero');
+  }
+}
+
+// ✅ Then define the main rendering function
 function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById('quoteSummaryBody');
   if (!sb) return;
@@ -1134,6 +1152,7 @@ function renderSummaryRows(itemsTotal) {
 
   sb.innerHTML = rows;
 
+  // ✅ Call helper after rendering
   updateDiscountVisibility(discount);
 }
 
