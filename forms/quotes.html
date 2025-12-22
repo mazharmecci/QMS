@@ -1680,9 +1680,14 @@ function renderInstrumentModalList() {
     };
     
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/supabase.js"></script>
-<script src="../js/quote.js"></script>
+existing.push(quote);
+localStorage.setItem('quotes', JSON.stringify(existing));
+
+// NEW: background save to Supabase
+saveQuoteToSupabase(header, quote);
+
+alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
+
 
 </body>
 </html>
