@@ -638,6 +638,30 @@ Next lines: bullet lines starting with ' - '"
 </script>
 
 <script>
+  /* REQUIRED GLOBAL – used by inline onclick */
+  window.openInstrumentModal = function () {
+    const overlay = document.getElementById('instrumentModalOverlay');
+    if (!overlay) {
+      console.warn('instrumentModalOverlay not found');
+      return;
+    }
+
+    if (typeof renderInstrumentModalList === 'function') {
+      renderInstrumentModalList();
+    }
+
+    overlay.style.display = 'flex';
+  };
+</script>
+
+<script>
+  window.saveItemFromModal = function (e) {
+    e.preventDefault();
+    console.warn("saveItemFromModal not implemented yet");
+  };
+</script>
+
+<script>
   window.buildQuoteHeader = function () {
     return {
       quoteNo: document.getElementById('metaQuoteNo')?.textContent?.trim() || '',
