@@ -783,6 +783,7 @@
     if (!Array.isArray(header.quoteLines)) header.quoteLines = [];
     return { header, instruments, lines: header.quoteLines };
   }
+</script>
 
   /* ========= Populate letterhead from header ========= */
 
@@ -1695,8 +1696,9 @@ function renderInstrumentModalList() {
   document.addEventListener('DOMContentLoaded', function () {
     populateHeader();
     renderQuoteBuilder();
-  });
+  });  
 </script>
+  
 </body>
 </html>
 
