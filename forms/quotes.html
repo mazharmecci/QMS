@@ -377,9 +377,8 @@
     }
 
     @media print {
-      /* assume you store discount value in a hidden input or data-* attribute */
-      .discount-zero .discount-row,
-      .discount-zero .after-discount-row {
+      #quoteSummaryTable.discount-zero tr.discount-row,
+      #quoteSummaryTable.discount-zero tr.after-discount-row {
         display: none !important;
       }
     }
@@ -1066,97 +1065,100 @@ function renderQuoteBuilder() {
   renderSummaryRows(itemsTotal);
 }
 
-  function renderSummaryRows(itemsTotal) {
-    const sb = document.getElementById('quoteSummaryBody');
-    if (!sb) return;
-  
-    const header = getQuoteHeaderRaw();
-    const gstPercent = 18;
-    const discount = Number(header.discount || 0);
-  
-    const afterDisc = itemsTotal - discount;
-    const gstAmount = (afterDisc * gstPercent) / 100;
-    const totalValue = afterDisc + gstAmount;
-    const roundedTotal = Math.round(totalValue);
-    const roundOff = roundedTotal - totalValue;
-  
-    sb.innerHTML = `
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
-      </tr>
-      <tr class="discount-row">
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
-      </tr>
-      <tr class="after-discount-row">
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(gstAmount)}</td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(totalValue)}</td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
-        <td style="text-align:right; font-weight:600;">${moneyINR(roundOff)}</td>
-      </tr>
-      <tr>
-        <td colspan="3"></td>
-        <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
-        <td style="text-align:right; font-weight:700;">${moneyINR(roundedTotal)}</td>
-      </tr>
-    `;
-  }
+function renderSummaryRows(itemsTotal) {
+  const sb = document.getElementById('quoteSummaryBody');
+  if (!sb) return;
 
-    function updateDiscountFromInput() {
-    const input = document.getElementById('discountInput');
-    if (!input) return;
-  
-    const raw = input.value || '0';
-    const cleaned = raw.replace(/[^\d.]/g, '');
-    const discount = parseFloat(cleaned) || 0;
-  
-    const header = getQuoteHeaderRaw();
-    header.discount = discount;
-    saveQuoteHeader(header);       // you already have this
-  
-    // Recompute using the new discount
-    const { instruments, lines } = getQuoteContext();
-    let itemsTotal = 0;
-  
-    lines.forEach(line => {
-      const inst = instruments[line.instrumentIndex] || null;
-      if (inst) {
-        const qty = Number(line.quantity || 1);
-        itemsTotal += Number(inst.unitPrice || 0) * qty;
-      }
-      (line.additionalItems || []).forEach(item => {
-        const qtyNum = Number(item.qty || 1);
-        const unitNum = Number(item.price || item.unitPrice || 0);
-        itemsTotal += qtyNum * unitNum;
-      });
-    });
-  
-    renderSummaryRows(itemsTotal);
-  }
-
-  function updateDiscountVisibility() {
   const header = getQuoteHeaderRaw();
+  const gstPercent = 18;
   const discount = Number(header.discount || 0);
-  const table = document.getElementById('quoteSummaryTable'); // or wrapper
 
+  const afterDisc   = itemsTotal - discount;
+  const gstAmount   = (afterDisc * gstPercent) / 100;
+  const totalValue  = afterDisc + gstAmount;
+  const roundedTotal = Math.round(totalValue);
+  const roundOff    = roundedTotal - totalValue;
+
+  sb.innerHTML = `
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(itemsTotal)}</td>
+    </tr>
+    <tr class="discount-row">
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(discount)}</td>
+    </tr>
+    <tr class="after-discount-row">
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(afterDisc)}</td>
+    </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(gstAmount)}</td>
+    </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(totalValue)}</td>
+    </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
+      <td style="text-align:right; font-weight:600;">${moneyINR(roundOff)}</td>
+    </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
+      <td style="text-align:right; font-weight:700;">${moneyINR(roundedTotal)}</td>
+    </tr>
+  `;
+
+  updateDiscountVisibility(discount);
+}
+
+function updateDiscountFromInput() {
+  const input = document.getElementById('discountInput');
+  if (!input) return;
+
+  const raw      = input.value || '0';
+  const cleaned  = raw.replace(/[^\d.]/g, '');
+  const discount = parseFloat(cleaned) || 0;
+
+  const header = getQuoteHeaderRaw();
+  header.discount = discount;
+  saveQuoteHeader(header);
+
+  const { instruments, lines } = getQuoteContext();
+  let itemsTotal = 0;
+
+  lines.forEach(line => {
+    const inst = instruments[line.instrumentIndex] || null;
+    if (inst) {
+      const qty = Number(line.quantity || 1);
+      itemsTotal += Number(inst.unitPrice || 0) * qty;
+    }
+
+    (line.additionalItems || []).forEach(item => {
+      const qtyNum  = Number(item.qty || 1);
+      const unitNum = Number(item.price || item.unitPrice || 0);
+      itemsTotal += qtyNum * unitNum;
+    });
+  });
+
+  renderSummaryRows(itemsTotal);
+}
+
+function updateDiscountVisibility(discountValue) {
+  const table = document.getElementById('quoteSummaryTable');
   if (!table) return;
+
+  const discount = Number(
+    discountValue != null ? discountValue : (getQuoteHeaderRaw().discount || 0)
+  );
 
   if (discount === 0) {
     table.classList.add('discount-zero');
@@ -1164,8 +1166,6 @@ function renderQuoteBuilder() {
     table.classList.remove('discount-zero');
   }
 }
-
-// Call this after you update discount and after renderSummaryRows
 
   /* ========= Instruments modal (frame) ========= */
 
