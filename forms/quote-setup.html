@@ -46,6 +46,7 @@
       box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
     h2 { color:#0d6efd; margin-bottom:1rem; }
+
     form {
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -123,17 +124,6 @@
       outline:none;
     }
 
-    #instrumentPreview {
-      grid-column:span 2;
-      display:none;
-      font-size:0.85rem;
-      color:#333;
-      background:#f8fafc;
-      border-radius:8px;
-      padding:0.5rem 0.75rem;
-      border:1px dashed #cbd5e1;
-    }
-    #instrumentSelect,
     #yourReference { min-width:250px; }
 
     .sales-note-block {
@@ -225,15 +215,6 @@
       <select id="hospitalSelect" required>
         <option value="">Select Hospital</option>
       </select>
-
-      <select id="instrumentSelect" required>
-        <option value="">Select Instrument</option>
-      </select>
-    </div>
-
-    <div id="instrumentPreview">
-      <strong>Selected Instrument:</strong>
-      <span id="instrumentDetails"></span>
     </div>
 
     <input
@@ -286,44 +267,42 @@
 As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
     </div>
 
-<div id="termsTextBlock" contenteditable="true">
-  <div class="terms-section">
-    <p>
-      These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
-    </p>
+    <div id="termsTextBlock" contenteditable="true">
+      <div class="terms-section">
+        <p>
+          These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
+        </p>
 
-    <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
+        <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
 
-    <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
+        <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
 
-    <p><strong>Delivery and Title:</strong></p>
-    <div class="terms-indent">
-      <ol>
-        <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
-        <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
-        <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
-        <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
-      </ol>
+        <p><strong>Delivery and Title:</strong></p>
+        <div class="terms-indent">
+          <ol>
+            <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
+            <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
+            <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
+            <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
+          </ol>
+        </div>
+
+        <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
+
+        <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
+
+        <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
+      </div>
+
+      <div style="margin-top:40px; text-align:left;">
+        <p>------------------------------</p>
+        <p><strong>For ISTOS Medical Private Limited</strong></p>
+        <br><br>
+        <p>Naushad</p>
+      </div>
     </div>
 
-    <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
-
-    <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
-
-    <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
-  </div>
-
-  <!-- Signature block -->
-  <div style="margin-top:40px; text-align:left;">
-    <p>------------------------------</p>
-    <p><strong>For ISTOS Medical Private Limited</strong></p>
-    <br><br>
-    <p>Naushad</p>
-  </div>
-</div>
-
-
-<button type="submit">Proceed to Quote</button>
+    <button type="submit">Proceed to Quote</button>
   </form>
 </div>
 
@@ -365,64 +344,10 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
-  function populateInstrumentDropdown() {
-    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-    const select = document.getElementById('instrumentSelect');
-  
-    instruments.forEach((inst, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-  
-      // Dropdown label: strictly prefer main equipment name
-      const name = inst.instrumentName || inst.name || '';
-      const fallback = inst.catalog || inst.instrumentCode || '';
-      const label = name || fallback || 'Unnamed Instrument';
-  
-      opt.textContent = label; // e.g. "pfm Rotary 3006 EM (Fully-Electronic Microtome)"
-      select.appendChild(opt);
-    });
-  }
-
-  function setupInstrumentPreview() {
-    const select = document.getElementById('instrumentSelect');
-    const preview = document.getElementById('instrumentPreview');
-    const details = document.getElementById('instrumentDetails');
-  
-    select.addEventListener('change', function () {
-      const idx = this.value;
-      const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-      const inst = instruments[idx];
-  
-      if (!inst) {
-        preview.style.display = 'none';
-        details.textContent = '';
-        return;
-      }
-  
-      // Build description strictly from longDescription/description
-      const descLines = (inst.longDescription || inst.description || '')
-        .split('\n')
-        .map(l => l.trim())
-        .filter(Boolean);
-  
-      const overview = descLines[0] || '';
-      const extras = descLines.slice(1).join(' ');
-  
-      const fullText = [overview, extras].filter(Boolean).join(' ');
-      preview.style.display = fullText ? 'block' : 'none';
-      details.textContent = fullText; // e.g. "The pfm Rotary 3006 EM is a modern, newly-designed..."
-    });
-  }
-
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
   document.getElementById('quoteSetupForm').addEventListener('submit', function (e) {
     e.preventDefault();
-
-    const instrumentSelectEl = document.getElementById('instrumentSelect');
-    const selectedInstrumentIndex = instrumentSelectEl.value;
-    const instruments = JSON.parse(localStorage.getItem('instruments') || '[]');
-    const inst = instruments[selectedInstrumentIndex] || null;
 
     const termsBlock = document.getElementById('termsTextBlock');
     const headerData = {
@@ -439,17 +364,8 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
       officePhone: document.getElementById('officePhone').value || '',
       salesNote: document.getElementById('salesNote').value || '',
       termsHtml: termsBlock.innerHTML,
-      selectedInstrumentIndex,
-      instrumentCode: inst ? (inst.instrumentCode || inst.catalog || '') : ''
+      quoteLines: []  // instrument will be added later in quotes.html
     };
-
-    headerData.quoteLines = [{
-      lineType: 'instrument',
-      instrumentIndex: selectedInstrumentIndex !== '' ? Number(selectedInstrumentIndex) : null,
-      quantity: 1,
-      configItems: [],
-      additionalItems: []
-    }];
 
     localStorage.setItem('quoteHeader', JSON.stringify(headerData));
     window.location.href = 'quotes.html';
@@ -461,8 +377,6 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   document.getElementById('refDate').value = todayISO;
 
   populateHospitalDropdown();
-  populateInstrumentDropdown();
-  setupInstrumentPreview();
 </script>
 
 </body>
