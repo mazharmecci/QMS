@@ -1001,14 +1001,14 @@ Next lines: bullet lines starting with ' - '"
   
       // 2) configuration and additional rows buffered into extraRows
       const configItems = line.configItems || [];
-      if (configItems.length) {
-        extraRows.push(`
-          <tr style="background:#00B0F0; color:#000;">
-            <td colspan="5" style="font-weight:700;">
-              CONFIGURATION ITEMS – Instrument #${lineIdx + 1}
-            </td>
-          </tr>
-        `);
+        if (configItems.length) {
+          rows.push(`
+            <tr style="background:#00B0F0; color:#000;">
+              <td colspan="5" style="font-weight:700;">
+                CONFIGURATION ITEMS – Instrument #${lineIdx + 1}
+              </td>
+            </tr>
+          `);
         configItems.forEach(item => {
           const itemCode = String(runningItemCode).padStart(3, '0');
           runningItemCode += 1;
@@ -1031,14 +1031,14 @@ Next lines: bullet lines starting with ' - '"
       }
   
       const additionalItems = line.additionalItems || [];
-      if (additionalItems.length) {
-        extraRows.push(`
-          <tr style="background:#00B0F0; color:#000;">
-            <td colspan="5" style="font-weight:700;">
-              ADDITIONAL ITEMS – Instrument #${lineIdx + 1}
-            </td>
-          </tr>
-        `);
+        if (additionalItems.length) {
+          rows.push(`
+            <tr style="background:#00B0F0; color:#000;">
+              <td colspan="5" style="font-weight:700;">
+                ADDITIONAL ITEMS – Instrument #${lineIdx + 1}
+              </td>
+            </tr>
+          `);
         additionalItems.forEach(item => {
           const itemCode = String(runningItemCode).padStart(3, '0');
           runningItemCode += 1;
