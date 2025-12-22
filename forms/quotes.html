@@ -370,18 +370,20 @@
     .overlay { display: none !important; }
   
     /* Screen: rows always visible */
+    /* Ensure rows are always visible on screen */
     .discount-row,
     .after-discount-row {
       display: table-row;
     }
     
     @media print {
-      /* Hide discount rows only in print when discount is zero */
+      /* Hide only during print when discount is zero */
       .discount-zero .discount-row,
       .discount-zero .after-discount-row {
         display: none !important;
       }
     }
+
   
   /* Overlay (screen only) */
   .overlay {
