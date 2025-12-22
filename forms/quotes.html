@@ -783,7 +783,6 @@
     if (!Array.isArray(header.quoteLines)) header.quoteLines = [];
     return { header, instruments, lines: header.quoteLines };
   }
-</script>
 
   /* ========= Populate letterhead from header ========= */
 
@@ -905,7 +904,7 @@
     html += `</td>`;
     return html;
   }
-  
+
   function formatItemCell(item) {
     const code       = item.code || item.catalog || '';
     const descSource = item.description || item.longDescription || '';
@@ -1502,7 +1501,6 @@ function renderInstrumentModalList() {
     document.getElementById('itemModalOverlay').style.display = 'flex';
   }
 
-<script>
   function removeItemFromModal(type, idx) {
     const { header } = getQuoteContext();
     const lineIndex = Number(document.getElementById('itemLineIndex').value || 0);
@@ -1694,7 +1692,7 @@ function renderInstrumentModalList() {
 
   /* ========= Init ========= */
   document.addEventListener('DOMContentLoaded', function () {
-    // populateHeader(); // remove or comment out
+    populateHeader();
     renderQuoteBuilder();
   });  
 </script>
