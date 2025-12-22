@@ -306,110 +306,101 @@
       font-weight:700;
     }
 
-    /* Print helpers */
-    .print-footer tr,
-    .print-footer td {
-      border-top:none !important;
+  /* Print helpers */
+  .print-footer tr,
+  .print-footer td {
+    border-top: none !important;
+  }
+  .print-frame {
+    width: 100%;
+    border-collapse: collapse;
+    border: none;
+  }
+  .print-header td,
+  .print-body td,
+  .print-footer td {
+    padding: 0;
+    border: none;
+  }
+  .footer {
+    font-size: 10px;
+    text-align: right;
+    border-top: 1px solid #ccc;
+    padding-top: 4px;
+    margin-top: 4px;
+  }
+  
+  /* visible on screen by default */
+  .no-print { display: block; }
+  
+  @page {
+    size: A4;
+    margin: 15mm 15mm 20mm 15mm;
+  }
+  
+  @media print {
+    body {
+      margin: 0;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+      color-adjust: exact;
     }
-    .print-frame {
-      width:100%;
-      border-collapse:collapse;
-      border:none;
+  
+    header { display: none !important; }
+  
+    .container {
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+      border-radius: 0;
     }
-    .print-header td,
-    .print-body td,
-    .print-footer td {
-      padding:0;
-      border:none;
-    }
-    .footer {
-      font-size:10px;
-      text-align:right;
-      border-top:1px solid #ccc;
-      padding-top:4px;
-      margin-top:4px;
-    }
-    
-    /* visible on screen by default */
-    .no-print { display:block; }
-    
-    @page {
-      size:A4;
-      margin:15mm 15mm 20mm 15mm;
-    }
-    
-    @media print {
-      body {
-        margin:0;
-        background:#ffffff;
-        -webkit-print-color-adjust:exact;
-        color-adjust:exact;
-      }
-    
-      header { display:none !important; }
-    
-      .container {
-        margin:0;
-        padding:0;
-        box-shadow:none;
-        border-radius:0;
-      }
-    
-      thead.print-header { display:table-header-group; }
-      tfoot.print-footer { display:table-footer-group; }
-    
-      /* Hide any screen‑only elements */
-      .no-print {
-        display:none !important;
-      }
-    
-      /* Hide all buttons in print (toolbar + per-row buttons) */
-      button,
-      .btn-quote,
-      .btn-finalize {
-        display:none !important;
-      }
-    
-      /* Never show overlays in print */
-      .overlay {
-        display:none !important;
-      }
-    }
+  
+    thead.print-header { display: table-header-group; }
+    tfoot.print-footer { display: table-footer-group; }
+  
+    /* Hide any screen‑only elements */
+    .no-print { display: none !important; }
+  
+    /* Hide all buttons in print (toolbar + per-row buttons) */
+    button,
+    .btn-quote,
+    .btn-finalize { display: none !important; }
+  
+    /* Hide overlays in print */
+    .overlay { display: none !important; }
+  
+    /* Hide discount rows only in print when discount is zero */
+    .discount-zero .discount-row,
+    .discount-zero .after-discount-row { display: none; }
+  }
+  
+  /* Overlay (screen only) */
+  .overlay {
+    display: flex; /* ✅ changed from none so it shows on screen */
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .overlay-panel {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    max-width: 900px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.35);
+  }
+  .overlay-body {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 0.25rem;
+  }
 
-    @media print {
-      .discount-zero .discount-row,
-      .discount-zero .after-discount-row {
-        display: none;
-      }
-    }
-    
-    /* Overlay (screen only) */
-    .overlay {
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,0.55);
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-    }
-    .overlay-panel {
-      background:#fff;
-      border-radius:10px;
-      padding:1rem 1.25rem;
-      max-width:900px;
-      width:90%;
-      max-height:80vh;
-      display:flex;
-      flex-direction:column;
-      box-shadow:0 10px 30px rgba(15,23,42,0.35);
-    }
-    .overlay-body {
-      flex:1;
-      overflow-y:auto;
-      margin-top:0.25rem;
-    }
-  </style>
 </head>
 <body>
 <header>
