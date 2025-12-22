@@ -1678,17 +1678,19 @@ function renderInstrumentModalList() {
         time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]
     };
+    
 <!-- Load Supabase library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<script>
-  // Initialize Supabase client once
-  const client = supabase.createClient("https://YOUR_PROJECT.supabase.co", "YOUR_ANON_KEY");
+<!-- Load your Supabase client config -->
+<script src="../js/supabase.js"></script>
 
+<!-- Main logic -->
+<script>
   async function saveQuoteToSupabase(header, quote) {
     try {
       // 1. Insert / fetch quote master
-      const { data: quoteRow, error: quoteError } = await client
+      const { data: quoteRow, error: quoteError } = await supabase
         .from("quotes")
         .select("id")
         .eq("quote_number", header.quoteNo)
@@ -1699,7 +1701,7 @@ function renderInstrumentModalList() {
       if (quoteRow) {
         quoteId = quoteRow.id;
       } else {
-        const { data: newQuote, error: newQuoteError } = await client
+        const { data: newQuote, error: newQuoteError } = await supabase
           .from("quotes")
           .insert([{
             quote_number: header.quoteNo,
@@ -1713,7 +1715,7 @@ function renderInstrumentModalList() {
       }
 
       // 2. Insert version
-      await client.from("quote_versions").insert([{
+      await supabase.from("quote_versions").insert([{
         quote_id: quoteId,
         version_number: quote.rev,
         quote_json: quote
@@ -1737,7 +1739,10 @@ function renderInstrumentModalList() {
   }
 </script>
 
+<!-- Load your quote logic -->
 <script src="../js/quote.js"></script>
+
 </body>
 </html>
+
 
