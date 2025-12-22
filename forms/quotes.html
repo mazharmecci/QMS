@@ -835,6 +835,22 @@ Next lines: bullet lines starting with ' - '"
       });
     }
   
+    // Per-instrument actions: config / additional items
+    html += `
+      <div style="margin-top:8px; display:flex; gap:0.4rem; flex-wrap:wrap;">
+        <button type="button"
+                class="btn-quote"
+                onclick="openConfigModal(${lineIdx})">
+          Config Items
+        </button>
+        <button type="button"
+                class="btn-quote btn-quote-secondary"
+                onclick="openAdditionalModal(${lineIdx})">
+          Additional Items
+        </button>
+      </div>
+    `;
+  
     // One vertical gap before meta
     if (origin || hsn) {
       html += `<div style="height:8px;"></div>`;
@@ -850,34 +866,34 @@ Next lines: bullet lines starting with ' - '"
     html += `</td>`;
     return html;
   }
-
+  
   function formatItemCell(item) {
     const code       = item.code || item.catalog || '';
     const descSource = item.description || item.longDescription || '';
     const lines      = parseLines(descSource);
-
+  
     const title = lines[0] || '';
     const rest  = lines.slice(1);
-
+  
     const meta = [];
     if (item.origin || item.country) meta.push(`Country of Origin: ${item.origin || item.country}`);
     if (item.hsn)                    meta.push(`HSN Code: ${item.hsn}`);
-
+  
     let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.3;">`;
-
+  
     if (code)  html += `<div class="cat-main">${code}</div>`;
     if (title) html += `<div class="cat-main"><strong>${title}</strong></div>`;
-
+  
     if (rest.length) {
       html += `<div style="height:8px;"></div>`;
       html += rest.map(line => `<div class="cat-sub">${line}</div>`).join('');
     }
-
+  
     if (meta.length) {
       html += `<div style="height:8px;"></div>`;
       html += `<div class="cat-sub">${meta.join('<br>')}</div>`;
     }
-
+  
     html += `</td>`;
     return html;
   }
