@@ -11,7 +11,7 @@
 
   // Example: Test connection by fetching something
   async function testSupabase() {
-    const { data, error } = await supabase.from('your_table').select('*');
+    const { data, error } = await supabase.from('quotes').select('*');
     if (error) {
       console.error("Supabase error:", error);
     } else {
