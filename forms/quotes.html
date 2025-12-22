@@ -1501,6 +1501,7 @@ function renderInstrumentModalList() {
     document.getElementById('itemModalOverlay').style.display = 'flex';
   }
 
+<script>
   function removeItemFromModal(type, idx) {
     const { header } = getQuoteContext();
     const lineIndex = Number(document.getElementById('itemLineIndex').value || 0);
@@ -1619,86 +1620,85 @@ function renderInstrumentModalList() {
     return items;
   }
 
-<script>
-function finalizeQuote() {
-  const header = getQuoteHeaderRaw();
-  if (!validateHeader(header)) return;
+  function finalizeQuote() {
+    const header = getQuoteHeaderRaw();
+    if (!validateHeader(header)) return;
 
-  const { instruments, lines } = getQuoteContext();
-  if (!lines.length) {
-    alert('No instruments in this quote. Please add at least one instrument.');
-    return;
+    const { instruments, lines } = getQuoteContext();
+    if (!lines.length) {
+      alert('No instruments in this quote. Please add at least one instrument.');
+      return;
+    }
+
+    let itemsTotal = 0;
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        const qty = Number(line.quantity || 1);
+        itemsTotal += (Number(inst.unitPrice || 0) * qty);
+      }
+      (line.additionalItems || []).forEach(item => {
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        itemsTotal += qtyNum * unitNum;
+      });
+    });
+
+    const gstPercent = 18;
+    const discount = 0;
+    const afterDisc = itemsTotal - discount;
+    const gstAmount = (afterDisc * gstPercent) / 100;
+    const totalValue = afterDisc + gstAmount;
+    const roundedTotal = Math.round(totalValue);
+
+    const summary = {
+      itemsTotal,
+      discount,
+      afterDiscount: afterDisc,
+      freight: 'Included',
+      gstPercent,
+      gstAmount,
+      totalValue,
+      roundOff: roundedTotal - totalValue
+    };
+
+    const lineItems = buildLineItemsFromCurrentQuote();
+    const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
+
+    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
+    const nextRev = lastRev + 1;
+
+    const now = new Date();
+    const quote = {
+      header,
+      lineItems,
+      summary,
+      quoteNo: header.quoteNo,
+      revision: nextRev,
+      status: 'submitted',
+      history: [{
+        status: 'submitted',
+        date: now.toISOString().slice(0, 10),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]
+    };
+
+    existing.push(quote);
+    localStorage.setItem('quotes', JSON.stringify(existing));
+    alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
   }
 
-  let itemsTotal = 0;
-  lines.forEach(line => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (inst) {
-      const qty = Number(line.quantity || 1);
-      itemsTotal += (Number(inst.unitPrice || 0) * qty);
-    }
-    (line.additionalItems || []).forEach(item => {
-      const qtyNum = Number(item.qty || 1);
-      const unitNum = Number(item.price || item.unitPrice || 0);
-      itemsTotal += qtyNum * unitNum;
-    });
+  /* ========= Init ========= */
+  document.addEventListener('DOMContentLoaded', function () {
+    populateHeader();
+    renderQuoteBuilder();
   });
-
-  const gstPercent = 18;
-  const discount = 0;
-  const afterDisc = itemsTotal - discount;
-  const gstAmount = (afterDisc * gstPercent) / 100;
-  const totalValue = afterDisc + gstAmount;
-  const roundedTotal = Math.round(totalValue);
-
-  const summary = {
-    itemsTotal,
-    discount,
-    afterDiscount: afterDisc,
-    freight: 'Included',
-    gstPercent,
-    gstAmount,
-    totalValue,
-    roundOff: roundedTotal - totalValue
-  };
-
-  const lineItems = buildLineItemsFromCurrentQuote();
-  const existing = JSON.parse(localStorage.getItem('quotes') || '[]');
-
-  const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
-  const lastRev = sameQuote.length
-    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-    : 0;
-  const nextRev = lastRev + 1;
-
-  const now = new Date();
-  const quote = {
-    header,
-    lineItems,
-    summary,
-    quoteNo: header.quoteNo,
-    revision: nextRev,
-    status: 'submitted',
-    history: [{
-      status: 'submitted',
-      date: now.toISOString().slice(0, 10),
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]
-  };
-
-  existing.push(quote);
-  localStorage.setItem('quotes', JSON.stringify(existing));
-  alert(`Quote saved to history as ${header.quoteNo} (Rev ${nextRev}).`);
-}
-
-/* ========= Init ========= */
-document.addEventListener('DOMContentLoaded', function () {
-  populateHeader();
-  renderQuoteBuilder();
-});
 </script>
-
 </body>
 </html>
+
 
 
