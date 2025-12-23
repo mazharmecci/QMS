@@ -1,7 +1,7 @@
 // quoteService.js
 
 import { fetchInstruments } from "./instrumentService.js";
-import { db, collection, addDoc, Timestamp } from "./firebase.js";
+import { db, collection, addDoc } from "./firebase.js";
 
 /**
  * Get the current quote header object from localStorage.
@@ -147,8 +147,9 @@ export function buildQuoteObject() {
     gstValueINR,
     items,
     createdBy: "Mazhar R Mecci",
-    createdAt: new Date().toISOString(),
-    createdAtTs: Timestamp.now() // server-style timestamp for ordering/filtering
+    createdAt: new Date().toISOString()
+    // If you later want a server timestamp, you can add createdAtTs: serverTimestamp()
+    // by importing serverTimestamp from firebase/firestore in firebase.js. [web:148]
   };
 }
 
@@ -177,7 +178,7 @@ export function validateHeader(header) {
 async function saveQuoteToFirestore() {
   const quoteDoc = buildQuoteObject();
   const colRef = collection(db, "quoteHistory");
-  await addDoc(colRef, quoteDoc); // add a new document with an auto ID [web:111][web:114]
+  await addDoc(colRef, quoteDoc);
 }
 
 /**
