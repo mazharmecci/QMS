@@ -622,6 +622,7 @@
 
 <!-- ========= Scripts ========= -->
 <script type="module">
+  /* ===== Imports ===== */
   import { 
     moneyINR, 
     parseDetailsText, 
@@ -639,6 +640,7 @@
   } from "../js/quoteService.js";
 
   import { 
+    populateHeader,
     renderQuoteBuilder,
     openInstrumentModal,
     closeInstrumentModal,
@@ -652,26 +654,37 @@
     renderItemModalList,
     editItemFromModal,
     removeItemFromModal,
-    saveItemFromModal,
-    populateHeader
+    saveItemFromModal
   } from "../js/quoteUI.js";
 
-  // Basic helper: go back
+  /* ===== Helpers ===== */
   function goBack() {
-    if (window.history.length > 1) window.history.back();
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // fallback if no history
+      window.location.href = "index.html";
+    }
   }
 
-  // Attach event listeners
+  /* ===== Init & Event Wiring ===== */
   document.addEventListener("DOMContentLoaded", () => {
+    // Initial render
     populateHeader();
     renderQuoteBuilder();
 
+    // Back button
     document.getElementById("goBackBtn")?.addEventListener("click", goBack);
 
     // Instrument modal
-    document.getElementById("openInstrumentModalBtn")?.addEventListener("click", openInstrumentModal);
-    document.getElementById("closeInstrumentModalBtn")?.addEventListener("click", closeInstrumentModal);
-    document.getElementById("closeInstrumentModalFooterBtn")?.addEventListener("click", closeInstrumentModal);
+    const instrumentModalEvents = [
+      ["openInstrumentModalBtn", openInstrumentModal],
+      ["closeInstrumentModalBtn", closeInstrumentModal],
+      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
+    ];
+    instrumentModalEvents.forEach(([id, handler]) => {
+      document.getElementById(id)?.addEventListener("click", handler);
+    });
 
     // Instrument picker
     document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
