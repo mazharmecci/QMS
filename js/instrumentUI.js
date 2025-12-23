@@ -90,8 +90,8 @@ form.addEventListener("submit", async e => {
   const suppliedWithLines = (suppliedWithInput.value || "").split("\n").map(l => l.trim()).filter(Boolean);
 
   const instrument = {
-    description: mainItemNameInput.value,
-    instrumentName: firstLine,
+    description: mainItemNameInput.value,   // now single line instrument description
+    instrumentName: firstLine,              // parsed from descriptionTextarea
     instrumentShortLine: secondLine,
     instrumentExtraLines: remainingLines,
     details: detailsHTML,
