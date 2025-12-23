@@ -74,33 +74,36 @@ function formatPriceDisplay(v) {
 }
 
 /* ========= Form submit ========= */
+
 form.addEventListener("submit", async e => {
   e.preventDefault();
 
-  const { firstLine, description, detailsHTML } = parseDetails(descriptionTextarea.value);
-  const suppliedWithLines = (suppliedWithInput.value || "").split("\n").map(l => l.trim()).filter(Boolean);
+  // Normalize fields
+  const instrumentName = mainItemNameInput.value.trim();       // main item name
+  const longDescription = descriptionTextarea.value.trim();    // full description
+  const suppliedRaw = suppliedWithInput.value.trim();
 
   const instrument = {
-    instrumentName: firstLine,               // always first line
-    description: mainItemNameInput.value,    // main item name field
-    longDescription: description,            // rest of textarea
-    details: detailsHTML,
-    suppliedWith: suppliedWithLines,
-    origin: document.getElementById("origin").value,
-    catalog: document.getElementById("catalog").value,
-    hsn: hsnInput.value,
-    instrumentCode: document.getElementById("instrumentCode").value,
+    instrumentName,                 // always first line
+    longDescription,                // always second block
+    suppliedCompleteWith: suppliedRaw,
+    origin: document.getElementById("origin").value.trim(),
+    catalog: document.getElementById("catalog").value.trim(),
+    hsn: hsnInput.value.trim(),
+    instrumentCode: document.getElementById("instrumentCode").value.trim(),
     unitPrice: parsePriceValue(unitPriceInput.value),
-    gstType: document.getElementById("gstType").value,
-    gstPercent: document.getElementById("gstPercent").value
+    gstType: document.getElementById("gstType").value.trim(),
+    gstPercent: document.getElementById("gstPercent").value.trim()
   };
 
   if (editIndex !== null) {
+    // preserve ID when updating
     const existingId = instruments[editIndex].id;
     instruments[editIndex] = { ...instrument, id: existingId };
     await updateInstrument(existingId, instrument);
     editIndex = null;
   } else {
+    // add new instrument and capture Firestore ID
     const newId = await addInstrument(instrument);
     instruments.push({ ...instrument, id: newId });
   }
