@@ -85,15 +85,13 @@
       background: #dc3545;
       color: white;
     }
-
-     .header-inner {
+    .header-inner {
       max-width: 1200px;
       margin: 0 auto;
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    
     .back-btn {
       border: none;
       background: rgba(255,255,255,0.12);
@@ -103,23 +101,20 @@
       cursor: pointer;
       font-size: 0.85rem;
     }
-    
     .back-btn:hover {
       background: rgba(255,255,255,0.2);
     }
-    
     .header-title {
       flex: 1;
       text-align: center;
       font-weight: 600;
       font-size: 1.5rem;
     }
-
-   input[readonly] {
-    background-color: #f3f4f6;   /* subtle light grey */
-    color: #111827;
-    cursor: not-allowed;
-  }
+    input[readonly] {
+      background-color: #f3f4f6;
+      color: #111827;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -129,6 +124,7 @@
       <div class="header-title">ISTOS Medical</div>
     </div>
   </header>
+
   <div class="container">
     <h2>Add / Edit Hospital</h2>
     <form id="hospitalForm">
@@ -160,28 +156,21 @@
       <tbody></tbody>
     </table>
   </div>
-  
 
+  <!-- Page-specific script -->
   <script>
-
-   function goBack() {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.href = 'index.html';
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = 'index.html';
+      }
     }
-  }
+  </script>
 
-    const form = document.getElementById('hospitalForm');
-    const tableBody = document.querySelector('#hospitalTable tbody');
-    let hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
-    let editIndex = null;
-
-
+  <!-- Module imports -->
   <script type="module" src="firebase.js"></script>
   <script type="module" src="hospitalService.js"></script>
   <script type="module" src="hospitalUI.js"></script>
-
-
 </body>
 </html>
