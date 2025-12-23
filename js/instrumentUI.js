@@ -1,4 +1,3 @@
-// instrumentUI.js
 import { fetchInstruments, addInstrument, updateInstrument, deleteInstrument } from "./instrumentService.js";
 
 const form = document.getElementById("instrumentForm");
@@ -15,7 +14,7 @@ let currentPage = 1;
 const pageSize = 10;
 let editIndex = null;
 
-// 🔹 Toast helper
+/* ========= Toast helper ========= */
 export function showToast(message, type = "success", duration = 1800) {
   const container = document.getElementById("toastContainer");
   if (!container) return;
@@ -32,7 +31,7 @@ export function showToast(message, type = "success", duration = 1800) {
   }, duration);
 }
 
-// 🔹 Input formatting
+/* ========= Input formatting ========= */
 hsnInput.addEventListener("input", () => {
   let digits = hsnInput.value.replace(/\D/g, "").slice(0, 8);
   if (digits.length > 4) digits = digits.slice(0, 4) + " " + digits.slice(4);
@@ -54,46 +53,37 @@ function parsePriceValue(v) {
   return digits ? parseInt(digits, 10) : 0;
 }
 
+/* ========= Details parsing ========= */
 function parseDetails(rawText) {
-  const lines = rawText.split("\n").map(l => l.trim()).filter(l => l);
-  const first = lines[0] || "";
-  const second = lines[1] || "";
-  const rest = lines.slice(2);
+  const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+  const firstLine = lines[0] || "";
+  const description = lines.slice(1).join("\n");
 
   let detailsHTML = "";
-  if (first) detailsHTML += `<p><strong>${first}</strong></p>`;
-  if (second || rest.length) {
-    const allBullets = [];
-    if (second) allBullets.push(second);
-    allBullets.push(...rest);
-    const li = allBullets.map(line => `<li>${line}</li>`).join("");
-    detailsHTML += `<ul>${li}</ul>`;
+  if (firstLine) detailsHTML += `<p><strong>${firstLine}</strong></p>`;
+  if (description) {
+    const descLines = description.split("\n").map(line => `<li>${line}</li>`).join("");
+    detailsHTML += `<ul>${descLines}</ul>`;
   }
 
-  return {
-    firstLine: first,
-    secondLine: second,
-    remainingLines: rest.join("\n"),
-    detailsHTML
-  };
+  return { firstLine, description, detailsHTML };
 }
 
 function formatPriceDisplay(v) {
   return "₹ " + Number(v || 0).toLocaleString("en-IN");
 }
 
-// 🔹 Form submit
+/* ========= Form submit ========= */
 form.addEventListener("submit", async e => {
   e.preventDefault();
 
-  const { firstLine, secondLine, remainingLines, detailsHTML } = parseDetails(descriptionTextarea.value);
+  const { firstLine, description, detailsHTML } = parseDetails(descriptionTextarea.value);
   const suppliedWithLines = (suppliedWithInput.value || "").split("\n").map(l => l.trim()).filter(Boolean);
 
   const instrument = {
-    description: mainItemNameInput.value,   // now single line instrument description
-    instrumentName: firstLine,              // parsed from descriptionTextarea
-    instrumentShortLine: secondLine,
-    instrumentExtraLines: remainingLines,
+    instrumentName: firstLine,               // always first line
+    description: mainItemNameInput.value,    // main item name field
+    longDescription: description,            // rest of textarea
     details: detailsHTML,
     suppliedWith: suppliedWithLines,
     origin: document.getElementById("origin").value,
@@ -106,13 +96,11 @@ form.addEventListener("submit", async e => {
   };
 
   if (editIndex !== null) {
-    // preserve ID when updating
     const existingId = instruments[editIndex].id;
     instruments[editIndex] = { ...instrument, id: existingId };
     await updateInstrument(existingId, instrument);
     editIndex = null;
   } else {
-    // add new instrument and capture Firestore ID
     const newId = await addInstrument(instrument);
     instruments.push({ ...instrument, id: newId });
   }
@@ -125,7 +113,7 @@ form.addEventListener("submit", async e => {
   showToast("Instrument saved");
 });
 
-// 🔹 Render table
+/* ========= Render table ========= */
 export async function renderTable() {
   tableBody.innerHTML = "";
   instruments = await fetchInstruments();
@@ -137,7 +125,7 @@ export async function renderTable() {
     const idx = start + i;
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${inst.description || ""}</td>
+      <td><strong>${inst.instrumentName || ""}</strong><br><strong>${inst.longDescription || ""}</strong></td>
       <td>
         <div class="collapse-toggle" onclick="toggleDetails(this)">Details</div>
         <div class="details-content">${inst.details || ""}</div>
@@ -161,7 +149,7 @@ export async function renderTable() {
   pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
-// 🔹 Handlers
+/* ========= Handlers ========= */
 window.toggleDetails = function(el) {
   const d = el.nextElementSibling;
   const visible = d.style.display === "block";
@@ -173,13 +161,16 @@ window.editInstrument = function(i) {
   const inst = instruments[i];
   if (!inst) return;
 
+  // Restore main item name
   mainItemNameInput.value = inst.description || "";
+
+  // Restore description textarea (name + long description)
   descriptionTextarea.value = [
     inst.instrumentName || "",
-    inst.instrumentShortLine || "",
-    inst.instrumentExtraLines || ""
+    inst.longDescription || ""
   ].filter(Boolean).join("\n");
 
+  // Restore other fields
   document.getElementById("origin").value = inst.origin || "";
   document.getElementById("catalog").value = inst.catalog || "";
   hsnInput.value = inst.hsn || "";
@@ -189,38 +180,7 @@ window.editInstrument = function(i) {
   document.getElementById("gstPercent").value = inst.gstPercent || "";
   suppliedWithInput.value = (inst.suppliedWith || []).join("\n");
 
+  // Track edit index and show form
   editIndex = i;
   form.classList.add("active");
 };
-
-window.deleteInstrument = async function(i) {
-  const inst = instruments[i];
-  if (!inst || !inst.id) {
-    showToast("Missing instrument ID", "error");
-    return;
-  }
-  await deleteInstrument(inst.id);
-  instruments.splice(i, 1);
-  localStorage.setItem("instruments", JSON.stringify(instruments));
-
-  const maxPage = Math.max(1, Math.ceil(instruments.length / pageSize));
-  if (currentPage > maxPage) currentPage = maxPage;
-  renderTable();
-};
-
-window.nextPage = function() {
-  if (currentPage * pageSize < instruments.length) {
-    currentPage++;
-    renderTable();
-  }
-};
-
-window.prevPage = function() {
-  if (currentPage > 1) {
-    currentPage--;
-    renderTable();
-  }
-};
-
-// Initial render
-renderTable();
