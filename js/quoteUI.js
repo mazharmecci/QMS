@@ -1,12 +1,24 @@
-import { moneyINR, formatInstrumentCell, formatItemCell } from "./quoteUtils.js";
-import { 
-  getQuoteHeaderRaw, 
-  saveQuoteHeader, 
-  getInstrumentsMaster, 
-  getQuoteContext, 
-  validateHeader, 
-  finalizeQuote 
-} from "./quoteService.js";
+// quoteUI.js
+
+/* ========= Imports ========= */
+import {
+  moneyINR,
+  parseDetailsText,
+  formatInstrumentCell,
+  formatItemCell
+} from "../js/quoteUtils.js";
+
+import {
+  getQuoteHeaderRaw,
+  saveQuoteHeader,
+  getInstrumentsMaster,
+  getQuoteContext,
+  validateHeader,
+  finalizeQuote
+} from "../js/quoteService.js";
+
+import { db } from "./firebase.js";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 /* ========= Header population ========= */
 export function populateHeader() {
@@ -21,7 +33,8 @@ export function populateHeader() {
   document.getElementById("metaPhone").textContent = header.contactPhone || "";
   document.getElementById("metaEmail").textContent = header.contactEmail || "";
   document.getElementById("metaOffice").textContent = header.officePhone || "";
-  document.getElementById("toHospitalNameLine").textContent = header.hospitalName || "Hospital / Client Name";
+  document.getElementById("toHospitalNameLine").textContent =
+    header.hospitalName || "Hospital / Client Name";
 
   const [line1, line2] = (header.hospitalAddress || "").split(",");
   document.getElementById("toHospitalAddressLine1").textContent = line1 || "";
@@ -44,7 +57,7 @@ export function populateHeader() {
   }
 }
 
-/* ========= Quote builder ========= */
+/* ========= Quote builder (with config/additional) ========= */
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
@@ -83,70 +96,6 @@ export function renderQuoteBuilder() {
         <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
     `);
-  });
-
-  body.innerHTML = rows.join("");
-  const sb = document.getElementById("quoteSummaryBody");
-  if (sb) {
-    sb.innerHTML = `
-      <tr>
-        <td colspan="4" style="text-align:right; font-weight:600;">Grand Total</td>
-        <td>₹ ${moneyINR(itemsTotal)}</td>
-      </tr>
-    `;
-  }
-}
-
-/* ========= Build Quote Object ========= */
-export function buildQuoteObject() {
-  const header = getQuoteHeaderRaw();
-  const { instruments, lines } = getQuoteContext();
-
-  let totalValueINR = 0;
-  let gstValueINR = 0;
-
-  const items = lines.map(line => {
-    const inst = instruments[line.instrumentIndex] || {};
-    const qty = Number(line.quantity || 1);
-    const unitPrice = Number(inst.unitPrice || 0);
-    const totalPrice = qty * unitPrice;
-    totalValueINR += totalPrice;
-
-    const gstPercent = Number(inst.gstPercent || 0);
-    const gstAmount = totalPrice * (gstPercent / 100);
-    gstValueINR += gstAmount;
-
-    return {
-      instrumentCode: inst.instrumentCode || "",
-      instrumentName: inst.instrumentName || "",
-      description: inst.longDescription || inst.description || "",
-      quantity: qty,
-      unitPrice,
-      totalPrice,
-      gstPercent,
-      configItems: line.configItems || [],
-      additionalItems: line.additionalItems || []
-    };
-  });
-
-  return {
-    quoteNo: header.quoteNo || "",
-    quoteDate: header.quoteDate || "",
-    hospital: {
-      name: header.hospitalName || "",
-      address: header.hospitalAddress || "",
-      contactPerson: header.contactPerson || "",
-      email: header.contactEmail || "",
-      phone: header.contactPhone || ""
-    },
-    status: "Submitted",
-    totalValueINR,
-    gstValueINR,
-    items,
-    createdBy: "Mazhar R Mecci",
-    createdAt: new Date().toISOString()
-  };
-}
 
     // configuration items
     const configItems = line.configItems || [];
@@ -215,7 +164,7 @@ export function buildQuoteObject() {
   renderSummaryRows(itemsTotal);
 }
 
-/* ========= Summary rows ========= */
+/* ========= Summary rows / discount ========= */
 export function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById("quoteSummaryBody");
   if (!sb) return;
@@ -257,7 +206,6 @@ export function updateDiscountVisibility(discountValue) {
 }
 
 /* ========= Discount Handling ========= */
-
 let discountDraft = null;
 
 export function discountInputChanged(val) {
@@ -280,13 +228,64 @@ export function discountInputCommitted() {
       itemsTotal += Number(inst.unitPrice || 0) * qty;
     }
     (line.additionalItems || []).forEach(item => {
-      const qtyNum  = Number(item.qty || 1);
+      const qtyNum = Number(item.qty || 1);
       const unitNum = Number(item.price || item.unitPrice || 0);
       itemsTotal += qtyNum * unitNum;
     });
   });
 
   renderSummaryRows(itemsTotal);
+}
+
+/* ========= Build Quote Object (for history) ========= */
+export function buildQuoteObject() {
+  const header = getQuoteHeaderRaw();
+  const { instruments, lines } = getQuoteContext();
+
+  let totalValueINR = 0;
+  let gstValueINR = 0;
+
+  const items = lines.map(line => {
+    const inst = instruments[line.instrumentIndex] || {};
+    const qty = Number(line.quantity || 1);
+    const unitPrice = Number(inst.unitPrice || 0);
+    const totalPrice = qty * unitPrice;
+    totalValueINR += totalPrice;
+
+    const gstPercent = Number(inst.gstPercent || 0);
+    const gstAmount = totalPrice * (gstPercent / 100);
+    gstValueINR += gstAmount;
+
+    return {
+      instrumentCode: inst.instrumentCode || "",
+      instrumentName: inst.instrumentName || "",
+      description: inst.longDescription || inst.description || "",
+      quantity: qty,
+      unitPrice,
+      totalPrice,
+      gstPercent,
+      configItems: line.configItems || [],
+      additionalItems: line.additionalItems || []
+    };
+  });
+
+  return {
+    quoteNo: header.quoteNo || "",
+    quoteDate: header.quoteDate || "",
+    hospital: {
+      name: header.hospitalName || "",
+      address: header.hospitalAddress || "",
+      contactPerson: header.contactPerson || "",
+      email: header.contactEmail || "",
+      phone: header.contactPhone || ""
+    },
+    status: "Submitted",
+    totalValueINR,
+    gstValueINR,
+    items,
+    createdBy: "Mazhar R Mecci",
+    createdAt: new Date().toISOString()
+  };
 }
 
 /* ========= Instrument Modal ========= */
@@ -640,34 +639,77 @@ export function saveItemFromModal(e) {
   renderItemModalList(line, type);
 }
 
-// Basic helper: go back
-function goBack() {
-  if (window.history.length > 1) window.history.back();
+/* ========= Quote History (Firebase) ========= */
+export async function renderQuoteHistoryTable() {
+  const tableBody = document.getElementById("quoteHistoryBody");
+  if (!tableBody) return;
+
+  tableBody.innerHTML = `<tr><td colspan="7">Loading...</td></tr>`;
+
+  try {
+    const q = query(collection(db, "quoteHistory"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      tableBody.innerHTML = `<tr><td colspan="7">No quotes found</td></tr>`;
+      return;
+    }
+
+    let rows = [];
+    let counter = 1;
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      rows.push(`
+        <tr>
+          <td>${counter++}</td>
+          <td>${data.quoteNo || ""}</td>
+          <td>${data.quoteDate || ""}</td>
+          <td>${data.hospital?.name || ""}</td>
+          <td>₹ ${moneyINR(data.totalValueINR || 0)}</td>
+          <td>${data.status || ""}</td>
+          <td>
+            <button type="button" class="btn-quote" onclick="viewQuote('${docSnap.id}')">View</button>
+            <button type="button" class="btn-quote btn-quote-secondary" onclick="exportQuote('${docSnap.id}')">Export</button>
+          </td>
+        </tr>
+      `);
+    });
+
+    tableBody.innerHTML = rows.join("");
+  } catch (err) {
+    console.error("Error fetching quotes:", err);
+    tableBody.innerHTML = `<tr><td colspan="7">Error loading quotes</td></tr>`;
+  }
 }
 
+/* ========= Basic helper: go back ========= */
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+
+/* ========= Init wiring ========= */
 document.addEventListener("DOMContentLoaded", () => {
-  // Initial render
   populateHeader();
   renderQuoteBuilder();
 
-  // Header back button
-  document.getElementById("goBackBtn")?.addEventListener("click", goBack);
+  document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-  // Instrument modal
   document.getElementById("openInstrumentModalBtn")?.addEventListener("click", openInstrumentModal);
   document.getElementById("closeInstrumentModalBtn")?.addEventListener("click", closeInstrumentModal);
   document.getElementById("closeInstrumentModalFooterBtn")?.addEventListener("click", closeInstrumentModal);
 
-  // Instrument picker
   document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
   document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
 
-  // Item modal
   document.getElementById("closeItemModalBtn")?.addEventListener("click", closeItemModal);
   document.getElementById("cancelItemModalBtn")?.addEventListener("click", closeItemModal);
   document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
 
-  // Config/Additional pickers
   document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
     document.getElementById("configPickerOverlay").style.display = "none";
   });
@@ -675,12 +717,10 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("additionalPickerOverlay").style.display = "none";
   });
 
-  // Finalize quote
   document.getElementById("finalizeQuoteBtn")?.addEventListener("click", finalizeQuote);
 });
 
 /* ========= Expose functions for inline onclick ========= */
-
 window.addInstrumentToQuote   = addInstrumentToQuote;
 window.editInstrumentLine     = editInstrumentLine;
 window.removeInstrumentLine   = removeInstrumentLine;
@@ -688,3 +728,6 @@ window.editItemFromModal      = editItemFromModal;
 window.removeItemFromModal    = removeItemFromModal;
 window.discountInputChanged   = discountInputChanged;
 window.discountInputCommitted = discountInputCommitted;
+// For history actions, if you implement them in this file, also expose:
+// window.viewQuote  = viewQuote;
+// window.exportQuote = exportQuote;
