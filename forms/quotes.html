@@ -339,6 +339,14 @@ table.quote-table .cat-sub strong {
   margin:0.35rem 0;
 }
 
+/* Force Terms & Conditions to a new page when printing */
+@media print {
+  #termsBlock {
+    page-break-before: always;  /* legacy but still widely supported [web:173][web:175] */
+    break-before: page;         /* modern replacement [web:174] */
+  }
+}
+
 .section-header-label {
   font-weight:700;
 }
