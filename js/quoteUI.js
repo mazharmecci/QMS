@@ -14,11 +14,10 @@ import {
   getInstrumentsMaster,
   getQuoteContext,
   validateHeader,
-  finalizeQuote
+  finalizeQuote,
+  buildQuoteObject          // now provided by quoteService.js
 } from "./quoteService.js";
 
-// firebase.js should re‑export db, collection, getDocs, orderBy, query
-// and itself use CDN URLs (or a bundler) for Firebase SDK.
 import {
   db,
   collection,
@@ -243,57 +242,6 @@ export function discountInputCommitted() {
   });
 
   renderSummaryRows(itemsTotal);
-}
-
-/* ========= Build Quote Object (for history) ========= */
-export function buildQuoteObject() {
-  const header = getQuoteHeaderRaw();
-  const { instruments, lines } = getQuoteContext();
-
-  let totalValueINR = 0;
-  let gstValueINR = 0;
-
-  const items = lines.map(line => {
-    const inst = instruments[line.instrumentIndex] || {};
-    const qty = Number(line.quantity || 1);
-    const unitPrice = Number(inst.unitPrice || 0);
-    const totalPrice = qty * unitPrice;
-    totalValueINR += totalPrice;
-
-    const gstPercent = Number(inst.gstPercent || 0);
-    const gstAmount = totalPrice * (gstPercent / 100);
-    gstValueINR += gstAmount;
-
-    return {
-      instrumentCode: inst.instrumentCode || "",
-      instrumentName: inst.instrumentName || "",
-      description: inst.longDescription || inst.description || "",
-      quantity: qty,
-      unitPrice,
-      totalPrice,
-      gstPercent,
-      configItems: line.configItems || [],
-      additionalItems: line.additionalItems || []
-    };
-  });
-
-  return {
-    quoteNo: header.quoteNo || "",
-    quoteDate: header.quoteDate || "",
-    hospital: {
-      name: header.hospitalName || "",
-      address: header.hospitalAddress || "",
-      contactPerson: header.contactPerson || "",
-      email: header.contactEmail || "",
-      phone: header.contactPhone || ""
-    },
-    status: "Submitted",
-    totalValueINR,
-    gstValueINR,
-    items,
-    createdBy: "Mazhar R Mecci",
-    createdAt: new Date().toISOString()
-  };
 }
 
 /* ========= Instrument Modal ========= */
@@ -680,7 +628,6 @@ export async function renderQuoteHistoryTable() {
   tableBody.innerHTML = `<tr><td colspan="7">Loading...</td></tr>`;
 
   try {
-    // get all docs without query/orderBy
     const snapshot = await getDocs(collection(db, "quoteHistory"));
 
     const docs = [];
