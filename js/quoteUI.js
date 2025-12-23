@@ -1,10 +1,13 @@
 // quoteUI.js
+
 import {
   getQuoteContext,
   getQuoteHeaderRaw,
   saveQuoteHeader,
-  getInstrumentsMaster
+  getInstrumentsMaster,
+  validateHeader
 } from "../js/quoteService.js";
+
 import {
   moneyINR,
   formatInstrumentCell,
@@ -13,8 +16,6 @@ import {
 } from "../js/quoteUtils.js";
 
 /* ========= Quote Builder & Summary ========= */
-
-import { getQuoteHeaderRaw, validateHeader } from "../js/quoteService.js";
 
 // Populate letterhead from header
 export function populateHeader() {
