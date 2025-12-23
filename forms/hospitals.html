@@ -177,104 +177,11 @@
     let hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
     let editIndex = null;
 
-    function renderTable() {
-      tableBody.innerHTML = '';
-      hospitals.forEach((h, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${h.clientCode}</td>
-          <td>${h.clientName}</td>
-          <td>${h.address}</td>
-          <td>${h.area}</td>
-          <td>${h.mobile}</td>
-          <td>${h.email}</td>
-          <td>${h.pan}</td>
-          <td class="actions">
-            <button class="edit-btn" onclick="editHospital(${index})">Edit</button>
-            <button class="delete-btn" onclick="deleteHospital(${index})">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-
-    function getNextClientCode() {
-      if (!hospitals.length) return 'HOSP-01';
-
-      const nums = hospitals
-        .map(h => h.clientCode || '')
-        .map(code => {
-          const match = String(code).match(/(\d+)$/);
-          return match ? parseInt(match[1], 10) : 0;
-        })
-        .filter(n => !isNaN(n) && n > 0);
-
-      const maxNum = nums.length ? Math.max(...nums) : 0;
-      const nextNum = maxNum + 1;
-
-      return 'HOSP-' + String(nextNum).padStart(2, '0');
-    }
-
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const isEdit = editIndex !== null;
-
-      const hospital = {
-        clientCode: isEdit
-          ? document.getElementById('clientCode').value
-          : getNextClientCode(),
-        clientName: document.getElementById('clientName').value,
-        address: document.getElementById('address').value,
-        area: document.getElementById('area').value,
-        mobile: document.getElementById('mobile').value,
-        email: document.getElementById('email').value,
-        pan: document.getElementById('pan').value
-      };
-
-      if (isEdit) {
-        hospitals[editIndex] = hospital;
-        editIndex = null;
-      } else {
-        hospitals.push(hospital);
-      }
-
-      localStorage.setItem('hospitals', JSON.stringify(hospitals));
-      form.reset();
-      document.getElementById('clientCode').value = getNextClientCode();
-      renderTable();
-    });
-
-    function editHospital(index) {
-      const h = hospitals[index];
-      document.getElementById('clientCode').value = h.clientCode;
-      document.getElementById('clientName').value = h.clientName;
-      document.getElementById('address').value = h.address;
-      document.getElementById('area').value = h.area;
-      document.getElementById('mobile').value = h.mobile;
-      document.getElementById('email').value = h.email;
-      document.getElementById('pan').value = h.pan;
-      editIndex = index;
-    }
-
-    function deleteHospital(index) {
-      if (confirm('Are you sure you want to delete this hospital?')) {
-        hospitals.splice(index, 1);
-        localStorage.setItem('hospitals', JSON.stringify(hospitals));
-        renderTable();
-        // After delete, update next code for a new record
-        document.getElementById('clientCode').value = getNextClientCode();
-      }
-    }
-
-    // Initial render and initial code
-    renderTable();
-    document.getElementById('clientCode').value = getNextClientCode();
-  </script>
 
   <script type="module" src="firebase.js"></script>
   <script type="module" src="hospitalService.js"></script>
+  <script type="module" src="hospitalUI.js"></script>
+
 
 </body>
 </html>
