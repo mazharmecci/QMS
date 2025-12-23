@@ -135,21 +135,40 @@ export async function renderTable() {
     const idx = start + i;
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><strong>${inst.instrumentName || ""}</strong></td>
+      <!-- Equip-Name -->
+      <td><strong>${inst.instrumentName || inst.description || ""}</strong></td>
+    
+      <!-- Equip-Desc -->
       <td><strong>${inst.longDescription || ""}</strong></td>
+    
+      <!-- Origin -->
       <td>${inst.origin || ""}</td>
+    
+      <!-- Catalog -->
       <td>${inst.catalog || ""}</td>
+    
+      <!-- HSN -->
       <td>${inst.hsn || ""}</td>
+    
+      <!-- Code -->
       <td>${inst.instrumentCode || ""}</td>
+    
+      <!-- Price -->
       <td class="price-cell">${formatPriceDisplay(inst.unitPrice)}</td>
+    
+      <!-- GST Type -->
       <td>${inst.gstType || ""}</td>
+    
+      <!-- GST % -->
       <td>${inst.gstPercent || ""}</td>
+    
+      <!-- Actions -->
       <td class="actions">
         <button type="button" class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
         <button type="button" class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
-      </td>    
+      </td>
     `;
-    tableBody.appendChild(row);
+        tableBody.appendChild(row);
   });
 
   pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
