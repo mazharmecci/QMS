@@ -4,7 +4,7 @@ import {
   addInstrument,
   updateInstrument,
   deleteInstrument
-} from "./instrumentService.js";
+} from "../js/instrumentService.js";
 
 const form = document.getElementById("instrumentForm");
 const tableBody = document.querySelector("#instrumentTable tbody");
