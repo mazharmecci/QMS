@@ -1,49 +1,30 @@
 // quoteUI.js
+import { moneyINR, formatInstrumentCell, formatItemCell } from "./quoteUtils.js";
+import { getQuoteHeaderRaw, saveQuoteHeader, getInstrumentsMaster, getQuoteContext, validateHeader, finalizeQuote } from "./quoteService.js";
 
-import {
-  getQuoteHeaderRaw,
-  saveQuoteHeader,
-  getInstrumentsMaster,
-  getQuoteContext,
-  validateHeader,
-  finalizeQuote
-} from "../js/quoteService.js";
-
-import {
-  moneyINR,
-  parseDetailsText,
-  formatInstrumentCell,
-  formatItemCell
-} from "../js/quoteUtils.js";
-
-/* ========= Quote Builder & Summary ========= */
-
-// Populate letterhead from header
+/* ========= Header population ========= */
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
   if (!validateHeader(header)) return;
 
-  document.getElementById("metaQuoteNo").textContent   = header.quoteNo || "";
+  document.getElementById("metaQuoteNo").textContent = header.quoteNo || "";
   document.getElementById("metaQuoteDate").textContent = header.quoteDate || "";
-  document.getElementById("metaYourRef").textContent   = header.yourReference || "";
-  document.getElementById("metaRefDate").textContent   = header.refDate || "";
+  document.getElementById("metaYourRef").textContent = header.yourReference || "";
+  document.getElementById("metaRefDate").textContent = header.refDate || "";
   document.getElementById("metaContactPerson").textContent = header.contactPerson || "";
-  document.getElementById("metaPhone").textContent     = header.contactPhone || "";
-  document.getElementById("metaEmail").textContent     = header.contactEmail || "";
-  document.getElementById("metaOffice").textContent    = header.officePhone || "";
-
-  document.getElementById("toHospitalNameLine").textContent =
-    header.hospitalName || "Hospital / Client Name";
+  document.getElementById("metaPhone").textContent = header.contactPhone || "";
+  document.getElementById("metaEmail").textContent = header.contactEmail || "";
+  document.getElementById("metaOffice").textContent = header.officePhone || "";
+  document.getElementById("toHospitalNameLine").textContent = header.hospitalName || "Hospital / Client Name";
 
   const [line1, line2] = (header.hospitalAddress || "").split(",");
   document.getElementById("toHospitalAddressLine1").textContent = line1 || "";
   document.getElementById("toHospitalAddressLine2").textContent = line2 || "";
+
   document.getElementById("toAttn").textContent = header.kindAttn || "Attention";
 
   const noteEl = document.getElementById("salesNoteBlock");
-  if (noteEl && header.salesNote) {
-    noteEl.textContent = header.salesNote;
-  }
+  if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
 
   const termsEl = document.getElementById("termsTextBlock");
   if (termsEl) {
@@ -57,6 +38,7 @@ export function populateHeader() {
   }
 }
 
+/* ========= Quote builder ========= */
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
@@ -109,9 +91,10 @@ export function renderQuoteBuilder() {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
 
-        const q      = item.qty != null ? item.qty : "Included";
-        const upRaw  = item.upInr != null ? item.upInr : "Included";
-        const tpRaw  = item.tpInr != null ? item.tpInr : "Included";
+        const q = item.qty != null ? item.qty : "Included";
+        const upRaw = item.upInr != null ? item.upInr : "Included";
+        const tpRaw = item.tpInr != null ? item.tpInr : "Included";
+
         const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
         const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
 
@@ -140,7 +123,7 @@ export function renderQuoteBuilder() {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
 
-        const qtyNum  = Number(item.qty || 1);
+        const qtyNum = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
         const totalNum = unitNum * qtyNum;
         itemsTotal += totalNum;
@@ -162,33 +145,19 @@ export function renderQuoteBuilder() {
   renderSummaryRows(itemsTotal);
 }
 
-export function updateDiscountVisibility(discountValue) {
-  const table = document.getElementById("quoteSummaryTable");
-  if (!table) return;
-
-  const header   = getQuoteHeaderRaw();
-  const discount = discountValue != null ? Number(discountValue) : Number(header.discount || 0);
-
-  if (discount === 0) {
-    table.classList.add("discount-zero");
-  } else {
-    table.classList.remove("discount-zero");
-  }
-}
-
+/* ========= Summary rows ========= */
 export function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById("quoteSummaryBody");
   if (!sb) return;
 
-  const header     = getQuoteHeaderRaw();
+  const header = getQuoteHeaderRaw();
   const gstPercent = 18;
-  const discount   = Number(header.discount || 0);
-
-  const afterDisc    = itemsTotal - discount;
-  const gstAmount    = (afterDisc * gstPercent) / 100;
-  const totalValue   = afterDisc + gstAmount;
+  const discount = Number(header.discount || 0);
+  const afterDisc = itemsTotal - discount;
+  const gstAmount = (afterDisc * gstPercent) / 100;
+  const totalValue = afterDisc + gstAmount;
   const roundedTotal = Math.round(totalValue);
-  const roundOff     = roundedTotal - totalValue;
+  const roundOff = roundedTotal - totalValue;
 
   sb.innerHTML = `
     <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Items Total</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td></tr>
@@ -201,6 +170,20 @@ export function renderSummaryRows(itemsTotal) {
   `;
 
   updateDiscountVisibility(discount);
+}
+
+export function updateDiscountVisibility(discountValue) {
+  const table = document.getElementById("quoteSummaryTable");
+  if (!table) return;
+
+  const header = getQuoteHeaderRaw();
+  const discount = discountValue != null ? Number(discountValue) : Number(header.discount || 0);
+
+  if (discount === 0) {
+    table.classList.add("discount-zero");
+  } else {
+    table.classList.remove("discount-zero");
+  }
 }
 
 /* ========= Discount Handling ========= */
