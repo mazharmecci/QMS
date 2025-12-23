@@ -1,5 +1,5 @@
 // quoteService.js
-import { fetchInstruments } from "./instrumentService.js";
+import { fetchInstruments } from "../js/instrumentService.js";
 
 /**
  * Get the current quote context: instruments + lines.
