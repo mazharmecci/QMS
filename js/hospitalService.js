@@ -1,5 +1,15 @@
-import { db } from "./firebase.js";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
+// hospitalService.js
+
+// Import db and Firestore helpers from your CDN-based firebase.js
+import {
+  db,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDocs
+} from "../js/firebase.js"; // adjust path if needed
 
 const hospitalsRef = collection(db, "hospitals");
 
@@ -72,7 +82,7 @@ export async function deleteHospital(id, index = null) {
 export async function fetchHospitals() {
   try {
     const snapshot = await getDocs(hospitalsRef);
-    const firebaseHospitals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const firebaseHospitals = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // Sync Firebase → LocalStorage
     setLocalHospitals(firebaseHospitals);
