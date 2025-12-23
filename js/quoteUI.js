@@ -14,6 +14,47 @@ import {
 
 /* ========= Quote Builder & Summary ========= */
 
+import { getQuoteHeaderRaw, validateHeader } from "../js/quoteService.js";
+
+// Populate letterhead from header
+export function populateHeader() {
+  const header = getQuoteHeaderRaw();
+  if (!validateHeader(header)) return;
+
+  document.getElementById("metaQuoteNo").textContent   = header.quoteNo || "";
+  document.getElementById("metaQuoteDate").textContent = header.quoteDate || "";
+  document.getElementById("metaYourRef").textContent   = header.yourReference || "";
+  document.getElementById("metaRefDate").textContent   = header.refDate || "";
+  document.getElementById("metaContactPerson").textContent = header.contactPerson || "";
+  document.getElementById("metaPhone").textContent     = header.contactPhone || "";
+  document.getElementById("metaEmail").textContent     = header.contactEmail || "";
+  document.getElementById("metaOffice").textContent    = header.officePhone || "";
+
+  document.getElementById("toHospitalNameLine").textContent =
+    header.hospitalName || "Hospital / Client Name";
+
+  const [line1, line2] = (header.hospitalAddress || "").split(",");
+  document.getElementById("toHospitalAddressLine1").textContent = line1 || "";
+  document.getElementById("toHospitalAddressLine2").textContent = line2 || "";
+  document.getElementById("toAttn").textContent = header.kindAttn || "Attention";
+
+  const noteEl = document.getElementById("salesNoteBlock");
+  if (noteEl && header.salesNote) {
+    noteEl.textContent = header.salesNote;
+  }
+
+  const termsEl = document.getElementById("termsTextBlock");
+  if (termsEl) {
+    if (header.termsHtml) {
+      termsEl.innerHTML = header.termsHtml;
+    } else if (header.termsText) {
+      termsEl.textContent = header.termsText;
+    } else {
+      termsEl.textContent = "";
+    }
+  }
+}
+
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
