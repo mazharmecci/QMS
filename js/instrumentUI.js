@@ -106,12 +106,15 @@ form.addEventListener("submit", async e => {
   };
 
   if (editIndex !== null) {
-    instruments[editIndex] = instrument;
-    await updateInstrument(instruments[editIndex].id, instrument);
+    // preserve ID when updating
+    const existingId = instruments[editIndex].id;
+    instruments[editIndex] = { ...instrument, id: existingId };
+    await updateInstrument(existingId, instrument);
     editIndex = null;
   } else {
-    instruments.push(instrument);
-    await addInstrument(instrument);
+    // add new instrument and capture Firestore ID
+    const newId = await addInstrument(instrument);
+    instruments.push({ ...instrument, id: newId });
   }
 
   localStorage.setItem("instruments", JSON.stringify(instruments));
@@ -122,7 +125,7 @@ form.addEventListener("submit", async e => {
   showToast("Instrument saved");
 });
 
-// 🔹 Render table, edit, delete, pagination (same as your inline code, moved here)
+// 🔹 Render table
 export async function renderTable() {
   tableBody.innerHTML = "";
   instruments = await fetchInstruments();
@@ -158,7 +161,7 @@ export async function renderTable() {
   pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
-// expose handlers
+// 🔹 Handlers
 window.toggleDetails = function(el) {
   const d = el.nextElementSibling;
   const visible = d.style.display === "block";
@@ -166,10 +169,58 @@ window.toggleDetails = function(el) {
   el.textContent = visible ? "Details" : "Hide details";
 };
 
-window.editInstrument = function(i) { /* same as your inline editInstrument */ };
-window.deleteInstrument = async function(i) { /* same as your inline deleteInstrument */ };
-window.nextPage = function() { /* same as your inline nextPage */ };
-window.prevPage = function() { /* same as your inline prevPage */ };
+window.editInstrument = function(i) {
+  const inst = instruments[i];
+  if (!inst) return;
+
+  mainItemNameInput.value = inst.description || "";
+  descriptionTextarea.value = [
+    inst.instrumentName || "",
+    inst.instrumentShortLine || "",
+    inst.instrumentExtraLines || ""
+  ].filter(Boolean).join("\n");
+
+  document.getElementById("origin").value = inst.origin || "";
+  document.getElementById("catalog").value = inst.catalog || "";
+  hsnInput.value = inst.hsn || "";
+  document.getElementById("instrumentCode").value = inst.instrumentCode || "";
+  unitPriceInput.value = formatPriceDisplay(inst.unitPrice);
+  document.getElementById("gstType").value = inst.gstType || "";
+  document.getElementById("gstPercent").value = inst.gstPercent || "";
+  suppliedWithInput.value = (inst.suppliedWith || []).join("\n");
+
+  editIndex = i;
+  form.classList.add("active");
+};
+
+window.deleteInstrument = async function(i) {
+  const inst = instruments[i];
+  if (!inst || !inst.id) {
+    showToast("Missing instrument ID", "error");
+    return;
+  }
+  await deleteInstrument(inst.id);
+  instruments.splice(i, 1);
+  localStorage.setItem("instruments", JSON.stringify(instruments));
+
+  const maxPage = Math.max(1, Math.ceil(instruments.length / pageSize));
+  if (currentPage > maxPage) currentPage = maxPage;
+  renderTable();
+};
+
+window.nextPage = function() {
+  if (currentPage * pageSize < instruments.length) {
+    currentPage++;
+    renderTable();
+  }
+};
+
+window.prevPage = function() {
+  if (currentPage > 1) {
+    currentPage--;
+    renderTable();
+  }
+};
 
 // Initial render
 renderTable();
