@@ -1,19 +1,19 @@
 // firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Your Firebase project configuration
+// ✅ Your Firebase project configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
   authDomain: "istos-qms.firebaseapp.com",
   projectId: "istos-qms",
-  storageBucket: "istos-qms.appspot.com",   // ✅ fix: use .appspot.com not .firebasestorage.app
+  storageBucket: "istos-qms.appspot.com",   // fixed: must be .appspot.com
   messagingSenderId: "777790389934",
   appId: "1:777790389934:web:1acd36f952445a1625373f"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// ✅ Only initialize once
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Export Firestore instance for other modules
+// ✅ Export Firestore instance for use in hospitalService.js
 export const db = getFirestore(app);
