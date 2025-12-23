@@ -339,7 +339,9 @@ export function openInstrumentPicker() {
       const name = inst.instrumentName || inst.name || "Unnamed Instrument";
       const code = inst.catalog || inst.instrumentCode || "";
       const desc = inst.description || inst.longDescription || "";
-      const shortDesc = desc.replace(/\s+/g, " ").slice(0, 160) + (desc.length > 160 ? "…" : "";
+      const shortDesc =
+        desc.replace(/\s+/g, " ").slice(0, 160) +
+        (desc.length > 160 ? "…" : "");
       return `
         <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
           <div style="font-size:12px; flex:1;">
