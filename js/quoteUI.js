@@ -625,3 +625,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Finalize quote
   document.getElementById("finalizeQuoteBtn")?.addEventListener("click", finalizeQuote);
 });
+
+/* ========= Expose functions for inline onclick ========= */
+
+window.addInstrumentToQuote   = addInstrumentToQuote;
+window.editInstrumentLine     = editInstrumentLine;
+window.removeInstrumentLine   = removeInstrumentLine;
+window.editItemFromModal      = editItemFromModal;
+window.removeItemFromModal    = removeItemFromModal;
+window.discountInputChanged   = discountInputChanged;
+window.discountInputCommitted = discountInputCommitted;
