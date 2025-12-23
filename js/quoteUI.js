@@ -10,7 +10,7 @@ import {
   formatInstrumentCell,
   formatItemCell,
   parseDetailsText
-} from "./quoteUtils.js";
+} from "../js/quoteUtils.js";
 
 /* ========= Quote Builder & Summary ========= */
 
