@@ -458,7 +458,7 @@ export function renderItemModalList(line, type) {
 
   if (!arr.length) {
     listEl.innerHTML =
-      '<div style="font-size:12px; color:#64748b;">No items yet for this instrument.</div>';
+      '<div style="font-size:11px; color:#64748b;">No items yet for this instrument.</div>';
     return;
   }
 
@@ -470,32 +470,35 @@ export function renderItemModalList(line, type) {
         type === "config"
           ? "Included"
           : item.price || item.unitPrice || item.upInr || item.tpInr || "";
+
       return `
-      <div style="display:flex; align-items:center; justify-content:space-between;
-                  padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
-        <div style="flex:1; font-size:12px;">
-          <div style="font-weight:600;">${item.code || ""} ${item.name || ""}</div>
-          <div style="color:#64748b;">Qty: ${qty} &nbsp; | &nbsp; Price: ${price}</div>
+        <div class="item-row">
+          <div class="item-row-main">
+            <div class="item-row-main-title">
+              ${item.code || ""} ${item.name || ""}
+            </div>
+            <div class="item-row-main-meta">
+              Qty: ${qty} &nbsp; | &nbsp; Price: ${price}
+            </div>
+          </div>
+          <div class="item-row-actions">
+            <button type="button"
+                    onclick="editItemFromModal('${type}', ${idx})">
+              Edit
+            </button>
+            <button type="button"
+                    onclick="removeItemFromModal('${type}', ${idx})">
+              Remove
+            </button>
+          </div>
         </div>
-        <div style="display:flex; gap:0.25rem;">
-          <button type="button"
-                  class="btn-quote"
-                  onclick="editItemFromModal('${type}', ${idx})">
-            Edit
-          </button>
-          <button type="button"
-                  class="btn-quote btn-quote-secondary"
-                  onclick="removeItemFromModal('${type}', ${idx})">
-            Remove
-          </button>
-        </div>
-      </div>
-    `;
+      `;
     })
     .join("");
 }
 
 /* ========= Item Modal Editing ========= */
+
 export function editItemFromModal(type, idx) {
   const { header } = getQuoteContext();
   const lineIndex = Number(
