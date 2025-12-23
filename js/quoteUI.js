@@ -4,7 +4,7 @@ import {
   getQuoteHeaderRaw,
   saveQuoteHeader,
   getInstrumentsMaster
-} from "./quoteService.js";
+} from "../js/quoteService.js";
 import {
   moneyINR,
   formatInstrumentCell,
