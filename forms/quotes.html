@@ -427,7 +427,7 @@
 <body>
 <header>
   <div class="header-inner">
-    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+    <button type="button" class="back-btn" id="backBtn">← Back</button>
     <div class="header-title">ISTOS Medical Private Limited</div>
   </div>
 </header>
@@ -660,12 +660,11 @@
   /* ===== Helpers ===== */
 
   function goBack() {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.href = 'index.html';
-    }
-  }
+   if (window.history.length > 1) {
+     window.history.back();
+   } else {
+     window.location.href = "index.html";
+   }
 
   /* ===== Init & Event Wiring ===== */
   document.addEventListener("DOMContentLoaded", () => {
@@ -674,7 +673,7 @@
     renderQuoteBuilder();
 
     // Back button
-    document.getElementById("back-btn")?.addEventListener("click", goBack);
+  document.getElementById("backBtn")?.addEventListener("click", goBack);
 
     // Instrument modal
     const instrumentModalEvents = [
