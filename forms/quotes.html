@@ -655,11 +655,18 @@ table.quote-table .cat-sub strong {
 
   /* ===== Helpers ===== */
 function goBack() {
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.location.href = "index.html";
-  }
+  const before = window.location.href;
+
+  // Try to go back
+  window.history.back();
+
+  // After a short delay, check if the location changed; if not, go home
+  setTimeout(() => {
+    const after = window.location.href;
+    if (after === before) {
+      window.location.href = HOME_URL;
+    }
+  }, 150);
 }
 
 /* ===== Init & Event Wiring ===== */
@@ -669,8 +676,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderQuoteBuilder();
 
   // Back button
-  document.getElementById("backBtn")?.addEventListener("click", goBack);
-
+document.getElementById("backBtn")?.addEventListener("click", goBack);
+  
   // Instrument modal
   const instrumentModalEvents = [
     ["openInstrumentModalBtn", openInstrumentModal],
