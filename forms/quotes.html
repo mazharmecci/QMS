@@ -161,6 +161,35 @@ header {
   text-align: right;
 }
 
+/* Print-specific overrides */
+@media print {
+  .quote-meta-grid .label {
+    font-size: 8px;       /* smaller labels for print */
+    font-weight: 500;
+    color: #000;
+  }
+
+  .quote-meta-grid .value {
+    font-size: 11px;      /* shrink values further for print */
+    font-weight: 600;
+    color: #000;
+    white-space: normal;  /* allow wrapping */
+    word-break: break-word;
+  }
+
+  .quote-meta-grid .value-small {
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .quote-meta-grid {
+    column-gap: 0.5rem;   /* tighter spacing for print */
+    row-gap: 0.4rem;
+    grid-template-columns: minmax(0, auto) minmax(0, 2fr)
+                           minmax(0, auto) minmax(0, 1.5fr);
+  }
+}
+
 /* Sales note and builder wrapper */
 #salesNoteBlock {
   margin:0 0 1rem 0;
