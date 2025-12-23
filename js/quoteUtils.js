@@ -6,7 +6,7 @@
 export function moneyINR(value) {
   const num = Number(value || 0);
   return num.toLocaleString("en-IN", {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 }
