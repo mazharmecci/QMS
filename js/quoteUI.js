@@ -17,43 +17,52 @@ import {
   finalizeQuote
 } from "./quoteService.js";
 
-import { db } from "./firebase.js";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+// firebase.js should re‑export db, collection, getDocs, orderBy, query
+// and itself use CDN URLs (or a bundler) for Firebase SDK.
+import {
+  db,
+  collection,
+  getDocs,
+  orderBy,
+  query
+} from "./firebase.js";
 
 /* ========= Header population ========= */
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
   if (!validateHeader(header)) return;
 
-  document.getElementById("metaQuoteNo").textContent = header.quoteNo || "";
-  document.getElementById("metaQuoteDate").textContent = header.quoteDate || "";
-  document.getElementById("metaYourRef").textContent = header.yourReference || "";
-  document.getElementById("metaRefDate").textContent = header.refDate || "";
-  document.getElementById("metaContactPerson").textContent = header.contactPerson || "";
-  document.getElementById("metaPhone").textContent = header.contactPhone || "";
-  document.getElementById("metaEmail").textContent = header.contactEmail || "";
-  document.getElementById("metaOffice").textContent = header.officePhone || "";
-  document.getElementById("toHospitalNameLine").textContent =
+  const getTextEl = id => document.getElementById(id);
+
+  getTextEl("metaQuoteNo").textContent = header.quoteNo || "";
+  getTextEl("metaQuoteDate").textContent = header.quoteDate || "";
+  getTextEl("metaYourRef").textContent = header.yourReference || "";
+  getTextEl("metaRefDate").textContent = header.refDate || "";
+  getTextEl("metaContactPerson").textContent = header.contactPerson || "";
+  getTextEl("metaPhone").textContent = header.contactPhone || "";
+  getTextEl("metaEmail").textContent = header.contactEmail || "";
+  getTextEl("metaOffice").textContent = header.officePhone || "";
+  getTextEl("toHospitalNameLine").textContent =
     header.hospitalName || "Hospital / Client Name";
 
   const [line1, line2] = (header.hospitalAddress || "").split(",");
-  document.getElementById("toHospitalAddressLine1").textContent = line1 || "";
-  document.getElementById("toHospitalAddressLine2").textContent = line2 || "";
+  getTextEl("toHospitalAddressLine1").textContent = line1 || "";
+  getTextEl("toHospitalAddressLine2").textContent = line2 || "";
 
-  document.getElementById("toAttn").textContent = header.kindAttn || "Attention";
+  getTextEl("toAttn").textContent = header.kindAttn || "Attention";
 
-  const noteEl = document.getElementById("salesNoteBlock");
+  const noteEl = getTextEl("salesNoteBlock");
   if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
 
-  const termsEl = document.getElementById("termsTextBlock");
-  if (termsEl) {
-    if (header.termsHtml) {
-      termsEl.innerHTML = header.termsHtml;
-    } else if (header.termsText) {
-      termsEl.textContent = header.termsText;
-    } else {
-      termsEl.textContent = "";
-    }
+  const termsEl = getTextEl("termsTextBlock");
+  if (!termsEl) return;
+
+  if (header.termsHtml) {
+    termsEl.innerHTML = header.termsHtml;
+  } else if (header.termsText) {
+    termsEl.textContent = header.termsText;
+  } else {
+    termsEl.textContent = "";
   }
 }
 
@@ -196,7 +205,8 @@ export function updateDiscountVisibility(discountValue) {
   if (!table) return;
 
   const header = getQuoteHeaderRaw();
-  const discount = discountValue != null ? Number(discountValue) : Number(header.discount || 0);
+  const discount =
+    discountValue != null ? Number(discountValue) : Number(header.discount || 0);
 
   if (discount === 0) {
     table.classList.add("discount-zero");
@@ -289,7 +299,6 @@ export function buildQuoteObject() {
 }
 
 /* ========= Instrument Modal ========= */
-
 export function openInstrumentModal() {
   const overlay = document.getElementById("instrumentModalOverlay");
   if (!overlay) return;
@@ -376,7 +385,6 @@ export function editInstrumentLine(idx) {
 }
 
 /* ========= Instrument Picker ========= */
-
 export function openInstrumentPicker() {
   const overlay = document.getElementById("instrumentPickerOverlay");
   if (!overlay) return;
@@ -385,16 +393,18 @@ export function openInstrumentPicker() {
   const instruments = getInstrumentsMaster();
 
   if (!instruments.length) {
-    listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No instruments in master. Please create instruments first.</div>';
+    listEl.innerHTML =
+      '<div style="font-size:12px; color:#64748b;">No instruments in master. Please create instruments first.</div>';
   } else {
-    listEl.innerHTML = instruments.map((inst, idx) => {
-      const name = inst.instrumentName || inst.name || "Unnamed Instrument";
-      const code = inst.catalog || inst.instrumentCode || "";
-      const desc = inst.description || inst.longDescription || "";
-      const shortDesc =
-        desc.replace(/\s+/g, " ").slice(0, 160) +
-        (desc.length > 160 ? "…" : "");
-      return `
+    listEl.innerHTML = instruments
+      .map((inst, idx) => {
+        const name = inst.instrumentName || inst.name || "Unnamed Instrument";
+        const code = inst.catalog || inst.instrumentCode || "";
+        const desc = inst.description || inst.longDescription || "";
+        const shortDesc =
+          desc.replace(/\s+/g, " ").slice(0, 160) +
+          (desc.length > 160 ? "…" : "");
+        return `
         <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
           <div style="font-size:12px; flex:1;">
             <div style="font-weight:600;">${code} ${name}</div>
@@ -406,7 +416,8 @@ export function openInstrumentPicker() {
           </div>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
   }
 
   overlay.style.display = "flex";
@@ -438,7 +449,6 @@ export function addInstrumentToQuote(instIndex) {
 }
 
 /* ========= Config / Additional Modal ========= */
-
 let currentEditIndex = null;
 
 export function openConfigModal(lineIndex) {
@@ -451,31 +461,33 @@ export function openAdditionalModal(lineIndex) {
 
 export function openItemModal(type, lineIndex) {
   const { header } = getQuoteContext();
-  const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
+  const line =
+    header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
 
   const overlay = document.getElementById("itemModalOverlay");
   const titleEl = document.getElementById("itemModalTitle");
-  const typeEl  = document.getElementById("itemModalType");
-  const lineEl  = document.getElementById("itemLineIndex");
+  const typeEl = document.getElementById("itemModalType");
+  const lineEl = document.getElementById("itemLineIndex");
 
-  const codeEl      = document.getElementById("itemCodeInput");
-  const qtyEl       = document.getElementById("itemQty");
-  const priceEl     = document.getElementById("itemPrice");
-  const priceGroup  = document.getElementById("itemPriceGroup");
-  const detailsEl   = document.getElementById("itemDetails");
+  const codeEl = document.getElementById("itemCodeInput");
+  const qtyEl = document.getElementById("itemQty");
+  const priceEl = document.getElementById("itemPrice");
+  const priceGroup = document.getElementById("itemPriceGroup");
+  const detailsEl = document.getElementById("itemDetails");
 
   currentEditIndex = null;
   typeEl.value = type;
   lineEl.value = String(lineIndex);
 
-  titleEl.textContent = type === "config"
-    ? "Configuration Items for this Instrument"
-    : "Additional Items for this Instrument";
+  titleEl.textContent =
+    type === "config"
+      ? "Configuration Items for this Instrument"
+      : "Additional Items for this Instrument";
 
-  codeEl.value    = "";
-  qtyEl.value     = type === "config" ? "Included" : "1";
+  codeEl.value = "";
+  qtyEl.value = type === "config" ? "Included" : "1";
   detailsEl.value = "";
-  if (priceGroup) priceGroup.style.display = (type === "config") ? "none" : "block";
+  if (priceGroup) priceGroup.style.display = type === "config" ? "none" : "block";
   if (priceEl) priceEl.value = "";
 
   renderItemModalList(line, type);
@@ -490,19 +502,24 @@ export function closeItemModal() {
 
 export function renderItemModalList(line, type) {
   const listEl = document.getElementById("itemModalList");
-  const arr = type === "config" ? (line.configItems || []) : (line.additionalItems || []);
+  const arr =
+    type === "config" ? line.configItems || [] : line.additionalItems || [];
 
   if (!arr.length) {
-    listEl.innerHTML = '<div style="font-size:12px; color:#64748b;">No items yet for this instrument.</div>';
+    listEl.innerHTML =
+      '<div style="font-size:12px; color:#64748b;">No items yet for this instrument.</div>';
     return;
   }
 
-  listEl.innerHTML = arr.map((item, idx) => {
-    const qty = item.qty != null ? item.qty : (type === "config" ? "Included" : "1");
-    const price = type === "config"
-      ? "Included"
-      : (item.price || item.unitPrice || item.upInr || item.tpInr || "");
-    return `
+  listEl.innerHTML = arr
+    .map((item, idx) => {
+      const qty =
+        item.qty != null ? item.qty : type === "config" ? "Included" : "1";
+      const price =
+        type === "config"
+          ? "Included"
+          : item.price || item.unitPrice || item.upInr || item.tpInr || "";
+      return `
       <div style="display:flex; align-items:center; justify-content:space-between;
                   padding:0.25rem 0; border-bottom:1px dashed #e2e8f0;">
         <div style="flex:1; font-size:12px;">
@@ -523,16 +540,20 @@ export function renderItemModalList(line, type) {
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 /* ========= Item Modal Editing ========= */
-
 export function editItemFromModal(type, idx) {
   const { header } = getQuoteContext();
-  const lineIndex = Number(document.getElementById("itemLineIndex").value || 0);
-  const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
-  const arr = type === "config" ? (line.configItems || []) : (line.additionalItems || []);
+  const lineIndex = Number(
+    document.getElementById("itemLineIndex").value || 0
+  );
+  const line =
+    header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
+  const arr =
+    type === "config" ? line.configItems || [] : line.additionalItems || [];
   const item = arr[idx];
   if (!item) return;
 
@@ -540,18 +561,20 @@ export function editItemFromModal(type, idx) {
   document.getElementById("itemModalType").value = type;
 
   const titleEl = document.getElementById("itemModalTitle");
-  titleEl.textContent = type === "config" ? "Edit Configuration Item" : "Edit Additional Item";
+  titleEl.textContent =
+    type === "config" ? "Edit Configuration Item" : "Edit Additional Item";
 
-  const codeEl     = document.getElementById("itemCodeInput");
-  const qtyEl      = document.getElementById("itemQty");
-  const priceEl    = document.getElementById("itemPrice");
+  const codeEl = document.getElementById("itemCodeInput");
+  const qtyEl = document.getElementById("itemQty");
+  const priceEl = document.getElementById("itemPrice");
   const priceGroup = document.getElementById("itemPriceGroup");
-  const detailsEl  = document.getElementById("itemDetails");
+  const detailsEl = document.getElementById("itemDetails");
 
   codeEl.value = item.code || "";
-  qtyEl.value  = item.qty != null ? item.qty : (type === "config" ? "Included" : "1");
+  qtyEl.value =
+    item.qty != null ? item.qty : type === "config" ? "Included" : "1";
 
-  if (priceGroup) priceGroup.style.display = (type === "config") ? "none" : "block";
+  if (priceGroup) priceGroup.style.display = type === "config" ? "none" : "block";
 
   if (type === "config") {
     if (priceEl) priceEl.value = "";
@@ -567,8 +590,11 @@ export function editItemFromModal(type, idx) {
 
 export function removeItemFromModal(type, idx) {
   const { header } = getQuoteContext();
-  const lineIndex = Number(document.getElementById("itemLineIndex").value || 0);
-  const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
+  const lineIndex = Number(
+    document.getElementById("itemLineIndex").value || 0
+  );
+  const line =
+    header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
 
   const arrName = type === "config" ? "configItems" : "additionalItems";
   const arr = line[arrName] || [];
@@ -586,11 +612,13 @@ export function saveItemFromModal(e) {
   e.preventDefault();
 
   const { header } = getQuoteContext();
-  const typeEl    = document.getElementById("itemModalType");
-  const lineIndex = Number(document.getElementById("itemLineIndex").value || 0);
-  const codeEl    = document.getElementById("itemCodeInput");
-  const qtyEl     = document.getElementById("itemQty");
-  const priceEl   = document.getElementById("itemPrice");
+  const typeEl = document.getElementById("itemModalType");
+  const lineIndex = Number(
+    document.getElementById("itemLineIndex").value || 0
+  );
+  const codeEl = document.getElementById("itemCodeInput");
+  const qtyEl = document.getElementById("itemQty");
+  const priceEl = document.getElementById("itemPrice");
   const detailsEl = document.getElementById("itemDetails");
 
   const type = typeEl.value;
@@ -598,7 +626,8 @@ export function saveItemFromModal(e) {
   const { name } = parseDetailsText(detailsEl.value);
   if (!name) return;
 
-  const line = header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
+  const line =
+    header.quoteLines[lineIndex] || { configItems: [], additionalItems: [] };
   const arrName = type === "config" ? "configItems" : "additionalItems";
   if (!Array.isArray(line[arrName])) line[arrName] = [];
 
@@ -606,9 +635,12 @@ export function saveItemFromModal(e) {
   const idx = isEdit ? currentEditIndex : line[arrName].length;
 
   if (type === "config") {
-    const existingCode = isEdit && line.configItems[idx]?.code || null;
+    const existingCode = (isEdit && line.configItems[idx]?.code) || null;
     const item = {
-      code: code || existingCode || `CFG-${String(line.configItems.length + 1).padStart(2, "0")}`,
+      code:
+        code ||
+        existingCode ||
+        `CFG-${String(line.configItems.length + 1).padStart(2, "0")}`,
       name,
       description: detailsEl.value,
       qty: qtyEl.value || "Included",
@@ -617,13 +649,16 @@ export function saveItemFromModal(e) {
     };
     line.configItems[idx] = item;
   } else {
-    const existingCode = isEdit && line.additionalItems[idx]?.code || null;
+    const existingCode = (isEdit && line.additionalItems[idx]?.code) || null;
     const rawPrice = priceEl?.value || "0";
     const cleanedPrice = rawPrice.replace(/[^\d.]/g, "");
     const priceNum = parseFloat(cleanedPrice) || 0;
 
     const item = {
-      code: code || existingCode || `ADD-${String(line.additionalItems.length + 1).padStart(2, "0")}`,
+      code:
+        code ||
+        existingCode ||
+        `ADD-${String(line.additionalItems.length + 1).padStart(2, "0")}`,
       name,
       description: detailsEl.value,
       qty: Number(qtyEl.value || 1),
@@ -647,7 +682,10 @@ export async function renderQuoteHistoryTable() {
   tableBody.innerHTML = `<tr><td colspan="7">Loading...</td></tr>`;
 
   try {
-    const q = query(collection(db, "quoteHistory"), orderBy("createdAt", "desc"));
+    const q = query(
+      collection(db, "quoteHistory"),
+      orderBy("createdAt", "desc")
+    );
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
@@ -699,35 +737,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-  document.getElementById("openInstrumentModalBtn")?.addEventListener("click", openInstrumentModal);
-  document.getElementById("closeInstrumentModalBtn")?.addEventListener("click", closeInstrumentModal);
-  document.getElementById("closeInstrumentModalFooterBtn")?.addEventListener("click", closeInstrumentModal);
+  document
+    .getElementById("openInstrumentModalBtn")
+    ?.addEventListener("click", openInstrumentModal);
+  document
+    .getElementById("closeInstrumentModalBtn")
+    ?.addEventListener("click", closeInstrumentModal);
+  document
+    .getElementById("closeInstrumentModalFooterBtn")
+    ?.addEventListener("click", closeInstrumentModal);
 
-  document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
-  document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
+  document
+    .getElementById("openInstrumentPickerBtn")
+    ?.addEventListener("click", openInstrumentPicker);
+  document
+    .getElementById("closeInstrumentPickerBtn")
+    ?.addEventListener("click", closeInstrumentPicker);
 
-  document.getElementById("closeItemModalBtn")?.addEventListener("click", closeItemModal);
-  document.getElementById("cancelItemModalBtn")?.addEventListener("click", closeItemModal);
-  document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+  document
+    .getElementById("closeItemModalBtn")
+    ?.addEventListener("click", closeItemModal);
+  document
+    .getElementById("cancelItemModalBtn")
+    ?.addEventListener("click", closeItemModal);
+  document
+    .getElementById("itemModalForm")
+    ?.addEventListener("submit", saveItemFromModal);
 
-  document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
-    document.getElementById("configPickerOverlay").style.display = "none";
-  });
-  document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", () => {
-    document.getElementById("additionalPickerOverlay").style.display = "none";
-  });
+  document
+    .getElementById("closeConfigPickerBtn")
+    ?.addEventListener("click", () => {
+      document.getElementById("configPickerOverlay").style.display = "none";
+    });
+  document
+    .getElementById("closeAdditionalPickerBtn")
+    ?.addEventListener("click", () => {
+      document.getElementById("additionalPickerOverlay").style.display = "none";
+    });
 
-  document.getElementById("finalizeQuoteBtn")?.addEventListener("click", finalizeQuote);
+  document
+    .getElementById("finalizeQuoteBtn")
+    ?.addEventListener("click", finalizeQuote);
 });
 
 /* ========= Expose functions for inline onclick ========= */
-window.addInstrumentToQuote   = addInstrumentToQuote;
-window.editInstrumentLine     = editInstrumentLine;
-window.removeInstrumentLine   = removeInstrumentLine;
-window.editItemFromModal      = editItemFromModal;
-window.removeItemFromModal    = removeItemFromModal;
-window.discountInputChanged   = discountInputChanged;
+window.addInstrumentToQuote = addInstrumentToQuote;
+window.editInstrumentLine = editInstrumentLine;
+window.removeInstrumentLine = removeInstrumentLine;
+window.editItemFromModal = editItemFromModal;
+window.removeItemFromModal = removeItemFromModal;
+window.discountInputChanged = discountInputChanged;
 window.discountInputCommitted = discountInputCommitted;
-// For history actions, if you implement them in this file, also expose:
+// Optionally:
 // window.viewQuote  = viewQuote;
 // window.exportQuote = exportQuote;
