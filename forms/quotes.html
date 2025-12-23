@@ -658,53 +658,69 @@
   } from "../js/quoteUI.js";
 
   /* ===== Helpers ===== */
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
 
-  function goBack() {
-   if (window.history.length > 1) {
-     window.history.back();
-   } else {
-     window.location.href = "index.html";
-   }
+/* ===== Init & Event Wiring ===== */
+document.addEventListener("DOMContentLoaded", () => {
+  // Initial render
+  populateHeader();
+  renderQuoteBuilder();
 
-  /* ===== Init & Event Wiring ===== */
-  document.addEventListener("DOMContentLoaded", () => {
-    // Initial render
-    populateHeader();
-    renderQuoteBuilder();
-
-    // Back button
+  // Back button
   document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-    // Instrument modal
-    const instrumentModalEvents = [
-      ["openInstrumentModalBtn", openInstrumentModal],
-      ["closeInstrumentModalBtn", closeInstrumentModal],
-      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-    ];
-    instrumentModalEvents.forEach(([id, handler]) => {
-      document.getElementById(id)?.addEventListener("click", handler);
-    });
+  // Instrument modal
+  const instrumentModalEvents = [
+    ["openInstrumentModalBtn", openInstrumentModal],
+    ["closeInstrumentModalBtn", closeInstrumentModal],
+    ["closeInstrumentModalFooterBtn", closeInstrumentModal]
+  ];
+  instrumentModalEvents.forEach(([id, handler]) => {
+    document.getElementById(id)?.addEventListener("click", handler);
+  });
 
-    // Instrument picker
-    document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
-    document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
+  // Instrument picker
+  document
+    .getElementById("openInstrumentPickerBtn")
+    ?.addEventListener("click", openInstrumentPicker);
+  document
+    .getElementById("closeInstrumentPickerBtn")
+    ?.addEventListener("click", closeInstrumentPicker);
 
-    // Item modal
-    document.getElementById("closeItemModalBtn")?.addEventListener("click", closeItemModal);
-    document.getElementById("cancelItemModalBtn")?.addEventListener("click", closeItemModal);
-    document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+  // Item modal
+  document
+    .getElementById("closeItemModalBtn")
+    ?.addEventListener("click", closeItemModal);
+  document
+    .getElementById("cancelItemModalBtn")
+    ?.addEventListener("click", closeItemModal);
+  document
+    .getElementById("itemModalForm")
+    ?.addEventListener("submit", saveItemFromModal);
 
-    // Config/Additional pickers
-    document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
+  // Config/Additional pickers
+  document
+    .getElementById("closeConfigPickerBtn")
+    ?.addEventListener("click", () => {
       document.getElementById("configPickerOverlay").style.display = "none";
     });
-    document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", () => {
+  document
+    .getElementById("closeAdditionalPickerBtn")
+    ?.addEventListener("click", () => {
       document.getElementById("additionalPickerOverlay").style.display = "none";
     });
 
-    // Finalize quote
-    document.getElementById("finalizeQuoteBtn")?.addEventListener("click", finalizeQuote);
-  });
+  // Finalize quote
+  document
+    .getElementById("finalizeQuoteBtn")
+    ?.addEventListener("click", finalizeQuote);
+});
 </script>
 </body>
 </html>
