@@ -617,7 +617,6 @@ table.quote-table .cat-sub strong {
 </div> <!-- end container -->
 
 <!-- ========= Scripts ========= -->
-  
 <script type="module">
   /* ===== Imports ===== */
   import {
@@ -659,7 +658,10 @@ table.quote-table .cat-sub strong {
     db,
     doc,
     getDoc
-  } from "../js/firebase.js"; // ensure firebase.js re-exports doc/getDoc
+  } from "../js/firebase.js";
+
+  /* ===== Config ===== */
+  const HOME_URL = "https://qms.istosmedical.com/";
 
   /* ===== Helpers ===== */
   function goBack() {
@@ -668,7 +670,7 @@ table.quote-table .cat-sub strong {
     setTimeout(() => {
       const after = window.location.href;
       if (after === before) {
-        window.location.href = "https://qms.istosmedical.com/"; // adjust to your home/dashboard
+        window.location.href = HOME_URL;
       }
     }, 150);
   }
@@ -685,7 +687,6 @@ table.quote-table .cat-sub strong {
   function hydrateLocalFromFirestoreDoc(docData) {
     if (!docData) return;
 
-    // Basic header from Firestore structure used in buildQuoteObject()
     const header = {
       quoteNo: docData.quoteNo || "",
       quoteDate: docData.quoteDate || "",
@@ -704,13 +705,11 @@ table.quote-table .cat-sub strong {
       quoteLines: []
     };
 
-    // Convert items back to quoteLines (instrument-centric)
     const quoteLines = [];
     (docData.items || []).forEach(item => {
       quoteLines.push({
         lineType: "instrument",
-        // Try to find matching instrument by code in master; fallback to 0
-        instrumentIndex: 0,
+        instrumentIndex: 0,           // you can map by code later if you want
         quantity: item.quantity || 1,
         configItems: item.configItems || [],
         additionalItems: item.additionalItems || []
@@ -722,33 +721,24 @@ table.quote-table .cat-sub strong {
   }
 
   async function loadQuoteFromFirestoreIfNeeded() {
-    // 1) If localStorage already has a header with quoteNo, use it
     const existingHeader = getQuoteHeaderRaw();
-    if (existingHeader && existingHeader.quoteNo) {
-      return;
-    }
+    if (existingHeader && existingHeader.quoteNo) return;
 
-    // 2) Get ID or quoteNo from URL
     const quoteId = getQueryParam("id");
     const quoteNo = getQueryParam("quoteNo");
 
-    if (!quoteId && !quoteNo) {
-      // Nothing to load; let the UI render empty
-      return;
-    }
+    if (!quoteId && !quoteNo) return;
 
     try {
       if (quoteId) {
-        // Direct document id path
         const ref = doc(db, "quoteHistory", quoteId);
-        const snap = await getDoc(ref); // [web:117][web:125]
+        const snap = await getDoc(ref);          // [web:117][web:168]
         if (snap.exists()) {
           hydrateLocalFromFirestoreDoc(snap.data());
         } else {
           console.warn("No quoteHistory document for id", quoteId);
         }
-      } else if (quoteNo) {
-        // Optional: query by fields if you don't have id; you can extend this
+      } else {
         console.warn(
           "Query by quoteNo not implemented; pass ?id=<docId> in URL for best results."
         );
@@ -816,6 +806,14 @@ table.quote-table .cat-sub strong {
       .getElementById("finalizeQuoteBtn")
       ?.addEventListener("click", finalizeQuote);
   });
+
+  /* ===== Expose for inline onclick="" handlers ===== */
+  window.openConfigModal = openConfigModal;
+  window.openAdditionalModal = openAdditionalModal;
+  window.openItemModal = openItemModal;
+  window.editItemFromModal = editItemFromModal;
+  window.removeItemFromModal = removeItemFromModal;
+  window.addInstrumentToQuote = addInstrumentToQuote;
 </script>
 
 </body>
