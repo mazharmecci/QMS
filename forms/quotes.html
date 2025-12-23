@@ -78,21 +78,24 @@ header {
   display:block;
 }
 .company-box {
-  flex:0 0 auto;
-  background:#d0d4d9;
-  border-radius:4px;
-  padding:0.4rem 1rem;
-  display:flex;
-  align-items:center;
-  margin-top:4.85rem;
+  flex: 1 1 auto;              /* allow it to grow/shrink */
+  background: #d0d4d9;
+  border-radius: 4px;
+  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  margin-top: 4.85rem;
+  min-width: 0;                /* critical: prevents flex overflow clipping */
 }
+
 .company-box p {
-  margin:0;
-  font-size:9px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  margin: 0;
+  font-size: 9px;
+  white-space: nowrap;         /* keep in one line */
+  overflow: hidden;            /* still hides overflow */
+  text-overflow: ellipsis;     /* show ellipsis if too long */
 }
+
 .sales-box {
   flex:0 0 auto;
   background:#d0d4d9;
@@ -103,7 +106,7 @@ header {
 }
 .sales-title {
   margin-left:auto;
-  font-weight:900;
+  font-weight:700;
   font-size:18px;
   line-height:1;
   padding-top:0.1rem;
