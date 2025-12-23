@@ -1,5 +1,3 @@
-// quoteUtils.js
-
 /**
  * Format a number into INR currency style (with commas).
  * @param {number} value
@@ -39,6 +37,31 @@ export function parseSuppliedBlock(raw) {
 }
 
 /**
+ * Parse plain text into trimmed non-empty lines.
+ * @param {string} raw
+ * @returns {string[]}
+ */
+export function parseLines(raw) {
+  if (!raw) return [];
+  return String(raw)
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Parse details text into structured parts.
+ * @param {string} rawText
+ * @returns {{ name: string, description: string }}
+ */
+export function parseDetailsText(rawText) {
+  const lines = parseLines(rawText);
+  const name = lines[0] || "";
+  const description = lines.slice(1).join("\n");
+  return { name, description };
+}
+
+/**
  * Render the instrument cell for the quote builder table.
  * @param {object} inst - instrument object
  * @param {number} lineIdx - index of the line
@@ -60,9 +83,8 @@ export function formatInstrumentCell(inst, lineIdx) {
 
   if (code) html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
   if (name) html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
-
   if (descLines.length) {
-    html += descLines.map(l => `<div>${l}</div>`).join("");
+    html += `<div style="font-weight:600;">${descLines.join(" ")}</div>`;
     html += `<div style="height:8px;"></div>`;
   }
 
@@ -123,6 +145,10 @@ export function formatItemCell(item) {
 
   if (code) html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
   if (title) html += `<div style="font-weight:600; margin-bottom:4px;">${title}</div>`;
+  if (rest.length) {
+    html += `<div style="font-weight:600;">${rest.join(" ")}</div>`;
+    html += `<div style="height:8px;"></div>`;
+  }
 
   if (suppliedLines.length) {
     html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
@@ -144,29 +170,4 @@ export function formatItemCell(item) {
 
   html += `</td>`;
   return html;
-}
-
-/**
- * Parse details text into structured parts.
- * @param {string} rawText
- * @returns {{ name: string, description: string }}
- */
-export function parseDetailsText(rawText) {
-  const lines = (rawText || "").split("\n").map(l => l.trim()).filter(Boolean);
-  const name = lines[0] || "";
-  const description = lines.slice(1).join("\n");
-  return { name, description };
-}
-
-/**
- * Parse plain text into trimmed non-empty lines.
- * @param {string} raw
- * @returns {string[]}
- */
-export function parseLines(raw) {
-  if (!raw) return [];
-  return String(raw)
-    .split("\n")
-    .map(l => l.trim())
-    .filter(Boolean);
 }
