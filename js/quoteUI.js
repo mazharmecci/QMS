@@ -22,9 +22,7 @@ import {
 import {
   db,
   collection,
-  getDocs,
-  orderBy,
-  query
+  getDocs
 } from "./firebase.js";
 
 /* ========= Header population ========= */
@@ -682,37 +680,41 @@ export async function renderQuoteHistoryTable() {
   tableBody.innerHTML = `<tr><td colspan="7">Loading...</td></tr>`;
 
   try {
-    const q = query(
-      collection(db, "quoteHistory"),
-      orderBy("createdAt", "desc")
-    );
-    const snapshot = await getDocs(q);
+    // get all docs without query/orderBy
+    const snapshot = await getDocs(collection(db, "quoteHistory"));
 
-    if (snapshot.empty) {
+    const docs = [];
+    snapshot.forEach(docSnap => {
+      docs.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    // sort by createdAt descending in JS
+    docs.sort((a, b) => {
+      const ta = new Date(a.createdAt || 0).getTime();
+      const tb = new Date(b.createdAt || 0).getTime();
+      return tb - ta;
+    });
+
+    if (!docs.length) {
       tableBody.innerHTML = `<tr><td colspan="7">No quotes found</td></tr>`;
       return;
     }
 
-    let rows = [];
     let counter = 1;
-
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      rows.push(`
-        <tr>
-          <td>${counter++}</td>
-          <td>${data.quoteNo || ""}</td>
-          <td>${data.quoteDate || ""}</td>
-          <td>${data.hospital?.name || ""}</td>
-          <td>₹ ${moneyINR(data.totalValueINR || 0)}</td>
-          <td>${data.status || ""}</td>
-          <td>
-            <button type="button" class="btn-quote" onclick="viewQuote('${docSnap.id}')">View</button>
-            <button type="button" class="btn-quote btn-quote-secondary" onclick="exportQuote('${docSnap.id}')">Export</button>
-          </td>
-        </tr>
-      `);
-    });
+    const rows = docs.map(data => `
+      <tr>
+        <td>${counter++}</td>
+        <td>${data.quoteNo || ""}</td>
+        <td>${data.quoteDate || ""}</td>
+        <td>${data.hospital?.name || ""}</td>
+        <td>₹ ${moneyINR(data.totalValueINR || 0)}</td>
+        <td>${data.status || ""}</td>
+        <td>
+          <button type="button" class="btn-quote" onclick="viewQuote('${data.id}')">View</button>
+          <button type="button" class="btn-quote btn-quote-secondary" onclick="exportQuote('${data.id}')">Export</button>
+        </td>
+      </tr>
+    `);
 
     tableBody.innerHTML = rows.join("");
   } catch (err) {
