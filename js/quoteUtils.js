@@ -41,6 +41,7 @@ export function parseSuppliedBlock(raw) {
  * @param {string} raw
  * @returns {string[]}
  */
+
 export function parseLines(raw) {
   if (!raw) return [];
   return String(raw)
@@ -54,6 +55,7 @@ export function parseLines(raw) {
  * @param {string} rawText
  * @returns {{ name: string, description: string }}
  */
+
 export function parseDetailsText(rawText) {
   const lines = parseLines(rawText);
   const name = lines[0] || "";
@@ -67,6 +69,7 @@ export function parseDetailsText(rawText) {
  * @param {number} lineIdx - index of the line
  * @returns {string} HTML string
  */
+
 export function formatInstrumentCell(inst, lineIdx) {
   const code     = inst.catalog || inst.instrumentCode || inst.code || "";
   const name     = inst.instrumentName || inst.name || "Unnamed Instrument";
@@ -81,7 +84,8 @@ export function formatInstrumentCell(inst, lineIdx) {
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
 
-  if (code) html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
+  // instrument code in bold
+  if (code) html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
   if (name) html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
   if (descLines.length) {
     html += `<div style="font-weight:600;">${descLines.join(" ")}</div>`;
@@ -116,6 +120,7 @@ export function formatInstrumentCell(inst, lineIdx) {
   html += `</td>`;
   return html;
 }
+
 
 /**
  * Render a generic item cell (config/additional) with preserved formatting.
