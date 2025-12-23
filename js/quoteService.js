@@ -6,7 +6,7 @@ import { fetchInstruments } from "./instrumentService.js";
  * Instruments are fetched from master, lines come from header.quoteLines.
  */
 export function getQuoteContext() {
-  const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
+  const instruments = getInstrumentsMaster();
   const header = getQuoteHeaderRaw();
   const lines = Array.isArray(header.quoteLines) ? header.quoteLines : [];
   return { instruments, lines, header };
@@ -29,9 +29,14 @@ export function saveQuoteHeader(header) {
 
 /**
  * Get instruments master list (from localStorage or Firebase).
+ * Ensures each instrument has suppliedCompleteWith field.
  */
 export function getInstrumentsMaster() {
-  return JSON.parse(localStorage.getItem("instruments") || "[]");
+  const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
+  return instruments.map(inst => ({
+    ...inst,
+    suppliedCompleteWith: inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
+  }));
 }
 
 /**
@@ -48,7 +53,8 @@ export function buildLineItemsFromCurrentQuote() {
         name: inst.instrumentName || inst.name || "",
         code: inst.catalog || inst.instrumentCode || "",
         type: "Instrument",
-        price: Number(inst.unitPrice || 0)
+        price: Number(inst.unitPrice || 0),
+        supplied: inst.suppliedCompleteWith || ""
       });
     }
 
@@ -58,7 +64,8 @@ export function buildLineItemsFromCurrentQuote() {
         name: item.name || item.itemName || "",
         code: item.code || item.catalog || "",
         type: "Configuration",
-        price
+        price,
+        supplied: item.suppliedCompleteWith || item.suppliedWith || item.supplied || ""
       });
     });
 
@@ -68,7 +75,8 @@ export function buildLineItemsFromCurrentQuote() {
         name: item.name || item.itemName || "",
         code: item.code || item.catalog || "",
         type: "Additional",
-        price: unitNum
+        price: unitNum,
+        supplied: item.suppliedCompleteWith || item.suppliedWith || item.supplied || ""
       });
     });
   });
@@ -82,8 +90,14 @@ export function buildLineItemsFromCurrentQuote() {
  * @returns {boolean}
  */
 export function validateHeader(header) {
-  if (!header || !header.quoteNo) {
-    alert("Quote header is missing a Quote Number.");
+  const errors = [];
+  if (!header.quoteNo) errors.push("Quote Number is missing");
+  if (!header.quoteDate) errors.push("Quote Date is missing");
+  if (!header.hospitalName) errors.push("Hospital Name is missing");
+  if (!header.hospitalAddress) errors.push("Hospital Address is missing");
+
+  if (errors.length) {
+    alert("Validation errors:\n" + errors.join("\n"));
     return false;
   }
   return true;
