@@ -118,56 +118,49 @@ export function formatInstrumentCell(inst, lineIdx) {
 }
 
 /**
- * Render a generic item cell (config/additional).
+ * Render a generic item cell (config/additional) with preserved formatting.
+ * First line: code (bold)
+ * Second line: main title (bold)
+ * Remaining lines: shown exactly as typed (including "Supplied Complete with", bullets, origin, HSN).
  * @param {object} item
  * @returns {string} HTML string
  */
 export function formatItemCell(item) {
-  const code       = item.code || item.catalog || "";
+  const code = item.code || item.catalog || "";
   const descSource = item.description || item.longDescription || "";
-  const lines      = parseLines(descSource);
 
-  const title = lines[0] || item.name || item.itemName || "Unnamed Item";
-  const rest  = lines.slice(1);
+  // Split raw description into lines without trying to re‑parse supplied/meta blocks
+  const lines = descSource.split(/\r?\n/);
 
-  const suppliedRaw =
-    item.suppliedCompleteWith ||
-    item.suppliedWith ||
-    item.supplied ||
-    rest.join("\n");
+  const titleLine = lines[0] || item.name || item.itemName || "Unnamed Item";
+  const bodyLines = lines.slice(1); // all remaining lines as the user authored them
 
-  const { suppliedLines, metaLines } = parseSuppliedBlock(suppliedRaw);
+  // Escape HTML and preserve line breaks
+  const escape = str =>
+    String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
-  const origin = item.origin || item.country || item.countryOfOrigin || "";
-  const hsn    = item.hsn || item.hsnCode || "";
+  const bodyHtml = bodyLines
+    .map(escape)
+    .join("<br>");
 
-  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+  let html = `<td style="white-space:normal; vertical-align:top; line-height:1.4;">`;
 
-  if (code) html += `<div class="cat-main" style="margin-bottom:2px;">${code}</div>`;
-  if (title) html += `<div style="font-weight:600; margin-bottom:4px;">${title}</div>`;
-  if (rest.length) {
-    html += `<div style="font-weight:600;">${rest.join(" ")}</div>`;
-    html += `<div style="height:8px;"></div>`;
+  if (code) {
+    html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${escape(code)}</div>`;
   }
 
-  if (suppliedLines.length) {
-    html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
-    suppliedLines.forEach(line => {
-      html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
-    });
+  if (titleLine) {
+    html += `<div style="font-weight:700; margin-bottom:4px;">${escape(titleLine)}</div>`;
   }
 
-  if (metaLines.length || origin || hsn) {
-    html += `<div style="height:8px;"></div>`;
+  if (bodyLines.length) {
+    html += `<div style="font-weight:400;">${bodyHtml}</div>`;
   }
-
-  metaLines.forEach(line => {
-    html += `<div>${line}</div>`;
-  });
-
-  if (origin) html += `<div>Country of Origin: ${origin}</div>`;
-  if (hsn) html += `<div>HSN Code: ${hsn}</div>`;
 
   html += `</td>`;
   return html;
 }
+
