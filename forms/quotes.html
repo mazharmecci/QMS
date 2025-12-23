@@ -82,36 +82,37 @@ header {
   flex: 1 1 auto;              /* allow it to grow/shrink */
   background: #d0d4d9;
   border-radius: 4px;
-  padding: 0.4rem 1rem;
+  padding: 0.3rem 1rem;
   display: flex;
   align-items: center;
   margin-top: 4.85rem;
-  min-width: 0;
+  min-width: 0;                /* critical: prevents flex overflow clipping */
 }
 
 .company-box p {
   margin: 0;
-  font-size: 9px;
+  font-size: 8px;
   white-space: nowrap;         /* keep in one line */
-  overflow: hidden;            /* hides overflow on screen */
-  text-overflow: ellipsis;
+  overflow: hidden;            /* still hides overflow */
+  text-overflow: ellipsis;     /* show ellipsis if too long */
 }
 
 .sales-box {
   flex: 0 0 auto;
-  background:#d0d4d9;
-  border-radius:4px;
-  padding:0.3rem 1rem;
-  display:flex;
-  align-items:center;
+  background: #d0d4d9;
+  border-radius: 4px;
+  padding: 0.3rem 1rem;
+  display: flex;
+  align-items: center;
 }
+
 .sales-title {
-  margin-left:auto;
-  font-weight:700;
-  font-size:18px;
-  line-height:1;
-  padding-top:0.1rem;
-  letter-spacing:0.03em;
+  margin-left: auto;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1;
+  padding-top: 0.1rem;
+  letter-spacing: 0.03em;
 }
 
 /* PRINT OVERRIDES */
