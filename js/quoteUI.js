@@ -1,18 +1,19 @@
 // quoteUI.js
 
 import {
-  getQuoteContext,
   getQuoteHeaderRaw,
   saveQuoteHeader,
   getInstrumentsMaster,
-  validateHeader
+  getQuoteContext,
+  validateHeader,
+  finalizeQuote
 } from "../js/quoteService.js";
 
 import {
   moneyINR,
+  parseDetailsText,
   formatInstrumentCell,
-  formatItemCell,
-  parseDetailsText
+  formatItemCell
 } from "../js/quoteUtils.js";
 
 /* ========= Quote Builder & Summary ========= */
@@ -338,7 +339,7 @@ export function openInstrumentPicker() {
       const name = inst.instrumentName || inst.name || "Unnamed Instrument";
       const code = inst.catalog || inst.instrumentCode || "";
       const desc = inst.description || inst.longDescription || "";
-      const shortDesc = desc.replace(/\s+/g, " ").slice(0, 160) + (desc.length > 160 ? "…" : "");
+      const shortDesc = desc.replace(/\s+/g, " ").slice(0, 160) + (desc.length > 160 ? "…" : "";
       return `
         <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
           <div style="font-size:12px; flex:1;">
@@ -584,9 +585,41 @@ export function saveItemFromModal(e) {
   renderItemModalList(line, type);
 }
 
-/* ========= Init ========= */
+// Basic helper: go back
+function goBack() {
+  if (window.history.length > 1) window.history.back();
+}
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
+  // Initial render
   populateHeader();
   renderQuoteBuilder();
+
+  // Header back button
+  document.getElementById("goBackBtn")?.addEventListener("click", goBack);
+
+  // Instrument modal
+  document.getElementById("openInstrumentModalBtn")?.addEventListener("click", openInstrumentModal);
+  document.getElementById("closeInstrumentModalBtn")?.addEventListener("click", closeInstrumentModal);
+  document.getElementById("closeInstrumentModalFooterBtn")?.addEventListener("click", closeInstrumentModal);
+
+  // Instrument picker
+  document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
+  document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
+
+  // Item modal
+  document.getElementById("closeItemModalBtn")?.addEventListener("click", closeItemModal);
+  document.getElementById("cancelItemModalBtn")?.addEventListener("click", closeItemModal);
+  document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+
+  // Config/Additional pickers
+  document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
+    document.getElementById("configPickerOverlay").style.display = "none";
+  });
+  document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", () => {
+    document.getElementById("additionalPickerOverlay").style.display = "none";
+  });
+
+  // Finalize quote
+  document.getElementById("finalizeQuoteBtn")?.addEventListener("click", finalizeQuote);
 });
