@@ -124,36 +124,41 @@ header {
 
 /* widen the meta grid so long values sit better */
 .quote-meta-grid {
-  margin-top:0.5rem;
-  background:#fff;
-  border-radius:4px;
-  padding:0.5rem 1rem;
-  display:grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 2.2fr)
-                         minmax(0, auto) minmax(0, 1.6fr);
-  column-gap:1rem;
-  row-gap:0.55rem;
+  margin-top: 0.5rem;
+  background: #fff;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 2fr)
+                         minmax(0, auto) minmax(0, 1.5fr);
+  column-gap: 0.75rem;   /* slightly reduced gap */
+  row-gap: 0.5rem;
 }
+
 .quote-meta-grid .label {
-  font-size:9px;
-  font-weight:500;
-  color:#222;
-  text-align:left;
+  font-size: 9px;
+  font-weight: 500;
+  color: #222;
+  text-align: left;
 }
+
 .quote-meta-grid .value {
-  font-size:14px;
-  font-weight:700;
-  color:#000;
-  text-align:left;
-  white-space:nowrap;
+  font-size: 12px;       /* reduced from 14px */
+  font-weight: 600;      /* slightly lighter */
+  color: #000;
+  text-align: left;
+  white-space: normal;   /* allow wrapping instead of forcing one line */
+  word-break: break-word;/* break long strings if needed */
 }
+
 .quote-meta-grid .value-small {
-  font-size:13px;
-  font-weight:600;
+  font-size: 11px;       /* reduced from 13px */
+  font-weight: 600;
 }
+
 .quote-meta-grid .label.right,
 .quote-meta-grid .value.right {
-  text-align:right;
+  text-align: right;
 }
 
 /* Sales note and builder wrapper */
