@@ -135,11 +135,8 @@ export async function renderTable() {
     const idx = start + i;
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>
-        <strong>${inst.instrumentName || ""}</strong>
-        <br>
-        <strong>${inst.longDescription || ""}</strong>
-      </td>
+      <td><strong>${inst.instrumentName || ""}</strong></td>
+      <td><strong>${inst.longDescription || ""}</strong></td>
       <td>${inst.origin || ""}</td>
       <td>${inst.catalog || ""}</td>
       <td>${inst.hsn || ""}</td>
@@ -149,8 +146,8 @@ export async function renderTable() {
       <td>${inst.gstPercent || ""}</td>
       <td class="actions">
         <button type="button" class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
-        <button type="button" class="delete-btn" onclick="deleteInstrumentRow(${idx})">Delete</button>
-      </td>
+        <button type="button" class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
+      </td>    
     `;
     tableBody.appendChild(row);
   });
