@@ -10,18 +10,21 @@
       background:#f5f7fa;
       margin:0;
     }
+    
     header {
       background:#0d6efd;
       color:#fff;
       padding:0.75rem 1.5rem;
     }
+    
     .header-inner {
-      max-width:1200px;
+      max-width:1320px;      /* widened */
       margin:0 auto;
       display:flex;
       align-items:center;
       gap:12px;
     }
+    
     .back-btn {
       border:none;
       background:rgba(255,255,255,0.12);
@@ -30,22 +33,24 @@
       border-radius:999px;
       cursor:pointer;
     }
+    
     .header-title {
       flex:1;
       text-align:center;
       font-weight:600;
       font-size:1.5rem;
     }
-
+    
+    /* MAIN FRAME */
     .container {
-      max-width:1200px;
+      max-width:1320px;      /* widened to match header */
       margin:2rem auto;
-      padding:2rem;
+      padding:2rem 2.5rem;   /* a bit more side padding */
       background:#fff;
       border-radius:12px;
       box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
-
+    
     h2 {
       color:#0d6efd;
       margin-bottom:1rem;
@@ -53,7 +58,7 @@
       align-items:center;
       gap:0.5rem;
     }
-
+    
     /* Dashboard stats */
     .dashboard {
       display:grid;
@@ -64,6 +69,34 @@
       background:#f8f9ff;
       border-radius:10px;
     }
+    
+    /* ... rest of your CSS unchanged ... */
+    
+    /* Table */
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+    
+    th, td {
+      padding:0.75rem 0.8rem;   /* tiny bump for readability */
+      border-bottom:1px solid #e9ecef;
+      text-align:left;
+      font-size:0.9rem;
+    }
+    
+    th {
+      background:#f8f9fa;
+      font-weight:600;
+      color:#495057;
+      cursor:pointer;
+      user-select:none;
+    }
+    
+    tr:hover {
+      background:#f8f9ff;
+    }
+
     .stat-card {
       text-align:center;
       padding:1rem;
@@ -113,28 +146,6 @@
     .btn:hover {
       transform:translateY(-1px);
       box-shadow:0 3px 10px rgba(0,0,0,0.15);
-    }
-
-    /* Table */
-    table {
-      width:100%;
-      border-collapse:collapse;
-    }
-    th, td {
-      padding:0.75rem 0.7rem;
-      border-bottom:1px solid #e9ecef;
-      text-align:left;
-      font-size:0.9rem;
-    }
-    th {
-      background:#f8f9fa;
-      font-weight:600;
-      color:#495057;
-      cursor:pointer;
-      user-select:none;
-    }
-    tr:hover {
-      background:#f8f9ff;
     }
 
     .actions button {
