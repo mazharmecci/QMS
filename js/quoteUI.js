@@ -6,7 +6,7 @@ import {
   parseDetailsText,
   formatInstrumentCell,
   formatItemCell
-} from "../js/quoteUtils.js";
+} from "./quoteUtils.js";
 
 import {
   getQuoteHeaderRaw,
@@ -15,7 +15,7 @@ import {
   getQuoteContext,
   validateHeader,
   finalizeQuote
-} from "../js/quoteService.js";
+} from "./quoteService.js";
 
 import { db } from "./firebase.js";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
