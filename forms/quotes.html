@@ -82,7 +82,7 @@ header {
   flex: 1 1 auto;              /* allow it to grow/shrink */
   background: #d0d4d9;
   border-radius: 4px;
-  padding: 0.3rem 1rem;
+  padding: 0.4rem 1rem;
   display: flex;
   align-items: center;
   margin-top: 4.85rem;
@@ -91,10 +91,17 @@ header {
 
 .company-box p {
   margin: 0;
-  font-size: 8px;
+  font-size: 9px;
   white-space: nowrap;         /* keep in one line */
   overflow: hidden;            /* still hides overflow */
   text-overflow: ellipsis;     /* show ellipsis if too long */
+}
+
+@media print {
+  .company-box p {
+    overflow: visible;
+    text-overflow: clip;
+  }
 }
 
 .sales-box {
