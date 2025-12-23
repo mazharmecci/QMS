@@ -3,6 +3,7 @@ import { db, collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "./fi
 
 const instrumentsRef = collection(db, "instruments");
 
+// Fetch all instruments
 export async function fetchInstruments() {
   try {
     const snapshot = await getDocs(instrumentsRef);
@@ -15,14 +16,41 @@ export async function fetchInstruments() {
   }
 }
 
+// Add a new instrument and return its Firestore ID
 export async function addInstrument(instrument) {
-  await addDoc(instrumentsRef, { ...instrument, createdAt: new Date() });
+  try {
+    const docRef = await addDoc(instrumentsRef, { ...instrument, createdAt: new Date() });
+    return docRef.id; // return the new document ID
+  } catch (err) {
+    console.error("Error adding instrument:", err);
+    throw err;
+  }
 }
 
+// Update an existing instrument by ID
 export async function updateInstrument(id, instrument) {
-  await updateDoc(doc(db, "instruments", id), { ...instrument, updatedAt: new Date() });
+  if (!id) {
+    console.error("updateInstrument called without a valid ID");
+    return;
+  }
+  try {
+    await updateDoc(doc(db, "instruments", id), { ...instrument, updatedAt: new Date() });
+  } catch (err) {
+    console.error("Error updating instrument:", err);
+    throw err;
+  }
 }
 
+// Delete an instrument by ID
 export async function deleteInstrument(id) {
-  await deleteDoc(doc(db, "instruments", id));
+  if (!id) {
+    console.error("deleteInstrument called without a valid ID");
+    return;
+  }
+  try {
+    await deleteDoc(doc(db, "instruments", id));
+  } catch (err) {
+    console.error("Error deleting instrument:", err);
+    throw err;
+  }
 }
