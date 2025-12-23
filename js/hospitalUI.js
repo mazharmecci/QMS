@@ -1,8 +1,9 @@
+// hospitalUI.js
 import {
   fetchHospitals,
   addHospital,
   updateHospital,
-  deleteHospital
+  deleteHospital as deleteHospitalFromService
 } from "./hospitalService.js";
 
 // DOM references
@@ -26,16 +27,16 @@ export async function renderTable() {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
-      <td>${h.clientCode}</td>
-      <td>${h.clientName}</td>
-      <td>${h.address}</td>
-      <td>${h.area}</td>
-      <td>${h.mobile}</td>
-      <td>${h.email}</td>
-      <td>${h.pan}</td>
+      <td>${h.clientCode || ""}</td>
+      <td>${h.clientName || ""}</td>
+      <td>${h.address || ""}</td>
+      <td>${h.area || ""}</td>
+      <td>${h.mobile || ""}</td>
+      <td>${h.email || ""}</td>
+      <td>${h.pan || ""}</td>
       <td class="actions">
         <button class="edit-btn" onclick="editHospital(${index})">Edit</button>
-        <button class="delete-btn" onclick="deleteHospital(${index})">Delete</button>
+        <button class="delete-btn" onclick="deleteHospitalUI(${index})">Delete</button>
       </td>
     `;
     tableBody.appendChild(row);
@@ -82,9 +83,14 @@ form.addEventListener("submit", async function (e) {
   };
 
   if (isEdit) {
-    hospitals[editIndex] = hospital;
+    // Keep id when updating so subsequent edits still work
+    const id = hospitals[editIndex]?.id;
+    hospitals[editIndex] = { ...hospital, id };
     localStorage.setItem("hospitals", JSON.stringify(hospitals));
-    await updateHospital(hospitals[editIndex].id, hospital, editIndex);
+
+    if (id) {
+      await updateHospital(id, hospital, editIndex);
+    }
     editIndex = null;
   } else {
     hospitals.push(hospital);
@@ -100,25 +106,33 @@ form.addEventListener("submit", async function (e) {
 // 🔹 Edit hospital
 window.editHospital = function (index) {
   const h = hospitals[index];
-  document.getElementById("clientCode").value = h.clientCode;
-  document.getElementById("clientName").value = h.clientName;
-  document.getElementById("address").value = h.address;
-  document.getElementById("area").value = h.area;
-  document.getElementById("mobile").value = h.mobile;
-  document.getElementById("email").value = h.email;
-  document.getElementById("pan").value = h.pan;
+  if (!h) return;
+
+  document.getElementById("clientCode").value = h.clientCode || "";
+  document.getElementById("clientName").value = h.clientName || "";
+  document.getElementById("address").value = h.address || "";
+  document.getElementById("area").value = h.area || "";
+  document.getElementById("mobile").value = h.mobile || "";
+  document.getElementById("email").value = h.email || "";
+  document.getElementById("pan").value = h.pan || "";
   editIndex = index;
 };
 
 // 🔹 Delete hospital
-window.deleteHospital = async function (index) {
-  if (confirm("Are you sure you want to delete this hospital?")) {
-    const hospital = hospitals[index];
-    hospitals.splice(index, 1);
-    localStorage.setItem("hospitals", JSON.stringify(hospitals));
-    await deleteHospital(hospital.id, index);
-    renderTable();
+window.deleteHospitalUI = async function (index) {
+  if (!confirm("Are you sure you want to delete this hospital?")) return;
+
+  const hospital = hospitals[index];
+  if (!hospital) return;
+
+  hospitals.splice(index, 1);
+  localStorage.setItem("hospitals", JSON.stringify(hospitals));
+
+  if (hospital.id) {
+    await deleteHospitalFromService(hospital.id, index);
   }
+
+  renderTable();
 };
 
 // 🔹 Initial load
