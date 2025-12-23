@@ -1,4 +1,10 @@
-import { fetchInstruments, addInstrument, updateInstrument, deleteInstrument } from "./instrumentService.js";
+// instrumentUI.js
+import {
+  fetchInstruments,
+  addInstrument,
+  updateInstrument,
+  deleteInstrument
+} from "./instrumentService.js";
 
 const form = document.getElementById("instrumentForm");
 const tableBody = document.querySelector("#instrumentTable tbody");
@@ -53,40 +59,21 @@ function parsePriceValue(v) {
   return digits ? parseInt(digits, 10) : 0;
 }
 
-/* ========= Details parsing ========= */
-function parseDetails(rawText) {
-  const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
-  const firstLine = lines[0] || "";
-  const description = lines.slice(1).join("\n");
-
-  let detailsHTML = "";
-  if (firstLine) detailsHTML += `<p><strong>${firstLine}</strong></p>`;
-  if (description) {
-    const descLines = description.split("\n").map(line => `<li>${line}</li>`).join("");
-    detailsHTML += `<ul>${descLines}</ul>`;
-  }
-
-  return { firstLine, description, detailsHTML };
-}
-
 function formatPriceDisplay(v) {
   return "₹ " + Number(v || 0).toLocaleString("en-IN");
 }
 
 /* ========= Form submit ========= */
-
 form.addEventListener("submit", async e => {
   e.preventDefault();
 
-  // Normalize fields
-  const instrumentName = mainItemNameInput.value.trim();       // main item name
-  const longDescription = descriptionTextarea.value.trim();    // full description
-  const suppliedRaw = suppliedWithInput.value.trim();
-
   const instrument = {
-    instrumentName,                 // always first line
-    longDescription,                // always second block
-    suppliedCompleteWith: suppliedRaw,
+    instrumentName: mainItemNameInput.value.trim(),
+    longDescription: descriptionTextarea.value.trim(),
+    suppliedWith: (suppliedWithInput.value || "")
+      .split("\n")
+      .map(l => l.trim())
+      .filter(Boolean),
     origin: document.getElementById("origin").value.trim(),
     catalog: document.getElementById("catalog").value.trim(),
     hsn: hsnInput.value.trim(),
@@ -96,30 +83,50 @@ form.addEventListener("submit", async e => {
     gstPercent: document.getElementById("gstPercent").value.trim()
   };
 
-  if (editIndex !== null) {
-    // preserve ID when updating
-    const existingId = instruments[editIndex].id;
-    instruments[editIndex] = { ...instrument, id: existingId };
-    await updateInstrument(existingId, instrument);
-    editIndex = null;
-  } else {
-    // add new instrument and capture Firestore ID
-    const newId = await addInstrument(instrument);
-    instruments.push({ ...instrument, id: newId });
+  try {
+    if (editIndex !== null) {
+      const existing = instruments[editIndex];
+      if (!existing || !existing.id) {
+        showToast("Missing instrument ID", "error");
+      } else {
+        await updateInstrument(existing.id, instrument);
+        showToast("Instrument updated");
+      }
+      editIndex = null;
+    } else {
+      await addInstrument(instrument);
+      showToast("Instrument saved");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to save instrument", "error");
   }
 
-  localStorage.setItem("instruments", JSON.stringify(instruments));
   form.reset();
   unitPriceInput.value = "";
   form.classList.remove("active");
-  renderTable();
-  showToast("Instrument saved");
+
+  // Always refresh from Firebase after save
+  await renderTable();
 });
 
 /* ========= Render table ========= */
 export async function renderTable() {
+  try {
+    instruments = await fetchInstruments(); // always pull fresh from Firebase
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to load instruments", "error");
+    return;
+  }
+
+  // Optional: keep a local cache in sync
+  localStorage.setItem("instruments", JSON.stringify(instruments));
+
   tableBody.innerHTML = "";
-  instruments = await fetchInstruments();
+
+  const totalPages = Math.ceil(instruments.length / pageSize) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
 
   const start = (currentPage - 1) * pageSize;
   const end = start + pageSize;
@@ -128,10 +135,10 @@ export async function renderTable() {
     const idx = start + i;
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><strong>${inst.instrumentName || ""}</strong><br><strong>${inst.longDescription || ""}</strong></td>
       <td>
-        <div class="collapse-toggle" onclick="toggleDetails(this)">Details</div>
-        <div class="details-content">${inst.details || ""}</div>
+        <strong>${inst.instrumentName || ""}</strong>
+        <br>
+        <strong>${inst.longDescription || ""}</strong>
       </td>
       <td>${inst.origin || ""}</td>
       <td>${inst.catalog || ""}</td>
@@ -142,38 +149,22 @@ export async function renderTable() {
       <td>${inst.gstPercent || ""}</td>
       <td class="actions">
         <button type="button" class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
-        <button type="button" class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
+        <button type="button" class="delete-btn" onclick="deleteInstrumentRow(${idx})">Delete</button>
       </td>
     `;
     tableBody.appendChild(row);
   });
 
-  const totalPages = Math.ceil(instruments.length / pageSize) || 1;
   pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
 /* ========= Handlers ========= */
-window.toggleDetails = function(el) {
-  const d = el.nextElementSibling;
-  const visible = d.style.display === "block";
-  d.style.display = visible ? "none" : "block";
-  el.textContent = visible ? "Details" : "Hide details";
-};
-
 window.editInstrument = function(i) {
   const inst = instruments[i];
   if (!inst) return;
 
-  // Restore main item name
-  mainItemNameInput.value = inst.description || "";
-
-  // Restore description textarea (name + long description)
-  descriptionTextarea.value = [
-    inst.instrumentName || "",
-    inst.longDescription || ""
-  ].filter(Boolean).join("\n");
-
-  // Restore other fields
+  mainItemNameInput.value = inst.instrumentName || "";
+  descriptionTextarea.value = inst.longDescription || "";
   document.getElementById("origin").value = inst.origin || "";
   document.getElementById("catalog").value = inst.catalog || "";
   hsnInput.value = inst.hsn || "";
@@ -183,7 +174,42 @@ window.editInstrument = function(i) {
   document.getElementById("gstPercent").value = inst.gstPercent || "";
   suppliedWithInput.value = (inst.suppliedWith || []).join("\n");
 
-  // Track edit index and show form
   editIndex = i;
   form.classList.add("active");
 };
+
+window.deleteInstrumentRow = async function(i) {
+  const inst = instruments[i];
+  if (!inst || !inst.id) {
+    showToast("Missing instrument ID", "error");
+    return;
+  }
+
+  try {
+    await deleteInstrument(inst.id);
+    showToast("Instrument deleted");
+    await renderTable(); // refresh from Firebase
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to delete instrument", "error");
+  }
+};
+
+window.nextPage = function() {
+  if (currentPage * pageSize < instruments.length) {
+    currentPage++;
+    renderTable();
+  }
+};
+
+window.prevPage = function() {
+  if (currentPage > 1) {
+    currentPage--;
+    renderTable();
+  }
+};
+
+/* ========= Initial render ========= */
+document.addEventListener("DOMContentLoaded", () => {
+  renderTable(); // always pull from Firebase on load
+});
