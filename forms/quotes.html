@@ -77,6 +77,7 @@ header {
   width:auto;
   display:block;
 }
+  
 .company-box {
   flex: 1 1 auto;              /* allow it to grow/shrink */
   background: #d0d4d9;
@@ -85,19 +86,19 @@ header {
   display: flex;
   align-items: center;
   margin-top: 4.85rem;
-  min-width: 0;                /* critical: prevents flex overflow clipping */
+  min-width: 0;
 }
 
 .company-box p {
   margin: 0;
   font-size: 9px;
   white-space: nowrap;         /* keep in one line */
-  overflow: hidden;            /* still hides overflow */
-  text-overflow: ellipsis;     /* show ellipsis if too long */
+  overflow: hidden;            /* hides overflow on screen */
+  text-overflow: ellipsis;
 }
 
 .sales-box {
-  flex:0 0 auto;
+  flex: 0 0 auto;
   background:#d0d4d9;
   border-radius:4px;
   padding:0.3rem 1rem;
@@ -112,10 +113,28 @@ header {
   padding-top:0.1rem;
   letter-spacing:0.03em;
 }
+
+/* PRINT OVERRIDES */
+@media print {
+  .company-box {
+    flex: 1 0 75%;          /* give the address more width in print */
+  }
+
+  .company-box p {
+    overflow: visible;       /* do NOT clip in print */
+    text-overflow: clip;     /* no ellipsis in print */
+  }
+
+  .sales-box {
+    flex: 0 0 25%;          /* keep right box, but narrower in print */
+  }
+}
+  
 .hospital-box,
 .attn-box {
   margin-top:0.3rem;
 }
+  
 .attn-box {
   background:#add8e6;
   padding:0.75rem 1rem;
