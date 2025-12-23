@@ -129,22 +129,16 @@ export function formatItemCell(item) {
   const code = item.code || item.catalog || "";
   const descSource = item.description || item.longDescription || "";
 
-  // Split raw description into lines without trying to re‑parse supplied/meta blocks
-  const lines = descSource.split(/\r?\n/);
+  const rawLines = descSource.split(/\r?\n/);
 
-  const titleLine = lines[0] || item.name || item.itemName || "Unnamed Item";
-  const bodyLines = lines.slice(1); // all remaining lines as the user authored them
+  const titleLine = rawLines[0] || item.name || item.itemName || "Unnamed Item";
+  const contentLines = rawLines.slice(1);
 
-  // Escape HTML and preserve line breaks
   const escape = str =>
     String(str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
-
-  const bodyHtml = bodyLines
-    .map(escape)
-    .join("<br>");
 
   let html = `<td style="white-space:normal; vertical-align:top; line-height:1.4;">`;
 
@@ -156,11 +150,36 @@ export function formatItemCell(item) {
     html += `<div style="font-weight:700; margin-bottom:4px;">${escape(titleLine)}</div>`;
   }
 
-  if (bodyLines.length) {
-    html += `<div style="font-weight:400;">${bodyHtml}</div>`;
-  }
+  contentLines.forEach(line => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      html += `<div style="height:4px;"></div>`;
+      return;
+    }
+
+    // Bullet lines: "- something"
+    if (trimmed.startsWith("-")) {
+      const bulletText = trimmed.replace(/^-+\s*/, "");
+      html += `<div style="padding-left:1.25rem;">- ${escape(bulletText)}</div>`;
+      return;
+    }
+
+    // Meta lines: Country / HSN should NOT be indented
+    if (
+      trimmed.toLowerCase().startsWith("country of origin:") ||
+      trimmed.toLowerCase().startsWith("hsn code:")
+    ) {
+      html += `<div>${escape(trimmed)}</div>`;
+      return;
+    }
+
+    // Normal non-bullet text
+    html += `<div>${escape(trimmed)}</div>`;
+  });
 
   html += `</td>`;
   return html;
 }
+
 
