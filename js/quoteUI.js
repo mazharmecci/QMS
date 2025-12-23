@@ -184,16 +184,17 @@ export function renderSummaryRows(itemsTotal) {
   const roundedTotal = Math.round(totalValue);
   const roundOff = roundedTotal - totalValue;
 
-  sb.innerHTML = `
-    <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Items Total</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td></tr>
-    <tr class="discount-row"><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Discount</td><td style="text-align:right; font-weight:600;"><input id="discountInput" type="number" value="${discount}" style="width:100px; text-align:right;" oninput="discountInputChanged(this.value)" onblur="discountInputCommitted()" /></td></tr>
-    <tr class="after-discount-row"><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">After Discount</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td></tr>
-    <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td></tr>
-    <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Total Value</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td></tr>
-    <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Round Off</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td></tr>
-    <tr><td colspan="3"></td><td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td><td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td></tr>
-  `;
-
+sb.innerHTML = `
+  <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Items Total</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td></tr>
+  <tr class="discount-row"><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Discount</td><td style="text-align:right; font-weight:600;"> ₹ <input
+        id="discountInput" type="text" value="${moneyINR(discount)}" style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;" oninput="discountInputChanged(this.value)" onblur="discountInputCommitted()" /></td></tr>
+  <tr class="after-discount-row"><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">After Discount</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td></tr>
+  <tr> <td colspan="3"></td> <td style="text-align:right; font-size:12px; color:#475569;">Freight</td> <td style="text-align:right; font-weight:600;">Included</td> </tr>
+  <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent}%</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td></tr>
+  <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Total Value</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td></tr>
+  <tr><td colspan="3"></td><td style="text-align:right; font-size:12px; color:#475569;">Round Off</td><td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td></tr>
+  <tr><td colspan="3"></td><td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td><td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td></tr>
+`;
   updateDiscountVisibility(discount);
 }
 
@@ -212,11 +213,14 @@ export function updateDiscountVisibility(discountValue) {
   }
 }
 
+
 /* ========= Discount Handling ========= */
 let discountDraft = null;
 
 export function discountInputChanged(val) {
-  discountDraft = Number(val || 0);
+  // Strip everything except digits, minus, and dot
+  const cleaned = String(val).replace(/[^\d.-]/g, "");
+  discountDraft = Number(cleaned || 0);
 }
 
 export function discountInputCommitted() {
@@ -241,6 +245,7 @@ export function discountInputCommitted() {
     });
   });
 
+  // Re-render summary so discount field is refreshed with nicely formatted value
   renderSummaryRows(itemsTotal);
 }
 
