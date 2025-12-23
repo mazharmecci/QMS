@@ -7,8 +7,9 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  getDocs,
+  getDoc            // ⬅ added
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"; // [web:117][web:127]
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
@@ -24,4 +25,12 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Export Firestore instance and helpers
 export const db = getFirestore(app);
-export { collection, addDoc, updateDoc, deleteDoc, doc, getDocs };
+export {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  getDoc        // ⬅ exported so quotes.html can import it
+};
