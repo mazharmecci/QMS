@@ -151,6 +151,9 @@ export function buildQuoteObject() {
   return {
     quoteNo: header.quoteNo || "",
     quoteDate: header.quoteDate || "",
+    // add ref fields so they persist to Firestore
+    yourReference: header.yourReference || "",
+    refDate: header.refDate || "",
     hospital: {
       name: header.hospitalName || "",
       address: header.hospitalAddress || "",
