@@ -885,14 +885,9 @@ Next lines: brief description"></textarea>
     addMasterItemToLine
   } from "../js/quoteUI.js";
 
-  import {
-    db,
-    doc,
-    getDoc
-  } from "../js/firebase.js";
+  import { db, doc, getDoc } from "../js/firebase.js";
 
   const HOME_URL = "https://qms.istosmedical.com/";
-
   let currentQuoteDocId = null;
 
   function goBack() {
@@ -911,66 +906,59 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-  if (!docData || typeof docData !== "object") return;
+  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+    if (!docData || typeof docData !== "object") return;
 
-  if (docId) {
-    currentQuoteDocId = docId;
+    if (docId) {
+      currentQuoteDocId = docId;
+    }
+
+    const hosp = docData.hospital || {};
+
+    const toDateInputValue = (val) => {
+      if (!val) return "";
+      if (typeof val.toDate === "function") {
+        const d = val.toDate();
+        return d.toISOString().slice(0, 10);
+      }
+      if (typeof val === "string") {
+        return val.length >= 10 ? val.slice(0, 10) : val;
+      }
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+    };
+
+    const header = {
+      quoteNo: docData.quoteNo || "",
+      quoteDate: toDateInputValue(docData.quoteDate),
+      hospitalName: hosp.name || "",
+      hospitalAddress: hosp.address || "",
+      contactPerson: hosp.contactPerson || "",
+      contactEmail: hosp.email || "",
+      contactPhone: hosp.phone || "",
+      officePhone: hosp.officePhone || "",
+      yourReference: docData.yourReference || "",
+      refDate: toDateInputValue(docData.refDate),
+      kindAttn: hosp.contactPerson || "",
+      salesNote: docData.salesNote || "",
+      termsHtml: docData.termsHtml || "",
+      termsText: docData.termsText || "",
+      discount: Number(docData.discount || 0),
+      status: docData.status || "Submitted",
+      quoteLines: []
+    };
+
+    const quoteLines = (docData.items || []).map(item => ({
+      lineType: "instrument",
+      instrumentIndex: 0,
+      quantity: item.quantity || 1,
+      configItems: item.configItems || [],
+      additionalItems: item.additionalItems || []
+    }));
+
+    header.quoteLines = quoteLines;
+    saveQuoteHeader(header);
   }
-
-  const hosp = docData.hospital || {};
-
-  // Helper to normalise Firestore Timestamp or string -> YYYY-MM-DD
-  const toDateInputValue = (val) => {
-    if (!val) return "";
-    // Firestore Timestamp
-    if (typeof val.toDate === "function") {
-      const d = val.toDate();
-      return d.toISOString().slice(0, 10); // YYYY-MM-DD
-    }
-    // Already a string (assume good for input[type="date"])
-    if (typeof val === "string") {
-      // If it's a full ISO string, trim to date part
-      if (val.length >= 10) return val.slice(0, 10);
-      return val;
-    }
-    // Fallback: Date-like value
-    const d = new Date(val);
-    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-    return "";
-  };
-  
-  const header = {
-    quoteNo: docData.quoteNo || "",
-    quoteDate: toDateInputValue(docData.quoteDate),
-    hospitalName: hosp.name || "",
-    hospitalAddress: hosp.address || "",
-    contactPerson: hosp.contactPerson || "",
-    contactEmail: hosp.email || "",
-    contactPhone: hosp.phone || "",
-    officePhone: hosp.officePhone || "",
-    yourReference: docData.yourReference || "",
-    refDate: toDateInputValue(docData.refDate),
-    kindAttn: hosp.contactPerson || "",
-    salesNote: docData.salesNote || "",
-    termsHtml: docData.termsHtml || "",
-    termsText: docData.termsText || "",
-    discount: Number(docData.discount || 0),
-    status: docData.status || "Submitted",
-    quoteLines: []
-  };
-  
-  const quoteLines = (docData.items || []).map(item => ({
-    lineType: "instrument",
-    instrumentIndex: 0,
-    quantity: item.quantity || 1,
-    configItems: item.configItems || [],
-    additionalItems: item.additionalItems || []
-  }));
-
-  header.quoteLines = quoteLines;
-  saveQuoteHeader(header);
-}
 
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
@@ -1003,83 +991,85 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     }
   }
 
- document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[quotes.html] DOMContentLoaded");
+  document.addEventListener("DOMContentLoaded", async () => {
+    console.log("[quotes.html] DOMContentLoaded");
 
-  await loadQuoteFromFirestoreIfNeeded();
+    await loadQuoteFromFirestoreIfNeeded();
 
-  populateHeader();
-  renderQuoteBuilder();
+    populateHeader();
+    renderQuoteBuilder();
 
-  document.getElementById("backBtn")?.addEventListener("click", goBack);
+    document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-  const instrumentModalEvents = [
-    ["openInstrumentModalBtn", openInstrumentModal],
-    ["closeInstrumentModalBtn", closeInstrumentModal],
-    ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-  ];
-  instrumentModalEvents.forEach(([id, handler]) => {
-    document.getElementById(id)?.addEventListener("click", handler);
-  });
-
-  document
-    .getElementById("openInstrumentPickerBtn")
-    ?.addEventListener("click", openInstrumentPicker);
-  document
-    .getElementById("closeInstrumentPickerBtn")
-    ?.addEventListener("click", closeInstrumentPicker);
-
-  document
-    .getElementById("closeItemModalBtn")
-    ?.addEventListener("click", closeItemModal);
-  document
-    .getElementById("cancelItemModalBtn")
-    ?.addEventListener("click", closeItemModal);
-  document
-    .getElementById("itemModalForm")
-    ?.addEventListener("submit", saveItemFromModal);
-
-  document
-    .getElementById("closeConfigPickerBtn")
-    ?.addEventListener("click", () => {
-      document.getElementById("configPickerOverlay").style.display = "none";
-    });
-  document
-    .getElementById("closeAdditionalPickerBtn")
-    ?.addEventListener("click", () => {
-      document.getElementById("additionalPickerOverlay").style.display = "none";
+    const instrumentModalEvents = [
+      ["openInstrumentModalBtn", openInstrumentModal],
+      ["closeInstrumentModalBtn", closeInstrumentModal],
+      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
+    ];
+    instrumentModalEvents.forEach(([id, handler]) => {
+      document.getElementById(id)?.addEventListener("click", handler);
     });
 
-const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-if (finalizeBtn) {
-  let clickInProgress = false;
+    document
+      .getElementById("openInstrumentPickerBtn")
+      ?.addEventListener("click", openInstrumentPicker);
+    document
+      .getElementById("closeInstrumentPickerBtn")
+      ?.addEventListener("click", closeInstrumentPicker);
 
-  finalizeBtn.addEventListener("click", async () => {
-    if (clickInProgress) return; // guard
-    clickInProgress = true;
-    finalizeBtn.disabled = true;
+    document
+      .getElementById("closeItemModalBtn")
+      ?.addEventListener("click", closeItemModal);
+    document
+      .getElementById("cancelItemModalBtn")
+      ?.addEventListener("click", closeItemModal);
+    document
+      .getElementById("itemModalForm")
+      ?.addEventListener("submit", saveItemFromModal);
 
-    console.log(
-      "[quotes.html] finalize button clicked, docId:",
-      currentQuoteDocId
-    );
+    document
+      .getElementById("closeConfigPickerBtn")
+      ?.addEventListener("click", () => {
+        document.getElementById("configPickerOverlay").style.display = "none";
+      });
+    document
+      .getElementById("closeAdditionalPickerBtn")
+      ?.addEventListener("click", () => {
+        document.getElementById("additionalPickerOverlay").style.display = "none";
+      });
 
-    try {
-      await finalizeQuote(currentQuoteDocId);
-    } finally {
-      clickInProgress = false;
-      finalizeBtn.disabled = false; // or leave disabled if desired
+    const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+    if (finalizeBtn) {
+      let clickInProgress = false;
+
+      finalizeBtn.addEventListener("click", async () => {
+        if (clickInProgress) return;
+        clickInProgress = true;
+        finalizeBtn.disabled = true;
+
+        console.log(
+          "[quotes.html] finalize button clicked, docId:",
+          currentQuoteDocId
+        );
+
+        try {
+          await finalizeQuote(currentQuoteDocId);
+        } finally {
+          clickInProgress = false;
+          finalizeBtn.disabled = false; // or keep disabled if desired
+        }
+      });
     }
   });
-}
 
-window.openConfigModal = openConfigModal;
-window.openAdditionalModal = openAdditionalModal;
-window.openItemModal = openItemModal;
-window.editItemFromModal = editItemFromModal;
-window.removeItemFromModal = removeItemFromModal;
-window.addInstrumentToQuote = addInstrumentToQuote;
-window.addMasterItemToLine = addMasterItemToLine;
+  // expose functions for inline handlers
+  window.openConfigModal = openConfigModal;
+  window.openAdditionalModal = openAdditionalModal;
+  window.openItemModal = openItemModal;
+  window.editItemFromModal = editItemFromModal;
+  window.removeItemFromModal = removeItemFromModal;
+  window.addInstrumentToQuote = addInstrumentToQuote;
+  window.addMasterItemToLine = addMasterItemToLine;
 </script>
 
 </body>
