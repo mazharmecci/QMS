@@ -1003,68 +1003,77 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     }
   }
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    console.log("[quotes.html] DOMContentLoaded");
+ document.addEventListener("DOMContentLoaded", async () => {
+  console.log("[quotes.html] DOMContentLoaded");
 
-    await loadQuoteFromFirestoreIfNeeded();
+  await loadQuoteFromFirestoreIfNeeded();
 
-    populateHeader();
-    renderQuoteBuilder();
+  populateHeader();
+  renderQuoteBuilder();
 
-    document.getElementById("backBtn")?.addEventListener("click", goBack);
+  document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-    const instrumentModalEvents = [
-      ["openInstrumentModalBtn", openInstrumentModal],
-      ["closeInstrumentModalBtn", closeInstrumentModal],
-      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-    ];
-    instrumentModalEvents.forEach(([id, handler]) => {
-      document.getElementById(id)?.addEventListener("click", handler);
-    });
-
-    document
-      .getElementById("openInstrumentPickerBtn")
-      ?.addEventListener("click", openInstrumentPicker);
-    document
-      .getElementById("closeInstrumentPickerBtn")
-      ?.addEventListener("click", closeInstrumentPicker);
-
-    document
-      .getElementById("closeItemModalBtn")
-      ?.addEventListener("click", closeItemModal);
-    document
-      .getElementById("cancelItemModalBtn")
-      ?.addEventListener("click", closeItemModal);
-    document
-      .getElementById("itemModalForm")
-      ?.addEventListener("submit", saveItemFromModal);
-
-    document
-      .getElementById("closeConfigPickerBtn")
-      ?.addEventListener("click", () => {
-        document.getElementById("configPickerOverlay").style.display = "none";
-      });
-    document
-      .getElementById("closeAdditionalPickerBtn")
-      ?.addEventListener("click", () => {
-        document.getElementById("additionalPickerOverlay").style.display = "none";
-      });
-
-    document
-      .getElementById("finalizeQuoteBtn")
-      ?.addEventListener("click", () => {
-        console.log("[quotes.html] finalize button clicked, docId:", currentQuoteDocId);
-        finalizeQuote(currentQuoteDocId);
-      });
+  const instrumentModalEvents = [
+    ["openInstrumentModalBtn", openInstrumentModal],
+    ["closeInstrumentModalBtn", closeInstrumentModal],
+    ["closeInstrumentModalFooterBtn", closeInstrumentModal]
+  ];
+  instrumentModalEvents.forEach(([id, handler]) => {
+    document.getElementById(id)?.addEventListener("click", handler);
   });
 
-  window.openConfigModal = openConfigModal;
-  window.openAdditionalModal = openAdditionalModal;
-  window.openItemModal = openItemModal;
-  window.editItemFromModal = editItemFromModal;
-  window.removeItemFromModal = removeItemFromModal;
-  window.addInstrumentToQuote = addInstrumentToQuote;
-  window.addMasterItemToLine = addMasterItemToLine;
+  document
+    .getElementById("openInstrumentPickerBtn")
+    ?.addEventListener("click", openInstrumentPicker);
+  document
+    .getElementById("closeInstrumentPickerBtn")
+    ?.addEventListener("click", closeInstrumentPicker);
+
+  document
+    .getElementById("closeItemModalBtn")
+    ?.addEventListener("click", closeItemModal);
+  document
+    .getElementById("cancelItemModalBtn")
+    ?.addEventListener("click", closeItemModal);
+  document
+    .getElementById("itemModalForm")
+    ?.addEventListener("submit", saveItemFromModal);
+
+  document
+    .getElementById("closeConfigPickerBtn")
+    ?.addEventListener("click", () => {
+      document.getElementById("configPickerOverlay").style.display = "none";
+    });
+  document
+    .getElementById("closeAdditionalPickerBtn")
+    ?.addEventListener("click", () => {
+      document.getElementById("additionalPickerOverlay").style.display = "none";
+    });
+
+  const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+  finalizeBtn?.addEventListener("click", async () => {
+    if (finalizeBtn.disabled) return; // prevent double click
+    finalizeBtn.disabled = true;
+
+    console.log(
+      "[quotes.html] finalize button clicked, docId:",
+      currentQuoteDocId
+    );
+    try {
+      await finalizeQuote(currentQuoteDocId);
+    } finally {
+      finalizeBtn.disabled = false; // or keep disabled if you prefer
+    }
+  });
+});
+
+window.openConfigModal = openConfigModal;
+window.openAdditionalModal = openAdditionalModal;
+window.openItemModal = openItemModal;
+window.editItemFromModal = editItemFromModal;
+window.removeItemFromModal = removeItemFromModal;
+window.addInstrumentToQuote = addInstrumentToQuote;
+window.addMasterItemToLine = addMasterItemToLine;
 </script>
 
 </body>
