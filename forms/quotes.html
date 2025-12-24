@@ -921,33 +921,35 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
   const hosp = docData.hospital || {};
 
   // Helper to normalise Firestore Timestamp or string -> YYYY-MM-DD
-  const toDateString = (val) => {
+  const toDateInputValue = (val) => {
     if (!val) return "";
-    // Firestore Timestamp has a toDate() method
+    // Firestore Timestamp
     if (typeof val.toDate === "function") {
       const d = val.toDate();
-      return d.toISOString().slice(0, 10);
+      return d.toISOString().slice(0, 10); // YYYY-MM-DD
     }
-    // If already a string, assume it's OK
-    if (typeof val === "string") return val;
-    // Fallback: try Date constructor
-    try {
-      const d = new Date(val);
-      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-    } catch (e) {}
+    // Already a string (assume good for input[type="date"])
+    if (typeof val === "string") {
+      // If it's a full ISO string, trim to date part
+      if (val.length >= 10) return val.slice(0, 10);
+      return val;
+    }
+    // Fallback: Date-like value
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
     return "";
   };
-
+  
   const header = {
     quoteNo: docData.quoteNo || "",
-    quoteDate: toDateString(docData.quoteDate),
+    quoteDate: toDateInputValue(docData.quoteDate),
     hospitalName: hosp.name || "",
     hospitalAddress: hosp.address || "",
     contactPerson: hosp.contactPerson || "",
     contactEmail: hosp.email || "",
     contactPhone: hosp.phone || "",
     yourReference: docData.yourReference || "",
-    refDate: toDateString(docData.refDate),
+    refDate: toDateInputValue(docData.refDate),
     kindAttn: hosp.contactPerson || "",
     salesNote: docData.salesNote || "",
     termsHtml: docData.termsHtml || "",
@@ -956,7 +958,7 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     status: docData.status || "Submitted",
     quoteLines: []
   };
-
+  
   const quoteLines = (docData.items || []).map(item => ({
     lineType: "instrument",
     instrumentIndex: 0,
