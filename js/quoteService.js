@@ -148,34 +148,34 @@ export function buildQuoteObject() {
     };
   });
 
-return {
-  quoteNo: header.quoteNo || "",
-  quoteDate: header.quoteDate || "",
+  return {
+    quoteNo: header.quoteNo || "",
+    quoteDate: header.quoteDate || "",
 
-  // reference fields
-  yourReference: header.yourReference || "",
-  refDate: header.refDate || "",
+    // reference fields
+    yourReference: header.yourReference || "",
+    refDate: header.refDate || "",
 
-  hospital: {
-    name: header.hospitalName || "",
-    address: header.hospitalAddress || "",
-    contactPerson: header.contactPerson || "",
-    email: header.contactEmail || "",
-    phone: header.contactPhone || "",
-    officePhone: header.officePhone || ""
-  },
+    hospital: {
+      name: header.hospitalName || "",
+      address: header.hospitalAddress || "",
+      contactPerson: header.contactPerson || "",
+      email: header.contactEmail || "",
+      phone: header.contactPhone || "",
+      officePhone: header.officePhone || ""
+    },
 
-  status: header.status || "Submitted",
-  discount: Number(header.discount || 0),
-  totalValueINR,
-  gstValueINR,
-  items,
-  salesNote: header.salesNote || "",
-  termsHtml: header.termsHtml || "",
-  termsText: header.termsText || "",
-  createdBy: header.createdBy || "Mazhar R Mecci"
-};
-
+    status: header.status || "Submitted",
+    discount: Number(header.discount || 0),
+    totalValueINR,
+    gstValueINR,
+    items,
+    salesNote: header.salesNote || "",
+    termsHtml: header.termsHtml || "",
+    termsText: header.termsText || "",
+    createdBy: header.createdBy || "Mazhar R Mecci"
+  };
+}
 
 /* ========================
  * Validation
@@ -204,11 +204,6 @@ export function validateHeader(header) {
  * Firestore persistence
  * =======================*/
 
-/**
- * Internal: write the "active" quote document in quoteHistory.
- * If docId is provided, update that doc; otherwise create a new one.
- * Does NOT handle revisions subcollection; caller passes revision. [web:42][web:58]
- */
 async function saveBaseQuoteDocToFirestore(docId, data) {
   console.log("[saveBaseQuoteDocToFirestore] docId:", docId);
 
@@ -232,9 +227,6 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
   return newDoc.id;
 }
 
-/**
- * Internal: append a snapshot into quoteHistory/{docId}/revisions.
- */
 async function appendRevisionSnapshot(docId, data) {
   console.log("[appendRevisionSnapshot] for docId:", docId);
   const subCol = collection(db, "quoteHistory", docId, "revisions");
@@ -253,11 +245,26 @@ async function appendRevisionSnapshot(docId, data) {
  * Finalize the current quote: compute totals, local revision, and save
  * to both local history and Firestore, with Firestore revision history.
  *
- * @param {string|null} docId - existing quoteHistory document id when editing,
- *                              or null/undefined for a brand new quote.
+ * rawArg may be: Firestore docId string, a PointerEvent, or null/undefined.
  */
-export async function finalizeQuote(docId = null) {
-  console.log("[finalizeQuote] CALLED with docId:", docId, "at", new Date().toISOString());
+export async function finalizeQuote(rawArg = null) {
+  let docId = null;
+  if (typeof rawArg === "string") {
+    docId = rawArg;
+  } else if (rawArg && typeof rawArg === "object" && rawArg.target) {
+    console.warn(
+      "[finalizeQuote] called with PointerEvent; treating as new quote (docId = null)."
+    );
+  }
+
+  console.log(
+    "[finalizeQuote] CALLED with rawArg:",
+    rawArg,
+    "normalized docId:",
+    docId,
+    "at",
+    new Date().toISOString()
+  );
 
   const header = getQuoteHeaderRaw();
   console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
@@ -315,7 +322,14 @@ export async function finalizeQuote(docId = null) {
     : 0;
   const nextRev = lastRev + 1;
 
-  console.log("[finalizeQuote] sameQuote.length:", sameQuote.length, "lastRev:", lastRev, "nextRev:", nextRev);
+  console.log(
+    "[finalizeQuote] sameQuote.length:",
+    sameQuote.length,
+    "lastRev:",
+    lastRev,
+    "nextRev:",
+    nextRev
+  );
 
   const now = new Date();
   const quoteLocal = {
@@ -336,7 +350,10 @@ export async function finalizeQuote(docId = null) {
 
   existing.push(quoteLocal);
   localStorage.setItem("quotes", JSON.stringify(existing));
-  console.log("[finalizeQuote] local history updated, total entries:", existing.length);
+  console.log(
+    "[finalizeQuote] local history updated, total entries:",
+    existing.length
+  );
 
   // Firestore payload
   const baseQuoteDoc = buildQuoteObject();
