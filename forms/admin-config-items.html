@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QMS – Configuration Item Master</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --primary: #0d6efd;
+      --primary-soft: #e3f0ff;
+      --accent: #20a4a4;
+      --accent-soft: #e0f7f7;
+      --card-bg: #ffffff;
+      --card-border: #dde3f0;
+      --text-main: #1f2933;
+      --text-muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top, #e8f1ff 0, var(--bg) 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(90deg, var(--primary), #2563eb);
+      color: white;
+      padding: 1.1rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.25);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .header-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    .pill {
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      background: rgba(15, 23, 42, 0.12);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.3);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 2rem auto 2.5rem;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .page-intro {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: linear-gradient(145deg, var(--card-bg), #f9fbff);
+      border-radius: 18px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+      padding: 1.4rem 1.5rem 1.3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(32,164,164,0.13), transparent 60%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      padding: 0.1rem 0.6rem;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .badge-collection {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid #d0d7f2;
+      background: #eef2ff;
+      color: #4338ca;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .field-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .field-row .field {
+      flex: 1;
+    }
+
+    label span.badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.05rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid #cdd4eb;
+      margin-left: 0.45rem;
+      color: #4b5563;
+      background: #f3f4ff;
+    }
+
+    input[type="text"],
+    textarea {
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      background: #f9fbff;
+      border-radius: 10px;
+      border: 1px solid #d4dce9;
+      padding: 0.45rem 0.6rem;
+      outline: none;
+      transition: border-color 130ms ease, box-shadow 130ms ease, background 130ms ease;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+      max-height: 220px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 0.3rem;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #f9fafb;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.78rem;
+      color: #111827;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background 120ms ease, border-color 120ms ease, transform 90ms ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #2563eb);
+      border-color: #2563eb;
+      color: #eff6ff;
+      font-weight: 500;
+    }
+
+    .btn-ghost {
+      background: #f8fafc;
+    }
+
+    .btn-danger {
+      border-color: #fee2e2;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .btn:hover {
+      transform: translateY(-0.5px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .table-card {
+      margin-top: 0.6rem;
+      border-radius: 14px;
+      border: 1px solid #d1d5e6;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    thead {
+      background: #f1f5f9;
+    }
+
+    th, td {
+      padding: 0.45rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7f2;
+    }
+
+    th {
+      font-weight: 600;
+      color: #4b5563;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    tbody tr:nth-child(2n) {
+      background: #f9fafb;
+    }
+
+    tbody tr:hover {
+      background: #eef2ff;
+    }
+
+    .code-cell {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      color: #111827;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: #f3f4ff;
+      border: 1px solid #e5e7ff;
+      color: #4b5563;
+      margin: 1px 2px;
+    }
+
+    .chip-all {
+      background: #e0f2fe;
+      border-color: #bfdbfe;
+      color: #1d4ed8;
+    }
+
+    .chip-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: #2563eb;
+    }
+
+    .empty-row {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    footer {
+      max-width: 1100px;
+      margin: 0 auto 1.6rem;
+      padding: 0 1.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <div class="header-title">Configuration item master</div>
+    <div class="header-subtitle">Define reusable configuration items mapped to instruments</div>
+  </div>
+  <div class="header-right">
+    <div class="pill">
+      <span class="pill-dot"></span>
+      Live Firestore · configItems
+    </div>
+    <button class="btn btn-ghost" onclick="window.location.href='../index.html'">Back to dashboard</button>
+  </div>
+</header>
+
+<main>
+  <p class="page-intro">
+    Use this screen to create and manage configuration items that appear as <strong>Included</strong> against instruments in quotes.
+  </p>
+
+  <section class="layout">
+    <!-- Left: form -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              New / edit configuration
+              <span class="card-badge">Form</span>
+            </div>
+            <div class="card-subtitle">
+              Each row here becomes selectable from the Configuration picker inside quotes.
+            </div>
+          </div>
+          <span class="badge-collection">Collection: configItems</span>
+        </div>
+
+        <form id="configForm" class="form-grid">
+          <input type="hidden" id="configDocId">
+
+          <div class="field-row">
+            <div class="field">
+              <label for="configCode">
+                Item code
+                <span class="badge">Required</span>
+              </label>
+              <input id="configCode" type="text" placeholder="e.g. 030051" required>
+            </div>
+            <div class="field">
+              <label for="configName">
+                Name
+                <span class="badge">Required</span>
+              </label>
+              <input id="configName" type="text"
+                     placeholder="e.g. Blade holder Base unit for Rotary 3000/3004/3005/3006"
+                     required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="configDescription">Description</label>
+            <textarea id="configDescription"
+                      placeholder="Detailed text, bullet lines, HSN, Country of Origin, etc."></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="configApplicable">Applicable models</label>
+              <input id="configApplicable" type="text"
+                     placeholder="Comma separated; e.g. 0300610, 0300510, ALL">
+            </div>
+            <div class="field">
+              <label for="configPriceLabel">
+                Price label
+                <span class="badge">Defaults to Included</span>
+              </label>
+              <input id="configPriceLabel" type="text" value="Included">
+            </div>
+          </div>
+
+          <div class="checkbox-row">
+            <input id="configIsActive" type="checkbox" checked>
+            <label for="configIsActive">Active (visible in picker)</label>
+          </div>
+
+          <div class="button-row">
+            <button type="button" class="btn btn-ghost" id="configResetBtn">Clear</button>
+            <button type="submit" class="btn btn-primary">Save configuration item</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: table -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              Existing configuration items
+              <span class="card-badge">List</span>
+            </div>
+            <div class="card-subtitle">
+              Edit or delete rows. Only active items will appear in quote pickers.
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table>
+            <thead>
+            <tr>
+              <th style="width:18%;">Code</th>
+              <th>Name &amp; status</th>
+              <th style="width:30%;">Models</th>
+              <th style="width:18%;">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="configTableBody">
+            <tr><td colspan="4" class="empty-row">Loading configuration items…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>Changes here update the Firestore master. Quotes will pick the latest values automatically.</div>
+  <div>Back to <a href="../index.html">dashboard</a></div>
+</footer>
+
+<script type="module">
+  import {
+    db,
+    collection,
+    addDoc,
+    getDocs,
+    doc,
+    updateDoc,
+    deleteDoc
+  } from "../js/firebase.js";
+
+  function parseModels(str) {
+    const raw = (str || "").split(",");
+    const list = raw.map(s => s.trim()).filter(Boolean);
+    return list.length ? list : [];
+  }
+
+  async function loadConfigTable() {
+    const tbody = document.getElementById("configTableBody");
+    tbody.innerHTML = "<tr><td colspan='4' class='empty-row'>Loading configuration items…</td></tr>";
+
+    const snap = await getDocs(collection(db, "configItems"));
+    const rows = [];
+    snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+
+    if (!rows.length) {
+      tbody.innerHTML = "<tr><td colspan='4' class='empty-row'>No configuration items defined yet.</td></tr>";
+      return;
+    }
+
+    tbody.innerHTML = rows
+      .map(r => `
+        <tr>
+          <td class="code-cell">${r.code || ""}</td>
+          <td>
+            <div>${r.name || ""}</div>
+            <div style="font-size:0.72rem; color:#6b7280; margin-top:1px;">
+              ${(r.priceLabel || "Included")} · ${r.isActive === false ? "Inactive" : "Active"}
+            </div>
+          </td>
+          <td>
+            ${
+              (r.applicableModels || []).length
+                ? (r.applicableModels || []).map(m =>
+                    `<span class="chip ${m === "ALL" ? "chip-all" : ""}">
+                       ${m === "ALL" ? "<span class='chip-dot'></span> All" : m}
+                     </span>`
+                  ).join(" ")
+                : "<span class='chip'>Global</span>"
+            }
+          </td>
+          <td>
+            <button type="button" data-id="${r.id}" class="btn btn-ghost cfg-edit">Edit</button>
+            <button type="button" data-id="${r.id}" class="btn btn-danger cfg-del">Remove</button>
+          </td>
+        </tr>
+      `)
+      .join("");
+
+    tbody.querySelectorAll(".cfg-edit").forEach(btn => {
+      btn.addEventListener("click", () =>
+        fillConfigForm(rows.find(r => r.id === btn.dataset.id))
+      );
+    });
+
+    tbody.querySelectorAll(".cfg-del").forEach(btn => {
+      btn.addEventListener("click", () => deleteConfigItem(btn.dataset.id));
+    });
+  }
+
+  function fillConfigForm(item) {
+    document.getElementById("configDocId").value = item.id;
+    document.getElementById("configCode").value = item.code || "";
+    document.getElementById("configName").value = item.name || "";
+    document.getElementById("configDescription").value = item.description || "";
+    document.getElementById("configApplicable").value =
+      (item.applicableModels || []).join(", ");
+    document.getElementById("configPriceLabel").value =
+      item.priceLabel || "Included";
+    document.getElementById("configIsActive").checked =
+      item.isActive !== false;
+  }
+
+  async function deleteConfigItem(id) {
+    if (!confirm("Delete this configuration item from master?")) return;
+    await deleteDoc(doc(db, "configItems", id)); // [web:308][web:307]
+    await loadConfigTable();
+  }
+
+  async function onConfigSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("configDocId").value || null;
+
+    const payload = {
+      code: document.getElementById("configCode").value.trim(),
+      name: document.getElementById("configName").value.trim(),
+      description: document.getElementById("configDescription").value,
+      priceLabel: document.getElementById("configPriceLabel").value || "Included",
+      applicableModels: parseModels(
+        document.getElementById("configApplicable").value
+      ),
+      isActive: document.getElementById("configIsActive").checked
+    };
+
+    if (!payload.code || !payload.name) return;
+
+    if (id) {
+      await updateDoc(doc(db, "configItems", id), payload); // [web:306]
+    } else {
+      await addDoc(collection(db, "configItems"), payload);
+    }
+
+    document.getElementById("configForm").reset();
+    document.getElementById("configDocId").value = "";
+    document.getElementById("configPriceLabel").value = "Included";
+    document.getElementById("configIsActive").checked = true;
+    await loadConfigTable();
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    document.getElementById("configForm").addEventListener("submit", onConfigSubmit);
+    document.getElementById("configResetBtn").addEventListener("click", () => {
+      document.getElementById("configForm").reset();
+      document.getElementById("configDocId").value = "";
+      document.getElementById("configPriceLabel").value = "Included";
+      document.getElementById("configIsActive").checked = true;
+    });
+
+    await loadConfigTable();
+  });
+</script>
+</body>
+</html>
