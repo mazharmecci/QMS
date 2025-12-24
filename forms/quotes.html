@@ -948,6 +948,7 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     contactPerson: hosp.contactPerson || "",
     contactEmail: hosp.email || "",
     contactPhone: hosp.phone || "",
+    officePhone: hosp.officePhone || "",
     yourReference: docData.yourReference || "",
     refDate: toDateInputValue(docData.refDate),
     kindAttn: hosp.contactPerson || "",
