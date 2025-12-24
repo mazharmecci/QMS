@@ -322,66 +322,57 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // ... keep your existing local history + Firestore logic here,
-    // using docId and summary/lineItems exactly as before ...
+    // Local revision history
+    const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
+    const sameQuote = existing.filter(
+      q => q.header && q.header.quoteNo === header.quoteNo
+    );
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
+    const nextRev = lastRev + 1;
 
-  } finally {
-    finalizeInProgress = false;
-  }
-}
+    console.log(
+      "[finalizeQuote] sameQuote.length:",
+      sameQuote.length,
+      "lastRev:",
+      lastRev,
+      "nextRev:",
+      nextRev
+    );
 
-  // Local revision history
-  const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const sameQuote = existing.filter(
-    q => q.header && q.header.quoteNo === header.quoteNo
-  );
-  const lastRev = sameQuote.length
-    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-    : 0;
-  const nextRev = lastRev + 1;
+    const now = new Date();
+    const quoteLocal = {
+      header,
+      lineItems,
+      summary,
+      quoteNo: header.quoteNo,
+      revision: nextRev,
+      status: "submitted",
+      history: [
+        {
+          status: "submitted",
+          date: now.toISOString().slice(0, 10),
+          time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        }
+      ]
+    };
 
-  console.log(
-    "[finalizeQuote] sameQuote.length:",
-    sameQuote.length,
-    "lastRev:",
-    lastRev,
-    "nextRev:",
-    nextRev
-  );
+    existing.push(quoteLocal);
+    localStorage.setItem("quotes", JSON.stringify(existing));
+    console.log(
+      "[finalizeQuote] local history updated, total entries:",
+      existing.length
+    );
 
-  const now = new Date();
-  const quoteLocal = {
-    header,
-    lineItems,
-    summary,
-    quoteNo: header.quoteNo,
-    revision: nextRev,
-    status: "submitted",
-    history: [
-      {
-        status: "submitted",
-        date: now.toISOString().slice(0, 10),
-        time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      }
-    ]
-  };
+    // Firestore payload
+    const baseQuoteDoc = buildQuoteObject();
+    const firestoreData = {
+      ...baseQuoteDoc,
+      revision: nextRev,
+      localSummary: summary
+    };
 
-  existing.push(quoteLocal);
-  localStorage.setItem("quotes", JSON.stringify(existing));
-  console.log(
-    "[finalizeQuote] local history updated, total entries:",
-    existing.length
-  );
-
-  // Firestore payload
-  const baseQuoteDoc = buildQuoteObject();
-  const firestoreData = {
-    ...baseQuoteDoc,
-    revision: nextRev,
-    localSummary: summary
-  };
-
-  try {
     console.log("[finalizeQuote] saving base doc to Firestore...");
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
     console.log("[finalizeQuote] base doc saved with id:", savedId);
@@ -397,8 +388,10 @@ export async function finalizeQuote(rawArg = null) {
   } catch (err) {
     console.error("[finalizeQuote] Error saving quote to Firestore:", err);
     alert(
-      `Quote saved to local history as ${header.quoteNo} (Rev ${nextRev}), but cloud save failed.`
+      "Quote saved to local history, but cloud save failed. Please try again later."
     );
     return null;
+  } finally {
+    finalizeInProgress = false;
   }
 }
