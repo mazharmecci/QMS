@@ -8,7 +8,9 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  getDoc            // ⬅ added
+  getDoc,   
+  serverTimestamp
+
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"; // [web:117][web:127]
 
 const firebaseConfig = {
@@ -32,5 +34,6 @@ export {
   deleteDoc,
   doc,
   getDocs,
-  getDoc        // ⬅ exported so quotes.html can import it
+  getDoc,
+  serverTimestamp
 };
