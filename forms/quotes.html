@@ -1050,22 +1050,28 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
       document.getElementById("additionalPickerOverlay").style.display = "none";
     });
 
-  const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-  finalizeBtn?.addEventListener("click", async () => {
-    if (finalizeBtn.disabled) return; // prevent double click
+const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+if (finalizeBtn) {
+  let clickInProgress = false;
+
+  finalizeBtn.addEventListener("click", async () => {
+    if (clickInProgress) return; // guard
+    clickInProgress = true;
     finalizeBtn.disabled = true;
 
     console.log(
       "[quotes.html] finalize button clicked, docId:",
       currentQuoteDocId
     );
+
     try {
       await finalizeQuote(currentQuoteDocId);
     } finally {
-      finalizeBtn.disabled = false; // or keep disabled if you prefer
+      clickInProgress = false;
+      finalizeBtn.disabled = false; // or leave disabled if desired
     }
   });
-});
+}
 
 window.openConfigModal = openConfigModal;
 window.openAdditionalModal = openAdditionalModal;
