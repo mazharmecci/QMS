@@ -1,7 +1,18 @@
 // quoteService.js
 
 import { fetchInstruments } from "./instrumentService.js";
-import { db, collection, addDoc } from "./firebase.js";
+import {
+  db,
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  serverTimestamp
+} from "./firebase.js"; // ensure firebase.js exports serverTimestamp, updateDoc [web:42][web:61]
+
+/* ========================
+ * Local header & context
+ * =======================*/
 
 /**
  * Get the current quote header object from localStorage.
@@ -42,8 +53,12 @@ export function getQuoteContext() {
   return { instruments, lines, header };
 }
 
+/* ========================
+ * Line items & summary
+ * =======================*/
+
 /**
- * Build line items from the current quote (for summary/finalization).
+ * Build line items from the current quote (for on-screen summary / local history).
  */
 export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
@@ -100,6 +115,7 @@ export function buildLineItemsFromCurrentQuote() {
 
 /**
  * Build Firestore-friendly quote document from current quote.
+ * This is what goes into quoteHistory.
  */
 export function buildQuoteObject() {
   const header = getQuoteHeaderRaw();
@@ -142,16 +158,21 @@ export function buildQuoteObject() {
       email: header.contactEmail || "",
       phone: header.contactPhone || ""
     },
-    status: "Submitted",
+    status: header.status || "Submitted",
+    discount: Number(header.discount || 0),
     totalValueINR,
     gstValueINR,
     items,
-    createdBy: "Mazhar R Mecci",
-    createdAt: new Date().toISOString()
-    // If you later want a server timestamp, you can add createdAtTs: serverTimestamp()
-    // by importing serverTimestamp from firebase/firestore in firebase.js. [web:148]
+    salesNote: header.salesNote || "",
+    termsHtml: header.termsHtml || "",
+    termsText: header.termsText || "",
+    createdBy: header.createdBy || "Mazhar R Mecci"
   };
 }
+
+/* ========================
+ * Validation
+ * =======================*/
 
 /**
  * Validate header before finalizing quote.
@@ -172,19 +193,51 @@ export function validateHeader(header) {
   return true;
 }
 
-/**
- * Save a simplified quote document into Firestore (quoteHistory collection).
- */
-async function saveQuoteToFirestore() {
-  const quoteDoc = buildQuoteObject();
-  const colRef = collection(db, "quoteHistory");
-  await addDoc(colRef, quoteDoc);
-}
+/* ========================
+ * Firestore persistence
+ * =======================*/
 
 /**
- * Finalize the current quote: compute totals, revision, and save to history + Firestore.
+ * Save quote to Firestore quoteHistory.
+ * If docId is provided, update that doc; otherwise create a new one. [web:42][web:61]
+ * Returns the document id (existing or newly created).
  */
-export async function finalizeQuote() {
+async function saveQuoteToFirestore(docId = null) {
+  const baseQuoteDoc = buildQuoteObject();
+
+  // Add timestamps here so they are always set by server
+  const data = {
+    ...baseQuoteDoc,
+    updatedAt: serverTimestamp()
+  };
+
+  if (docId) {
+    const ref = doc(db, "quoteHistory", docId);
+    await updateDoc(ref, data);
+    return docId;
+  }
+
+  // New document
+  const colRef = collection(db, "quoteHistory");
+  const newDoc = await addDoc(colRef, {
+    ...data,
+    createdAt: serverTimestamp()
+  });
+  return newDoc.id;
+}
+
+/* ========================
+ * Finalization & local history
+ * =======================*/
+
+/**
+ * Finalize the current quote: compute totals, local revision, and save
+ * to both local history and Firestore.
+ *
+ * @param {string|null} docId - existing quoteHistory document id when editing,
+ *                              or null/undefined for a brand new quote.
+ */
+export async function finalizeQuote(docId = null) {
   const header = getQuoteHeaderRaw();
   if (!validateHeader(header)) return;
 
@@ -194,6 +247,7 @@ export async function finalizeQuote() {
     return;
   }
 
+  // Totals for on-screen / local history summary
   let itemsTotal = 0;
   lines.forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
@@ -208,7 +262,7 @@ export async function finalizeQuote() {
     });
   });
 
-  const gstPercent = 18;
+  const gstPercent = 18; // business rule
   const discount = Number(header.discount || 0);
   const afterDisc = itemsTotal - discount;
   const gstAmount = (afterDisc * gstPercent) / 100;
@@ -227,8 +281,9 @@ export async function finalizeQuote() {
   };
 
   const lineItems = buildLineItemsFromCurrentQuote();
-  const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
 
+  // Local history: maintain revisions by quoteNo (purely local, as before)
+  const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
   const sameQuote = existing.filter(
     q => q.header && q.header.quoteNo === header.quoteNo
   );
@@ -238,7 +293,7 @@ export async function finalizeQuote() {
   const nextRev = lastRev + 1;
 
   const now = new Date();
-  const quote = {
+  const quoteLocal = {
     header,
     lineItems,
     summary,
@@ -255,19 +310,21 @@ export async function finalizeQuote() {
   };
 
   // 1) Keep existing local history behavior
-  existing.push(quote);
+  existing.push(quoteLocal);
   localStorage.setItem("quotes", JSON.stringify(existing));
 
-  // 2) Save a separate normalized document into Firestore
+  // 2) Save normalized document into Firestore (add or update)
   try {
-    await saveQuoteToFirestore();
+    const savedId = await saveQuoteToFirestore(docId);
     alert(
       `Quote saved to history and cloud as ${header.quoteNo} (Rev ${nextRev}).`
     );
+    return savedId;
   } catch (err) {
     console.error("Error saving quote to Firestore:", err);
     alert(
       `Quote saved to local history as ${header.quoteNo} (Rev ${nextRev}), but cloud save failed.`
     );
+    return null;
   }
 }
