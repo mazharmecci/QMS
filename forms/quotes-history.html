@@ -328,50 +328,53 @@
     renderTable();
   }
 
-  // ===== Table render =====
-  function renderTable(data = filteredQuotes) {
-    tbody.innerHTML = "";
-    data.forEach((q, i) => {
-      const quoteNo  = q.quoteNo || "-";
-      const date     = q.quoteDate || "-";
-      const hospital = q.hospital?.name || "-";
-      const total    = q.totalValueINR || 0;
-      const status   = q.status || "Draft";
+// ===== Table render =====
+function renderTable(data = filteredQuotes) {
+  tbody.innerHTML = "";
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${quoteNo}</td>
-        <td>${date}</td>
-        <td>${hospital}</td>
-        <td>₹ ${moneyINR(total)}</td>
-        <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-        <td class="actions">
-          <button class="view-btn" onclick="viewQuote(${i})">View</button>
-          <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
-          <button class="view-btn" onclick="editQuote(${i})">Edit</button>
-          <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-    updateDashboard();
-  }
+  data.forEach((q, i) => {
+    const quoteNo   = q.quoteNo || "-";
+    const revision  = q.revision || 1; // latest revision stored on base doc
+    const date      = q.quoteDate || "-";
+    const hospital  = q.hospital?.name || "-";
+    const total     = q.totalValueINR || 0;
+    const status    = q.status || "Draft";
 
-  function updateDashboard() {
-    const total = quotes.length;
-    const pending = quotes.filter(q => {
-      const s = (q.status || "draft").toLowerCase();
-      return s === "draft" || s === "submitted";
-    }).length;
-    const won = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
-    const rate = total ? Math.round((won / total) * 100) : 0;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${quoteNo} (Rev ${revision})</td>
+      <td>${date}</td>
+      <td>${hospital}</td>
+      <td>₹ ${moneyINR(total)}</td>
+      <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
+      <td class="actions">
+        <button class="view-btn" onclick="viewQuote(${i})">View</button>
+        <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
+        <button class="view-btn" onclick="editQuote(${i})">Edit</button>
+        <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-    document.getElementById("statTotal").textContent = total;
-    document.getElementById("statPending").textContent = pending;
-    document.getElementById("statWon").textContent = won;
-    document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
-  }
+  updateDashboard();
+}
+
+function updateDashboard() {
+  const total   = quotes.length;
+  const pending = quotes.filter(q => {
+    const s = (q.status || "draft").toLowerCase();
+    return s === "draft" || s === "submitted";
+  }).length;
+  const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
+  const rate = total ? Math.round((won / total) * 100) : 0;
+
+  document.getElementById("statTotal").textContent   = total;
+  document.getElementById("statPending").textContent = pending;
+  document.getElementById("statWon").textContent     = won;
+  document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
+}
 
   // ===== Filters =====
   function applyFilters() {
