@@ -842,9 +842,9 @@ Next lines: brief description"></textarea>
   </table>
 
   <div style="margin-top:1.5rem; text-align:right;" class="no-print">
-    <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
-      ✅ Finalize &amp; Save to History
-    </button>
+  <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
+    ✅ Finalize &amp; Save to History
+  </button>
   </div>
 </div>
 
@@ -1030,8 +1030,10 @@ Next lines: brief description"></textarea>
     // Single finalize handler; no inline onclick on the button
     document
       .getElementById("finalizeQuoteBtn")
-      ?.addEventListener("click", () => finalizeQuote(currentQuoteDocId));
-  });
+      ?.addEventListener("click", () => {
+        console.log("[quotes.html] finalize button clicked, docId:", currentQuoteDocId);
+        finalizeQuote(currentQuoteDocId);
+      });
 
   window.openConfigModal = openConfigModal;
   window.openAdditionalModal = openAdditionalModal;
