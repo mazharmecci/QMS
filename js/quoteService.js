@@ -148,30 +148,34 @@ export function buildQuoteObject() {
     };
   });
 
-  return {
-    quoteNo: header.quoteNo || "",
-    quoteDate: header.quoteDate || "",
-    // add ref fields so they persist to Firestore
-    yourReference: header.yourReference || "",
-    refDate: header.refDate || "",
-    hospital: {
-      name: header.hospitalName || "",
-      address: header.hospitalAddress || "",
-      contactPerson: header.contactPerson || "",
-      email: header.contactEmail || "",
-      phone: header.contactPhone || ""
-    },
-    status: header.status || "Submitted",
-    discount: Number(header.discount || 0),
-    totalValueINR,
-    gstValueINR,
-    items,
-    salesNote: header.salesNote || "",
-    termsHtml: header.termsHtml || "",
-    termsText: header.termsText || "",
-    createdBy: header.createdBy || "Mazhar R Mecci"
-  };
-}
+return {
+  quoteNo: header.quoteNo || "",
+  quoteDate: header.quoteDate || "",
+
+  // reference fields
+  yourReference: header.yourReference || "",
+  refDate: header.refDate || "",
+
+  hospital: {
+    name: header.hospitalName || "",
+    address: header.hospitalAddress || "",
+    contactPerson: header.contactPerson || "",
+    email: header.contactEmail || "",
+    phone: header.contactPhone || "",
+    officePhone: header.officePhone || ""
+  },
+
+  status: header.status || "Submitted",
+  discount: Number(header.discount || 0),
+  totalValueINR,
+  gstValueINR,
+  items,
+  salesNote: header.salesNote || "",
+  termsHtml: header.termsHtml || "",
+  termsText: header.termsText || "",
+  createdBy: header.createdBy || "Mazhar R Mecci"
+};
+
 
 /* ========================
  * Validation
