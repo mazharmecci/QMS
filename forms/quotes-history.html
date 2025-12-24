@@ -18,7 +18,7 @@
     }
     
     .header-inner {
-      max-width:1320px;      /* widened */
+      max-width:1320px;
       margin:0 auto;
       display:flex;
       align-items:center;
@@ -41,11 +41,10 @@
       font-size:1.5rem;
     }
     
-    /* MAIN FRAME */
     .container {
-      max-width:1320px;      /* widened to match header */
+      max-width:1320px;
       margin:2rem auto;
-      padding:2rem 2.5rem;   /* a bit more side padding */
+      padding:2rem 2.5rem;
       background:#fff;
       border-radius:12px;
       box-shadow:0 4px 12px rgba(0,0,0,0.1);
@@ -59,7 +58,6 @@
       gap:0.5rem;
     }
     
-    /* Dashboard stats */
     .dashboard {
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -70,16 +68,13 @@
       border-radius:10px;
     }
     
-    /* ... rest of your CSS unchanged ... */
-    
-    /* Table */
     table {
       width:100%;
       border-collapse:collapse;
     }
     
     th, td {
-      padding:0.75rem 0.8rem;   /* tiny bump for readability */
+      padding:0.75rem 0.8rem;
       border-bottom:1px solid #e9ecef;
       text-align:left;
       font-size:0.9rem;
@@ -115,7 +110,6 @@
       margin-top:0.25rem;
     }
 
-    /* Controls */
     .controls {
       display:flex;
       gap:0.75rem;
@@ -160,7 +154,6 @@
     .delete-btn { background:#dc3545; color:#fff; }
     .status-btn { background:#28a745; color:#fff; }
 
-    /* Status badges */
     .status-badge {
       padding:0.25rem 0.7rem;
       border-radius:999px;
@@ -175,7 +168,6 @@
     .status-won { background:#d4edda; color:#155724; }
     .status-lost { background:#f8d7da; color:#721c24; }
 
-    /* Details panel */
     .quote-details {
       margin-top:1.75rem;
       padding:1.5rem;
@@ -296,10 +288,12 @@
 
 <!-- ========= Scripts ========= -->
 <script type="module">
-  import { db, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "../js/firebase.js";
+  import { db, collection, getDocs, updateDoc, deleteDoc, doc } from "../js/firebase.js";
+
+  const QUOTES_URL = "quotes.html"; // relative path from this file
 
   // ===== State =====
-  let quotes = [];          // Firestore docs as plain objects
+  let quotes = [];
   let filteredQuotes = [];
   let sortConfig = { key: null, direction: "asc" };
 
@@ -355,6 +349,7 @@
         <td class="actions">
           <button class="view-btn" onclick="viewQuote(${i})">View</button>
           <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
+          <button class="view-btn" onclick="editQuote(${i})">Edit</button>
           <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
         </td>
       `;
@@ -440,7 +435,7 @@
     renderTable(filteredQuotes);
   }
 
-  // ===== Status advance (in-place field only, no history yet) =====
+  // ===== Status advance =====
   async function advanceStatus(index) {
     const q = filteredQuotes[index];
     if (!q) return;
@@ -454,7 +449,6 @@
 
     try {
       await updateDoc(doc(db, "quoteHistory", q.id), { status: next });
-      // update base array too
       const base = quotes.find(x => x.id === q.id);
       if (base) base.status = next;
       renderTable(filteredQuotes);
@@ -462,6 +456,14 @@
       console.error("Failed to update status", err);
       alert("Failed to update status");
     }
+  }
+
+  // ===== Edit in quotes.html =====
+  function editQuote(index) {
+    const q = filteredQuotes[index];
+    if (!q) return;
+    // Let quotes.html load it via ?id=...
+    window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
   // ===== Delete =====
@@ -550,7 +552,7 @@
     detailsDiv.classList.remove("hidden");
   }
 
-  // ===== CSV Export (from Firestore data) =====
+  // ===== CSV Export =====
   function exportCSV() {
     if (!quotes.length) {
       alert("No quotes to export.");
@@ -580,7 +582,7 @@
     URL.revokeObjectURL(url);
   }
 
-  // ===== Wire globals for inline handlers =====
+  // ===== Wire globals =====
   window.goBack        = goBack;
   window.applyFilters  = applyFilters;
   window.clearFilters  = clearFilters;
@@ -589,14 +591,13 @@
   window.advanceStatus = advanceStatus;
   window.deleteQuote   = deleteQuote;
   window.exportCSV     = exportCSV;
+  window.editQuote     = editQuote;
 
-  // Live filter handlers
   document.getElementById("filterQuoteNo").addEventListener("input", applyFilters);
   document.getElementById("filterHospital").addEventListener("input", applyFilters);
   document.getElementById("filterStatus").addEventListener("input", applyFilters);
   document.getElementById("filterDate").addEventListener("change", applyFilters);
 
-  // Initial load
   loadQuotes();
 </script>
 
