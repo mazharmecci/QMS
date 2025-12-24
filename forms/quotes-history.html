@@ -294,57 +294,68 @@
   <div id="quoteDetails" class="hidden"></div>
 </div>
 
-<script>
+<!-- ========= Scripts ========= -->
+<script type="module">
+  import { db, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "../js/firebase.js";
+
+  // ===== State =====
+  let quotes = [];          // Firestore docs as plain objects
+  let filteredQuotes = [];
+  let sortConfig = { key: null, direction: "asc" };
+
+  const tbody = document.querySelector("#quoteTable tbody");
+  const detailsDiv = document.getElementById("quoteDetails");
+
   function goBack() {
     if (history.length > 1) history.back();
   }
 
-  let quotes = JSON.parse(localStorage.getItem('quotes') || '[]');
-  let filteredQuotes = [...quotes];
-  let sortConfig = { key:null, direction:'asc' };
-
-  const tbody = document.querySelector('#quoteTable tbody');
-  const detailsDiv = document.getElementById('quoteDetails');
-
   function moneyINR(value) {
     const num = Number(value || 0);
-    return num.toLocaleString('en-IN',{
-      minimumFractionDigits:2,
-      maximumFractionDigits:2
+    return num.toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   }
 
-  function saveQuotes() {
-    localStorage.setItem('quotes', JSON.stringify(quotes));
-  }
-
   function getStatusClass(status) {
-    const s = (status || 'draft').toLowerCase();
-    return 'status-' + s;
+    const s = (status || "draft").toLowerCase();
+    return "status-" + s;
   }
 
-  function renderTable(data = filteredQuotes) {
-    tbody.innerHTML = '';
-    data.forEach((q, i) => {
-      const globalIndex = quotes.indexOf(q); // map back to master array
-      const tr = document.createElement('tr');
-      const status = q.status || 'Draft';
-      const header = q.header || {};
+  // ===== Firestore load =====
+  async function loadQuotes() {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    quotes = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
+    filteredQuotes = [...quotes];
+    renderTable();
+  }
 
+  // ===== Table render =====
+  function renderTable(data = filteredQuotes) {
+    tbody.innerHTML = "";
+    data.forEach((q, i) => {
+      const quoteNo  = q.quoteNo || "-";
+      const date     = q.quoteDate || "-";
+      const hospital = q.hospital?.name || "-";
+      const total    = q.totalValueINR || 0;
+      const status   = q.status || "Draft";
+
+      const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>
-          ${header.quoteNo || '-'}
-          ${q.revision ? ` (Rev ${q.revision})` : ''}
-        </td>
-        <td>${header.quoteDate || '-'}</td>
-        <td>${header.hospitalName || '-'}</td>
-        <td>₹ ${moneyINR(q.summary?.totalValue)}</td>
+        <td>${quoteNo}</td>
+        <td>${date}</td>
+        <td>${hospital}</td>
+        <td>₹ ${moneyINR(total)}</td>
         <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
         <td class="actions">
-          <button class="view-btn" onclick="viewQuote(${globalIndex})">View</button>
-          <button class="status-btn" onclick="advanceStatus(${globalIndex})">Next</button>
-          <button class="delete-btn" onclick="deleteQuote(${globalIndex})">Delete</button>
+          <button class="view-btn" onclick="viewQuote(${i})">View</button>
+          <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
+          <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -355,87 +366,73 @@
   function updateDashboard() {
     const total = quotes.length;
     const pending = quotes.filter(q => {
-      const s = (q.status || 'draft').toLowerCase();
-      return s === 'draft' || s === 'submitted';
+      const s = (q.status || "draft").toLowerCase();
+      return s === "draft" || s === "submitted";
     }).length;
-    const won = quotes.filter(q => (q.status || '').toLowerCase() === 'won').length;
+    const won = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
     const rate = total ? Math.round((won / total) * 100) : 0;
 
-    document.getElementById('statTotal').textContent = total;
-    document.getElementById('statPending').textContent = pending;
-    document.getElementById('statWon').textContent = won;
-    document.getElementById('statWinRate').textContent = total ? rate + '%' : '--';
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statWon").textContent = won;
+    document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
   }
 
+  // ===== Filters =====
   function applyFilters() {
-    const fQuote = document.getElementById('filterQuoteNo').value.trim().toLowerCase();
-    const fHospital = document.getElementById('filterHospital').value.trim().toLowerCase();
-    const fStatus = document.getElementById('filterStatus').value.trim().toLowerCase();
-    const fDate = document.getElementById('filterDate').value;
+    const fQuote    = document.getElementById("filterQuoteNo").value.trim().toLowerCase();
+    const fHospital = document.getElementById("filterHospital").value.trim().toLowerCase();
+    const fStatus   = document.getElementById("filterStatus").value.trim().toLowerCase();
+    const fDate     = document.getElementById("filterDate").value;
 
     filteredQuotes = quotes.filter(q => {
-      const header = q.header || {};
-      const quoteNo = (header.quoteNo || '').toLowerCase();
-      const hospital = (header.hospitalName || '').toLowerCase();
-      const status = (q.status || 'draft').toLowerCase();
-      const date = header.quoteDate || '';
+      const quoteNo  = (q.quoteNo || "").toLowerCase();
+      const hospital = (q.hospital?.name || "").toLowerCase();
+      const status   = (q.status || "draft").toLowerCase();
+      const date     = q.quoteDate || "";
 
-      return (!fQuote || quoteNo.includes(fQuote)) &&
+      return (!fQuote    || quoteNo.includes(fQuote)) &&
              (!fHospital || hospital.includes(fHospital)) &&
-             (!fStatus || status.includes(fStatus)) &&
-             (!fDate || date.startsWith(fDate));
+             (!fStatus   || status.includes(fStatus)) &&
+             (!fDate     || date.startsWith(fDate));
     });
 
     renderTable(filteredQuotes);
   }
 
   function clearFilters() {
-    document.getElementById('filterQuoteNo').value = '';
-    document.getElementById('filterHospital').value = '';
-    document.getElementById('filterStatus').value = '';
-    document.getElementById('filterDate').value = '';
+    document.getElementById("filterQuoteNo").value = "";
+    document.getElementById("filterHospital").value = "";
+    document.getElementById("filterStatus").value = "";
+    document.getElementById("filterDate").value = "";
     filteredQuotes = [...quotes];
     renderTable(filteredQuotes);
   }
 
+  // ===== Sorting =====
   function sortBy(key) {
     if (sortConfig.key === key) {
-      sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+      sortConfig.direction = sortConfig.direction === "asc" ? "desc" : "asc";
     } else {
       sortConfig.key = key;
-      sortConfig.direction = 'asc';
+      sortConfig.direction = "asc";
     }
 
     filteredQuotes.sort((a, b) => {
       let av, bv;
-      switch(key) {
-        case 'quoteNo': {
-          const aq = a.header?.quoteNo || '';
-          const bq = b.header?.quoteNo || '';
-          if (aq === bq) {
-            const ar = Number(a.revision || 1);
-            const br = Number(b.revision || 1);
-            return sortConfig.direction === 'asc' ? ar - br : br - ar;
-          }
-          av = aq; bv = bq;
-          break;
-        }
-        case 'date':
-          av = a.header?.quoteDate || ''; bv = b.header?.quoteDate || ''; break;
-        case 'hospital':
-          av = a.header?.hospitalName || ''; bv = b.header?.hospitalName || ''; break;
-        case 'value':
-          av = a.summary?.totalValue || 0; bv = b.summary?.totalValue || 0; break;
-        case 'status':
-          av = a.status || 'Draft'; bv = b.status || 'Draft'; break;
-        default:
-          return 0;
+      switch (key) {
+        case "quoteNo":   av = a.quoteNo   || ""; bv = b.quoteNo   || ""; break;
+        case "date":      av = a.quoteDate || ""; bv = b.quoteDate || ""; break;
+        case "hospital":  av = a.hospital?.name || ""; bv = b.hospital?.name || ""; break;
+        case "value":     av = a.totalValueINR || 0; bv = b.totalValueINR || 0; break;
+        case "status":    av = a.status || "Draft"; bv = b.status || "Draft"; break;
+        default: return 0;
       }
 
-      if (typeof av === 'number') {
-        return sortConfig.direction === 'asc' ? av - bv : bv - av;
+      if (typeof av === "number") {
+        return sortConfig.direction === "asc" ? av - bv : bv - av;
       }
-      return sortConfig.direction === 'asc'
+      return sortConfig.direction === "asc"
         ? String(av).localeCompare(String(bv))
         : String(bv).localeCompare(String(av));
     });
@@ -443,82 +440,92 @@
     renderTable(filteredQuotes);
   }
 
-  function advanceStatus(index) {
-    const sequence = ['draft','submitted','approved','sent','won','lost'];
-    const q = quotes[index];
-    const current = (q.status || 'draft').toLowerCase();
-    const currentIdx = sequence.indexOf(current);
-    const next = sequence[Math.min(currentIdx + 1, sequence.length - 1)];
-
-    q.status = next;
-    q.history = q.history || [];
-    const now = new Date();
-    q.history.push({
-      status: next,
-      date: now.toISOString().slice(0,10),
-      time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-    });
-
-    saveQuotes();
-    filteredQuotes = [...quotes];
-    applyFilters();
-  }
-
-  function deleteQuote(index) {
-    if (!confirm('Delete this quote from history?')) return;
-    quotes.splice(index, 1);
-    saveQuotes();
-    filteredQuotes = [...quotes];
-    renderTable(filteredQuotes);
-    detailsDiv.classList.add('hidden');
-  }
-
-  function viewQuote(index) {
-    const q = quotes[index];
+  // ===== Status advance (in-place field only, no history yet) =====
+  async function advanceStatus(index) {
+    const q = filteredQuotes[index];
     if (!q) return;
 
-    const header = q.header || {};
-    const summary = q.summary || {};
-    const lineItems = q.lineItems || [];
+    const sequence = ["Draft","Submitted","Approved","Sent","Won","Lost"];
+    const current  = (q.status || "Draft");
+    const idx      = sequence.findIndex(s => s.toLowerCase() === current.toLowerCase());
+    const next     = sequence[Math.min(idx + 1, sequence.length - 1)];
 
-    const titleNo = header.quoteNo || '';
-    const titleRev = q.revision ? ` (Rev ${q.revision})` : '';
+    q.status = next;
+
+    try {
+      await updateDoc(doc(db, "quoteHistory", q.id), { status: next });
+      // update base array too
+      const base = quotes.find(x => x.id === q.id);
+      if (base) base.status = next;
+      renderTable(filteredQuotes);
+    } catch (err) {
+      console.error("Failed to update status", err);
+      alert("Failed to update status");
+    }
+  }
+
+  // ===== Delete =====
+  async function deleteQuote(index) {
+    const q = filteredQuotes[index];
+    if (!q) return;
+    if (!confirm("Delete this quote from history?")) return;
+
+    try {
+      await deleteDoc(doc(db, "quoteHistory", q.id));
+      quotes = quotes.filter(x => x.id !== q.id);
+      filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
+      renderTable(filteredQuotes);
+      detailsDiv.classList.add("hidden");
+    } catch (err) {
+      console.error("Failed to delete quote", err);
+      alert("Failed to delete quote");
+    }
+  }
+
+  // ===== Detail view =====
+  function viewQuote(index) {
+    const q = filteredQuotes[index];
+    if (!q) return;
+
+    const items = q.items || [];
+    const hosp  = q.hospital || {};
 
     let html = `
       <div class="quote-details">
-        <h3>Quote Details - ${titleNo}${titleRev}</h3>
+        <h3>Quote Details - ${q.quoteNo || ""}</h3>
         <div class="details-grid">
-          <p>
-            <strong>Quote No:</strong>
-            ${titleNo || '-'}${titleRev}
-          </p>
-          <p><strong>Date:</strong> ${header.quoteDate || '-'}</p>
-          <p><strong>Hospital:</strong> ${header.hospitalName || '-'}</p>
-          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || 'Draft'}</span></p>
-          <p><strong>Contact:</strong> ${header.contactPerson || '-'}</p>
-          <p><strong>Phone:</strong> ${header.contactPhone || '-'}</p>
+          <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
+          <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
+          <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Draft"}</span></p>
+          <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
+          <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
+          <p><strong>Email:</strong> ${hosp.email || "-"}</p>
+          <p><strong>Address:</strong> ${hosp.address || "-"}</p>
         </div>
 
         <h4>Line Items</h4>
         <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
           <thead>
             <tr style="background:#f0f4f8;">
-              <th>Item</th>
+              <th>Instrument</th>
               <th>Code</th>
-              <th>Type</th>
-              <th style="text-align:right;">Price (INR)</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Unit Price</th>
+              <th style="text-align:right;">Total</th>
             </tr>
           </thead>
           <tbody>
     `;
 
-    lineItems.forEach(li => {
+    items.forEach(li => {
       html += `
         <tr>
-          <td>${li.name || ''}</td>
-          <td>${li.code || ''}</td>
-          <td>${li.type || ''}</td>
-          <td style="text-align:right;">₹ ${moneyINR(li.price)}</td>
+          <td>${li.instrumentName || ""}</td>
+          <td>${li.instrumentCode || ""}</td>
+          <td style="text-align:right;">${li.quantity || 0}</td>
+          <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
+          <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
         </tr>
       `;
     });
@@ -529,33 +536,10 @@
 
         <h4>Summary</h4>
         <div class="details-grid">
-          <p><strong>Items Total:</strong> ₹ ${moneyINR(summary.itemsTotal)}</p>
-          <p><strong>Discount:</strong> ₹ ${moneyINR(summary.discount)}</p>
-          <p><strong>After Discount:</strong> ₹ ${moneyINR(summary.afterDiscount)}</p>
-          <p><strong>Freight:</strong> ${summary.freight || '-'}</p>
-          <p><strong>GST @ ${summary.gstPercent || 0}%:</strong> ₹ ${moneyINR(summary.gstAmount)}</p>
-          <p><strong>Total Value:</strong> ₹ ${moneyINR(summary.totalValue)}</p>
+          <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
+          <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
         </div>
-    `;
 
-    if (q.history && q.history.length) {
-      html += `
-        <div class="status-timeline">
-          <h4>Status History</h4>
-          ${q.history.slice().reverse().map(h => `
-            <div class="timeline-item">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <h4>${(h.status || '').toUpperCase()}</h4>
-                <div class="timeline-meta">${h.date || ''} ${h.time || ''}</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    html += `
         <div style="margin-top:1.5rem; text-align:right;">
           <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">Close</button>
         </div>
@@ -563,48 +547,57 @@
     `;
 
     detailsDiv.innerHTML = html;
-    detailsDiv.classList.remove('hidden');
+    detailsDiv.classList.remove("hidden");
   }
 
+  // ===== CSV Export (from Firestore data) =====
   function exportCSV() {
     if (!quotes.length) {
-      alert('No quotes to export.');
+      alert("No quotes to export.");
       return;
     }
 
-    const headerRow = ['Quote No','Revision','Date','Hospital','Total Value','Status'];
-    const lines = [headerRow.join(',')];
+    const headerRow = ["Quote No","Date","Hospital","Total Value","Status"];
+    const lines = [headerRow.join(",")];
 
     quotes.forEach(q => {
-      const h = q.header || {};
-      const s = q.summary || {};
       const row = [
-        `"${(h.quoteNo || '').replace(/"/g,'""')}"`,
-        q.revision || 1,
-        h.quoteDate || '',
-        `"${(h.hospitalName || '').replace(/"/g,'""')}"`,
-        s.totalValue || 0,
-        q.status || 'Draft'
+        `"${(q.quoteNo || "").replace(/"/g, '""')}"`,
+        q.quoteDate || "",
+        `"${(q.hospital?.name || "").replace(/"/g, '""')}"`,
+        q.totalValueINR || 0,
+        q.status || "Draft"
       ];
-      lines.push(row.join(','));
+      lines.push(row.join(","));
     });
 
-    const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'quotes-history.csv';
+    a.download = "quotes-history.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  // Live filter handlers
-  document.getElementById('filterQuoteNo').addEventListener('input', applyFilters);
-  document.getElementById('filterHospital').addEventListener('input', applyFilters);
-  document.getElementById('filterStatus').addEventListener('input', applyFilters);
-  document.getElementById('filterDate').addEventListener('change', applyFilters);
+  // ===== Wire globals for inline handlers =====
+  window.goBack        = goBack;
+  window.applyFilters  = applyFilters;
+  window.clearFilters  = clearFilters;
+  window.sortBy        = sortBy;
+  window.viewQuote     = viewQuote;
+  window.advanceStatus = advanceStatus;
+  window.deleteQuote   = deleteQuote;
+  window.exportCSV     = exportCSV;
 
-  renderTable();
+  // Live filter handlers
+  document.getElementById("filterQuoteNo").addEventListener("input", applyFilters);
+  document.getElementById("filterHospital").addEventListener("input", applyFilters);
+  document.getElementById("filterStatus").addEventListener("input", applyFilters);
+  document.getElementById("filterDate").addEventListener("change", applyFilters);
+
+  // Initial load
+  loadQuotes();
 </script>
 
 </body>
