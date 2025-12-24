@@ -17,7 +17,7 @@ header {
   padding:0.75rem 1.5rem;
 }
 .header-inner {
-  max-width:1320px;           /* ⬅ widened */
+  max-width:1320px;
   margin:0 auto;
   display:flex;
   align-items:center;
@@ -40,9 +40,9 @@ header {
 
 /* MAIN FRAME */
 .container {
-  max-width:1320px;           /* ⬅ widened to match header */
+  max-width:1320px;
   margin:2rem auto;
-  padding:2rem 2.5rem;        /* ⬅ a bit more padding left/right */
+  padding:2rem 2.5rem;
   background:#fff;
   border-radius:12px;
   box-shadow:0 4px 12px rgba(0,0,0,0.1);
@@ -54,12 +54,12 @@ header {
   border:1px solid #ccc;
   border-radius:8px;
   background:#fff;
-  padding:2rem 2.25rem;       /* ⬅ slightly wider inside */
+  padding:2rem 2.25rem;
   position:relative;
 }
 .quote-header-body {
   display:flex;
-  gap:1.5rem;                 /* ⬅ little more breathing room */
+  gap:1.5rem;
 }
 .quote-left,
 .quote-right {
@@ -77,24 +77,23 @@ header {
   width:auto;
   display:block;
 }
-  
+
 .company-box {
-  flex: 1 1 auto;              /* allow it to grow/shrink */
+  flex: 1 1 auto;
   background: #d0d4d9;
   border-radius: 4px;
   padding: 0.4rem 1rem;
   display: flex;
   align-items: center;
   margin-top: 4.85rem;
-  min-width: 0;                /* critical: prevents flex overflow clipping */
+  min-width: 0;
 }
-
 .company-box p {
   margin: 0;
   font-size: 9px;
-  white-space: nowrap;         /* keep in one line */
-  overflow: hidden;            /* still hides overflow */
-  text-overflow: ellipsis;     /* show ellipsis if too long */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sales-box {
@@ -105,7 +104,6 @@ header {
   display: flex;
   align-items: center;
 }
-
 .sales-title {
   margin-left: auto;
   font-weight: 700;
@@ -114,12 +112,11 @@ header {
   padding-top: 0.1rem;
   letter-spacing: 0.03em;
 }
-  
+
 .hospital-box,
 .attn-box {
   margin-top:0.3rem;
 }
-  
 .attn-box {
   background:#add8e6;
   padding:0.75rem 1rem;
@@ -138,31 +135,27 @@ header {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 2fr)
                          minmax(0, auto) minmax(0, 1.5fr);
-  column-gap: 0.75rem;   /* slightly reduced gap */
+  column-gap: 0.75rem;
   row-gap: 0.5rem;
 }
-
 .quote-meta-grid .label {
   font-size: 9px;
   font-weight: 500;
   color: #222;
   text-align: left;
 }
-
 .quote-meta-grid .value {
-  font-size: 12px;       /* reduced from 14px */
-  font-weight: 600;      /* slightly lighter */
+  font-size: 12px;
+  font-weight: 600;
   color: #000;
   text-align: left;
-  white-space: normal;   /* allow wrapping instead of forcing one line */
-  word-break: break-word;/* break long strings if needed */
+  white-space: normal;
+  word-break: break-word;
 }
-
 .quote-meta-grid .value-small {
-  font-size: 11px;       /* reduced from 13px */
+  font-size: 11px;
   font-weight: 600;
 }
-
 .quote-meta-grid .label.right,
 .quote-meta-grid .value.right {
   text-align: right;
@@ -171,26 +164,23 @@ header {
 /* Print-specific overrides */
 @media print {
   .quote-meta-grid .label {
-    font-size: 8px;       /* smaller labels for print */
+    font-size: 8px;
     font-weight: 500;
     color: #000;
   }
-
   .quote-meta-grid .value {
-    font-size: 10px;      /* shrink values further for print */
+    font-size: 10px;
     font-weight: 500;
     color: #000;
-    white-space: normal;  /* allow wrapping */
+    white-space: normal;
     word-break: break-word;
   }
-
   .quote-meta-grid .value-small {
     font-size: 9px;
     font-weight: 600;
   }
-
   .quote-meta-grid {
-    column-gap: 0.5rem;   /* tighter spacing for print */
+    column-gap: 0.5rem;
     row-gap: 0.4rem;
     grid-template-columns: minmax(0, auto) minmax(0, 2fr)
                            minmax(0, auto) minmax(0, 1.5fr);
@@ -206,7 +196,7 @@ header {
 }
 #quoteBuilder {
   margin-top:1.5rem;
-  padding:1.5rem 1.75rem;    /* ⬅ a bit wider to match header */
+  padding:1.5rem 1.75rem;
   background:#ffffff;
   border:1px solid #ddd;
   border-radius:12px;
@@ -349,8 +339,8 @@ table.quote-table .cat-sub strong {
 /* Force Terms & Conditions to a new page when printing */
 @media print {
   #termsBlock {
-    page-break-before: always;  /* legacy but still widely supported [web:173][web:175] */
-    break-before: page;         /* modern replacement [web:174] */
+    page-break-before: always;
+    break-before: page;
   }
 }
 
@@ -424,7 +414,6 @@ table.quote-table .cat-sub strong {
     -webkit-appearance: none;
     margin: 0;
   }
-
   input[type="number"] {
     -moz-appearance: textfield;
   }
@@ -474,7 +463,7 @@ table.quote-table .cat-sub strong {
   inset:0;
   background:rgba(15,23,42,0.55);
   z-index:2000;
-  align-items:center;
+  alignitems:center;
   justify-content:center;
 }
 
@@ -537,7 +526,6 @@ table.quote-table .cat-sub strong {
   color:#64748b;
   margin-bottom:0.15rem;
 }
-
 .item-modal-field input,
 .item-modal-field textarea {
   width:100%;
@@ -548,7 +536,6 @@ table.quote-table .cat-sub strong {
   outline:none;
   transition:border-color 0.15s ease, box-shadow 0.15s ease;
 }
-
 .item-modal-field input:focus,
 .item-modal-field textarea:focus {
   border-color:#2563eb;
@@ -570,7 +557,6 @@ table.quote-table .cat-sub strong {
   display:flex;
   gap:0.5rem;
 }
-
 .btn-item-secondary,
 .btn-item-primary {
   border-radius:999px;
@@ -580,12 +566,10 @@ table.quote-table .cat-sub strong {
   padding:0.3rem 0.8rem;
   cursor:pointer;
 }
-
 .btn-item-secondary {
   background:#f1f5f9;
   color:#0f172a;
 }
-
 .btn-item-primary {
   background:linear-gradient(135deg,#2563eb,#1d4ed8);
   color:#ffffff;
@@ -609,31 +593,25 @@ table.quote-table .cat-sub strong {
   padding:0.35rem 0;
   border-bottom:1px dashed #e2e8f0;
 }
-
 .item-row:last-child {
   border-bottom:none;
 }
-
 .item-row-main {
   flex:1;
   margin-right:0.5rem;
 }
-
 .item-row-main-title {
   font-weight:600;
   color:#0f172a;
 }
-
 .item-row-main-meta {
   color:#64748b;
 }
-
 .item-row-actions {
   display:flex;
   flex-direction:column;
   gap:0.25rem;
 }
-
 .item-row-actions button {
   border-radius:999px;
   border:1px solid #cbd5e1;
@@ -642,17 +620,14 @@ table.quote-table .cat-sub strong {
   cursor:pointer;
   background:#f8fafc;
 }
-
 .item-row-actions button:nth-child(1) {
   color:#0f172a;
 }
-
 .item-row-actions button:nth-child(2) {
   color:#b91c1c;
   border-color:#fecaca;
   background:#fef2f2;
 }
-
 </style>
 </head>
 
@@ -736,7 +711,8 @@ table.quote-table .cat-sub strong {
 
         <div class="item-modal-field item-modal-details">
           <label for="itemDetails">Details</label>
-          <textarea id="itemDetails" rows="4" placeholder="First line: main item name&#10;Next lines: brief description"></textarea>
+          <textarea id="itemDetails" rows="4" placeholder="First line: main item name
+Next lines: brief description"></textarea>
         </div>
       </div>
 
@@ -802,83 +778,79 @@ table.quote-table .cat-sub strong {
                 <div class="label">Your Reference</div><div class="value value-small" id="metaYourRef"></div>
                 <div class="label right">Ref Date</div><div class="value value-small right" id="metaRefDate"></div>
                 <div class="label">Your Contact Person</div>
-<div class="value value-small" id="metaContactPerson"></div>
+                <div class="value value-small" id="metaContactPerson"></div>
+                <div class="label right">Handphone</div>
+                <div class="value value-small right" id="metaPhone"></div>
+                <div class="label">Email</div>
+                <div class="value value-small" id="metaEmail"></div>
+                <div class="label right">Office</div>
+                <div class="value value-small right" id="metaOffice"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </td></tr>
+    </thead>
 
-<div class="label right">Handphone</div>
-<div class="value value-small right" id="metaPhone"></div>
+    <tbody class="print-body">
+      <tr>
+        <td>
+          <div id="salesNoteBlock"></div>
 
-<div class="label">Email</div>
-<div class="value value-small" id="metaEmail"></div>
+          <!-- Builder wrapper -->
+          <div id="quoteBuilder" class="no-print">
+            <h3 class="no-print">Quote Builder</h3>
+            <div class="quote-actions no-print">
+              <button type="button" class="btn-quote" id="openInstrumentModalBtn">
+                Manage Instruments
+              </button>
+            </div>
+          </div>
 
-<div class="label right">Office</div>
-<div class="value value-small right" id="metaOffice"></div>
-</div> <!-- end quote-meta-grid -->
-</div> <!-- end quote-right -->
-</div> <!-- end quote-header-body -->
-</div> <!-- end quote-header -->
-</td>
-</tr>
-</thead>
+          <table id="quoteSummaryTable" class="quote-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Cat / Material No.<br>Description</th>
+                <th>Quantity</th>
+                <th>Unit Price (INR)</th>
+                <th>Total Price (INR)</th>
+              </tr>
+            </thead>
+            <tbody id="quoteBuilderBody"></tbody>
+            <tbody id="quoteSummaryBody"></tbody>
+          </table>
 
-<tbody class="print-body">
-<tr>
-  <td>
-    <div id="salesNoteBlock"></div>
+          <div id="termsBlock">
+            <h2>Terms and Conditions of Sale</h2>
+            <div id="termsTextBlock"></div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
 
-    <!-- Builder wrapper -->
-    <div id="quoteBuilder" class="no-print">
-      <h3 class="no-print">Quote Builder</h3>
-      <div class="quote-actions no-print">
-        <button type="button" class="btn-quote" id="openInstrumentModalBtn">
-          Manage Instruments
-        </button>
-      </div>
-    </div>
+    <tfoot class="print-footer">
+      <tr>
+        <td>
+          <div class="footer">
+            ISTOS Medical Private Limited<br>
+            # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
+            Bikasipura Main Road, Yelachenahalli,<br>
+            BANGALORE, Karnataka, INDIA 560 062<br>
+            P: +91 80 2686 0607 | F: +91 80 2686 0668 |
+            E: talktous@istos.in | www.istosmedical.com<br>
+            CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
+          </div>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
 
-    <table id="quoteSummaryTable" class="quote-table">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Cat / Material No.<br>Description</th>
-          <th>Quantity</th>
-          <th>Unit Price (INR)</th>
-          <th>Total Price (INR)</th>
-        </tr>
-      </thead>
-      <tbody id="quoteBuilderBody"></tbody>
-      <tbody id="quoteSummaryBody"></tbody>
-    </table>
-
-    <div id="termsBlock">
-      <h2>Terms and Conditions of Sale</h2>
-      <div id="termsTextBlock"></div>
-    </div>
-  </td>
-</tr>
-</tbody>
-
-<tfoot class="print-footer">
-<tr>
-  <td>
-    <div class="footer">
-      ISTOS Medical Private Limited<br>
-      # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
-      Bikasipura Main Road, Yelachenahalli,<br>
-      BANGALORE, Karnataka, INDIA 560 062<br>
-      P: +91 80 2686 0607 | F: +91 80 2686 0668 |
-      E: talktous@istos.in | www.istosmedical.com<br>
-      CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
-    </div>
-  </td>
-</tr>
-</tfoot>
-</table>
-
-<div style="margin-top:1.5rem; text-align:right;" class="no-print">
-  <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
-    ✅ Finalize &amp; Save to History
-  </button>
-</div>
+  <div style="margin-top:1.5rem; text-align:right;" class="no-print">
+    <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
+      ✅ Finalize &amp; Save to History
+    </button>
+  </div>
 </div> <!-- end container -->
 
 <!-- ========= Scripts ========= -->
@@ -929,6 +901,10 @@ table.quote-table .cat-sub strong {
   /* ===== Config ===== */
   const HOME_URL = "https://qms.istosmedical.com/";
 
+  /* ===== State ===== */
+  // null = new quote, non-null = editing existing quoteHistory doc
+  let currentQuoteDocId = null;
+
   /* ===== Helpers ===== */
   function goBack() {
     const before = window.location.href;
@@ -947,11 +923,15 @@ table.quote-table .cat-sub strong {
   }
 
   /**
-   * Convert Firestore quote document into header + quoteLines
+   * Convert Firestore quoteHistory document into header + quoteLines
    * and store in localStorage.
    */
-  function hydrateLocalFromFirestoreDoc(docData) {
+  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData) return;
+
+    if (docId) {
+      currentQuoteDocId = docId;
+    }
 
     const header = {
       quoteNo: docData.quoteNo || "",
@@ -975,7 +955,7 @@ table.quote-table .cat-sub strong {
     (docData.items || []).forEach(item => {
       quoteLines.push({
         lineType: "instrument",
-        instrumentIndex: 0,           // you can map by code later if you want
+        instrumentIndex: 0,
         quantity: item.quantity || 1,
         configItems: item.configItems || [],
         additionalItems: item.additionalItems || []
@@ -998,16 +978,14 @@ table.quote-table .cat-sub strong {
     try {
       if (quoteId) {
         const ref = doc(db, "quoteHistory", quoteId);
-        const snap = await getDoc(ref);          // [web:117][web:168]
+        const snap = await getDoc(ref);  // get a single doc by id [web:48][web:51]
         if (snap.exists()) {
-          hydrateLocalFromFirestoreDoc(snap.data());
+          hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
         } else {
           console.warn("No quoteHistory document for id", quoteId);
         }
       } else {
-        console.warn(
-          "Query by quoteNo not implemented; pass ?id=<docId> in URL for best results."
-        );
+        console.warn("Query by quoteNo not implemented; use ?id=<docId>.");
       }
     } catch (err) {
       console.error("Error loading quote from Firestore:", err);
@@ -1016,7 +994,7 @@ table.quote-table .cat-sub strong {
 
   /* ===== Init & Event Wiring ===== */
   document.addEventListener("DOMContentLoaded", async () => {
-    // 1) Ensure localStorage is hydrated from Firestore if empty
+    // 1) Ensure localStorage is hydrated from Firestore if opened via ?id=
     await loadQuoteFromFirestoreIfNeeded();
 
     // 2) Initial render using localStorage-backed services
@@ -1070,7 +1048,7 @@ table.quote-table .cat-sub strong {
     // Finalize quote (local + Firestore via quoteService)
     document
       .getElementById("finalizeQuoteBtn")
-      ?.addEventListener("click", finalizeQuote);
+      ?.addEventListener("click", () => finalizeQuote(currentQuoteDocId));
   });
 
   /* ===== Expose for inline onclick="" handlers ===== */
@@ -1080,7 +1058,7 @@ table.quote-table .cat-sub strong {
   window.editItemFromModal = editItemFromModal;
   window.removeItemFromModal = removeItemFromModal;
   window.addInstrumentToQuote = addInstrumentToQuote;
-  window.addMasterItemToLine = addMasterItemToLine;  // ← new
+  window.addMasterItemToLine = addMasterItemToLine;
 </script>
 
 </body>
