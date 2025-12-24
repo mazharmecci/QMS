@@ -983,6 +983,8 @@ Next lines: brief description"></textarea>
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
+    console.log("[quotes.html] DOMContentLoaded");
+
     await loadQuoteFromFirestoreIfNeeded();
 
     populateHeader();
@@ -1027,13 +1029,13 @@ Next lines: brief description"></textarea>
         document.getElementById("additionalPickerOverlay").style.display = "none";
       });
 
-    // Single finalize handler; no inline onclick on the button
     document
       .getElementById("finalizeQuoteBtn")
       ?.addEventListener("click", () => {
         console.log("[quotes.html] finalize button clicked, docId:", currentQuoteDocId);
         finalizeQuote(currentQuoteDocId);
       });
+  });
 
   window.openConfigModal = openConfigModal;
   window.openAdditionalModal = openAdditionalModal;
