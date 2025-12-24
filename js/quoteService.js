@@ -8,7 +8,7 @@ import {
   doc,
   updateDoc,
   serverTimestamp
-} from "./firebase.js"; // ensure firebase.js exports serverTimestamp, updateDoc [web:42][web:61]
+} from "./firebase.js";
 
 /* ========================
  * Local header & context
@@ -115,7 +115,7 @@ export function buildLineItemsFromCurrentQuote() {
 
 /**
  * Build Firestore-friendly quote document from current quote.
- * This is what goes into quoteHistory.
+ * This is what goes into quoteHistory & its revisions.
  */
 export function buildQuoteObject() {
   const header = getQuoteHeaderRaw();
@@ -198,32 +198,38 @@ export function validateHeader(header) {
  * =======================*/
 
 /**
- * Save quote to Firestore quoteHistory.
- * If docId is provided, update that doc; otherwise create a new one. [web:42][web:61]
- * Returns the document id (existing or newly created).
+ * Internal: write the "active" quote document in quoteHistory.
+ * If docId is provided, update that doc; otherwise create a new one.
+ * Does NOT handle revisions subcollection; caller passes revision. [web:42][web:58]
  */
-async function saveQuoteToFirestore(docId = null) {
-  const baseQuoteDoc = buildQuoteObject();
-
-  // Add timestamps here so they are always set by server
-  const data = {
-    ...baseQuoteDoc,
-    updatedAt: serverTimestamp()
-  };
-
+async function saveBaseQuoteDocToFirestore(docId, data) {
   if (docId) {
     const ref = doc(db, "quoteHistory", docId);
-    await updateDoc(ref, data);
+    await updateDoc(ref, {
+      ...data,
+      updatedAt: serverTimestamp()
+    });
     return docId;
   }
 
-  // New document
   const colRef = collection(db, "quoteHistory");
   const newDoc = await addDoc(colRef, {
     ...data,
-    createdAt: serverTimestamp()
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   });
   return newDoc.id;
+}
+
+/**
+ * Internal: append a snapshot into quoteHistory/{docId}/revisions.
+ */
+async function appendRevisionSnapshot(docId, data) {
+  const subCol = collection(db, "quoteHistory", docId, "revisions");
+  await addDoc(subCol, {
+    ...data,
+    createdAt: serverTimestamp()
+  });
 }
 
 /* ========================
@@ -232,7 +238,7 @@ async function saveQuoteToFirestore(docId = null) {
 
 /**
  * Finalize the current quote: compute totals, local revision, and save
- * to both local history and Firestore.
+ * to both local history and Firestore, with Firestore revision history.
  *
  * @param {string|null} docId - existing quoteHistory document id when editing,
  *                              or null/undefined for a brand new quote.
@@ -247,7 +253,7 @@ export async function finalizeQuote(docId = null) {
     return;
   }
 
-  // Totals for on-screen / local history summary
+  // Totals for local summary
   let itemsTotal = 0;
   lines.forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
@@ -282,7 +288,7 @@ export async function finalizeQuote(docId = null) {
 
   const lineItems = buildLineItemsFromCurrentQuote();
 
-  // Local history: maintain revisions by quoteNo (purely local, as before)
+  // Local history revision by quoteNo (keeps your existing behavior)
   const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
   const sameQuote = existing.filter(
     q => q.header && q.header.quoteNo === header.quoteNo
@@ -309,15 +315,27 @@ export async function finalizeQuote(docId = null) {
     ]
   };
 
-  // 1) Keep existing local history behavior
+  // Save to local history
   existing.push(quoteLocal);
   localStorage.setItem("quotes", JSON.stringify(existing));
 
-  // 2) Save normalized document into Firestore (add or update)
+  // Build Firestore payload, with revision embedded.
+  const baseQuoteDoc = buildQuoteObject();
+  const firestoreData = {
+    ...baseQuoteDoc,
+    revision: nextRev,          // <- current revision number for this snapshot
+    localSummary: summary       // optional, handy for listing without re-calc
+  };
+
   try {
-    const savedId = await saveQuoteToFirestore(docId);
+    // 1) Save base doc (creates or updates, but ALWAYS keeps same quoteNo)
+    const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
+
+    // 2) Append snapshot to revisions subcollection
+    await appendRevisionSnapshot(savedId, firestoreData);
+
     alert(
-      `Quote saved to history and cloud as ${header.quoteNo} (Rev ${nextRev}).`
+      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`
     );
     return savedId;
   } catch (err) {
