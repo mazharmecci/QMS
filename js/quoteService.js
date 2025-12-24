@@ -203,12 +203,15 @@ export function validateHeader(header) {
  * Does NOT handle revisions subcollection; caller passes revision. [web:42][web:58]
  */
 async function saveBaseQuoteDocToFirestore(docId, data) {
+  console.log("[saveBaseQuoteDocToFirestore] docId:", docId);
+
   if (docId) {
     const ref = doc(db, "quoteHistory", docId);
     await updateDoc(ref, {
       ...data,
       updatedAt: serverTimestamp()
     });
+    console.log("[saveBaseQuoteDocToFirestore] updated doc:", docId);
     return docId;
   }
 
@@ -218,6 +221,7 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   });
+  console.log("[saveBaseQuoteDocToFirestore] created new doc:", newDoc.id);
   return newDoc.id;
 }
 
@@ -225,11 +229,13 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
  * Internal: append a snapshot into quoteHistory/{docId}/revisions.
  */
 async function appendRevisionSnapshot(docId, data) {
+  console.log("[appendRevisionSnapshot] for docId:", docId);
   const subCol = collection(db, "quoteHistory", docId, "revisions");
   await addDoc(subCol, {
     ...data,
     createdAt: serverTimestamp()
   });
+  console.log("[appendRevisionSnapshot] snapshot written");
 }
 
 /* ========================
@@ -244,7 +250,11 @@ async function appendRevisionSnapshot(docId, data) {
  *                              or null/undefined for a brand new quote.
  */
 export async function finalizeQuote(docId = null) {
+  console.log("[finalizeQuote] CALLED with docId:", docId, "at", new Date().toISOString());
+
   const header = getQuoteHeaderRaw();
+  console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
+
   if (!validateHeader(header)) return;
 
   const { instruments, lines } = getQuoteContext();
@@ -268,7 +278,7 @@ export async function finalizeQuote(docId = null) {
     });
   });
 
-  const gstPercent = 18; // business rule
+  const gstPercent = 18;
   const discount = Number(header.discount || 0);
   const afterDisc = itemsTotal - discount;
   const gstAmount = (afterDisc * gstPercent) / 100;
@@ -288,7 +298,7 @@ export async function finalizeQuote(docId = null) {
 
   const lineItems = buildLineItemsFromCurrentQuote();
 
-  // Local history revision by quoteNo (keeps your existing behavior)
+  // Local revision history
   const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
   const sameQuote = existing.filter(
     q => q.header && q.header.quoteNo === header.quoteNo
@@ -297,6 +307,8 @@ export async function finalizeQuote(docId = null) {
     ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
     : 0;
   const nextRev = lastRev + 1;
+
+  console.log("[finalizeQuote] sameQuote.length:", sameQuote.length, "lastRev:", lastRev, "nextRev:", nextRev);
 
   const now = new Date();
   const quoteLocal = {
@@ -315,31 +327,33 @@ export async function finalizeQuote(docId = null) {
     ]
   };
 
-  // Save to local history
   existing.push(quoteLocal);
   localStorage.setItem("quotes", JSON.stringify(existing));
+  console.log("[finalizeQuote] local history updated, total entries:", existing.length);
 
-  // Build Firestore payload, with revision embedded.
+  // Firestore payload
   const baseQuoteDoc = buildQuoteObject();
   const firestoreData = {
     ...baseQuoteDoc,
-    revision: nextRev,          // <- current revision number for this snapshot
-    localSummary: summary       // optional, handy for listing without re-calc
+    revision: nextRev,
+    localSummary: summary
   };
 
   try {
-    // 1) Save base doc (creates or updates, but ALWAYS keeps same quoteNo)
+    console.log("[finalizeQuote] saving base doc to Firestore...");
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
+    console.log("[finalizeQuote] base doc saved with id:", savedId);
 
-    // 2) Append snapshot to revisions subcollection
+    console.log("[finalizeQuote] appending revision snapshot...");
     await appendRevisionSnapshot(savedId, firestoreData);
+    console.log("[finalizeQuote] revision snapshot completed");
 
     alert(
       `Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`
     );
     return savedId;
   } catch (err) {
-    console.error("Error saving quote to Firestore:", err);
+    console.error("[finalizeQuote] Error saving quote to Firestore:", err);
     alert(
       `Quote saved to local history as ${header.quoteNo} (Rev ${nextRev}), but cloud save failed.`
     );
