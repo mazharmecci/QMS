@@ -631,12 +631,10 @@
 
     const payload = {
       code: document.getElementById("configCode").value.trim(),
-      name: document.getElementById("configName").value.trim(),
+      name: document.getElementById("configName").value.trim(),  // ← here
       description: document.getElementById("configDescription").value,
       priceLabel: document.getElementById("configPriceLabel").value || "Included",
-      applicableModels: parseModels(
-        document.getElementById("configApplicable").value
-      ),
+      applicableModels: parseModels(document.getElementById("configApplicable").value),
       isActive: document.getElementById("configIsActive").checked
     };
 
