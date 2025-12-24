@@ -247,7 +247,16 @@ async function appendRevisionSnapshot(docId, data) {
  *
  * rawArg may be: Firestore docId string, a PointerEvent, or null/undefined.
  */
+
+let finalizeInProgress = false;
+
 export async function finalizeQuote(rawArg = null) {
+  if (finalizeInProgress) {
+    console.warn("[finalizeQuote] blocked: already in progress.");
+    return;
+  }
+  finalizeInProgress = true;
+
   let docId = null;
   if (typeof rawArg === "string") {
     docId = rawArg;
@@ -266,51 +275,60 @@ export async function finalizeQuote(rawArg = null) {
     new Date().toISOString()
   );
 
-  const header = getQuoteHeaderRaw();
-  console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
+  try {
+    const header = getQuoteHeaderRaw();
+    console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
 
-  if (!validateHeader(header)) return;
+    if (!validateHeader(header)) return;
 
-  const { instruments, lines } = getQuoteContext();
-  if (!lines.length) {
-    alert("No instruments in this quote. Please add at least one instrument.");
-    return;
-  }
-
-  // Totals for local summary
-  let itemsTotal = 0;
-  lines.forEach(line => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (inst) {
-      const qty = Number(line.quantity || 1);
-      itemsTotal += Number(inst.unitPrice || 0) * qty;
+    const { instruments, lines } = getQuoteContext();
+    if (!lines.length) {
+      alert("No instruments in this quote. Please add at least one instrument.");
+      return;
     }
-    (line.additionalItems || []).forEach(item => {
-      const qtyNum = Number(item.qty || 1);
-      const unitNum = Number(item.price || item.unitPrice || 0);
-      itemsTotal += qtyNum * unitNum;
+
+    // Totals for local summary
+    let itemsTotal = 0;
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        const qty = Number(line.quantity || 1);
+        itemsTotal += Number(inst.unitPrice || 0) * qty;
+      }
+      (line.additionalItems || []).forEach(item => {
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        itemsTotal += qtyNum * unitNum;
+      });
     });
-  });
 
-  const gstPercent = 18;
-  const discount = Number(header.discount || 0);
-  const afterDisc = itemsTotal - discount;
-  const gstAmount = (afterDisc * gstPercent) / 100;
-  const totalValue = afterDisc + gstAmount;
-  const roundedTotal = Math.round(totalValue);
+    const gstPercent = 18;
+    const discount = Number(header.discount || 0);
+    const afterDisc = itemsTotal - discount;
+    const gstAmount = (afterDisc * gstPercent) / 100;
+    const totalValue = afterDisc + gstAmount;
+    const roundedTotal = Math.round(totalValue);
 
-  const summary = {
-    itemsTotal,
-    discount,
-    afterDiscount: afterDisc,
-    freight: "Included",
-    gstPercent,
-    gstAmount,
-    totalValue,
-    roundOff: roundedTotal - totalValue
-  };
+    const summary = {
+      itemsTotal,
+      discount,
+      afterDiscount: afterDisc,
+      freight: "Included",
+      gstPercent,
+      gstAmount,
+      totalValue,
+      roundOff: roundedTotal - totalValue
+    };
 
-  const lineItems = buildLineItemsFromCurrentQuote();
+    const lineItems = buildLineItemsFromCurrentQuote();
+
+    // ... keep your existing local history + Firestore logic here,
+    // using docId and summary/lineItems exactly as before ...
+
+  } finally {
+    finalizeInProgress = false;
+  }
+}
 
   // Local revision history
   const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
