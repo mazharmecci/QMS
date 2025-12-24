@@ -926,71 +926,85 @@ Next lines: brief description"></textarea>
    * Convert Firestore quoteHistory document into header + quoteLines
    * and store in localStorage.
    */
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-    if (!docData) return;
+  
+function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+  if (!docData || typeof docData !== "object") return;
 
-    if (docId) {
-      currentQuoteDocId = docId;
-    }
-
-    const header = {
-      quoteNo: docData.quoteNo || "",
-      quoteDate: docData.quoteDate || "",
-      hospitalName: docData.hospital?.name || "",
-      hospitalAddress: docData.hospital?.address || "",
-      contactPerson: docData.hospital?.contactPerson || "",
-      contactEmail: docData.hospital?.email || "",
-      contactPhone: docData.hospital?.phone || "",
-      yourReference: docData.yourReference || "",
-      refDate: docData.refDate || "",
-      kindAttn: docData.hospital?.contactPerson || "",
-      salesNote: docData.salesNote || "",
-      termsHtml: docData.termsHtml || "",
-      termsText: docData.termsText || "",
-      discount: docData.discount || 0,
-      quoteLines: []
-    };
-
-    const quoteLines = [];
-    (docData.items || []).forEach(item => {
-      quoteLines.push({
-        lineType: "instrument",
-        instrumentIndex: 0,
-        quantity: item.quantity || 1,
-        configItems: item.configItems || [],
-        additionalItems: item.additionalItems || []
-      });
-    });
-
-    header.quoteLines = quoteLines;
-    saveQuoteHeader(header);
+  // Remember which Firestore doc this header belongs to (for finalizeQuote)
+  if (docId) {
+    currentQuoteDocId = docId;
   }
 
-  async function loadQuoteFromFirestoreIfNeeded() {
-    const existingHeader = getQuoteHeaderRaw();
-    if (existingHeader && existingHeader.quoteNo) return;
+  const hosp = docData.hospital || {};
 
-    const quoteId = getQueryParam("id");
-    const quoteNo = getQueryParam("quoteNo");
+  const header = {
+    // Always take quoteNo from Firestore to avoid auto‑increment side effects
+    quoteNo: docData.quoteNo || "",
+    quoteDate: docData.quoteDate || "",
+    hospitalName: hosp.name || "",
+    hospitalAddress: hosp.address || "",
+    contactPerson: hosp.contactPerson || "",
+    contactEmail: hosp.email || "",
+    contactPhone: hosp.phone || "",
+    yourReference: docData.yourReference || "",
+    refDate: docData.refDate || "",
+    kindAttn: hosp.contactPerson || "",
+    salesNote: docData.salesNote || "",
+    termsHtml: docData.termsHtml || "",
+    termsText: docData.termsText || "",
+    discount: Number(docData.discount || 0),
+    status: docData.status || "Submitted",
+    quoteLines: []
+  };
 
-    if (!quoteId && !quoteNo) return;
+  const quoteLines = (docData.items || []).map(item => ({
+    lineType: "instrument",
+    instrumentIndex: 0,                 // you can remap by code later if needed
+    quantity: item.quantity || 1,
+    configItems: item.configItems || [],
+    additionalItems: item.additionalItems || []
+  }));
 
+  header.quoteLines = quoteLines;
+  saveQuoteHeader(header);
+}
+
+async function loadQuoteFromFirestoreIfNeeded() {
+  const quoteId = getQueryParam("id");
+  const quoteNoParam = getQueryParam("quoteNo");
+
+  // If editing an existing Firestore doc (id present), ALWAYS load it and
+  // overwrite whatever is in localStorage so quoteNo/hospital/etc match.
+  if (quoteId) {
     try {
-      if (quoteId) {
-        const ref = doc(db, "quoteHistory", quoteId);
-        const snap = await getDoc(ref);  // get a single doc by id [web:48][web:51]
-        if (snap.exists()) {
-          hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
-        } else {
-          console.warn("No quoteHistory document for id", quoteId);
-        }
+      const ref = doc(db, "quoteHistory", quoteId);
+      const snap = await getDoc(ref);  // get a single doc by id [web:48][web:51]
+      if (snap.exists()) {
+        hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
       } else {
-        console.warn("Query by quoteNo not implemented; use ?id=<docId>.");
+        console.warn("No quoteHistory document for id", quoteId);
       }
     } catch (err) {
       console.error("Error loading quote from Firestore:", err);
     }
+    return;
   }
+
+  // No id -> new quote mode.
+  // If there is already a header in localStorage, keep using that as a draft.
+  const existingHeader = getQuoteHeaderRaw();
+  if (existingHeader && existingHeader.quoteNo) {
+    return;
+  }
+
+  // Optional: later you can implement lookup by quoteNo if needed.
+  if (quoteNoParam) {
+    console.warn(
+      "Query by quoteNo not implemented; only ?id=<docId> is supported for now."
+    );
+  }
+}
+}
 
   /* ===== Init & Event Wiring ===== */
   document.addEventListener("DOMContentLoaded", async () => {
