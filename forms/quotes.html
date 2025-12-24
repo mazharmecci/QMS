@@ -911,45 +911,63 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-    if (!docData || typeof docData !== "object") return;
+function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+  if (!docData || typeof docData !== "object") return;
 
-    if (docId) {
-      currentQuoteDocId = docId;
-    }
-
-    const hosp = docData.hospital || {};
-
-    const header = {
-      quoteNo: docData.quoteNo || "",
-      quoteDate: docData.quoteDate || "",
-      hospitalName: hosp.name || "",
-      hospitalAddress: hosp.address || "",
-      contactPerson: hosp.contactPerson || "",
-      contactEmail: hosp.email || "",
-      contactPhone: hosp.phone || "",
-      yourReference: docData.yourReference || "",
-      refDate: docData.refDate || "",
-      kindAttn: hosp.contactPerson || "",
-      salesNote: docData.salesNote || "",
-      termsHtml: docData.termsHtml || "",
-      termsText: docData.termsText || "",
-      discount: Number(docData.discount || 0),
-      status: docData.status || "Submitted",
-      quoteLines: []
-    };
-
-    const quoteLines = (docData.items || []).map(item => ({
-      lineType: "instrument",
-      instrumentIndex: 0,
-      quantity: item.quantity || 1,
-      configItems: item.configItems || [],
-      additionalItems: item.additionalItems || []
-    }));
-
-    header.quoteLines = quoteLines;
-    saveQuoteHeader(header);
+  if (docId) {
+    currentQuoteDocId = docId;
   }
+
+  const hosp = docData.hospital || {};
+
+  // Helper to normalise Firestore Timestamp or string -> YYYY-MM-DD
+  const toDateString = (val) => {
+    if (!val) return "";
+    // Firestore Timestamp has a toDate() method
+    if (typeof val.toDate === "function") {
+      const d = val.toDate();
+      return d.toISOString().slice(0, 10);
+    }
+    // If already a string, assume it's OK
+    if (typeof val === "string") return val;
+    // Fallback: try Date constructor
+    try {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    } catch (e) {}
+    return "";
+  };
+
+  const header = {
+    quoteNo: docData.quoteNo || "",
+    quoteDate: toDateString(docData.quoteDate),
+    hospitalName: hosp.name || "",
+    hospitalAddress: hosp.address || "",
+    contactPerson: hosp.contactPerson || "",
+    contactEmail: hosp.email || "",
+    contactPhone: hosp.phone || "",
+    yourReference: docData.yourReference || "",
+    refDate: toDateString(docData.refDate),
+    kindAttn: hosp.contactPerson || "",
+    salesNote: docData.salesNote || "",
+    termsHtml: docData.termsHtml || "",
+    termsText: docData.termsText || "",
+    discount: Number(docData.discount || 0),
+    status: docData.status || "Submitted",
+    quoteLines: []
+  };
+
+  const quoteLines = (docData.items || []).map(item => ({
+    lineType: "instrument",
+    instrumentIndex: 0,
+    quantity: item.quantity || 1,
+    configItems: item.configItems || [],
+    additionalItems: item.additionalItems || []
+  }));
+
+  header.quoteLines = quoteLines;
+  saveQuoteHeader(header);
+}
 
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
