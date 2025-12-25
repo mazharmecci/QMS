@@ -356,77 +356,82 @@
     updateDashboard();
   }
 
-// ===== Table render =====
+  // ===== Table render =====
+  function renderTable(data = filteredQuotes) {
+    tbody.innerHTML = "";
+    if (!Array.isArray(data) || !data.length) return;
   
-function renderTable(data = filteredQuotes) {
-  tbody.innerHTML = "";
-
-  data.forEach((q, i) => {
-    const quoteNo    = q.quoteNo || "-";
-    const revision   = q.revision || 1;
-    const date       = q.quoteDate || "-";
-    const hospital   = q.hospital?.name || "-";
-    const total      = q.totalValueINR || 0;
-    const status     = q.status || "Draft";
-
-    const createdByLabel = q.createdByLabel || q.createdBy || "—";
-
-    const canDelete = currentUser && currentUser.uid === q.createdBy;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${quoteNo} (Rev ${revision})</td>
-      <td>${date}</td>
-      <td>${hospital}</td>
-      <td>₹ ${moneyINR(total)}</td>
-      <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-      <td>${createdByLabel}</td>
-      <td class="actions">
-        <button class="view-btn" onclick="viewQuote(${i})">View</button>
-        <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
-        <button class="view-btn" onclick="editQuote(${i})">Edit</button>
-        ${canDelete ? `<button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>` : ""}
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function updateDashboard() {
-  const total   = quotes.length;
-  const pending = quotes.filter(q => {
-    const s = (q.status || "draft").toLowerCase();
-    return s === "draft" || s === "submitted";
-  }).length;
-  const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
-  const rate = total ? Math.round((won / total) * 100) : 0;
-
-  document.getElementById("statTotal").textContent   = total;
-  document.getElementById("statPending").textContent = pending;
-  document.getElementById("statWon").textContent     = won;
-  document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
-}
-
+    data.forEach((q, i) => {
+      const quoteNo   = q.quoteNo || "-";
+      const revision  = Number(q.revision || 1);
+      const date      = q.quoteDate || "-";
+      const hospital  = q.hospital?.name || "-";
+      const total     = Number(q.totalValueINR || 0);
+      const status    = q.status || "Draft";
+  
+      const createdByLabel = q.createdByLabel || q.createdBy || "—";
+      const canDelete      = currentUser && currentUser.uid === q.createdBy;
+  
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${quoteNo} (Rev ${revision})</td>
+        <td>${date}</td>
+        <td>${hospital}</td>
+        <td>₹ ${moneyINR(total)}</td>
+        <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
+        <td>${createdByLabel}</td>
+        <td class="actions">
+          <button class="view-btn" onclick="viewQuote(${i})">View</button>
+          <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
+          <button class="view-btn" onclick="editQuote(${i})">Edit</button>
+          ${canDelete ? `<button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>` : ""}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  
+  // ===== Dashboard stats =====
+  function updateDashboard() {
+    const total = quotes.length;
+  
+    const pending = quotes.filter(q => {
+      const s = (q.status || "draft").toLowerCase();
+      return s === "draft" || s === "submitted";
+    }).length;
+  
+    const won = quotes.filter(
+      q => (q.status || "").toLowerCase() === "won"
+    ).length;
+  
+    const rate = total ? Math.round((won / total) * 100) : 0;
+  
+    document.getElementById("statTotal").textContent   = total;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statWon").textContent     = won;
+    document.getElementById("statWinRate").textContent = total ? `${rate}%` : "--";
+  }
+  
   // ===== Filters =====
   function applyFilters() {
     const fQuote    = document.getElementById("filterQuoteNo").value.trim().toLowerCase();
     const fHospital = document.getElementById("filterHospital").value.trim().toLowerCase();
     const fStatus   = document.getElementById("filterStatus").value.trim().toLowerCase();
     const fDate     = document.getElementById("filterDate").value;
-
+  
     filteredQuotes = quotes.filter(q => {
       const quoteNo  = (q.quoteNo || "").toLowerCase();
       const hospital = (q.hospital?.name || "").toLowerCase();
       const status   = (q.status || "draft").toLowerCase();
       const date     = q.quoteDate || "";
-
+  
       return (!fQuote    || quoteNo.includes(fQuote)) &&
              (!fHospital || hospital.includes(fHospital)) &&
              (!fStatus   || status.includes(fStatus)) &&
              (!fDate     || date.startsWith(fDate));
     });
-
+  
     renderTable(filteredQuotes);
   }
 
