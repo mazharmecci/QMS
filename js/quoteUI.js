@@ -80,12 +80,14 @@ export function populateHeader() {
   // Single editable/read-only terms block
   const termsEl = getTextEl("termsTextBlock");
   if (termsEl) {
-    if (header.termsHtml) {
-      termsEl.innerHTML = header.termsHtml;
-    } else if (header.termsText) {
+    if (header.termsText) {
+      // New behavior: always prefer plain text
       termsEl.textContent = header.termsText;
+    } else if (header.termsHtml) {
+      // Fallback for older documents that still have HTML stored
+      termsEl.innerHTML = header.termsHtml;
     } else {
-      termsEl.innerHTML = "";
+      termsEl.textContent = "";
     }
   }
 }
