@@ -948,6 +948,7 @@ Next lines: brief description"></textarea>
       quoteLines: []
     };
 
+    // For now, we rebuild quoteLines from items; instrumentIndex will be 0
     const quoteLines = (docData.items || []).map(item => ({
       lineType: "instrument",
       instrumentIndex: 0,
@@ -957,15 +958,19 @@ Next lines: brief description"></textarea>
     }));
 
     header.quoteLines = quoteLines;
+
+    // Overwrite localStorage header with latest Firestore data
     saveQuoteHeader(header);
   }
 
+  // Always prefer Firestore when ?id= is present
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
     const quoteNoParam = getQueryParam("quoteNo");
 
     if (quoteId) {
       try {
+        console.log("[quotes.html] Loading quote from Firestore for id:", quoteId);
         const ref = doc(db, "quoteHistory", quoteId);
         const snap = await getDoc(ref);
         if (snap.exists()) {
@@ -976,11 +981,14 @@ Next lines: brief description"></textarea>
       } catch (err) {
         console.error("Error loading quote from Firestore:", err);
       }
+      // IMPORTANT: return here; we do not fall back to stale local header.
       return;
     }
 
+    // No id in URL → keep existing behavior (new or in-progress local quote)
     const existingHeader = getQuoteHeaderRaw();
     if (existingHeader && existingHeader.quoteNo) {
+      console.log("[quotes.html] Using existing local header (no Firestore id).");
       return;
     }
 
@@ -1071,6 +1079,7 @@ Next lines: brief description"></textarea>
   window.addInstrumentToQuote = addInstrumentToQuote;
   window.addMasterItemToLine = addMasterItemToLine;
 </script>
+
 
 </body>
 </html>
