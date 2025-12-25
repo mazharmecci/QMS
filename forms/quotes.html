@@ -956,27 +956,35 @@ Next lines: brief description"></textarea>
     // ===== CRITICAL: Map Firestore items back to master instruments =====
     const masterInstruments = getInstrumentsMaster();
     console.log("[hydrateLocalFromFirestoreDoc] Master instruments count:", masterInstruments.length);
-    console.log("[hydrateLocalFromFirestoreDoc] Master instruments:", masterInstruments.map(i => ({ 
-      idx: masterInstruments.indexOf(i),
-      code: i.catalog || i.instrumentCode,
-      name: i.instrumentName || i.name 
-    })));
+    
+    // DETAILED MASTER INSTRUMENTS LOGGING
+    console.log("[hydrateLocalFromFirestoreDoc] Master instruments detailed:");
+    masterInstruments.forEach((inst, idx) => {
+      console.log(`  [${idx}] catalog="${inst.catalog}", instrumentCode="${inst.instrumentCode}", name="${inst.instrumentName || inst.name}"`);
+    });
 
     const quoteLines = (docData.items || []).map((item, itemIdx) => {
-      console.log(`[hydrateLocalFromFirestoreDoc] Processing item ${itemIdx}:`, item.instrumentCode);
+      const searchCode = item.instrumentCode;
+      console.log(`[hydrateLocalFromFirestoreDoc] Processing item ${itemIdx}:`, searchCode);
 
       // Find matching instrument by code
       let instrumentIndex = 0;
-      if (item.instrumentCode) {
-        const matchIdx = masterInstruments.findIndex(
-          inst => (inst.catalog || inst.instrumentCode) === item.instrumentCode
-        );
+      if (searchCode) {
+        console.log(`[hydrateLocalFromFirestoreDoc]   → Searching for code: "${searchCode}"`);
+        
+        const matchIdx = masterInstruments.findIndex((inst, idx) => {
+          const instCode = inst.catalog || inst.instrumentCode;
+          const isMatch = instCode === searchCode;
+          console.log(`[hydrateLocalFromFirestoreDoc]     Checking [${idx}] "${instCode}" === "${searchCode}"? ${isMatch}`);
+          return isMatch;
+        });
+
         if (matchIdx !== -1) {
           instrumentIndex = matchIdx;
-          console.log(`[hydrateLocalFromFirestoreDoc]   → Matched to master index:`, matchIdx);
+          console.log(`[hydrateLocalFromFirestoreDoc]   → ✓ MATCH FOUND at index ${matchIdx}`);
         } else {
           console.warn(
-            `[hydrateLocalFromFirestoreDoc]   → NO MATCH for code ${item.instrumentCode}, defaulting to index 0`
+            `[hydrateLocalFromFirestoreDoc]   → ✗ NO MATCH for code "${searchCode}", defaulting to index 0`
           );
         }
       }
