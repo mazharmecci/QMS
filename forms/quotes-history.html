@@ -318,8 +318,18 @@
   });
 
   function goBack() {
-    if (history.length > 1) history.back();
+    const before = window.location.href;
+    window.history.back();
+    setTimeout(() => {
+      const after = window.location.href;
+      if (after === before) {
+        window.location.href = "index.html"; // or your HOME_URL
+      }
+    }, 150);
   }
+  
+  // expose for inline onclick
+  window.goBack = goBack;
 
   function moneyINR(value) {
     const num = Number(value || 0);
