@@ -906,141 +906,147 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-    if (!docData || typeof docData !== "object") return;
-  
-    console.log("[hydrateLocalFromFirestoreDoc] ===== HYDRATE INIT =====");
-    console.log("[hydrateLocalFromFirestoreDoc] docId:", docId);
-    console.log("[hydrateLocalFromFirestoreDoc] docData.quoteNo:", docData.quoteNo);
-    console.log("[hydrateLocalFromFirestoreDoc] docData.items.length:", docData.items?.length);
-  
-    const hosp = docData.hospital || {};
-  
-    const toDateInputValue = (val) => {
-      if (!val) return "";
-      if (typeof val.toDate === "function") {
-        const d = val.toDate();
-        return d.toISOString().slice(0, 10);
-      }
-      if (typeof val === "string") {
-        return val.length >= 10 ? val.slice(0, 10) : val;
-      }
-      const d = new Date(val);
-      return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+  if (!docData || typeof docData !== "object") return;
+
+  console.log("[hydrateLocalFromFirestoreDoc] ===== HYDRATE INIT =====");
+  console.log("[hydrateLocalFromFirestoreDoc] docId:", docId);
+  console.log("[hydrateLocalFromFirestoreDoc] docData.quoteNo:", docData.quoteNo);
+  console.log("[hydrateLocalFromFirestoreDoc] docData.items.length:", docData.items?.length);
+
+  const hosp = docData.hospital || {};
+
+  const toDateInputValue = (val) => {
+    if (!val) return "";
+    if (typeof val.toDate === "function") {
+      const d = val.toDate();
+      return d.toISOString().slice(0, 10);
+    }
+    if (typeof val === "string") {
+      return val.length >= 10 ? val.slice(0, 10) : val;
+    }
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+  };
+
+  const header = {
+    quoteNo: docData.quoteNo || "",
+    quoteDate: toDateInputValue(docData.quoteDate),
+    hospitalName: hosp.name || "",
+    hospitalAddress: hosp.address || "",
+    contactPerson: hosp.contactPerson || "",
+    contactEmail: hosp.email || "",
+    contactPhone: hosp.phone || "",
+    officePhone: hosp.officePhone || "",
+    yourReference: docData.yourReference || "",
+    refDate: toDateInputValue(docData.refDate),
+    kindAttn: docData.kindAttn || "",   // ✅ should be Rajesh if Firestore has it
+    salesNote: docData.salesNote || "",
+    termsHtml: docData.termsHtml || "",
+    termsText: docData.termsText || "",
+    discount: Number(docData.discount || 0),
+    status: docData.status || "Submitted",
+    quoteLines: []
+  };
+
+  console.log("[hydrateLocalFromFirestoreDoc] kindAttn from Firestore:", docData.kindAttn);
+  console.log("[hydrateLocalFromFirestoreDoc] kindAttn set in header:", header.kindAttn);
+
+  // Map items back to instruments
+  const masterInstruments = getInstrumentsMaster();
+  const quoteLines = (docData.items || []).map((item) => {
+    const searchCode = item.instrumentCode;
+    let instrumentIndex = 0;
+    if (searchCode) {
+      const matchIdx = masterInstruments.findIndex(
+        (inst) => (inst.instrumentCode || inst.catalog) === searchCode
+      );
+      instrumentIndex = matchIdx !== -1 ? matchIdx : 0;
+    }
+    return {
+      lineType: "instrument",
+      instrumentIndex,
+      quantity: item.quantity || 1,
+      configItems: item.configItems || [],
+      additionalItems: item.additionalItems || []
     };
-  
-    const header = {
-      quoteNo: docData.quoteNo || "",
-      quoteDate: toDateInputValue(docData.quoteDate),
-      hospitalName: hosp.name || "",
-      hospitalAddress: hosp.address || "",
-      contactPerson: hosp.contactPerson || "",
-      contactEmail: hosp.email || "",
-      contactPhone: hosp.phone || "",
-      officePhone: hosp.officePhone || "",
-      yourReference: docData.yourReference || "",
-      refDate: toDateInputValue(docData.refDate),
-      kindAttn: docData.kindAttn || "",   // ✅ FIXED
-      salesNote: docData.salesNote || "",
-      termsHtml: docData.termsHtml || "",
-      termsText: docData.termsText || "",
-      discount: Number(docData.discount || 0),
-      status: docData.status || "Submitted",
-      quoteLines: []
-    };
-  
-    // Map items back to instruments
-    const masterInstruments = getInstrumentsMaster();
-    const quoteLines = (docData.items || []).map((item) => {
-      const searchCode = item.instrumentCode;
-      let instrumentIndex = 0;
-      if (searchCode) {
-        const matchIdx = masterInstruments.findIndex(
-          (inst) => (inst.instrumentCode || inst.catalog) === searchCode
-        );
-        instrumentIndex = matchIdx !== -1 ? matchIdx : 0;
+  });
+
+  header.quoteLines = quoteLines;
+
+  // ✅ Only overwrite localStorage when Firestore hydration succeeds
+  saveQuoteHeader(header);
+  console.log("[hydrateLocalFromFirestoreDoc] saveQuoteHeader called, header.kindAttn:", header.kindAttn);
+}
+
+// -------------------------
+// Separate function
+// -------------------------
+async function loadQuoteFromFirestoreIfNeeded() {
+  const quoteId = getQueryParam("id");
+  const quoteNoParam = getQueryParam("quoteNo");
+
+  console.log("[loadQuoteFromFirestoreIfNeeded] ===== LOAD INIT =====");
+  console.log("[loadQuoteFromFirestoreIfNeeded] quoteId from URL:", quoteId);
+  console.log("[loadQuoteFromFirestoreIfNeeded] quoteNoParam from URL:", quoteNoParam);
+
+  // --- Case 1: Fetch by Firestore docId ---
+  if (quoteId) {
+    try {
+      console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by docId...");
+      const ref = doc(db, "quoteHistory", quoteId);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Document exists");
+        hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
+        return;
+      } else {
+        console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document for id:", quoteId);
       }
-      return {
-        lineType: "instrument",
-        instrumentIndex,
-        quantity: item.quantity || 1,
-        configItems: item.configItems || [],
-        additionalItems: item.additionalItems || []
-      };
-    });
-  
-    header.quoteLines = quoteLines;
-    saveQuoteHeader(header);
-    console.log("[hydrateLocalFromFirestoreDoc] saveQuoteHeader called");
-  } // ✅ Properly closed function here
-  
-  
-  // -------------------------
-  // Separate function
-  // -------------------------
-  async function loadQuoteFromFirestoreIfNeeded() {
-    const quoteId = getQueryParam("id");
-    const quoteNoParam = getQueryParam("quoteNo");
-  
-    console.log("[loadQuoteFromFirestoreIfNeeded] ===== LOAD INIT =====");
-    console.log("[loadQuoteFromFirestoreIfNeeded] quoteId from URL:", quoteId);
-    console.log("[loadQuoteFromFirestoreIfNeeded] quoteNoParam from URL:", quoteNoParam);
-  
-    // --- Case 1: Fetch by Firestore docId ---
-    if (quoteId) {
-      try {
-        console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by docId...");
-        const ref = doc(db, "quoteHistory", quoteId);
-        const snap = await getDoc(ref);
-  
-        if (snap.exists()) {
-          console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Document exists");
-          hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
-        } else {
-          console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document for id:", quoteId);
-        }
-      } catch (err) {
-        console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by docId:", err);
-      }
-      return;
+    } catch (err) {
+      console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by docId:", err);
     }
-  
-    // --- Case 2: Fetch by quoteNo ---
-    if (quoteNoParam) {
-      try {
-        console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by quoteNo...");
-        const colRef = collection(db, "quoteHistory");
-        const snap = await getDocs(colRef);
-  
-        let foundDoc = null;
-        snap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.quoteNo === quoteNoParam) {
-            foundDoc = { id: docSnap.id, data };
-          }
-        });
-  
-        if (foundDoc) {
-          console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Found document by quoteNo:", quoteNoParam);
-          hydrateLocalFromFirestoreDoc(foundDoc.data, foundDoc.id);
-          return;
-        } else {
-          console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document found for quoteNo:", quoteNoParam);
-        }
-      } catch (err) {
-        console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by quoteNo:", err);
-      }
-    }
-  
-    // --- Case 3: Fallback to localStorage ---
-    const existingHeader = getQuoteHeaderRaw();
-    if (existingHeader && existingHeader.quoteNo) {
-      console.log("[loadQuoteFromFirestoreIfNeeded] Using existing localStorage header");
-      return;
-    }
-  
-    console.warn("[loadQuoteFromFirestoreIfNeeded] No Firestore id or quoteNo provided, and no local header found.");
+    // fall through to localStorage if Firestore fails
   }
+
+  // --- Case 2: Fetch by quoteNo ---
+  if (quoteNoParam) {
+    try {
+      console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by quoteNo...");
+      const colRef = collection(db, "quoteHistory");
+      const snap = await getDocs(colRef);
+
+      let foundDoc = null;
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.quoteNo === quoteNoParam) {
+          foundDoc = { id: docSnap.id, data };
+        }
+      });
+
+      if (foundDoc) {
+        console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Found document by quoteNo:", quoteNoParam);
+        hydrateLocalFromFirestoreDoc(foundDoc.data, foundDoc.id);
+        return;
+      } else {
+        console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document found for quoteNo:", quoteNoParam);
+      }
+    } catch (err) {
+      console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by quoteNo:", err);
+    }
+    // fall through to localStorage if Firestore fails
+  }
+
+  // --- Case 3: Fallback to localStorage ---
+  const existingHeader = getQuoteHeaderRaw();
+  if (existingHeader && existingHeader.quoteNo) {
+    console.log("[loadQuoteFromFirestoreIfNeeded] Using existing localStorage header, kindAttn:", existingHeader.kindAttn);
+    return;
+  }
+
+  console.warn("[loadQuoteFromFirestoreIfNeeded] No Firestore id or quoteNo provided, and no local header found.");
+}
 
    // -------------------------
   // init
