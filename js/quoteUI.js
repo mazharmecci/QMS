@@ -54,10 +54,6 @@ export function populateHeader() {
   
   console.log("[populateHeader] ===== POPULATE INIT =====");
   console.log("[populateHeader] Retrieved header from localStorage:", header);
-  console.log("[populateHeader]   - quoteNo:", header.quoteNo);
-  console.log("[populateHeader]   - hospitalName:", header.hospitalName);
-  console.log("[populateHeader]   - contactPerson:", header.contactPerson);
-  console.log("[populateHeader]   - kindAttn:", header.kindAttn);
   
   if (!validateHeader(header)) return;
 
@@ -78,28 +74,117 @@ export function populateHeader() {
   getTextEl("toHospitalAddressLine1").textContent = line1 || "";
   getTextEl("toHospitalAddressLine2").textContent = line2 || "";
 
-  console.log("[populateHeader] Setting kindAttn input value to:", header.kindAttn);
   getTextEl("toAttn").textContent = header.kindAttn || "Attention";
-  console.log("[populateHeader] toAttn element after setting:", getTextEl("toAttn").textContent);
 
   const noteEl = getTextEl("salesNoteBlock");
   if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
 
   const termsEl = getTextEl("termsTextBlock");
-  if (!termsEl) return;
-
-  // ✅ Ensure block is editable
-  termsEl.setAttribute("contenteditable", "true");
-
-  if (header.termsHtml) {
-    termsEl.innerHTML = header.termsHtml;
-  } else if (header.termsText) {
-    termsEl.textContent = header.termsText;
-  } else {
-    termsEl.textContent = "";
+  if (termsEl) {
+    termsEl.setAttribute("contenteditable", "true");
+    if (header.termsHtml) {
+      termsEl.innerHTML = header.termsHtml;
+    } else if (header.termsText) {
+      termsEl.textContent = header.termsText;
+    } else {
+      termsEl.textContent = "";
+    }
   }
-  
+
   console.log("[populateHeader] populateHeader complete");
+}
+
+
+/* ========= Save header back (local + Firestore) ========= */
+export async function saveQuoteHeader(header, docId = null) {
+  if (!header || typeof header !== "object") return;
+
+  const getEl = id => document.getElementById(id);
+
+  header.quoteNo       = getEl("metaQuoteNo")?.textContent || header.quoteNo || "";
+  header.quoteDate     = getEl("metaQuoteDate")?.textContent || header.quoteDate || "";
+  header.yourReference = getEl("metaYourRef")?.textContent || header.yourReference || "";
+  header.refDate       = getEl("metaRefDate")?.textContent || header.refDate || "";
+  header.contactPerson = getEl("metaContactPerson")?.textContent || header.contactPerson || "";
+  header.contactPhone  = getEl("metaPhone")?.textContent || header.contactPhone || "";
+  header.contactEmail  = getEl("metaEmail")?.textContent || header.contactEmail || "";
+  header.officePhone   = getEl("metaOffice")?.textContent || header.officePhone || "";
+  header.hospitalName  = getEl("toHospitalNameLine")?.textContent || header.hospitalName || "";
+  header.hospitalAddress = 
+    (getEl("toHospitalAddressLine1")?.textContent || "") + "," +
+    (getEl("toHospitalAddressLine2")?.textContent || "");
+
+  header.kindAttn      = getEl("toAttn")?.textContent || header.kindAttn || "";
+  header.salesNote     = getEl("salesNoteBlock")?.textContent || header.salesNote || "";
+
+  const termsEl = getEl("termsTextBlock");
+  if (termsEl) {
+    header.termsHtml = termsEl.innerHTML;
+    header.termsText = termsEl.innerText;
+  }
+
+  // Save to localStorage
+  localStorage.setItem("quoteHeader", JSON.stringify(header));
+  console.log("[saveQuoteHeader] Header saved to localStorage:", header);
+
+  // Save to Firestore
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("No signed-in user; cannot save to Firestore.");
+
+    const firestoreData = {
+      ...header,
+      updatedAt: serverTimestamp(),
+      createdBy: user.uid,
+      createdByLabel: user.displayName || user.email || user.uid
+    };
+
+    if (docId || typeof currentQuoteDocId !== "undefined") {
+      const ref = doc(db, "quoteHistory", docId || currentQuoteDocId);
+      await setDoc(ref, firestoreData, { merge: true });
+      console.log("[saveQuoteHeader] Header also saved to Firestore:", docId || currentQuoteDocId);
+    } else {
+      const colRef = collection(db, "quoteHistory");
+      const newDoc = await addDoc(colRef, {
+        ...firestoreData,
+        createdAt: serverTimestamp()
+      });
+      console.log("[saveQuoteHeader] New Firestore doc created:", newDoc.id);
+      currentQuoteDocId = newDoc.id;
+    }
+  } catch (err) {
+    console.error("[saveQuoteHeader] Error saving header to Firestore:", err);
+  }
+}
+
+
+/* ========= Finalization ========= */
+export async function finalizeQuote(docId = null) {
+  try {
+    const header = getQuoteHeaderRaw();
+    if (!validateHeader(header)) return;
+
+    // Build line items and summary as before...
+    const lineItems = buildLineItemsFromCurrentQuote();
+    const summary   = buildSummaryFromCurrentQuote(header);
+
+    // Save header + terms to Firestore
+    await saveQuoteHeader(header, docId);
+
+    // Append revision snapshot if needed
+    await appendRevisionSnapshot(docId || currentQuoteDocId, {
+      ...header,
+      lineItems,
+      summary
+    });
+
+    alert(`Quote saved as ${header.quoteNo} with full revision history.`);
+    return docId || currentQuoteDocId;
+  } catch (err) {
+    console.error("[finalizeQuote] Error:", err);
+    alert("Quote saved locally, but cloud save failed.");
+    return null;
+  }
 }
 
 /* ========= Quote builder (with config/additional) ========= */
