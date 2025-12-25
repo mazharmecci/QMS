@@ -324,21 +324,13 @@
     return "status-" + s;
   }
 
-  // NEW: helper for Created By column
-  function createdByLabel(createdBy) {
-    if (!createdBy) return "-";
-    if (createdBy.includes("@")) {
-      return createdBy.split("@")[0]; // prefix before '@'
-    }
-    return createdBy;
-  }
-
   // Map auth UID → email prefix
   const USER_UID_TO_PREFIX = {
     "MUkO1OZ2KCfWvvoMHAHcuQm4FjH3": "mazhar",  // mazhar@istos.in
     "LIvqyOhAUkPpivMXbSK4sIB8I8T2": "s.khan"   // s.khan@istos.in
   };
 
+  // Helper for Created By column
   function createdByLabel(createdBy) {
     if (!createdBy) return "-";
 
@@ -347,9 +339,9 @@
       return USER_UID_TO_PREFIX[createdBy];
     }
 
-    // If we ever store email directly
-    if (createdBy.includes && createdBy.includes("@")) {
-      return createdBy.split("@")[0];
+    // If we stored email directly
+    if (typeof createdBy === "string" && createdBy.includes("@")) {
+      return createdBy.split("@")[0]; // prefix before '@'
     }
 
     // Fallback: show raw value
