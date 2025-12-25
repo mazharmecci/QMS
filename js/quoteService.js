@@ -7,32 +7,22 @@ import {
   addDoc,
   doc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  auth
 } from "./firebase.js";
 
 /* ========================
  * Local header & context
  * =======================*/
 
-/**
- * Get the current quote header object from localStorage.
- */
 export function getQuoteHeaderRaw() {
   return JSON.parse(localStorage.getItem("quoteHeader") || "{}");
 }
 
-/**
- * Save the current quote header object to localStorage.
- * @param {object} header
- */
 export function saveQuoteHeader(header) {
   localStorage.setItem("quoteHeader", JSON.stringify(header));
 }
 
-/**
- * Get instruments master list (from localStorage or Firebase).
- * Ensures each instrument has suppliedCompleteWith field.
- */
 export function getInstrumentsMaster() {
   const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
   return instruments.map(inst => ({
@@ -42,10 +32,6 @@ export function getInstrumentsMaster() {
   }));
 }
 
-/**
- * Get the current quote context: instruments + lines.
- * Instruments are fetched from master, lines come from header.quoteLines.
- */
 export function getQuoteContext() {
   const instruments = getInstrumentsMaster();
   const header = getQuoteHeaderRaw();
@@ -57,9 +43,6 @@ export function getQuoteContext() {
  * Line items & summary
  * =======================*/
 
-/**
- * Build line items from the current quote (for on-screen summary / local history).
- */
 export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
@@ -113,10 +96,10 @@ export function buildLineItemsFromCurrentQuote() {
   return items;
 }
 
-/**
- * Build Firestore-friendly quote document from current quote.
- * This is what goes into quoteHistory & its revisions.
- */
+/* ========================
+ * Quote object
+ * =======================*/
+
 export function buildQuoteObject() {
   const header = getQuoteHeaderRaw();
   const { instruments, lines } = getQuoteContext();
@@ -151,11 +134,8 @@ export function buildQuoteObject() {
   return {
     quoteNo: header.quoteNo || "",
     quoteDate: header.quoteDate || "",
-
-    // reference fields
     yourReference: header.yourReference || "",
     refDate: header.refDate || "",
-
     hospital: {
       name: header.hospitalName || "",
       address: header.hospitalAddress || "",
@@ -164,7 +144,6 @@ export function buildQuoteObject() {
       phone: header.contactPhone || "",
       officePhone: header.officePhone || ""
     },
-
     status: header.status || "Submitted",
     discount: Number(header.discount || 0),
     totalValueINR,
@@ -172,8 +151,8 @@ export function buildQuoteObject() {
     items,
     salesNote: header.salesNote || "",
     termsHtml: header.termsHtml || "",
-    termsText: header.termsText || "",
-    createdBy: header.createdBy || "Mazhar R Mecci"
+    termsText: header.termsText || ""
+    // createdBy injected at save time
   };
 }
 
@@ -181,11 +160,6 @@ export function buildQuoteObject() {
  * Validation
  * =======================*/
 
-/**
- * Validate header before finalizing quote.
- * @param {object} header
- * @returns {boolean}
- */
 export function validateHeader(header) {
   const errors = [];
   if (!header.quoteNo) errors.push("Quote Number is missing");
@@ -230,8 +204,15 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
 async function appendRevisionSnapshot(docId, data) {
   console.log("[appendRevisionSnapshot] for docId:", docId);
   const subCol = collection(db, "quoteHistory", docId, "revisions");
+
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("No signed-in user; cannot append revision.");
+  }
+
   await addDoc(subCol, {
     ...data,
+    createdBy: user.uid,
     createdAt: serverTimestamp()
   });
   console.log("[appendRevisionSnapshot] snapshot written");
@@ -240,13 +221,6 @@ async function appendRevisionSnapshot(docId, data) {
 /* ========================
  * Finalization & local history
  * =======================*/
-
-/**
- * Finalize the current quote: compute totals, local revision, and save
- * to both local history and Firestore, with Firestore revision history.
- *
- * rawArg may be: Firestore docId string, a PointerEvent, or null/undefined.
- */
 
 let finalizeInProgress = false;
 
@@ -287,7 +261,6 @@ export async function finalizeQuote(rawArg = null) {
       return;
     }
 
-    // Totals for local summary
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
@@ -322,7 +295,6 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // Local revision history
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter(
       q => q.header && q.header.quoteNo === header.quoteNo
@@ -365,13 +337,18 @@ export async function finalizeQuote(rawArg = null) {
       existing.length
     );
 
-    // Firestore payload
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
       revision: nextRev,
       localSummary: summary
     };
+
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("No signed-in user; cannot save to Firestore.");
+    }
+    firestoreData.createdBy = user.uid;
 
     console.log("[finalizeQuote] saving base doc to Firestore...");
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
