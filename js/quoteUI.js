@@ -80,23 +80,33 @@ export function populateHeader() {
 // Single editable/read-only terms block
 const termsEl = getTextEl("termsTextBlock");
 if (termsEl) {
-  const storedText = header.termsText && header.termsText.trim().length
-    ? header.termsText.trim()
-    : null;
+  const htmlStored =
+    header.termsHtml && header.termsHtml.trim().length
+      ? header.termsHtml.trim()
+      : null;
 
-  if (storedText) {
-    console.log("[populateHeader] Rendering stored termsText");
+  const textStored =
+    header.termsText && header.termsText.trim().length
+      ? header.termsText.trim()
+      : null;
 
-    // Normalize Windows/Mac line endings
-    const text = storedText.replace(/\r\n/g, "\n");
+  // 1) Preferred: stored HTML (from Firestore)
+  if (htmlStored) {
+    console.log("[populateHeader] Rendering stored termsHtml");
+    termsEl.innerHTML = htmlStored;   // keep full formatting
+    return;
+  }
 
-    // Split into paragraphs on blank lines
+  // 2) Fallback: stored plain text (very rare once you move back to HTML)
+  if (textStored) {
+    console.log("[populateHeader] Rendering stored termsText as paragraphs");
+
+    const text = textStored.replace(/\r\n/g, "\n");
     const blocks = text
-      .split(/\n\s*\n/)        // two+ newlines = new paragraph
+      .split(/\n\s*\n/)
       .map(b => b.trim())
       .filter(Boolean);
 
-    // Convert each paragraph block to <p>, preserving inner line breaks as <br>
     const html = blocks
       .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
       .join("");
@@ -105,7 +115,7 @@ if (termsEl) {
     return;
   }
 
-  // Fallback: build standard template when there is no stored text yet
+  // 3) Fallback template when nothing stored yet
   const warrantyText =
     header.termsWarrantyText ||
     "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
@@ -114,13 +124,11 @@ if (termsEl) {
 
   const html = `
     <div class="terms-section">
-      <!-- ... template as you have it ... -->
       <p><strong>Warranty:</strong> ${warrantyText}</p>
-      <!-- ... -->
       <div class="quote-sender-highlight">${signerName}</div>
     </div>
   `;
-  console.log("[populateHeader] Rendering template terms (no stored termsText)");
+  console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
   termsEl.innerHTML = html;
 }
 }
