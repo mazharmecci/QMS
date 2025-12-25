@@ -378,7 +378,13 @@ export async function finalizeQuote(rawArg = null) {
 
     // --- Local history ---
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+
+    // Remove stale drafts for this quoteNo
+    const cleaned = existing.filter(q =>
+      !(q.header?.quoteNo === header.quoteNo && q.status === "DRAFT")
+    );
+
+    const sameQuote = cleaned.filter(q => q.header && q.header.quoteNo === header.quoteNo);
     const lastRev   = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
     const nextRev   = lastRev + 1;
 
@@ -399,9 +405,9 @@ export async function finalizeQuote(rawArg = null) {
       ]
     };
 
-    existing.push(quoteLocal);
-    localStorage.setItem("quotes", JSON.stringify(existing));
-    console.log("[finalizeQuote] local history updated, total entries:", existing.length);
+    cleaned.push(quoteLocal);
+    localStorage.setItem("quotes", JSON.stringify(cleaned));
+    console.log("[finalizeQuote] local history updated, total entries:", cleaned.length);
 
     // --- Firestore persistence ---
     const baseQuoteDoc = buildQuoteObject();
@@ -436,3 +442,4 @@ export async function finalizeQuote(rawArg = null) {
     finalizeInProgress = false;
   }
 }
+
