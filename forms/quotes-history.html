@@ -475,38 +475,50 @@
     renderTable(filteredQuotes);
   }
 
-  // ===== Status advance =====
-  async function advanceStatus(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
-
-    const sequence = ["Draft","Submitted","Approved","Sent","Won","Lost"];
-    const current  = (q.status || "Draft");
-    const idx      = sequence.findIndex(s => s.toLowerCase() === current.toLowerCase());
-    const next     = sequence[Math.min(idx + 1, sequence.length - 1)];
-
-    q.status = next;
-
-    try {
-      await updateDoc(doc(db, "quoteHistory", q.id), { status: next });
-      const base = quotes.find(x => x.id === q.id);
-      if (base) base.status = next;
-      renderTable(filteredQuotes);
-      updateDashboard();
-    } catch (err) {
-      console.error("Failed to update status", err);
-      alert("Failed to update status");
-    }
+ // ===== Status Advance =====
+async function advanceStatus(index) {
+  const q = filteredQuotes[index];
+  if (!q) {
+    console.warn("[advanceStatus] No quote found at index:", index);
+    return;
   }
 
-  // ===== Edit in quotes.html =====
-  function editQuote(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
-    window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
+  const sequence = ["Draft", "Submitted", "Approved", "Sent", "Won", "Lost"];
+  const current = (q.status || "Draft").toLowerCase();
+  const idx = sequence.findIndex(s => s.toLowerCase() === current);
+  const next = sequence[Math.min(idx + 1, sequence.length - 1)];
+
+  if (q.status === next) {
+    console.log("[advanceStatus] Already at final status:", next);
+    return;
   }
 
-  // ===== Delete =====
+  q.status = next;
+
+  try {
+    await updateDoc(doc(db, "quoteHistory", q.id), { status: next });
+    const base = quotes.find(x => x.id === q.id);
+    if (base) base.status = next;
+
+    renderTable(filteredQuotes);
+    updateDashboard();
+    console.log("[advanceStatus] Status advanced to:", next);
+  } catch (err) {
+    console.error("[advanceStatus] Failed to update status:", err);
+    alert("Failed to update status. Please try again.");
+  }
+}
+
+// ===== Edit in quotes.html =====
+function editQuote(index) {
+  const q = filteredQuotes[index];
+  if (!q || !q.id) {
+    console.warn("[editQuote] No quote found at index:", index);
+    return;
+  }
+  window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
+}
+
 // ===== Delete Quote =====
 async function deleteQuote(index) {
   const q = filteredQuotes[index];
@@ -515,31 +527,25 @@ async function deleteQuote(index) {
     return;
   }
 
-  // Ownership check
   if (!currentUser || currentUser.uid !== q.createdBy) {
     alert("You can delete only your own quotes.");
     console.warn("[deleteQuote] Unauthorized delete attempt by:", currentUser?.uid);
     return;
   }
 
-  // Confirmation
-  const confirmed = confirm("Delete this quote from history?");
-  if (!confirmed) {
+  if (!confirm("Delete this quote from history?")) {
     console.log("[deleteQuote] Deletion cancelled by user.");
     return;
   }
 
   try {
-    // Firestore delete
     await deleteDoc(doc(db, "quoteHistory", q.id));
     console.log("[deleteQuote] ✓ Deleted from Firestore:", q.id);
 
-    // Local cleanup
     quotes = quotes.filter(x => x.id !== q.id);
     filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
     localStorage.setItem("quotes", JSON.stringify(quotes));
 
-    // UI refresh
     renderTable(filteredQuotes);
     updateDashboard();
     detailsDiv.classList.add("hidden");
@@ -551,128 +557,131 @@ async function deleteQuote(index) {
   }
 }
 
-  // ===== Detail view =====
-  function viewQuote(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
+// ===== Detail View =====
+function viewQuote(index) {
+  const q = filteredQuotes[index];
+  if (!q) {
+    console.warn("[viewQuote] No quote found at index:", index);
+    return;
+  }
 
-    const items = q.items || [];
-    const hosp  = q.hospital || {};
+  const items = q.items || [];
+  const hosp = q.hospital || {};
 
-    let html = `
-      <div class="quote-details">
-        <h3>Quote Details - ${q.quoteNo || ""}</h3>
-        <div class="details-grid">
-          <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
-          <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
-          <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
-          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Draft"}</span></p>
-          <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
-          <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
-          <p><strong>Email:</strong> ${hosp.email || "-"}</p>
-          <p><strong>Address:</strong> ${hosp.address || "-"}</p>
-        </div>
-
-        <h4>Line Items</h4>
-        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
-          <thead>
-            <tr style="background:#f0f4f8;">
-              <th>Instrument</th>
-              <th>Code</th>
-              <th style="text-align:right;">Qty</th>
-              <th style="text-align:right;">Unit Price</th>
-              <th style="text-align:right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    items.forEach(li => {
-      html += `
-        <tr>
-          <td>${li.instrumentName || ""}</td>
-          <td>${li.instrumentCode || ""}</td>
-          <td style="text-align:right;">${li.quantity || 0}</td>
-          <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
-          <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
-        </tr>
-      `;
-    });
-
-    html += `
-          </tbody>
-        </table>
-
-        <h4>Summary</h4>
-        <div class="details-grid">
-          <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
-          <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
-        </div>
-
-        <div style="margin-top:1.5rem; text-align:right;">
-          <button class="btn btn-secondary" id="detailsCloseBtn">Close</button>
-        </div>
+  let html = `
+    <div class="quote-details">
+      <h3>Quote Details - ${q.quoteNo || ""}</h3>
+      <div class="details-grid">
+        <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
+        <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
+        <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
+        <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Draft"}</span></p>
+        <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
+        <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
+        <p><strong>Email:</strong> ${hosp.email || "-"}</p>
+        <p><strong>Address:</strong> ${hosp.address || "-"}</p>
       </div>
+
+      <h4>Line Items</h4>
+      <table class="quote-items-table">
+        <thead>
+          <tr>
+            <th>Instrument</th>
+            <th>Code</th>
+            <th style="text-align:right;">Qty</th>
+            <th style="text-align:right;">Unit Price</th>
+            <th style="text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  items.forEach(li => {
+    html += `
+      <tr>
+        <td>${li.instrumentName || ""}</td>
+        <td>${li.instrumentCode || ""}</td>
+        <td style="text-align:right;">${li.quantity || 0}</td>
+        <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
+        <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
+      </tr>
     `;
+  });
 
-    detailsDiv.innerHTML = html;
-    detailsDiv.classList.remove("hidden");
+  html += `
+        </tbody>
+      </table>
 
-    const closeBtn = document.getElementById("detailsCloseBtn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        detailsDiv.classList.add("hidden");
-      });
-    }
+      <h4>Summary</h4>
+      <div class="details-grid">
+        <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
+        <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
+      </div>
+
+      <div style="margin-top:1.5rem; text-align:right;">
+        <button class="btn btn-secondary" id="detailsCloseBtn">Close</button>
+      </div>
+    </div>
+  `;
+
+  detailsDiv.innerHTML = html;
+  detailsDiv.classList.remove("hidden");
+
+  document.getElementById("detailsCloseBtn")?.addEventListener("click", () => {
+    detailsDiv.classList.add("hidden");
+  });
+}
+
+// ===== CSV Export =====
+function exportCSV() {
+  if (!quotes.length) {
+    alert("No quotes to export.");
+    return;
   }
 
-  // ===== CSV Export =====
-  function exportCSV() {
-    if (!quotes.length) {
-      alert("No quotes to export.");
-      return;
-    }
+  const headerRow = ["Quote No", "Date", "Hospital", "Total Value", "Status"];
+  const lines = [headerRow.join(",")];
 
-    const headerRow = ["Quote No","Date","Hospital","Total Value","Status"];
-    const lines = [headerRow.join(",")];
+  quotes.forEach(q => {
+    const row = [
+      `"${(q.quoteNo || "").replace(/"/g, '""')}"`,
+      q.quoteDate || "",
+      `"${(q.hospital?.name || "").replace(/"/g, '""')}"`,
+      q.totalValueINR || 0,
+      q.status || "Draft"
+    ];
+    lines.push(row.join(","));
+  });
 
-    quotes.forEach(q => {
-      const row = [
-        `"${(q.quoteNo || "").replace(/"/g, '""')}"`,
-        q.quoteDate || "",
-        `"${(q.hospital?.name || "").replace(/"/g, '""')}"`,
-        q.totalValueINR || 0,
-        q.status || "Draft"
-      ];
-      lines.push(row.join(","));
-    });
+  const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes-history.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "quotes-history.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  console.log("[exportCSV] Quotes exported to CSV.");
+}
 
-  // ===== Wire globals =====
-  window.goBack        = goBack;
-  window.applyFilters  = applyFilters;
-  window.clearFilters  = clearFilters;
-  window.sortBy        = sortBy;
-  window.viewQuote     = viewQuote;
-  window.advanceStatus = advanceStatus;
-  window.deleteQuote   = deleteQuote;
-  window.exportCSV     = exportCSV;
-  window.editQuote     = editQuote;
+// ===== Wire Globals =====
+window.goBack        = goBack;
+window.applyFilters  = applyFilters;
+window.clearFilters  = clearFilters;
+window.sortBy        = sortBy;
+window.viewQuote     = viewQuote;
+window.advanceStatus = advanceStatus;
+window.deleteQuote   = deleteQuote;
+window.exportCSV     = exportCSV;
+window.editQuote     = editQuote;
 
-  document.getElementById("filterQuoteNo").addEventListener("input", applyFilters);
-  document.getElementById("filterHospital").addEventListener("input", applyFilters);
-  document.getElementById("filterStatus").addEventListener("input", applyFilters);
-  document.getElementById("filterDate").addEventListener("change", applyFilters);
+document.getElementById("filterQuoteNo")?.addEventListener("input", applyFilters);
+document.getElementById("filterHospital")?.addEventListener("input", applyFilters);
+document.getElementById("filterStatus")?.addEventListener("input", applyFilters);
+document.getElementById("filterDate")?.addEventListener("change", applyFilters);
 
-  loadQuotes();
+loadQuotes();
+  
 </script>
 
 </body>
