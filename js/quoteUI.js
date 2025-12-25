@@ -225,8 +225,6 @@ export function renderQuoteBuilder() {
   console.log("[renderQuoteBuilder] Rendered", lines.length, "lines. Items total:", itemsTotal);
 }
 
-
-
 /* ========= Summary rows / discount ========= */
 
 export function renderSummaryRows(itemsTotal) {
