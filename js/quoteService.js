@@ -9,6 +9,7 @@ import {
   updateDoc,
   serverTimestamp
 } from "./firebase.js";
+import { getAuth } from "firebase/auth";
 
 /* ========================
  * Local header & context
@@ -43,8 +44,7 @@ export function getInstrumentsMaster() {
 }
 
 /**
- * Get the current quote context: instruments + lines.
- * Instruments are fetched from master, lines come from header.quoteLines.
+ * Get the current quote context: instruments + lines + header.
  */
 export function getQuoteContext() {
   const instruments = getInstrumentsMaster();
@@ -117,8 +117,8 @@ export function buildLineItemsFromCurrentQuote() {
  * Build Firestore-friendly quote document from current quote.
  * This is what goes into quoteHistory & its revisions.
  */
-export function buildQuoteObject() {
-  const header = getQuoteHeaderRaw();
+export function buildQuoteObject(existingDoc = null) {
+  const { header } = getQuoteContext();
   const { instruments, lines } = getQuoteContext();
 
   let totalValueINR = 0;
@@ -148,6 +148,11 @@ export function buildQuoteObject() {
     };
   });
 
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  const createdByUid = user ? user.uid : null;
+
   return {
     quoteNo: header.quoteNo || "",
     quoteDate: header.quoteDate || "",
@@ -173,7 +178,9 @@ export function buildQuoteObject() {
     salesNote: header.salesNote || "",
     termsHtml: header.termsHtml || "",
     termsText: header.termsText || "",
-    createdBy: header.createdBy || "Mazhar R Mecci"
+
+    // IMPORTANT: align with Firestore rules
+    createdBy: existingDoc?.createdBy || createdByUid
   };
 }
 
@@ -206,6 +213,13 @@ export function validateHeader(header) {
 
 async function saveBaseQuoteDocToFirestore(docId, data) {
   console.log("[saveBaseQuoteDocToFirestore] docId:", docId);
+  console.log("[saveBaseQuoteDocToFirestore] payload.createdBy:", data.createdBy);
+
+  if (!data.createdBy) {
+    console.warn(
+      "[saveBaseQuoteDocToFirestore] createdBy is missing; Firestore rules will reject this."
+    );
+  }
 
   if (docId) {
     const ref = doc(db, "quoteHistory", docId);
@@ -241,15 +255,14 @@ async function appendRevisionSnapshot(docId, data) {
  * Finalization & local history
  * =======================*/
 
+let finalizeInProgress = false;
+
 /**
  * Finalize the current quote: compute totals, local revision, and save
  * to both local history and Firestore, with Firestore revision history.
  *
  * rawArg may be: Firestore docId string, a PointerEvent, or null/undefined.
  */
-
-let finalizeInProgress = false;
-
 export async function finalizeQuote(rawArg = null) {
   if (finalizeInProgress) {
     console.warn("[finalizeQuote] blocked: already in progress.");
@@ -276,6 +289,9 @@ export async function finalizeQuote(rawArg = null) {
   );
 
   try {
+    const auth = getAuth();
+    console.log("[finalizeQuote] auth.currentUser:", auth.currentUser);
+
     const header = getQuoteHeaderRaw();
     console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
 
@@ -353,7 +369,10 @@ export async function finalizeQuote(rawArg = null) {
         {
           status: "submitted",
           date: now.toISOString().slice(0, 10),
-          time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          time: now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+          })
         }
       ]
     };
@@ -366,6 +385,7 @@ export async function finalizeQuote(rawArg = null) {
     );
 
     // Firestore payload
+    // If docId exists and you fetch existingDoc first, pass it into buildQuoteObject(existingDoc)
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
@@ -373,7 +393,11 @@ export async function finalizeQuote(rawArg = null) {
       localSummary: summary
     };
 
-    console.log("[finalizeQuote] saving base doc to Firestore...");
+    console.log(
+      "[finalizeQuote] firestoreData.createdBy:",
+      firestoreData.createdBy
+    );
+
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
     console.log("[finalizeQuote] base doc saved with id:", savedId);
 
