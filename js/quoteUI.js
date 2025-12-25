@@ -89,12 +89,16 @@ function populateHeader() {
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
-  if (!body) return;
+  if (!body) {
+    console.error("[renderQuoteBuilder] Missing #quoteBuilderBody container.");
+    return;
+  }
 
-  if (!lines.length) {
+  if (!Array.isArray(lines) || !lines.length) {
     body.innerHTML = "";
     const sb = document.getElementById("quoteSummaryBody");
     if (sb) sb.innerHTML = "";
+    console.log("[renderQuoteBuilder] No lines to render.");
     return;
   }
 
@@ -102,30 +106,34 @@ export function renderQuoteBuilder() {
   let runningItemCode = 1;
   let itemsTotal = 0;
 
+  const nextItemCode = () => String(runningItemCode++).padStart(3, "0");
+  const formatCurrency = (val) =>
+    typeof val === "number" && !isNaN(val) ? `₹ ${moneyINR(val)}` : val;
+
   lines.forEach((line, lineIdx) => {
     const inst = instruments[line.instrumentIndex] || null;
-    if (!inst) return;
+    if (!inst) {
+      console.warn("[renderQuoteBuilder] Missing instrument for line:", lineIdx);
+      return;
+    }
 
     const qty = Number(line.quantity || 1);
-    const codeText = String(runningItemCode).padStart(3, "0");
-    runningItemCode += 1;
-
     const instUnit = Number(inst.unitPrice || 0);
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    // main instrument row
+    // Main instrument row
     rows.push(`
       <tr>
-        <td>${codeText}</td>
+        <td>${nextItemCode()}</td>
         ${formatInstrumentCell(inst, lineIdx)}
         <td>${qty}</td>
-        <td>₹ ${moneyINR(instUnit)}</td>
-        <td>₹ ${moneyINR(instTotal)}</td>
+        <td>${formatCurrency(instUnit)}</td>
+        <td>${formatCurrency(instTotal)}</td>
       </tr>
     `);
 
-    // configuration items
+    // Configuration items
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -135,29 +143,23 @@ export function renderQuoteBuilder() {
       `);
 
       configItems.forEach(item => {
-        const itemCode = String(runningItemCode).padStart(3, "0");
-        runningItemCode += 1;
-
         const q = item.qty != null ? item.qty : "Included";
         const upRaw = item.upInr != null ? item.upInr : "Included";
         const tpRaw = item.tpInr != null ? item.tpInr : "Included";
 
-        const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
-        const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
-
         rows.push(`
           <tr>
-            <td>${itemCode}</td>
+            <td>${nextItemCode()}</td>
             ${formatItemCell(item)}
             <td>${q}</td>
-            <td>${upCell}</td>
-            <td>${tpCell}</td>
+            <td>${formatCurrency(upRaw)}</td>
+            <td>${formatCurrency(tpRaw)}</td>
           </tr>
         `);
       });
     }
 
-    // additional items
+    // Additional items
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -167,9 +169,6 @@ export function renderQuoteBuilder() {
       `);
 
       additionalItems.forEach(item => {
-        const itemCode = String(runningItemCode).padStart(3, "0");
-        runningItemCode += 1;
-
         const qtyNum = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
         const totalNum = unitNum * qtyNum;
@@ -177,11 +176,11 @@ export function renderQuoteBuilder() {
 
         rows.push(`
           <tr>
-            <td>${itemCode}</td>
+            <td>${nextItemCode()}</td>
             ${formatItemCell(item)}
             <td>${qtyNum.toString().padStart(2, "0")}</td>
-            <td>₹ ${moneyINR(unitNum)}</td>
-            <td>₹ ${moneyINR(totalNum)}</td>
+            <td>${formatCurrency(unitNum)}</td>
+            <td>${formatCurrency(totalNum)}</td>
           </tr>
         `);
       });
@@ -190,7 +189,10 @@ export function renderQuoteBuilder() {
 
   body.innerHTML = rows.join("");
   renderSummaryRows(itemsTotal);
+
+  console.log("[renderQuoteBuilder] Rendered", lines.length, "lines. Items total:", itemsTotal);
 }
+
 
 /* ========= Summary rows / discount ========= */
 
