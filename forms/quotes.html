@@ -945,15 +945,17 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null, options = {}) {
     termsText: docData.termsText || "",
     discount: Number(docData.discount || 0),
     status: docData.status || "Submitted",
-    quoteLines: (docData.items || [])
+    quoteLines: docData.items || []
   };
 
+  // ✅ Always hydrate in-memory state
+  window.currentQuoteHeader = header;
+
   if (!skipSave) {
-    // ✅ Only update localStorage, do NOT create new Firestore doc here
     localStorage.setItem("quoteHeader", JSON.stringify(header));
-    console.log("[hydrateLocalFromFirestoreDoc] Header hydrated into localStorage only");
+    console.log("[hydrateLocalFromFirestoreDoc] Header hydrated into localStorage + memory");
   } else {
-    console.log("[hydrateLocalFromFirestoreDoc] Skipped localStorage save");
+    console.log("[hydrateLocalFromFirestoreDoc] Header hydrated into memory only (skipSave)");
   }
 }
 
