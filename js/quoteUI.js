@@ -49,7 +49,6 @@ async function loadMasterItemsOnce() {
 }
 
 /* ========= Header population ========= */
-/* ========= Header population ========= */
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
   
