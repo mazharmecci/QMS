@@ -7,9 +7,9 @@ import {
   addDoc,
   doc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  getAuth   // ✅ import from ./firebase.js, not "firebase/auth"
 } from "./firebase.js";
-import { getAuth } from "firebase/auth";
 
 /* ========================
  * Local header & context
@@ -385,7 +385,6 @@ export async function finalizeQuote(rawArg = null) {
     );
 
     // Firestore payload
-    // If docId exists and you fetch existingDoc first, pass it into buildQuoteObject(existingDoc)
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
