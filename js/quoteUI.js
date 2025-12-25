@@ -77,7 +77,7 @@ export function populateHeader() {
     noteEl.textContent = header.salesNote;
   }
 
-  // Read-only terms block (for print)
+  // Single editable/read-only terms block
   const termsEl = getTextEl("termsTextBlock");
   if (termsEl) {
     if (header.termsHtml) {
@@ -85,21 +85,8 @@ export function populateHeader() {
     } else if (header.termsText) {
       termsEl.textContent = header.termsText;
     } else {
-      termsEl.textContent = "";
+      termsEl.innerHTML = "";
     }
-  }
-
-  // Editable terms textarea (no-print)
-  const termsTextarea = document.getElementById("termsTextarea");
-  if (termsTextarea) {
-    // Prefer plain text if present, otherwise fall back to raw HTML
-    termsTextarea.value = header.termsText || header.termsHtml || "";
-  }
-
-  // Hidden HTML field to keep HTML version in sync
-  const termsHtmlInput = document.getElementById("termsHtmlInput");
-  if (termsHtmlInput) {
-    termsHtmlInput.value = header.termsHtml || "";
   }
 }
 
