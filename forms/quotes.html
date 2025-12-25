@@ -1077,16 +1077,15 @@ Next lines: brief description"></textarea>
   if (termsEl) {
     const syncTermsToHeader = () => {
       const header = getQuoteHeaderRaw();
-      const plainText = termsEl.innerText || termsEl.textContent || "";
   
-      console.log("[terms] BEFORE save header.termsText:", header.termsText);
-      console.log("[terms] plainText from DOM:", plainText);
+      const html = termsEl.innerHTML;               // full formatted HTML
+      const plainText = termsEl.innerText || "";    // optional, for search/debug
   
-      header.termsText = plainText;
-      header.termsHtml = ""; // clear old HTML
+      header.termsHtml = html;
+      header.termsText = plainText;                 // keep if you still want text
       saveQuoteHeader(header);
   
-      console.log("[terms] AFTER save header:", header);
+      console.log("[terms] Synced termsHtml length:", html.length);
     };
   
     termsEl.addEventListener("input", syncTermsToHeader);
