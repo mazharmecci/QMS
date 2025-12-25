@@ -973,7 +973,8 @@ Next lines: brief description"></textarea>
         console.log(`[hydrateLocalFromFirestoreDoc]   → Searching for code: "${searchCode}"`);
         
         const matchIdx = masterInstruments.findIndex((inst, idx) => {
-          const instCode = inst.catalog || inst.instrumentCode;
+          // PRIORITY: instrumentCode > catalog
+          const instCode = inst.instrumentCode || inst.catalog;
           const isMatch = instCode === searchCode;
           console.log(`[hydrateLocalFromFirestoreDoc]     Checking [${idx}] "${instCode}" === "${searchCode}"? ${isMatch}`);
           return isMatch;
