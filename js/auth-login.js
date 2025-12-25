@@ -1,8 +1,8 @@
-import { auth } from "./firebase-auth.js"; // see next section
 import {
+  auth,
   signInWithEmailAndPassword,
   sendPasswordResetEmail
-} from "firebase/auth";
+} from "./firebase.js";
 
 const form = document.getElementById("loginForm");
 const emailEl = document.getElementById("email");
