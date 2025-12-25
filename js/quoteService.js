@@ -97,7 +97,7 @@ export function buildLineItemsFromCurrentQuote() {
 }
 
 /* ========================
- * Quote object
+ * Quote object (pure)
  * =======================*/
 
 export function buildQuoteObject() {
@@ -231,6 +231,7 @@ async function appendRevisionSnapshot(docId, data) {
   await addDoc(subCol, {
     ...data,
     createdBy: user.uid,
+    createdByLabel: user.displayName || user.email || user.uid,
     createdAt: serverTimestamp()
   });
   console.log("[appendRevisionSnapshot] snapshot written");
@@ -356,17 +357,18 @@ export async function finalizeQuote(rawArg = null) {
     );
 
     const baseQuoteDoc = buildQuoteObject();
-    const firestoreData = {
-      ...baseQuoteDoc,
-      revision: nextRev,
-      localSummary: summary
-    };
-
     const user = auth.currentUser;
     if (!user) {
       throw new Error("No signed-in user; cannot save to Firestore.");
     }
-    firestoreData.createdBy = user.uid;
+
+    const firestoreData = {
+      ...baseQuoteDoc,
+      revision: nextRev,
+      localSummary: summary,
+      createdBy: user.uid,
+      createdByLabel: user.displayName || user.email || user.uid
+    };
 
     console.log("[finalizeQuote] saving base doc to Firestore...");
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
