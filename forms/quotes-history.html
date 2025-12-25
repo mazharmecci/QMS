@@ -276,6 +276,7 @@
         <th onclick="sortBy('hospital')">Hospital</th>
         <th onclick="sortBy('value')">Total Value (INR)</th>
         <th onclick="sortBy('status')">Status</th>
+        <th>Created By</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -359,15 +360,16 @@
   // ===== Table render =====
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = "";
-
+  
     data.forEach((q, i) => {
       const quoteNo   = q.quoteNo || "-";
-      const revision  = q.revision || 1; // latest revision stored on base doc
+      const revision  = q.revision || 1;
       const date      = q.quoteDate || "-";
       const hospital  = q.hospital?.name || "-";
       const total     = q.totalValueINR || 0;
       const status    = q.status || "Draft";
-
+      const creator   = createdByLabel(q.createdBy);   // 👈
+  
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
@@ -376,6 +378,7 @@
         <td>${hospital}</td>
         <td>₹ ${moneyINR(total)}</td>
         <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
+        <td>${creator}</td>   <!-- NEW -->
         <td class="actions">
           <button class="view-btn" onclick="viewQuote(${i})">View</button>
           <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
@@ -385,7 +388,7 @@
       `;
       tbody.appendChild(tr);
     });
-
+  
     updateDashboard();
   }
 
