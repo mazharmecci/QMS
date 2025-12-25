@@ -48,7 +48,7 @@ async function loadMasterItemsOnce() {
 }
 
 /* ========= Header population ========= */
-function populateHeader() {
+export function populateHeader() {
   // Prefer in-memory header first
   const header = window.currentQuoteHeader 
     || JSON.parse(localStorage.getItem("quoteHeader") || "{}");
