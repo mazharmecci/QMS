@@ -507,29 +507,49 @@
   }
 
   // ===== Delete =====
-  async function deleteQuote(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
-
-    if (!currentUser || currentUser.uid !== q.createdBy) {
-      alert("You can delete only your own quotes.");
-      return;
-    }
-
-    if (!confirm("Delete this quote from history?")) return;
-
-    try {
-      await deleteDoc(doc(db, "quoteHistory", q.id));
-      quotes = quotes.filter(x => x.id !== q.id);
-      filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
-      renderTable(filteredQuotes);
-      updateDashboard();
-      detailsDiv.classList.add("hidden");
-    } catch (err) {
-      console.error("Failed to delete quote", err);
-      alert("Failed to delete quote");
-    }
+// ===== Delete Quote =====
+async function deleteQuote(index) {
+  const q = filteredQuotes[index];
+  if (!q) {
+    console.warn("[deleteQuote] No quote found at index:", index);
+    return;
   }
+
+  // Ownership check
+  if (!currentUser || currentUser.uid !== q.createdBy) {
+    alert("You can delete only your own quotes.");
+    console.warn("[deleteQuote] Unauthorized delete attempt by:", currentUser?.uid);
+    return;
+  }
+
+  // Confirmation
+  const confirmed = confirm("Delete this quote from history?");
+  if (!confirmed) {
+    console.log("[deleteQuote] Deletion cancelled by user.");
+    return;
+  }
+
+  try {
+    // Firestore delete
+    await deleteDoc(doc(db, "quoteHistory", q.id));
+    console.log("[deleteQuote] ✓ Deleted from Firestore:", q.id);
+
+    // Local cleanup
+    quotes = quotes.filter(x => x.id !== q.id);
+    filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+
+    // UI refresh
+    renderTable(filteredQuotes);
+    updateDashboard();
+    detailsDiv.classList.add("hidden");
+
+    console.log("[deleteQuote] Quote removed from UI and localStorage.");
+  } catch (err) {
+    console.error("[deleteQuote] ✗ Failed to delete quote:", q.id, err);
+    alert("Failed to delete quote. Please try again.");
+  }
+}
 
   // ===== Detail view =====
   function viewQuote(index) {
