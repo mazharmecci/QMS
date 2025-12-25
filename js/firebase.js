@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import {
@@ -31,6 +32,7 @@ export {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
   onAuthStateChanged,
   signInWithEmailAndPassword,
