@@ -6,93 +6,33 @@ import {
   collection,
   addDoc,
   doc,
-  setDoc,
   updateDoc,
-  serverTimestamp,
-  auth
+  serverTimestamp
 } from "./firebase.js";
 
 /* ========================
  * Local header & context
  * =======================*/
 
+/**
+ * Get the current quote header object from localStorage.
+ */
 export function getQuoteHeaderRaw() {
   return JSON.parse(localStorage.getItem("quoteHeader") || "{}");
 }
 
-// ✅ Refined saveQuoteHeader: captures DOM, preserves kindAttn, saves to localStorage + Firestore
-export async function saveQuoteHeader(header = {}, docId = null) {
-  if (typeof header !== "object" || !header) {
-    console.warn("[saveQuoteHeader] Invalid header object provided.");
-    return;
-  }
-
-  const getElText = (id) => document.getElementById(id)?.textContent?.trim() || "";
-  const getEl = (id) => document.getElementById(id);
-
-  // --- Capture DOM values with fallbacks ---
-  header.quoteNo       = getElText("metaQuoteNo")       || header.quoteNo       || "";
-  header.quoteDate     = getElText("metaQuoteDate")     || header.quoteDate     || "";
-  header.yourReference = getElText("metaYourRef")       || header.yourReference || "";
-  header.refDate       = getElText("metaRefDate")       || header.refDate       || "";
-
-  header.hospitalName  = getElText("toHospitalNameLine") || header.hospitalName || "";
-
-  const addrLine1 = getElText("toHospitalAddressLine1");
-  const addrLine2 = getElText("toHospitalAddressLine2") || (header.hospitalAddress?.split(",")[1] || "");
-  header.hospitalAddress = [addrLine1, addrLine2].filter(Boolean).join(", ");
-
-  header.contactPerson = getElText("metaContactPerson") || header.contactPerson || "";
-  header.contactPhone  = getElText("metaPhone")         || header.contactPhone  || "";
-  header.contactEmail  = getElText("metaEmail")         || header.contactEmail  || "";
-  header.officePhone   = getElText("metaOffice")        || header.officePhone   || "";
-
-  // ✅ Kind Attn is read from its own DOM field
-  const attnText = getElText("toAttn");
-  if (attnText) header.kindAttn = attnText;
-
-  header.salesNote = getElText("salesNoteBlock") || header.salesNote || "";
-
-  const termsEl = getEl("termsTextBlock");
-  if (termsEl) {
-    header.termsHtml = termsEl.innerHTML;
-    header.termsText = termsEl.innerText.trim();
-  }
-
-  // --- Save to localStorage ---
+/**
+ * Save the current quote header object to localStorage.
+ * @param {object} header
+ */
+export function saveQuoteHeader(header) {
   localStorage.setItem("quoteHeader", JSON.stringify(header));
-  console.log("[saveQuoteHeader] Header saved to localStorage:", header);
-
-  // --- Save to Firestore ---
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error("No signed-in user; cannot save to Firestore.");
-
-    const firestoreData = {
-      ...header,
-      updatedAt: serverTimestamp(),
-      createdBy: user.uid,
-      createdByLabel: user.displayName || user.email || user.uid
-    };
-
-    if (docId || window.currentQuoteDocId) {
-      const ref = doc(db, "quoteHistory", docId || window.currentQuoteDocId);
-      await setDoc(ref, firestoreData, { merge: true });
-      console.log("[saveQuoteHeader] Header updated in Firestore:", docId || window.currentQuoteDocId);
-    } else {
-      const colRef = collection(db, "quoteHistory");
-      const newDoc = await addDoc(colRef, {
-        ...firestoreData,
-        createdAt: serverTimestamp()
-      });
-      window.currentQuoteDocId = newDoc.id;
-      console.log("[saveQuoteHeader] New Firestore doc created:", newDoc.id);
-    }
-  } catch (err) {
-    console.error("[saveQuoteHeader] Error saving header to Firestore:", err);
-  }
 }
 
+/**
+ * Get instruments master list (from localStorage or Firebase).
+ * Ensures each instrument has suppliedCompleteWith field.
+ */
 export function getInstrumentsMaster() {
   const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
   return instruments.map(inst => ({
@@ -102,6 +42,10 @@ export function getInstrumentsMaster() {
   }));
 }
 
+/**
+ * Get the current quote context: instruments + lines.
+ * Instruments are fetched from master, lines come from header.quoteLines.
+ */
 export function getQuoteContext() {
   const instruments = getInstrumentsMaster();
   const header = getQuoteHeaderRaw();
@@ -113,6 +57,9 @@ export function getQuoteContext() {
  * Line items & summary
  * =======================*/
 
+/**
+ * Build line items from the current quote (for on-screen summary / local history).
+ */
 export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
@@ -166,37 +113,18 @@ export function buildLineItemsFromCurrentQuote() {
   return items;
 }
 
-/* ========================
- * Quote object (pure)
- * =======================*/
-
+/**
+ * Build Firestore-friendly quote document from current quote.
+ * This is what goes into quoteHistory & its revisions.
+ */
 export function buildQuoteObject() {
-  const rawHeader = getQuoteHeaderRaw() || {};
+  const header = getQuoteHeaderRaw();
   const { instruments, lines } = getQuoteContext();
-
-  const header = {
-    quoteNo: rawHeader.quoteNo || "",
-    quoteDate: rawHeader.quoteDate || "",
-    yourReference: rawHeader.yourReference || "",
-    refDate: rawHeader.refDate || "",
-    hospitalName: rawHeader.hospitalName || "",
-    hospitalAddress: rawHeader.hospitalAddress || "",
-    contactPerson: rawHeader.contactPerson || "",
-    contactEmail: rawHeader.contactEmail || "",
-    contactPhone: rawHeader.contactPhone || "",
-    officePhone: rawHeader.officePhone || "",
-    kindAttn: rawHeader.kindAttn || "",   // ✅ FIXED: include Kind Attn
-    status: rawHeader.status || "Submitted",
-    discount: Number(rawHeader.discount || 0),
-    salesNote: rawHeader.salesNote || "",
-    termsHtml: rawHeader.termsHtml || "",
-    termsText: rawHeader.termsText || ""
-  };
 
   let totalValueINR = 0;
   let gstValueINR = 0;
 
-  const items = (lines || []).map(line => {
+  const items = lines.map(line => {
     const inst = instruments[line.instrumentIndex] || {};
     const qty = Number(line.quantity || 1);
     const unitPrice = Number(inst.unitPrice || 0);
@@ -221,28 +149,31 @@ export function buildQuoteObject() {
   });
 
   return {
-    quoteNo: header.quoteNo,
-    quoteDate: header.quoteDate,
-    yourReference: header.yourReference,
-    refDate: header.refDate,
+    quoteNo: header.quoteNo || "",
+    quoteDate: header.quoteDate || "",
+
+    // reference fields
+    yourReference: header.yourReference || "",
+    refDate: header.refDate || "",
+
     hospital: {
-      name: header.hospitalName,
-      address: header.hospitalAddress,
-      contactPerson: header.contactPerson,
-      email: header.contactEmail,
-      phone: header.contactPhone,
-      officePhone: header.officePhone
+      name: header.hospitalName || "",
+      address: header.hospitalAddress || "",
+      contactPerson: header.contactPerson || "",
+      email: header.contactEmail || "",
+      phone: header.contactPhone || "",
+      officePhone: header.officePhone || ""
     },
-    kindAttn: header.kindAttn,   // ✅ FIXED: persist Kind Attn
-    status: header.status,
-    discount: header.discount,
+
+    status: header.status || "Submitted",
+    discount: Number(header.discount || 0),
     totalValueINR,
     gstValueINR,
     items,
-    salesNote: header.salesNote,
-    termsHtml: header.termsHtml,
-    termsText: header.termsText
-    // createdBy / createdByLabel injected at save time
+    salesNote: header.salesNote || "",
+    termsHtml: header.termsHtml || "",
+    termsText: header.termsText || "",
+    createdBy: header.createdBy || "Mazhar R Mecci"
   };
 }
 
@@ -250,13 +181,17 @@ export function buildQuoteObject() {
  * Validation
  * =======================*/
 
+/**
+ * Validate header before finalizing quote.
+ * @param {object} header
+ * @returns {boolean}
+ */
 export function validateHeader(header) {
   const errors = [];
   if (!header.quoteNo) errors.push("Quote Number is missing");
   if (!header.quoteDate) errors.push("Quote Date is missing");
   if (!header.hospitalName) errors.push("Hospital Name is missing");
   if (!header.hospitalAddress) errors.push("Hospital Address is missing");
-  if (!header.kindAttn) errors.push("Kind Attn is missing");   // ✅ ensure Kind Attn is validated
 
   if (errors.length) {
     alert("Validation errors:\n" + errors.join("\n"));
@@ -295,16 +230,8 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
 async function appendRevisionSnapshot(docId, data) {
   console.log("[appendRevisionSnapshot] for docId:", docId);
   const subCol = collection(db, "quoteHistory", docId, "revisions");
-
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error("No signed-in user; cannot append revision.");
-  }
-
   await addDoc(subCol, {
     ...data,
-    createdBy: user.uid,
-    createdByLabel: user.displayName || user.email || user.uid,
     createdAt: serverTimestamp()
   });
   console.log("[appendRevisionSnapshot] snapshot written");
@@ -314,11 +241,18 @@ async function appendRevisionSnapshot(docId, data) {
  * Finalization & local history
  * =======================*/
 
+/**
+ * Finalize the current quote: compute totals, local revision, and save
+ * to both local history and Firestore, with Firestore revision history.
+ *
+ * rawArg may be: Firestore docId string, a PointerEvent, or null/undefined.
+ */
+
 let finalizeInProgress = false;
 
 export async function finalizeQuote(rawArg = null) {
   if (finalizeInProgress) {
-    console.warn("[finalizeQuote] Blocked: already in progress.");
+    console.warn("[finalizeQuote] blocked: already in progress.");
     return;
   }
   finalizeInProgress = true;
@@ -327,28 +261,33 @@ export async function finalizeQuote(rawArg = null) {
   if (typeof rawArg === "string") {
     docId = rawArg;
   } else if (rawArg && typeof rawArg === "object" && rawArg.target) {
-    console.warn("[finalizeQuote] Triggered by PointerEvent; treating as new quote (docId = null).");
+    console.warn(
+      "[finalizeQuote] called with PointerEvent; treating as new quote (docId = null)."
+    );
   }
 
-  console.log("[finalizeQuote] CALLED with rawArg:", rawArg, "normalized docId:", docId);
+  console.log(
+    "[finalizeQuote] CALLED with rawArg:",
+    rawArg,
+    "normalized docId:",
+    docId,
+    "at",
+    new Date().toISOString()
+  );
 
   try {
     const header = getQuoteHeaderRaw();
-    if (!header || !header.quoteNo) {
-      console.error("[finalizeQuote] Invalid header or missing quoteNo.");
-      return;
-    }
     console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
 
     if (!validateHeader(header)) return;
 
     const { instruments, lines } = getQuoteContext();
-    if (!Array.isArray(lines) || !lines.length) {
+    if (!lines.length) {
       alert("No instruments in this quote. Please add at least one instrument.");
       return;
     }
 
-    // --- Calculate totals ---
+    // Totals for local summary
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
@@ -363,11 +302,11 @@ export async function finalizeQuote(rawArg = null) {
       });
     });
 
-    const gstPercent   = 18;
-    const discount     = Number(header.discount || 0);
-    const afterDisc    = itemsTotal - discount;
-    const gstAmount    = (afterDisc * gstPercent) / 100;
-    const totalValue   = afterDisc + gstAmount;
+    const gstPercent = 18;
+    const discount = Number(header.discount || 0);
+    const afterDisc = itemsTotal - discount;
+    const gstAmount = (afterDisc * gstPercent) / 100;
+    const totalValue = afterDisc + gstAmount;
     const roundedTotal = Math.round(totalValue);
 
     const summary = {
@@ -383,17 +322,24 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // --- Local history ---
+    // Local revision history
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-
-    // Remove stale drafts for this quoteNo
-    const cleaned = existing.filter(q =>
-      !(q.header?.quoteNo === header.quoteNo && q.status === "DRAFT")
+    const sameQuote = existing.filter(
+      q => q.header && q.header.quoteNo === header.quoteNo
     );
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
+    const nextRev = lastRev + 1;
 
-    const sameQuote = cleaned.filter(q => q.header?.quoteNo === header.quoteNo);
-    const lastRev   = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
-    const nextRev   = lastRev + 1;
+    console.log(
+      "[finalizeQuote] sameQuote.length:",
+      sameQuote.length,
+      "lastRev:",
+      lastRev,
+      "nextRev:",
+      nextRev
+    );
 
     const now = new Date();
     const quoteLocal = {
@@ -412,38 +358,38 @@ export async function finalizeQuote(rawArg = null) {
       ]
     };
 
-    cleaned.push(quoteLocal);
-    localStorage.setItem("quotes", JSON.stringify(cleaned));
-    console.log("[finalizeQuote] Local history updated, total entries:", cleaned.length);
+    existing.push(quoteLocal);
+    localStorage.setItem("quotes", JSON.stringify(existing));
+    console.log(
+      "[finalizeQuote] local history updated, total entries:",
+      existing.length
+    );
 
-    // --- Firestore persistence ---
+    // Firestore payload
     const baseQuoteDoc = buildQuoteObject();
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error("No signed-in user; cannot save to Firestore.");
-    }
-
     const firestoreData = {
       ...baseQuoteDoc,
       revision: nextRev,
-      localSummary: summary,
-      createdBy: user.uid,
-      createdByLabel: user.displayName || user.email || user.uid
+      localSummary: summary
     };
 
-    console.log("[finalizeQuote] Saving base doc to Firestore...");
+    console.log("[finalizeQuote] saving base doc to Firestore...");
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
-    console.log("[finalizeQuote] Base doc saved with id:", savedId);
+    console.log("[finalizeQuote] base doc saved with id:", savedId);
 
-    console.log("[finalizeQuote] Appending revision snapshot...");
+    console.log("[finalizeQuote] appending revision snapshot...");
     await appendRevisionSnapshot(savedId, firestoreData);
-    console.log("[finalizeQuote] Revision snapshot completed");
+    console.log("[finalizeQuote] revision snapshot completed");
 
-    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`);
+    alert(
+      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`
+    );
     return savedId;
   } catch (err) {
     console.error("[finalizeQuote] Error saving quote to Firestore:", err);
-    alert("Quote saved to local history, but cloud save failed. Please try again later.");
+    alert(
+      "Quote saved to local history, but cloud save failed. Please try again later."
+    );
     return null;
   } finally {
     finalizeInProgress = false;
