@@ -186,5 +186,3 @@ export function formatItemCell(item) {
   html += `</td>`;
   return html;
 }
-
-
