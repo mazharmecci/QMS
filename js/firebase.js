@@ -6,6 +6,7 @@ import {
   addDoc,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   serverTimestamp
@@ -31,6 +32,7 @@ export {
   addDoc,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
   serverTimestamp,
