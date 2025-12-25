@@ -25,7 +25,6 @@ import {
 } from "./firebase.js";
 
 /* ========= Master items cache ========= */
-
 let masterConfigItems = [];
 let masterAdditionalItems = [];
 let masterItemsLoaded = false;
@@ -61,34 +60,63 @@ function populateHeader() {
 
   console.log("[populateHeader] Populating UI with header:", header);
 
-  // Example DOM updates (adjust IDs to your actual markup)
-  document.getElementById("metaQuoteNo")?.textContent       = header.quoteNo || "";
-  document.getElementById("metaQuoteDate")?.textContent     = header.quoteDate || "";
-  document.getElementById("metaYourRef")?.textContent       = header.yourReference || "";
-  document.getElementById("metaRefDate")?.textContent       = header.refDate || "";
+  // Helper for safe DOM assignment
+  const safeAssign = (selector, value) => {
+    const el = document.querySelector(selector);
+    if (el) el.textContent = value || "";
+  };
 
-  document.getElementById("toHospitalNameLine")?.textContent    = header.hospitalName || "";
-  document.getElementById("toHospitalAddressLine1")?.textContent = header.hospitalAddress?.split(",")[0] || "";
-  document.getElementById("toHospitalAddressLine2")?.textContent = header.hospitalAddress?.split(",")[1] || "";
+  // Quote metadata
+  safeAssign("#metaQuoteNo", header.quoteNo);
+  safeAssign("#metaQuoteDate", header.quoteDate);
+  safeAssign("#metaYourRef", header.yourReference);
+  safeAssign("#metaRefDate", header.refDate);
 
-  document.getElementById("metaContactPerson")?.textContent = header.contactPerson || "";
-  document.getElementById("metaPhone")?.textContent         = header.contactPhone || "";
-  document.getElementById("metaEmail")?.textContent         = header.contactEmail || "";
-  document.getElementById("metaOffice")?.textContent        = header.officePhone || "";
+  // Hospital details
+  safeAssign("#toHospitalNameLine", header.hospitalName);
+  const addressParts = (header.hospitalAddress || "").split(",");
+  safeAssign("#toHospitalAddressLine1", addressParts[0]?.trim() || "");
+  safeAssign("#toHospitalAddressLine2", addressParts[1]?.trim() || "");
 
-  document.getElementById("toAttn")?.textContent            = header.kindAttn || "";
-  document.getElementById("salesNoteBlock")?.textContent    = header.salesNote || "";
+  // Contact details
+  safeAssign("#metaContactPerson", header.contactPerson);
+  safeAssign("#metaPhone", header.contactPhone);
+  safeAssign("#metaEmail", header.contactEmail);
+  safeAssign("#metaOffice", header.officePhone);
 
+  safeAssign("#toAttn", header.kindAttn);
+  safeAssign("#salesNoteBlock", header.salesNote);
+
+  // Terms HTML
   const termsEl = document.getElementById("termsTextBlock");
   if (termsEl) {
     termsEl.innerHTML = header.termsHtml || "";
   }
 }
 
+/* ========= Quote Summary Helper ========= */
+function renderSummaryRows(itemsTotal) {
+  const sb = document.getElementById("quoteSummaryBody");
+  if (!sb) return;
+  
+  const taxRate = 0.18;
+  const taxAmount = itemsTotal * taxRate;
+  const grandTotal = itemsTotal + taxAmount;
+  
+  sb.innerHTML = `
+    <tr><td>Subtotal</td><td>₹ ${moneyINR(itemsTotal)}</td></tr>
+    <tr><td>GST (18%)</td><td>₹ ${moneyINR(taxAmount)}</td></tr>
+    <tr style="font-weight: bold; font-size: 1.1em;">
+      <td>Total</td><td>₹ ${moneyINR(grandTotal)}</td>
+    </tr>
+  `;
+}
+
 /* ========= Quote builder (with config/additional) ========= */
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
+  
   if (!body) {
     console.error("[renderQuoteBuilder] Missing #quoteBuilderBody container.");
     return;
@@ -96,8 +124,7 @@ export function renderQuoteBuilder() {
 
   if (!Array.isArray(lines) || !lines.length) {
     body.innerHTML = "";
-    const sb = document.getElementById("quoteSummaryBody");
-    if (sb) sb.innerHTML = "";
+    renderSummaryRows(0);
     console.log("[renderQuoteBuilder] No lines to render.");
     return;
   }
@@ -106,9 +133,14 @@ export function renderQuoteBuilder() {
   let runningItemCode = 1;
   let itemsTotal = 0;
 
-  const nextItemCode = () => String(runningItemCode++).padStart(3, "0");
+  const nextItemCode = () => {
+    const code = String(runningItemCode).padStart(3, "0");
+    runningItemCode++;
+    return code;
+  };
+  
   const formatCurrency = (val) =>
-    typeof val === "number" && !isNaN(val) ? `₹ ${moneyINR(val)}` : val;
+    typeof val === "number" && !isNaN(val) ? `₹ ${moneyINR(val)}` : "Included";
 
   lines.forEach((line, lineIdx) => {
     const inst = instruments[line.instrumentIndex] || null;
@@ -178,7 +210,7 @@ export function renderQuoteBuilder() {
           <tr>
             <td>${nextItemCode()}</td>
             ${formatItemCell(item)}
-            <td>${qtyNum.toString().padStart(2, "0")}</td>
+            <td>${qtyNum}</td>
             <td>${formatCurrency(unitNum)}</td>
             <td>${formatCurrency(totalNum)}</td>
           </tr>
@@ -192,6 +224,7 @@ export function renderQuoteBuilder() {
 
   console.log("[renderQuoteBuilder] Rendered", lines.length, "lines. Items total:", itemsTotal);
 }
+
 
 
 /* ========= Summary rows / discount ========= */
