@@ -19,8 +19,8 @@ import {
 
 const firebaseConfig = { /* your existing config */ };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db   = getFirestore(app);
 const auth = getAuth(app);
 
 export {
@@ -32,15 +32,6 @@ export {
   getDoc,
   updateDoc,
   serverTimestamp,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  signOut
-};
-
-// Auth exports for use in other modules
-export {
-  auth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
