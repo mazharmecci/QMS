@@ -94,22 +94,82 @@ function populateHeader() {
   }
 }
 
-/* ========= Quote Summary Helper ========= */
-function renderSummaryRows(itemsTotal) {
+/* ========= Quote Summary Helper (SINGLE DEFINITION) ========= */
+export function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById("quoteSummaryBody");
   if (!sb) return;
-  
-  const taxRate = 0.18;
-  const taxAmount = itemsTotal * taxRate;
-  const grandTotal = itemsTotal + taxAmount;
-  
+
+  const header = getQuoteHeaderRaw();
+  const gstPercent = 18;
+  const discount = Number(header.discount || 0);
+  const afterDisc = itemsTotal - discount;
+  const gstAmount = (afterDisc * gstPercent) / 100;
+  const totalValue = afterDisc + gstAmount;
+  const roundedTotal = Math.round(totalValue);
+  const roundOff = roundedTotal - totalValue;
+
   sb.innerHTML = `
-    <tr><td>Subtotal</td><td>₹ ${moneyINR(itemsTotal)}</td></tr>
-    <tr><td>GST (18%)</td><td>₹ ${moneyINR(taxAmount)}</td></tr>
-    <tr style="font-weight: bold; font-size: 1.1em;">
-      <td>Total</td><td>₹ ${moneyINR(grandTotal)}</td>
-    </tr>
-  `;
+  <tr>
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
+    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
+  </tr>
+
+  <tr class="discount-row">
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+    <td style="text-align:right; font-weight:600;">
+      ₹ <input
+        id="discountInput"
+        type="text"
+        value="${moneyINR(discount)}"
+        style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+        oninput="discountInputChanged(this.value)"
+        onblur="discountInputCommitted()"
+      />
+    </td>
+  </tr>
+
+  <tr class="after-discount-row">
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
+  </tr>
+
+  <tr>
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">Freight</td>
+    <td style="text-align:right; font-weight:600;">Included</td>
+  </tr>
+
+  <tr>
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent.toFixed(2)}%</td>
+    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
+  </tr>
+
+  <tr>
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
+    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
+  </tr>
+
+  <tr>
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
+    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
+  </tr>
+
+  <tr>
+    <td colspan="3"></td>
+    <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
+    <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
+  </tr>
+`;
+
+  if (typeof updateDiscountVisibility === 'function') {
+    updateDiscountVisibility(discount);
+  }
 }
 
 /* ========= Quote builder (with config/additional) ========= */
@@ -223,83 +283,6 @@ export function renderQuoteBuilder() {
   renderSummaryRows(itemsTotal);
 
   console.log("[renderQuoteBuilder] Rendered", lines.length, "lines. Items total:", itemsTotal);
-}
-
-/* ========= Summary rows / discount ========= */
-
-export function renderSummaryRows(itemsTotal) {
-  const sb = document.getElementById("quoteSummaryBody");
-  if (!sb) return;
-
-  const header = getQuoteHeaderRaw();
-  const gstPercent = 18;
-  const discount = Number(header.discount || 0);
-  const afterDisc = itemsTotal - discount;
-  const gstAmount = (afterDisc * gstPercent) / 100;
-  const totalValue = afterDisc + gstAmount;
-  const roundedTotal = Math.round(totalValue);
-  const roundOff = roundedTotal - totalValue;
-
-  sb.innerHTML = `
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
-  </tr>
-
-  <tr class="discount-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-    <td style="text-align:right; font-weight:600;">
-      ₹ <input
-        id="discountInput"
-        type="text"
-        value="${moneyINR(discount)}"
-        style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-        oninput="discountInputChanged(this.value)"
-        onblur="discountInputCommitted()"
-      />
-    </td>
-  </tr>
-
-  <tr class="after-discount-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
-  </tr>
-
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Freight</td>
-    <td style="text-align:right; font-weight:600;">Included</td>
-  </tr>
-
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent.toFixed(2)}%</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
-  </tr>
-
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
-  </tr>
-
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
-  </tr>
-
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
-    <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
-  </tr>
-`;
-
-  updateDiscountVisibility(discount);
 }
 
 export function updateDiscountVisibility(discountValue) {
