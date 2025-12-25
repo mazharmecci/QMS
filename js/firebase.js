@@ -1,6 +1,10 @@
 // firebase.js
 
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  initializeApp,
+  getApps
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -10,16 +14,17 @@ import {
   doc,
   getDocs,
   getDoc,
-  setDoc, // ✅ add this
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 import {
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";  // [web:199][web:223]
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
@@ -39,8 +44,11 @@ const auth = getAuth(app);
 
 // Unified exports for use across the app
 export {
+  // core instances
   db,
   auth,
+
+  // Firestore helpers
   collection,
   addDoc,
   updateDoc,
@@ -48,8 +56,11 @@ export {
   doc,
   getDocs,
   getDoc,
-  setDoc, // ✅ add this
+  setDoc,
   serverTimestamp,
+
+  // Auth helpers
+  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
