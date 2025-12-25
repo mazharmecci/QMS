@@ -986,9 +986,10 @@ Next lines: brief description"></textarea>
     console.log("[loadQuoteFromFirestoreIfNeeded] quoteId from URL:", quoteId);
     console.log("[loadQuoteFromFirestoreIfNeeded] quoteNoParam from URL:", quoteNoParam);
   
+    // --- Case 1: Fetch by Firestore docId ---
     if (quoteId) {
       try {
-        console.log("[loadQuoteFromFirestoreIfNeeded] Fetching from Firestore...");
+        console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by docId...");
         const ref = doc(db, "quoteHistory", quoteId);
         const snap = await getDoc(ref);
   
@@ -996,23 +997,49 @@ Next lines: brief description"></textarea>
           console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Document exists");
           hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
         } else {
-          console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No quoteHistory document for id:", quoteId);
+          console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document for id:", quoteId);
         }
       } catch (err) {
-        console.error("[loadQuoteFromFirestoreIfNeeded] Error loading quote from Firestore:", err);
+        console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by docId:", err);
       }
       return;
     }
   
+    // --- Case 2: Fetch by quoteNo ---
+    if (quoteNoParam) {
+      try {
+        console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by quoteNo...");
+        const colRef = collection(db, "quoteHistory");
+        const snap = await getDocs(colRef);
+  
+        let foundDoc = null;
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          if (data.quoteNo === quoteNoParam) {
+            foundDoc = { id: docSnap.id, data };
+          }
+        });
+  
+        if (foundDoc) {
+          console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Found document by quoteNo:", quoteNoParam);
+          hydrateLocalFromFirestoreDoc(foundDoc.data, foundDoc.id);
+          return;
+        } else {
+          console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document found for quoteNo:", quoteNoParam);
+        }
+      } catch (err) {
+        console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by quoteNo:", err);
+      }
+    }
+  
+    // --- Case 3: Fallback to localStorage ---
     const existingHeader = getQuoteHeaderRaw();
     if (existingHeader && existingHeader.quoteNo) {
       console.log("[loadQuoteFromFirestoreIfNeeded] Using existing localStorage header");
       return;
     }
   
-    if (quoteNoParam) {
-      console.warn("[loadQuoteFromFirestoreIfNeeded] Query by quoteNo not implemented; only ?id=<docId> is supported.");
-    }
+    console.warn("[loadQuoteFromFirestoreIfNeeded] No Firestore id or quoteNo provided, and no local header found.");
   }
 
    // -------------------------
