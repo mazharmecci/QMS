@@ -1075,14 +1075,22 @@ Next lines: brief description"></textarea>
     if (termsEl) {
       const syncTermsToHeader = () => {
         const header = getQuoteHeaderRaw();
-        // Store only text in Firestore
-        header.termsText = termsEl.innerText || termsEl.textContent || "";
-        // Optional: clear any previous HTML value so you stop storing it
-        header.termsHtml = "";
+        const text = termsEl.innerText || termsEl.textContent || "";
+    
+        // Very simple parsing: look for "Warranty:" line and last non-empty line as name.
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    
+        const warrantyLine = lines.find(l => l.startsWith("Warranty:")) || "";
+        const signatureLine = lines[lines.length - 1] || "";
+    
+        header.termsWarrantyText = warrantyLine.replace(/^Warranty:\s*/i, ""); // store only the right-hand part
+        header.termsSignerName = signatureLine || "";
+    
         saveQuoteHeader(header);
+        console.log("[terms] warranty:", header.termsWarrantyText);
+        console.log("[terms] signer:", header.termsSignerName);
       };
-
-      termsEl.addEventListener("input", syncTermsToHeader);
+    
       termsEl.addEventListener("blur", syncTermsToHeader);
     }
 
