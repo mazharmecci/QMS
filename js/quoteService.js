@@ -254,24 +254,13 @@ export async function finalizeQuote(rawArg = null) {
   if (typeof rawArg === "string") {
     docId = rawArg;
   } else if (rawArg && typeof rawArg === "object" && rawArg.target) {
-    console.warn(
-      "[finalizeQuote] called with PointerEvent; treating as new quote (docId = null)."
-    );
+    console.warn("[finalizeQuote] called with PointerEvent; treating as new quote (docId = null).");
   }
 
-  console.log(
-    "[finalizeQuote] CALLED with rawArg:",
-    rawArg,
-    "normalized docId:",
-    docId,
-    "at",
-    new Date().toISOString()
-  );
+  console.log("[finalizeQuote] CALLED with rawArg:", rawArg, "normalized docId:", docId);
 
   try {
     const header = getQuoteHeaderRaw();
-    console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
-
     if (!validateHeader(header)) return;
 
     const { instruments, lines } = getQuoteContext();
@@ -280,6 +269,7 @@ export async function finalizeQuote(rawArg = null) {
       return;
     }
 
+    // --- Calculate summary ---
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
@@ -295,9 +285,9 @@ export async function finalizeQuote(rawArg = null) {
     });
 
     const gstPercent = 18;
-    const discount = Number(header.discount || 0);
-    const afterDisc = itemsTotal - discount;
-    const gstAmount = (afterDisc * gstPercent) / 100;
+    const discount   = Number(header.discount || 0);
+    const afterDisc  = itemsTotal - discount;
+    const gstAmount  = (afterDisc * gstPercent) / 100;
     const totalValue = afterDisc + gstAmount;
     const roundedTotal = Math.round(totalValue);
 
@@ -314,23 +304,11 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
+    // --- Local history ---
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter(
-      q => q.header && q.header.quoteNo === header.quoteNo
-    );
-    const lastRev = sameQuote.length
-      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-      : 0;
-    const nextRev = lastRev + 1;
-
-    console.log(
-      "[finalizeQuote] sameQuote.length:",
-      sameQuote.length,
-      "lastRev:",
-      lastRev,
-      "nextRev:",
-      nextRev
-    );
+    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+    const lastRev   = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
+    const nextRev   = lastRev + 1;
 
     const now = new Date();
     const quoteLocal = {
@@ -351,42 +329,28 @@ export async function finalizeQuote(rawArg = null) {
 
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
-    console.log(
-      "[finalizeQuote] local history updated, total entries:",
-      existing.length
-    );
+    console.log("[finalizeQuote] local history updated, total entries:", existing.length);
 
-    const baseQuoteDoc = buildQuoteObject();
-    const user = auth.currentUser;
-    if (!user) {
-      throw new Error("No signed-in user; cannot save to Firestore.");
-    }
+    // --- Firestore persistence ---
+    header.revision = nextRev;
+    header.localSummary = summary;
 
-    const firestoreData = {
-      ...baseQuoteDoc,
-      revision: nextRev,
-      localSummary: summary,
-      createdBy: user.uid,
-      createdByLabel: user.displayName || user.email || user.uid
-    };
+    const savedId = await saveQuoteHeader(header, docId);
+    console.log("[finalizeQuote] header saved to Firestore with id:", savedId);
 
-    console.log("[finalizeQuote] saving base doc to Firestore...");
-    const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
-    console.log("[finalizeQuote] base doc saved with id:", savedId);
-
-    console.log("[finalizeQuote] appending revision snapshot...");
-    await appendRevisionSnapshot(savedId, firestoreData);
+    // --- Append revision snapshot ---
+    await appendRevisionSnapshot(savedId, {
+      ...header,
+      lineItems,
+      summary
+    });
     console.log("[finalizeQuote] revision snapshot completed");
 
-    alert(
-      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`
-    );
+    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`);
     return savedId;
   } catch (err) {
-    console.error("[finalizeQuote] Error saving quote to Firestore:", err);
-    alert(
-      "Quote saved to local history, but cloud save failed. Please try again later."
-    );
+    console.error("[finalizeQuote] Error saving quote:", err);
+    alert("Quote saved to local history, but cloud save failed. Please try again later.");
     return null;
   } finally {
     finalizeInProgress = false;
