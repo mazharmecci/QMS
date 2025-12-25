@@ -550,15 +550,22 @@
           <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
           <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
         </div>
-
+    
         <div style="margin-top:1.5rem; text-align:right;">
-          <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">Close</button>
+          <button class="btn btn-secondary" id="detailsCloseBtn">Close</button>
         </div>
       </div>
     `;
 
     detailsDiv.innerHTML = html;
     detailsDiv.classList.remove("hidden");
+  }
+
+    const closeBtn = document.getElementById("detailsCloseBtn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      detailsDiv.classList.add("hidden");
+    });
   }
 
   // ===== Revisions modal =====
