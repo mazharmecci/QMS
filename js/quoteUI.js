@@ -51,22 +51,18 @@ async function loadMasterItemsOnce() {
 /* ========= Header population ========= */
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
-  
-  console.log("[populateHeader] ===== POPULATE INIT =====");
-  console.log("[populateHeader] Retrieved header from localStorage:", header);
-  
   if (!validateHeader(header)) return;
 
   const getTextEl = id => document.getElementById(id);
 
-  getTextEl("metaQuoteNo").textContent       = header.quoteNo || "";
-  getTextEl("metaQuoteDate").textContent     = header.quoteDate || "";
-  getTextEl("metaYourRef").textContent       = header.yourReference || "";
-  getTextEl("metaRefDate").textContent       = header.refDate || "";
+  getTextEl("metaQuoteNo").textContent = header.quoteNo || "";
+  getTextEl("metaQuoteDate").textContent = header.quoteDate || "";
+  getTextEl("metaYourRef").textContent = header.yourReference || "";
+  getTextEl("metaRefDate").textContent = header.refDate || "";
   getTextEl("metaContactPerson").textContent = header.contactPerson || "";
-  getTextEl("metaPhone").textContent         = header.contactPhone || "";
-  getTextEl("metaEmail").textContent         = header.contactEmail || "";
-  getTextEl("metaOffice").textContent        = header.officePhone || "";
+  getTextEl("metaPhone").textContent = header.contactPhone || "";
+  getTextEl("metaEmail").textContent = header.contactEmail || "";
+  getTextEl("metaOffice").textContent = header.officePhone || "";
   getTextEl("toHospitalNameLine").textContent =
     header.hospitalName || "Hospital / Client Name";
 
@@ -80,18 +76,15 @@ export function populateHeader() {
   if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
 
   const termsEl = getTextEl("termsTextBlock");
-  if (termsEl) {
-    termsEl.setAttribute("contenteditable", "true");
-    if (header.termsHtml) {
-      termsEl.innerHTML = header.termsHtml;
-    } else if (header.termsText) {
-      termsEl.textContent = header.termsText;
-    } else {
-      termsEl.textContent = "";
-    }
-  }
+  if (!termsEl) return;
 
-  console.log("[populateHeader] populateHeader complete");
+  if (header.termsHtml) {
+    termsEl.innerHTML = header.termsHtml;
+  } else if (header.termsText) {
+    termsEl.textContent = header.termsText;
+  } else {
+    termsEl.textContent = "";
+  }
 }
 
 /* ========= Quote builder (with config/additional) ========= */
