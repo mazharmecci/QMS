@@ -77,39 +77,51 @@ export function populateHeader() {
     noteEl.textContent = header.salesNote;
   }
 
-  // Single editable/read-only terms block
-  const termsEl = getTextEl("termsTextBlock");
-  if (termsEl) {
-    // Prefer stored plain text if present
-    const storedText = header.termsText && header.termsText.trim().length
-      ? header.termsText.trim()
-      : null;
+// Single editable/read-only terms block
+const termsEl = getTextEl("termsTextBlock");
+if (termsEl) {
+  const storedText = header.termsText && header.termsText.trim().length
+    ? header.termsText.trim()
+    : null;
 
-    if (storedText) {
-      console.log("[populateHeader] Rendering stored termsText");
-      // Show exactly what was stored (preserves manual edits)
-      termsEl.textContent = storedText;
-      return;
-    }
+  if (storedText) {
+    console.log("[populateHeader] Rendering stored termsText");
 
-    // Fallback: build standard template when there is no stored text yet
-    const warrantyText =
-      header.termsWarrantyText ||
-      "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+    // Normalize Windows/Mac line endings
+    const text = storedText.replace(/\r\n/g, "\n");
 
-    const signerName = header.termsSignerName || "Naushad";
+    // Split into paragraphs on blank lines
+    const blocks = text
+      .split(/\n\s*\n/)        // two+ newlines = new paragraph
+      .map(b => b.trim())
+      .filter(Boolean);
 
-    const html = `
-      <div class="terms-section">
-        <!-- ... template as you have it ... -->
-        <p><strong>Warranty:</strong> ${warrantyText}</p>
-        <!-- ... -->
-        <div class="quote-sender-highlight">${signerName}</div>
-      </div>
-    `;
-    console.log("[populateHeader] Rendering template terms (no stored termsText)");
+    // Convert each paragraph block to <p>, preserving inner line breaks as <br>
+    const html = blocks
+      .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
+      .join("");
+
     termsEl.innerHTML = html;
+    return;
   }
+
+  // Fallback: build standard template when there is no stored text yet
+  const warrantyText =
+    header.termsWarrantyText ||
+    "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+
+  const signerName = header.termsSignerName || "Naushad";
+
+  const html = `
+    <div class="terms-section">
+      <!-- ... template as you have it ... -->
+      <p><strong>Warranty:</strong> ${warrantyText}</p>
+      <!-- ... -->
+      <div class="quote-sender-highlight">${signerName}</div>
+    </div>
+  `;
+  console.log("[populateHeader] Rendering template terms (no stored termsText)");
+  termsEl.innerHTML = html;
 }
 
 /* ========= Quote builder (with config/additional) ========= */
