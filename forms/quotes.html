@@ -906,7 +906,9 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+function hydrateLocalFromFirestoreDoc(docData, docId = null, options = {}) {
+  const { skipSave = false } = options;
+
   if (!docData || typeof docData !== "object") return;
 
   console.log("[hydrateLocalFromFirestoreDoc] ===== HYDRATE INIT =====");
@@ -940,7 +942,7 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     officePhone: hosp.officePhone || "",
     yourReference: docData.yourReference || "",
     refDate: toDateInputValue(docData.refDate),
-    kindAttn: docData.kindAttn || "",   // ✅ should be Rajesh if Firestore has it
+    kindAttn: docData.kindAttn || "",
     salesNote: docData.salesNote || "",
     termsHtml: docData.termsHtml || "",
     termsText: docData.termsText || "",
@@ -949,10 +951,6 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     quoteLines: []
   };
 
-  console.log("[hydrateLocalFromFirestoreDoc] kindAttn from Firestore:", docData.kindAttn);
-  console.log("[hydrateLocalFromFirestoreDoc] kindAttn set in header:", header.kindAttn);
-
-  // Map items back to instruments
   const masterInstruments = getInstrumentsMaster();
   const quoteLines = (docData.items || []).map((item) => {
     const searchCode = item.instrumentCode;
@@ -974,9 +972,12 @@ function hydrateLocalFromFirestoreDoc(docData, docId = null) {
 
   header.quoteLines = quoteLines;
 
-  // ✅ Only overwrite localStorage when Firestore hydration succeeds
-  saveQuoteHeader(header);
-  console.log("[hydrateLocalFromFirestoreDoc] saveQuoteHeader called, header.kindAttn:", header.kindAttn);
+  if (!skipSave) {
+    saveQuoteHeader(header);
+    console.log("[hydrateLocalFromFirestoreDoc] saveQuoteHeader called");
+  } else {
+    console.log("[hydrateLocalFromFirestoreDoc] Skipped saveQuoteHeader during view/edit");
+  }
 }
 
 // -------------------------
