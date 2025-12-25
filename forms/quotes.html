@@ -906,13 +906,22 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData || typeof docData !== "object") return;
 
     console.log("[hydrateLocalFromFirestoreDoc] ===== HYDRATE INIT =====");
     console.log("[hydrateLocalFromFirestoreDoc] docId:", docId);
     console.log("[hydrateLocalFromFirestoreDoc] docData.quoteNo:", docData.quoteNo);
     console.log("[hydrateLocalFromFirestoreDoc] docData.items.length:", docData.items?.length);
+    
+    // ===== NEW: Log hospital/contact fields =====
+    console.log("[hydrateLocalFromFirestoreDoc] Firestore hospital object:", docData.hospital);
+    console.log("[hydrateLocalFromFirestoreDoc]   - hospital.name:", docData.hospital?.name);
+    console.log("[hydrateLocalFromFirestoreDoc]   - hospital.contactPerson:", docData.hospital?.contactPerson);
+    console.log("[hydrateLocalFromFirestoreDoc]   - hospital.address:", docData.hospital?.address);
+    console.log("[hydrateLocalFromFirestoreDoc]   - hospital.email:", docData.hospital?.email);
+    console.log("[hydrateLocalFromFirestoreDoc]   - hospital.phone:", docData.hospital?.phone);
+    console.log("[hydrateLocalFromFirestoreDoc]   - hospital.officePhone:", docData.hospital?.officePhone);
 
     if (docId) {
       currentQuoteDocId = docId;
@@ -944,7 +953,7 @@ Next lines: brief description"></textarea>
       officePhone: hosp.officePhone || "",
       yourReference: docData.yourReference || "",
       refDate: toDateInputValue(docData.refDate),
-      kindAttn: hosp.contactPerson || "",
+      kindAttn: hosp.contactPerson || "",  // <-- THIS LINE
       salesNote: docData.salesNote || "",
       termsHtml: docData.termsHtml || "",
       termsText: docData.termsText || "",
@@ -952,6 +961,16 @@ Next lines: brief description"></textarea>
       status: docData.status || "Submitted",
       quoteLines: []
     };
+
+    // ===== NEW: Log the kindAttn being set =====
+    console.log("[hydrateLocalFromFirestoreDoc] Setting kindAttn to:", header.kindAttn);
+    console.log("[hydrateLocalFromFirestoreDoc] header object before quoteLines:", {
+      quoteNo: header.quoteNo,
+      hospitalName: header.hospitalName,
+      contactPerson: header.contactPerson,
+      kindAttn: header.kindAttn
+    });
+
 
     // ===== CRITICAL: Map Firestore items back to master instruments =====
     const masterInstruments = getInstrumentsMaster();
