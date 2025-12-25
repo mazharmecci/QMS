@@ -51,6 +51,14 @@ async function loadMasterItemsOnce() {
 /* ========= Header population ========= */
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
+  
+  console.log("[populateHeader] ===== POPULATE INIT =====");
+  console.log("[populateHeader] Retrieved header from localStorage:", header);
+  console.log("[populateHeader]   - quoteNo:", header.quoteNo);
+  console.log("[populateHeader]   - hospitalName:", header.hospitalName);
+  console.log("[populateHeader]   - contactPerson:", header.contactPerson);
+  console.log("[populateHeader]   - kindAttn:', header.kindAttn);
+  
   if (!validateHeader(header)) return;
 
   const getTextEl = id => document.getElementById(id);
@@ -70,7 +78,10 @@ export function populateHeader() {
   getTextEl("toHospitalAddressLine1").textContent = line1 || "";
   getTextEl("toHospitalAddressLine2").textContent = line2 || "";
 
+  // ===== NEW: Log kindAttn population =====
+  console.log("[populateHeader] Setting kindAttn input value to:", header.kindAttn);
   getTextEl("toAttn").textContent = header.kindAttn || "Attention";
+  console.log("[populateHeader] toAttn element after setting:', getTextEl("toAttn").textContent);
 
   const noteEl = getTextEl("salesNoteBlock");
   if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
@@ -85,6 +96,8 @@ export function populateHeader() {
   } else {
     termsEl.textContent = "";
   }
+  
+  console.log("[populateHeader] populateHeader complete");
 }
 
 /* ========= Quote builder (with config/additional) ========= */
