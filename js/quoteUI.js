@@ -123,6 +123,7 @@ if (termsEl) {
   console.log("[populateHeader] Rendering template terms (no stored termsText)");
   termsEl.innerHTML = html;
 }
+}
 
 /* ========= Quote builder (with config/additional) ========= */
 export function renderQuoteBuilder() {
