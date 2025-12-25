@@ -94,35 +94,6 @@ export function populateHeader() {
   console.log("[populateHeader] populateHeader complete");
 }
 
-/* ========= Finalization ========= */
-export async function finalizeQuote(docId = null) {
-  try {
-    const header = getQuoteHeaderRaw();
-    if (!validateHeader(header)) return;
-
-    // Build line items and summary as before...
-    const lineItems = buildLineItemsFromCurrentQuote();
-    const summary   = buildSummaryFromCurrentQuote(header);
-
-    // Save header + terms to Firestore
-    await saveQuoteHeader(header, docId);
-
-    // Append revision snapshot if needed
-    await appendRevisionSnapshot(docId || currentQuoteDocId, {
-      ...header,
-      lineItems,
-      summary
-    });
-
-    alert(`Quote saved as ${header.quoteNo} with full revision history.`);
-    return docId || currentQuoteDocId;
-  } catch (err) {
-    console.error("[finalizeQuote] Error:", err);
-    alert("Quote saved locally, but cloud save failed.");
-    return null;
-  }
-}
-
 /* ========= Quote builder (with config/additional) ========= */
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
