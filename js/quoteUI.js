@@ -77,52 +77,38 @@ export function populateHeader() {
     noteEl.textContent = header.salesNote;
   }
 
-  // Single editable/read-only terms block
-  const termsEl = getTextEl("termsTextBlock");
-  if (termsEl) {
-    const warrantyText =
-      header.termsWarrantyText ||
-      "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+// Single editable/read-only terms block
+const termsEl = getTextEl("termsTextBlock");
+if (termsEl) {
+  // Prefer stored plain text if present
+  const storedText = header.termsText && header.termsText.trim().length
+    ? header.termsText.trim()
+    : null;
 
-    const signerName = header.termsSignerName || "Naushad";
-
-    const html = `
-      <div class="terms-section">
-        <p>
-          These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
-        </p>
-
-        <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
-
-        <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
-
-        <p><strong>Delivery and Title:</strong></p>
-        <div class="terms-indent">
-          <ol>
-            <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
-            <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
-            <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
-            <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
-          </ol>
-        </div>
-
-        <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
-
-        <p><strong>Warranty:</strong> ${warrantyText}</p>
-
-        <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
-      </div>
-
-      <div style="margin-top:40px; text-align:left;">
-        <p>------------------------------</p>
-        <p><strong>For ISTOS Medical Private Limited</strong></p>
-        <br><br>
-        <div class="quote-sender-highlight">${signerName}</div>
-      </div>
-    `;
-
-    termsEl.innerHTML = html;
+  if (storedText) {
+    console.log("[populateHeader] Rendering stored termsText");
+    // Show exactly what was stored (preserves manual edits)
+    termsEl.textContent = storedText;
+    return;
   }
+
+  // Fallback: build standard template when there is no stored text yet
+  const warrantyText =
+    header.termsWarrantyText ||
+    "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+
+  const signerName = header.termsSignerName || "Naushad";
+
+  const html = `
+    <div class="terms-section">
+      <!-- ... template as you have it ... -->
+      <p><strong>Warranty:</strong> ${warrantyText}</p>
+      <!-- ... -->
+      <div class="quote-sender-highlight">${signerName}</div>
+    </div>
+  `;
+  console.log("[populateHeader] Rendering template terms (no stored termsText)");
+  termsEl.innerHTML = html;
 }
 
 /* ========= Quote builder (with config/additional) ========= */
