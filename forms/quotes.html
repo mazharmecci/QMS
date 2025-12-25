@@ -906,6 +906,19 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
+function toDateInputValue(val) {
+  if (!val) return "";
+  if (typeof val.toDate === "function") {
+    const d = val.toDate();
+    return d.toISOString().slice(0, 10);
+  }
+  if (typeof val === "string") {
+    return val.length >= 10 ? val.slice(0, 10) : val;
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+
 function hydrateLocalFromFirestoreDoc(docData, docId = null, options = {}) {
   const { skipSave = false } = options;
 
