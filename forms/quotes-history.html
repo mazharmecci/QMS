@@ -286,9 +286,15 @@
   <div id="quoteDetails" class="hidden"></div>
 </div>
 
-<!-- ========= Scripts ========= -->
 <script type="module">
-  import { db, collection, getDocs, updateDoc, deleteDoc, doc } from "../js/firebase.js";
+  import {
+    db,
+    collection,
+    getDocs,
+    updateDoc,
+    deleteDoc,
+    doc
+  } from "../js/firebase.js";
 
   const QUOTES_URL = "quotes.html"; // relative path from this file
 
@@ -317,7 +323,7 @@
     return "status-" + s;
   }
 
-  // ===== Firestore load =====
+  // ===== Firestore load (base quotes only) =====
   async function loadQuotes() {
     const snap = await getDocs(collection(db, "quoteHistory"));
     quotes = snap.docs.map(d => ({
@@ -328,53 +334,75 @@
     renderTable();
   }
 
-// ===== Table render =====
-function renderTable(data = filteredQuotes) {
-  tbody.innerHTML = "";
+  // ===== Helper: load all revisions for a quote =====
+  async function loadRevisionsForQuote(quoteId) {
+    const revColRef = collection(db, "quoteHistory", quoteId, "revisions");
+    const revSnap = await getDocs(revColRef);
 
-  data.forEach((q, i) => {
-    const quoteNo   = q.quoteNo || "-";
-    const revision  = q.revision || 1; // latest revision stored on base doc
-    const date      = q.quoteDate || "-";
-    const hospital  = q.hospital?.name || "-";
-    const total     = q.totalValueINR || 0;
-    const status    = q.status || "Draft";
+    const revisions = revSnap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    }));
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${quoteNo} (Rev ${revision})</td>
-      <td>${date}</td>
-      <td>${hospital}</td>
-      <td>₹ ${moneyINR(total)}</td>
-      <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-      <td class="actions">
-        <button class="view-btn" onclick="viewQuote(${i})">View</button>
-        <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
-        <button class="view-btn" onclick="editQuote(${i})">Edit</button>
-        <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+    // sort by revision number if present, else createdAt
+    return revisions.sort((a, b) => {
+      const ra = Number(a.revision || 0);
+      const rb = Number(b.revision || 0);
+      if (ra && rb && ra !== rb) return ra - rb;
 
-  updateDashboard();
-}
+      const ca = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const cb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return ca - cb;
+    });
+  }
 
-function updateDashboard() {
-  const total   = quotes.length;
-  const pending = quotes.filter(q => {
-    const s = (q.status || "draft").toLowerCase();
-    return s === "draft" || s === "submitted";
-  }).length;
-  const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
-  const rate = total ? Math.round((won / total) * 100) : 0;
+  // ===== Table render =====
+  function renderTable(data = filteredQuotes) {
+    tbody.innerHTML = "";
 
-  document.getElementById("statTotal").textContent   = total;
-  document.getElementById("statPending").textContent = pending;
-  document.getElementById("statWon").textContent     = won;
-  document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
-}
+    data.forEach((q, i) => {
+      const quoteNo   = q.quoteNo || "-";
+      const revision  = q.revision || 1; // latest revision stored on base doc
+      const date      = q.quoteDate || "-";
+      const hospital  = q.hospital?.name || "-";
+      const total     = q.totalValueINR || 0;
+      const status    = q.status || "Draft";
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${quoteNo} (Rev ${revision})</td>
+        <td>${date}</td>
+        <td>${hospital}</td>
+        <td>₹ ${moneyINR(total)}</td>
+        <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
+        <td class="actions">
+          <button class="view-btn" onclick="viewQuote(${i})">View</button>
+          <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
+          <button class="view-btn" onclick="editQuote(${i})">Edit</button>
+          <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    updateDashboard();
+  }
+
+  function updateDashboard() {
+    const total   = quotes.length;
+    const pending = quotes.filter(q => {
+      const s = (q.status || "draft").toLowerCase();
+      return s === "draft" || s === "submitted";
+    }).length;
+    const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
+    const rate = total ? Math.round((won / total) * 100) : 0;
+
+    document.getElementById("statTotal").textContent   = total;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statWon").textContent     = won;
+    document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
+  }
 
   // ===== Filters =====
   function applyFilters() {
@@ -465,7 +493,6 @@ function updateDashboard() {
   function editQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
-    // Let quotes.html load it via ?id=...
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
@@ -487,13 +514,21 @@ function updateDashboard() {
     }
   }
 
-  // ===== Detail view =====
-  function viewQuote(index) {
+  // ===== Detail view (base + revisions) =====
+  async function viewQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
 
     const items = q.items || [];
     const hosp  = q.hospital || {};
+
+    // Load all revisions for this quote
+    let revisions = [];
+    try {
+      revisions = await loadRevisionsForQuote(q.id);
+    } catch (err) {
+      console.error("Failed to load revisions", err);
+    }
 
     let html = `
       <div class="quote-details">
@@ -509,7 +544,7 @@ function updateDashboard() {
           <p><strong>Address:</strong> ${hosp.address || "-"}</p>
         </div>
 
-        <h4>Line Items</h4>
+        <h4>Line Items (Latest)</h4>
         <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
           <thead>
             <tr style="background:#f0f4f8;">
@@ -539,12 +574,41 @@ function updateDashboard() {
           </tbody>
         </table>
 
-        <h4>Summary</h4>
+        <h4>Summary (Latest)</h4>
         <div class="details-grid">
           <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
           <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
         </div>
+    `;
 
+    // Revisions section
+    html += `
+      <h4>Revisions</h4>
+    `;
+
+    if (revisions.length) {
+      html += `<ul style="margin-top:0.5rem;">`;
+      revisions.forEach(r => {
+        const revNo = r.revision || "?";
+        const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
+        const createdAt =
+          r.createdAt && r.createdAt.toDate
+            ? r.createdAt.toDate().toISOString().slice(0, 10)
+            : "";
+        html += `
+          <li style="margin-bottom:4px;">
+            <strong>Rev ${revNo}</strong>
+            &nbsp;|&nbsp; Date: ${createdAt || "-"}
+            &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
+          </li>
+        `;
+      });
+      html += `</ul>`;
+    } else {
+      html += `<p>No revision snapshots found.</p>`;
+    }
+
+    html += `
         <div style="margin-top:1.5rem; text-align:right;">
           <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">Close</button>
         </div>
