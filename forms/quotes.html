@@ -906,258 +906,170 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-function toDateInputValue(val) {
-  if (!val) return "";
-  if (typeof val.toDate === "function") {
-    const d = val.toDate();
-    return d.toISOString().slice(0, 10);
-  }
-  if (typeof val === "string") {
-    return val.length >= 10 ? val.slice(0, 10) : val;
-  }
-  const d = new Date(val);
-  return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-}
+  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+    if (!docData || typeof docData !== "object") return;
 
-function hydrateLocalFromFirestoreDoc(docData, docId = null, options = {}) {
-  const { skipSave = false } = options;
-
-  if (!docData || typeof docData !== "object") return;
-
-  console.log("[hydrateLocalFromFirestoreDoc] ===== HYDRATE INIT =====");
-  console.log("[hydrateLocalFromFirestoreDoc] docId:", docId);
-  console.log("[hydrateLocalFromFirestoreDoc] docData.quoteNo:", docData.quoteNo);
-
-  const header = {
-    quoteNo: docData.quoteNo || "",
-    quoteDate: toDateInputValue(docData.quoteDate),
-    hospitalName: docData.hospital?.name || "",
-    hospitalAddress: docData.hospital?.address || "",
-    contactPerson: docData.hospital?.contactPerson || "",
-    contactEmail: docData.hospital?.email || "",
-    contactPhone: docData.hospital?.phone || "",
-    officePhone: docData.hospital?.officePhone || "",
-    yourReference: docData.yourReference || "",
-    refDate: toDateInputValue(docData.refDate),
-    kindAttn: docData.kindAttn || "",
-    salesNote: docData.salesNote || "",
-    termsHtml: docData.termsHtml || "",
-    termsText: docData.termsText || "",
-    discount: Number(docData.discount || 0),
-    status: docData.status || "Submitted",
-    quoteLines: docData.items || []
-  };
-
-  // ✅ Always hydrate in-memory state
-  window.currentQuoteHeader = header;
-
-  if (!skipSave) {
-    localStorage.setItem("quoteHeader", JSON.stringify(header));
-    console.log("[hydrateLocalFromFirestoreDoc] Header hydrated into localStorage + memory");
-  } else {
-    console.log("[hydrateLocalFromFirestoreDoc] Header hydrated into memory only (skipSave)");
-  }
-}
-
-// -------------------------
-// Separate function
-// -------------------------
-async function loadQuoteFromFirestoreIfNeeded() {
-  const quoteId = getQueryParam("id");
-  const quoteNoParam = getQueryParam("quoteNo");
-
-  console.log("[loadQuoteFromFirestoreIfNeeded] ===== LOAD INIT =====");
-  console.log("[loadQuoteFromFirestoreIfNeeded] quoteId from URL:", quoteId);
-  console.log("[loadQuoteFromFirestoreIfNeeded] quoteNoParam from URL:", quoteNoParam);
-
-  // --- Case 1: Fetch by Firestore docId ---
-  if (quoteId) {
-    try {
-      console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by docId...");
-      const ref = doc(db, "quoteHistory", quoteId);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Document exists");
-        hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
-        return;
-      } else {
-        console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document for id:", quoteId);
-      }
-    } catch (err) {
-      console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by docId:", err);
+    if (docId) {
+      currentQuoteDocId = docId;
     }
-    // fall through to localStorage if Firestore fails
-  }
 
-  // --- Case 2: Fetch by quoteNo ---
-  if (quoteNoParam) {
-    try {
-      console.log("[loadQuoteFromFirestoreIfNeeded] Fetching by quoteNo...");
-      const colRef = collection(db, "quoteHistory");
-      const snap = await getDocs(colRef);
+    const hosp = docData.hospital || {};
 
-      let foundDoc = null;
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.quoteNo === quoteNoParam) {
-          foundDoc = { id: docSnap.id, data };
-        }
-      });
-
-      if (foundDoc) {
-        console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Found document by quoteNo:", quoteNoParam);
-        hydrateLocalFromFirestoreDoc(foundDoc.data, foundDoc.id);
-        return;
-      } else {
-        console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No document found for quoteNo:", quoteNoParam);
+    const toDateInputValue = (val) => {
+      if (!val) return "";
+      if (typeof val.toDate === "function") {
+        const d = val.toDate();
+        return d.toISOString().slice(0, 10);
       }
-    } catch (err) {
-      console.error("[loadQuoteFromFirestoreIfNeeded] Error loading by quoteNo:", err);
-    }
-    // fall through to localStorage if Firestore fails
-  }
-
-  // --- Case 3: Fallback to localStorage ---
-  const existingHeader = getQuoteHeaderRaw();
-  if (existingHeader && existingHeader.quoteNo) {
-    console.log("[loadQuoteFromFirestoreIfNeeded] Using existing localStorage header, kindAttn:", existingHeader.kindAttn);
-    return;
-  }
-
-  console.warn("[loadQuoteFromFirestoreIfNeeded] No Firestore id or quoteNo provided, and no local header found.");
-}
-
-// -------------------------
-// init
-// -------------------------
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[quotes.html] DOMContentLoaded");
-
-  // Load header/context once
-  await loadQuoteFromFirestoreIfNeeded();
-
-  console.log("[quotes.html] After loadQuoteFromFirestoreIfNeeded, calling populateHeader");
-  populateHeader();
-  console.log("[quotes.html] After populateHeader, calling renderQuoteBuilder");
-  renderQuoteBuilder();
-
-  // Navigation
-  document.getElementById("backBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    goBack();
-  });
-
-  // Instrument modal events
-  [
-    ["openInstrumentModalBtn", openInstrumentModal],
-    ["closeInstrumentModalBtn", closeInstrumentModal],
-    ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-  ].forEach(([id, handler]) => {
-    const el = document.getElementById(id);
-    el?.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handler(e);
-    }, { once: false });
-  });
-
-  // Picker events
-  document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openInstrumentPicker();
-  });
-  document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeInstrumentPicker();
-  });
-
-  // Item modal events
-  ["closeItemModalBtn", "cancelItemModalBtn"].forEach(id => {
-    document.getElementById(id)?.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeItemModal();
-    });
-  });
-  document.getElementById("itemModalForm")?.addEventListener("submit", (e) => {
-    e.preventDefault(); // prevent implicit submit double-trigger
-    e.stopPropagation();
-    saveItemFromModal(e);
-  });
-
-  // Config & Additional pickers
-  document.getElementById("closeConfigPickerBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    document.getElementById("configPickerOverlay").style.display = "none";
-  });
-  document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    document.getElementById("additionalPickerOverlay").style.display = "none";
-  });
-
-  // Finalize button — strong re-entry prevention
-  const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-  if (finalizeBtn) {
-    let clickInProgress = false;
-    finalizeBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Block re-entry in UI layer
-      if (clickInProgress) {
-        console.warn("[quotes.html] Finalize blocked: click in progress.");
-        return;
+      if (typeof val === "string") {
+        return val.length >= 10 ? val.slice(0, 10) : val;
       }
-      clickInProgress = true;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+    };
 
-      // Block re-entry visually
-      finalizeBtn.disabled = true;
+    const header = {
+      quoteNo: docData.quoteNo || "",
+      quoteDate: toDateInputValue(docData.quoteDate),
+      hospitalName: hosp.name || "",
+      hospitalAddress: hosp.address || "",
+      contactPerson: hosp.contactPerson || "",
+      contactEmail: hosp.email || "",
+      contactPhone: hosp.phone || "",
+      officePhone: hosp.officePhone || "",
+      yourReference: docData.yourReference || "",
+      refDate: toDateInputValue(docData.refDate),
+      kindAttn: hosp.contactPerson || "",
+      salesNote: docData.salesNote || "",
+      termsHtml: docData.termsHtml || "",
+      termsText: docData.termsText || "",
+      discount: Number(docData.discount || 0),
+      status: docData.status || "Submitted",
+      quoteLines: []
+    };
 
-      // Optional: remove focus to avoid Enter key re-trigger
-      finalizeBtn.blur();
+    const quoteLines = (docData.items || []).map(item => ({
+      lineType: "instrument",
+      instrumentIndex: 0,
+      quantity: item.quantity || 1,
+      configItems: item.configItems || [],
+      additionalItems: item.additionalItems || []
+    }));
 
-      // Optional: prevent Enter key on whole document during finalize
-      const keyBlocker = (ke) => {
-        if (ke.key === "Enter") {
-          ke.preventDefault();
-          ke.stopPropagation();
-        }
-      };
-      document.addEventListener("keydown", keyBlocker, { capture: true });
+    header.quoteLines = quoteLines;
+    saveQuoteHeader(header);
+  }
 
-      console.log("[quotes.html] finalize button clicked, docId:", window.currentQuoteDocId);
+  async function loadQuoteFromFirestoreIfNeeded() {
+    const quoteId = getQueryParam("id");
+    const quoteNoParam = getQueryParam("quoteNo");
 
+    if (quoteId) {
       try {
-        const savedId = await finalizeQuote(window.currentQuoteDocId);
-        if (savedId) {
-          console.log("[quotes.html] Redirecting to quotes-history.html...");
-          window.location.href = "https://qms.istosmedical.com/forms/quotes-history.html";
+        const ref = doc(db, "quoteHistory", quoteId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
+        } else {
+          console.warn("No quoteHistory document for id", quoteId);
         }
       } catch (err) {
-        console.error("[quotes.html] Finalize failed:", err);
-      } finally {
-        clickInProgress = false;
-        finalizeBtn.disabled = false;
-        document.removeEventListener("keydown", keyBlocker, { capture: true });
+        console.error("Error loading quote from Firestore:", err);
       }
-    }, { once: false });
+      return;
+    }
+
+    const existingHeader = getQuoteHeaderRaw();
+    if (existingHeader && existingHeader.quoteNo) {
+      return;
+    }
+
+    if (quoteNoParam) {
+      console.warn(
+        "Query by quoteNo not implemented; only ?id=<docId> is supported for now."
+      );
+    }
   }
-});
 
-// Expose functions for inline handlers (single source of truth)
-window.openConfigModal = openConfigModal;
-window.openAdditionalModal = openAdditionalModal;
-window.openItemModal = openItemModal;
-window.editItemFromModal = editItemFromModal;
-window.removeItemFromModal = removeItemFromModal;
-window.addInstrumentToQuote = addInstrumentToQuote;
-window.addMasterItemToLine = addMasterItemToLine;
+  document.addEventListener("DOMContentLoaded", async () => {
+    console.log("[quotes.html] DOMContentLoaded");
 
+    await loadQuoteFromFirestoreIfNeeded();
+
+    populateHeader();
+    renderQuoteBuilder();
+
+    document.getElementById("backBtn")?.addEventListener("click", goBack);
+
+    const instrumentModalEvents = [
+      ["openInstrumentModalBtn", openInstrumentModal],
+      ["closeInstrumentModalBtn", closeInstrumentModal],
+      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
+    ];
+    instrumentModalEvents.forEach(([id, handler]) => {
+      document.getElementById(id)?.addEventListener("click", handler);
+    });
+
+    document
+      .getElementById("openInstrumentPickerBtn")
+      ?.addEventListener("click", openInstrumentPicker);
+    document
+      .getElementById("closeInstrumentPickerBtn")
+      ?.addEventListener("click", closeInstrumentPicker);
+
+    document
+      .getElementById("closeItemModalBtn")
+      ?.addEventListener("click", closeItemModal);
+    document
+      .getElementById("cancelItemModalBtn")
+      ?.addEventListener("click", closeItemModal);
+    document
+      .getElementById("itemModalForm")
+      ?.addEventListener("submit", saveItemFromModal);
+
+    document
+      .getElementById("closeConfigPickerBtn")
+      ?.addEventListener("click", () => {
+        document.getElementById("configPickerOverlay").style.display = "none";
+      });
+    document
+      .getElementById("closeAdditionalPickerBtn")
+      ?.addEventListener("click", () => {
+        document.getElementById("additionalPickerOverlay").style.display = "none";
+      });
+
+    const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+    if (finalizeBtn) {
+      let clickInProgress = false;
+
+      finalizeBtn.addEventListener("click", async () => {
+        if (clickInProgress) return;
+        clickInProgress = true;
+        finalizeBtn.disabled = true;
+
+        console.log(
+          "[quotes.html] finalize button clicked, docId:",
+          currentQuoteDocId
+        );
+
+        try {
+          await finalizeQuote(currentQuoteDocId);
+        } finally {
+          clickInProgress = false;
+          finalizeBtn.disabled = false; // or keep disabled if desired
+        }
+      });
+    }
+  });
+
+  // expose functions for inline handlers
+  window.openConfigModal = openConfigModal;
+  window.openAdditionalModal = openAdditionalModal;
+  window.openItemModal = openItemModal;
+  window.editItemFromModal = editItemFromModal;
+  window.removeItemFromModal = removeItemFromModal;
+  window.addInstrumentToQuote = addInstrumentToQuote;
+  window.addMasterItemToLine = addMasterItemToLine;
 </script>
 
 </body>
