@@ -25,6 +25,7 @@ import {
 } from "./firebase.js";
 
 /* ========= Master items cache ========= */
+
 let masterConfigItems = [];
 let masterAdditionalItems = [];
 let masterItemsLoaded = false;
@@ -49,52 +50,152 @@ async function loadMasterItemsOnce() {
 
 /* ========= Header population ========= */
 export function populateHeader() {
-  // Prefer in-memory header first
-  const header = window.currentQuoteHeader 
-    || JSON.parse(localStorage.getItem("quoteHeader") || "{}");
+  const header = getQuoteHeaderRaw();
+  if (!validateHeader(header)) return;
 
-  if (!header || !header.quoteNo) {
-    console.warn("[populateHeader] No header found to populate.");
-    return;
-  }
+  const getTextEl = id => document.getElementById(id);
 
-  console.log("[populateHeader] Populating UI with header:", header);
+  getTextEl("metaQuoteNo").textContent = header.quoteNo || "";
+  getTextEl("metaQuoteDate").textContent = header.quoteDate || "";
+  getTextEl("metaYourRef").textContent = header.yourReference || "";
+  getTextEl("metaRefDate").textContent = header.refDate || "";
+  getTextEl("metaContactPerson").textContent = header.contactPerson || "";
+  getTextEl("metaPhone").textContent = header.contactPhone || "";
+  getTextEl("metaEmail").textContent = header.contactEmail || "";
+  getTextEl("metaOffice").textContent = header.officePhone || "";
+  getTextEl("toHospitalNameLine").textContent =
+    header.hospitalName || "Hospital / Client Name";
 
-  // Helper for safe DOM assignment
-  const safeAssign = (selector, value) => {
-    const el = document.querySelector(selector);
-    if (el) el.textContent = value || "";
-  };
+  const [line1, line2] = (header.hospitalAddress || "").split(",");
+  getTextEl("toHospitalAddressLine1").textContent = line1 || "";
+  getTextEl("toHospitalAddressLine2").textContent = line2 || "";
 
-  // Quote metadata
-  safeAssign("#metaQuoteNo", header.quoteNo);
-  safeAssign("#metaQuoteDate", header.quoteDate);
-  safeAssign("#metaYourRef", header.yourReference);
-  safeAssign("#metaRefDate", header.refDate);
+  getTextEl("toAttn").textContent = header.kindAttn || "Attention";
 
-  // Hospital details
-  safeAssign("#toHospitalNameLine", header.hospitalName);
-  const addressParts = (header.hospitalAddress || "").split(",");
-  safeAssign("#toHospitalAddressLine1", addressParts[0]?.trim() || "");
-  safeAssign("#toHospitalAddressLine2", addressParts[1]?.trim() || "");
+  const noteEl = getTextEl("salesNoteBlock");
+  if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
 
-  // Contact details
-  safeAssign("#metaContactPerson", header.contactPerson);
-  safeAssign("#metaPhone", header.contactPhone);
-  safeAssign("#metaEmail", header.contactEmail);
-  safeAssign("#metaOffice", header.officePhone);
+  const termsEl = getTextEl("termsTextBlock");
+  if (!termsEl) return;
 
-  safeAssign("#toAttn", header.kindAttn);
-  safeAssign("#salesNoteBlock", header.salesNote);
-
-  // Terms HTML
-  const termsEl = document.getElementById("termsTextBlock");
-  if (termsEl) {
-    termsEl.innerHTML = header.termsHtml || "";
+  if (header.termsHtml) {
+    termsEl.innerHTML = header.termsHtml;
+  } else if (header.termsText) {
+    termsEl.textContent = header.termsText;
+  } else {
+    termsEl.textContent = "";
   }
 }
 
-/* ========= Quote Summary Helper (SINGLE DEFINITION) ========= */
+/* ========= Quote builder (with config/additional) ========= */
+export function renderQuoteBuilder() {
+  const { instruments, lines } = getQuoteContext();
+  const body = document.getElementById("quoteBuilderBody");
+  if (!body) return;
+
+  if (!lines.length) {
+    body.innerHTML = "";
+    const sb = document.getElementById("quoteSummaryBody");
+    if (sb) sb.innerHTML = "";
+    return;
+  }
+
+  const rows = [];
+  let runningItemCode = 1;
+  let itemsTotal = 0;
+
+  lines.forEach((line, lineIdx) => {
+    const inst = instruments[line.instrumentIndex] || null;
+    if (!inst) return;
+
+    const qty = Number(line.quantity || 1);
+    const codeText = String(runningItemCode).padStart(3, "0");
+    runningItemCode += 1;
+
+    const instUnit = Number(inst.unitPrice || 0);
+    const instTotal = instUnit * qty;
+    itemsTotal += instTotal;
+
+    // main instrument row
+    rows.push(`
+      <tr>
+        <td>${codeText}</td>
+        ${formatInstrumentCell(inst, lineIdx)}
+        <td>${qty}</td>
+        <td>₹ ${moneyINR(instUnit)}</td>
+        <td>₹ ${moneyINR(instTotal)}</td>
+      </tr>
+    `);
+
+    // configuration items
+    const configItems = line.configItems || [];
+    if (configItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">Configuration Items</td>
+        </tr>
+      `);
+
+      configItems.forEach(item => {
+        const itemCode = String(runningItemCode).padStart(3, "0");
+        runningItemCode += 1;
+
+        const q = item.qty != null ? item.qty : "Included";
+        const upRaw = item.upInr != null ? item.upInr : "Included";
+        const tpRaw = item.tpInr != null ? item.tpInr : "Included";
+
+        const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
+        const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
+
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${q}</td>
+            <td>${upCell}</td>
+            <td>${tpCell}</td>
+          </tr>
+        `);
+      });
+    }
+
+    // additional items
+    const additionalItems = line.additionalItems || [];
+    if (additionalItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">Additional Items</td>
+        </tr>
+      `);
+
+      additionalItems.forEach(item => {
+        const itemCode = String(runningItemCode).padStart(3, "0");
+        runningItemCode += 1;
+
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        const totalNum = unitNum * qtyNum;
+        itemsTotal += totalNum;
+
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${qtyNum.toString().padStart(2, "0")}</td>
+            <td>₹ ${moneyINR(unitNum)}</td>
+            <td>₹ ${moneyINR(totalNum)}</td>
+          </tr>
+        `);
+      });
+    }
+  });
+
+  body.innerHTML = rows.join("");
+  renderSummaryRows(itemsTotal);
+}
+
+/* ========= Summary rows / discount ========= */
+
 export function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById("quoteSummaryBody");
   if (!sb) return;
@@ -167,122 +268,7 @@ export function renderSummaryRows(itemsTotal) {
   </tr>
 `;
 
-  if (typeof updateDiscountVisibility === 'function') {
-    updateDiscountVisibility(discount);
-  }
-}
-
-/* ========= Quote builder (with config/additional) ========= */
-export function renderQuoteBuilder() {
-  const { instruments, lines } = getQuoteContext();
-  const body = document.getElementById("quoteBuilderBody");
-  
-  if (!body) {
-    console.error("[renderQuoteBuilder] Missing #quoteBuilderBody container.");
-    return;
-  }
-
-  if (!Array.isArray(lines) || !lines.length) {
-    body.innerHTML = "";
-    renderSummaryRows(0);
-    console.log("[renderQuoteBuilder] No lines to render.");
-    return;
-  }
-
-  const rows = [];
-  let runningItemCode = 1;
-  let itemsTotal = 0;
-
-  const nextItemCode = () => {
-    const code = String(runningItemCode).padStart(3, "0");
-    runningItemCode++;
-    return code;
-  };
-  
-  const formatCurrency = (val) =>
-    typeof val === "number" && !isNaN(val) ? `₹ ${moneyINR(val)}` : "Included";
-
-  lines.forEach((line, lineIdx) => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (!inst) {
-      console.warn("[renderQuoteBuilder] Missing instrument for line:", lineIdx);
-      return;
-    }
-
-    const qty = Number(line.quantity || 1);
-    const instUnit = Number(inst.unitPrice || 0);
-    const instTotal = instUnit * qty;
-    itemsTotal += instTotal;
-
-    // Main instrument row
-    rows.push(`
-      <tr>
-        <td>${nextItemCode()}</td>
-        ${formatInstrumentCell(inst, lineIdx)}
-        <td>${qty}</td>
-        <td>${formatCurrency(instUnit)}</td>
-        <td>${formatCurrency(instTotal)}</td>
-      </tr>
-    `);
-
-    // Configuration items
-    const configItems = line.configItems || [];
-    if (configItems.length) {
-      rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">Configuration Items</td>
-        </tr>
-      `);
-
-      configItems.forEach(item => {
-        const q = item.qty != null ? item.qty : "Included";
-        const upRaw = item.upInr != null ? item.upInr : "Included";
-        const tpRaw = item.tpInr != null ? item.tpInr : "Included";
-
-        rows.push(`
-          <tr>
-            <td>${nextItemCode()}</td>
-            ${formatItemCell(item)}
-            <td>${q}</td>
-            <td>${formatCurrency(upRaw)}</td>
-            <td>${formatCurrency(tpRaw)}</td>
-          </tr>
-        `);
-      });
-    }
-
-    // Additional items
-    const additionalItems = line.additionalItems || [];
-    if (additionalItems.length) {
-      rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">Additional Items</td>
-        </tr>
-      `);
-
-      additionalItems.forEach(item => {
-        const qtyNum = Number(item.qty || 1);
-        const unitNum = Number(item.price || item.unitPrice || 0);
-        const totalNum = unitNum * qtyNum;
-        itemsTotal += totalNum;
-
-        rows.push(`
-          <tr>
-            <td>${nextItemCode()}</td>
-            ${formatItemCell(item)}
-            <td>${qtyNum}</td>
-            <td>${formatCurrency(unitNum)}</td>
-            <td>${formatCurrency(totalNum)}</td>
-          </tr>
-        `);
-      });
-    }
-  });
-
-  body.innerHTML = rows.join("");
-  renderSummaryRows(itemsTotal);
-
-  console.log("[renderQuoteBuilder] Rendered", lines.length, "lines. Items total:", itemsTotal);
+  updateDiscountVisibility(discount);
 }
 
 export function updateDiscountVisibility(discountValue) {
