@@ -1070,6 +1070,20 @@ Next lines: brief description"></textarea>
     populateHeader();
     renderQuoteBuilder();
 
+    // NEW: keep Terms & Conditions in header in sync with editable block
+    const termsEl = document.getElementById("termsTextBlock");
+    if (termsEl) {
+      const syncTermsToHeader = () => {
+        const header = getQuoteHeaderRaw();
+        header.termsHtml = termsEl.innerHTML;
+        header.termsText = termsEl.innerText || termsEl.textContent || "";
+        saveQuoteHeader(header);
+      };
+
+      termsEl.addEventListener("input", syncTermsToHeader);
+      termsEl.addEventListener("blur", syncTermsToHeader);
+    }
+
     document.getElementById("backBtn")?.addEventListener("click", goBack);
 
     const instrumentModalEvents = [
