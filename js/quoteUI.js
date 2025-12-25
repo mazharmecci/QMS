@@ -63,14 +63,14 @@ export function populateHeader() {
 
   const getTextEl = id => document.getElementById(id);
 
-  getTextEl("metaQuoteNo").textContent = header.quoteNo || "";
-  getTextEl("metaQuoteDate").textContent = header.quoteDate || "";
-  getTextEl("metaYourRef").textContent = header.yourReference || "";
-  getTextEl("metaRefDate").textContent = header.refDate || "";
+  getTextEl("metaQuoteNo").textContent       = header.quoteNo || "";
+  getTextEl("metaQuoteDate").textContent     = header.quoteDate || "";
+  getTextEl("metaYourRef").textContent       = header.yourReference || "";
+  getTextEl("metaRefDate").textContent       = header.refDate || "";
   getTextEl("metaContactPerson").textContent = header.contactPerson || "";
-  getTextEl("metaPhone").textContent = header.contactPhone || "";
-  getTextEl("metaEmail").textContent = header.contactEmail || "";
-  getTextEl("metaOffice").textContent = header.officePhone || "";
+  getTextEl("metaPhone").textContent         = header.contactPhone || "";
+  getTextEl("metaEmail").textContent         = header.contactEmail || "";
+  getTextEl("metaOffice").textContent        = header.officePhone || "";
   getTextEl("toHospitalNameLine").textContent =
     header.hospitalName || "Hospital / Client Name";
 
@@ -88,6 +88,9 @@ export function populateHeader() {
   const termsEl = getTextEl("termsTextBlock");
   if (!termsEl) return;
 
+  // ✅ Ensure block is editable
+  termsEl.setAttribute("contenteditable", "true");
+
   if (header.termsHtml) {
     termsEl.innerHTML = header.termsHtml;
   } else if (header.termsText) {
@@ -97,6 +100,71 @@ export function populateHeader() {
   }
   
   console.log("[populateHeader] populateHeader complete");
+}
+
+
+/* ========= Save header back ========= */
+export async function saveQuoteHeader(header) {
+  if (!header || typeof header !== "object") return;
+
+  const getEl = id => document.getElementById(id);
+
+  header.quoteNo       = getEl("metaQuoteNo")?.textContent || header.quoteNo || "";
+  header.quoteDate     = getEl("metaQuoteDate")?.textContent || header.quoteDate || "";
+  header.yourReference = getEl("metaYourRef")?.textContent || header.yourReference || "";
+  header.refDate       = getEl("metaRefDate")?.textContent || header.refDate || "";
+  header.contactPerson = getEl("metaContactPerson")?.textContent || header.contactPerson || "";
+  header.contactPhone  = getEl("metaPhone")?.textContent || header.contactPhone || "";
+  header.contactEmail  = getEl("metaEmail")?.textContent || header.contactEmail || "";
+  header.officePhone   = getEl("metaOffice")?.textContent || header.officePhone || "";
+  header.hospitalName  = getEl("toHospitalNameLine")?.textContent || header.hospitalName || "";
+  header.hospitalAddress = 
+    (getEl("toHospitalAddressLine1")?.textContent || "") + "," +
+    (getEl("toHospitalAddressLine2")?.textContent || "");
+
+  header.kindAttn      = getEl("toAttn")?.textContent || header.kindAttn || "";
+  header.salesNote     = getEl("salesNoteBlock")?.textContent || header.salesNote || "";
+
+  // ✅ Capture edited Terms & Conditions block
+  const termsEl = getEl("termsTextBlock");
+  if (termsEl) {
+    header.termsHtml = termsEl.innerHTML;   // preserve formatting
+    header.termsText = termsEl.innerText;   // plain text fallback
+  }
+
+  // Persist to localStorage
+  localStorage.setItem("quoteHeader", JSON.stringify(header));
+  console.log("[saveQuoteHeader] Header saved to localStorage:", header);
+
+  // ✅ Also persist to Firestore if we have a current docId
+  if (typeof currentQuoteDocId !== "undefined" && currentQuoteDocId) {
+    try {
+      const ref = doc(db, "quoteHistory", currentQuoteDocId);
+      await setDoc(ref, {
+        quoteNo: header.quoteNo,
+        quoteDate: header.quoteDate,
+        hospitalName: header.hospitalName,
+        hospitalAddress: header.hospitalAddress,
+        contactPerson: header.contactPerson,
+        contactEmail: header.contactEmail,
+        contactPhone: header.contactPhone,
+        officePhone: header.officePhone,
+        yourReference: header.yourReference,
+        refDate: header.refDate,
+        kindAttn: header.kindAttn,
+        salesNote: header.salesNote,
+        discount: header.discount,
+        status: header.status,
+        quoteLines: header.quoteLines || [],
+        termsHtml: header.termsHtml || "",
+        termsText: header.termsText || ""
+      }, { merge: true });
+
+      console.log("[saveQuoteHeader] Header also saved to Firestore:", currentQuoteDocId);
+    } catch (err) {
+      console.error("[saveQuoteHeader] Error saving header to Firestore:", err);
+    }
+  }
 }
 
 /* ========= Quote builder (with config/additional) ========= */
