@@ -1048,84 +1048,136 @@ async function loadQuoteFromFirestoreIfNeeded() {
   console.warn("[loadQuoteFromFirestoreIfNeeded] No Firestore id or quoteNo provided, and no local header found.");
 }
 
-  // -------------------------
-  // init
-  // -------------------------
-  document.addEventListener("DOMContentLoaded", async () => {
-    console.log("[quotes.html] DOMContentLoaded");
-  
-    await loadQuoteFromFirestoreIfNeeded();
-  
-    console.log("[quotes.html] After loadQuoteFromFirestoreIfNeeded, calling populateHeader");
-    populateHeader();
-    console.log("[quotes.html] After populateHeader, calling renderQuoteBuilder");
-    renderQuoteBuilder();
-  
-    // Navigation
-    document.getElementById("backBtn")?.addEventListener("click", goBack);
-  
-    // Instrument modal events
-    [
-      ["openInstrumentModalBtn", openInstrumentModal],
-      ["closeInstrumentModalBtn", closeInstrumentModal],
-      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-    ].forEach(([id, handler]) => {
-      document.getElementById(id)?.addEventListener("click", handler);
-    });
-  
-    // Picker events
-    document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
-    document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
-  
-    // Item modal events
-    ["closeItemModalBtn", "cancelItemModalBtn"].forEach(id => {
-      document.getElementById(id)?.addEventListener("click", closeItemModal);
-    });
-    document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
-  
-    // Config & Additional pickers
-    document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
-      document.getElementById("configPickerOverlay").style.display = "none";
-    });
-    document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", () => {
-      document.getElementById("additionalPickerOverlay").style.display = "none";
-    });
-  
-    // Finalize button
-    const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-    if (finalizeBtn) {
-      let clickInProgress = false;
-  
-      finalizeBtn.addEventListener("click", async () => {
-        if (clickInProgress) return;
-        clickInProgress = true;
-        finalizeBtn.disabled = true;
-  
-        console.log("[quotes.html] finalize button clicked, docId:", currentQuoteDocId);
-  
-        try {
-          const savedId = await finalizeQuote(currentQuoteDocId);
-          if (savedId) {
-            console.log("[quotes.html] Redirecting to quotes-history.html...");
-            window.location.href = "https://qms.istosmedical.com/forms/quotes-history.html";
-          }
-        } finally {
-          clickInProgress = false;
-          finalizeBtn.disabled = false;
-        }
-      });
-    }
+// -------------------------
+// init
+// -------------------------
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("[quotes.html] DOMContentLoaded");
+
+  // Load header/context once
+  await loadQuoteFromFirestoreIfNeeded();
+
+  console.log("[quotes.html] After loadQuoteFromFirestoreIfNeeded, calling populateHeader");
+  populateHeader();
+  console.log("[quotes.html] After populateHeader, calling renderQuoteBuilder");
+  renderQuoteBuilder();
+
+  // Navigation
+  document.getElementById("backBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    goBack();
   });
 
+  // Instrument modal events
+  [
+    ["openInstrumentModalBtn", openInstrumentModal],
+    ["closeInstrumentModalBtn", closeInstrumentModal],
+    ["closeInstrumentModalFooterBtn", closeInstrumentModal]
+  ].forEach(([id, handler]) => {
+    const el = document.getElementById(id);
+    el?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handler(e);
+    }, { once: false });
+  });
 
-  // expose functions for inline handlers
-  window.openConfigModal = openConfigModal;
-  window.openAdditionalModal = openAdditionalModal;
-  window.openItemModal = openItemModal;
-  window.editItemFromModal = editItemFromModal;
-  window.removeItemFromModal = removeItemFromModal;
-  window.addInstrumentToQuote = addInstrumentToQuote;
-  window.addMasterItemToLine = addMasterItemToLine;
+  // Picker events
+  document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openInstrumentPicker();
+  });
+  document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeInstrumentPicker();
+  });
+
+  // Item modal events
+  ["closeItemModalBtn", "cancelItemModalBtn"].forEach(id => {
+    document.getElementById(id)?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeItemModal();
+    });
+  });
+  document.getElementById("itemModalForm")?.addEventListener("submit", (e) => {
+    e.preventDefault(); // prevent implicit submit double-trigger
+    e.stopPropagation();
+    saveItemFromModal(e);
+  });
+
+  // Config & Additional pickers
+  document.getElementById("closeConfigPickerBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById("configPickerOverlay").style.display = "none";
+  });
+  document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById("additionalPickerOverlay").style.display = "none";
+  });
+
+  // Finalize button — strong re-entry prevention
+  const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+  if (finalizeBtn) {
+    let clickInProgress = false;
+    finalizeBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Block re-entry in UI layer
+      if (clickInProgress) {
+        console.warn("[quotes.html] Finalize blocked: click in progress.");
+        return;
+      }
+      clickInProgress = true;
+
+      // Block re-entry visually
+      finalizeBtn.disabled = true;
+
+      // Optional: remove focus to avoid Enter key re-trigger
+      finalizeBtn.blur();
+
+      // Optional: prevent Enter key on whole document during finalize
+      const keyBlocker = (ke) => {
+        if (ke.key === "Enter") {
+          ke.preventDefault();
+          ke.stopPropagation();
+        }
+      };
+      document.addEventListener("keydown", keyBlocker, { capture: true });
+
+      console.log("[quotes.html] finalize button clicked, docId:", window.currentQuoteDocId);
+
+      try {
+        const savedId = await finalizeQuote(window.currentQuoteDocId);
+        if (savedId) {
+          console.log("[quotes.html] Redirecting to quotes-history.html...");
+          window.location.href = "https://qms.istosmedical.com/forms/quotes-history.html";
+        }
+      } catch (err) {
+        console.error("[quotes.html] Finalize failed:", err);
+      } finally {
+        clickInProgress = false;
+        finalizeBtn.disabled = false;
+        document.removeEventListener("keydown", keyBlocker, { capture: true });
+      }
+    }, { once: false });
+  }
+});
+
+// Expose functions for inline handlers (single source of truth)
+window.openConfigModal = openConfigModal;
+window.openAdditionalModal = openAdditionalModal;
+window.openItemModal = openItemModal;
+window.editItemFromModal = editItemFromModal;
+window.removeItemFromModal = removeItemFromModal;
+window.addInstrumentToQuote = addInstrumentToQuote;
+window.addMasterItemToLine = addMasterItemToLine;
+
 </script>
 
 </body>
