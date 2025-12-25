@@ -286,19 +286,35 @@
   <div id="quoteDetails" class="hidden"></div>
 </div>
 
-<!-- ========= Scripts ========= -->
 <script type="module">
-  import { db, collection, getDocs, updateDoc, deleteDoc, doc } from "../js/firebase.js";
+  import {
+    db,
+    auth,
+    collection,
+    getDocs,
+    updateDoc,
+    deleteDoc,
+    doc
+  } from "../js/firebase.js";
+  import { onAuthStateChanged } from "../js/firebase.js";
 
-  const QUOTES_URL = "quotes.html"; // relative path from this file
+  const QUOTES_URL = "quotes.html";
 
   // ===== State =====
   let quotes = [];
   let filteredQuotes = [];
   let sortConfig = { key: null, direction: "asc" };
+  let currentUser = null;
 
   const tbody = document.querySelector("#quoteTable tbody");
   const detailsDiv = document.getElementById("quoteDetails");
+
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (!user) {
+      window.location.href = "login.html";
+    }
+  });
 
   function goBack() {
     if (history.length > 1) history.back();
@@ -326,55 +342,56 @@
     }));
     filteredQuotes = [...quotes];
     renderTable();
+    updateDashboard();
   }
 
-// ===== Table render =====
-function renderTable(data = filteredQuotes) {
-  tbody.innerHTML = "";
+  // ===== Table render =====
+  function renderTable(data = filteredQuotes) {
+    tbody.innerHTML = "";
 
-  data.forEach((q, i) => {
-    const quoteNo   = q.quoteNo || "-";
-    const revision  = q.revision || 1; // latest revision stored on base doc
-    const date      = q.quoteDate || "-";
-    const hospital  = q.hospital?.name || "-";
-    const total     = q.totalValueINR || 0;
-    const status    = q.status || "Draft";
+    data.forEach((q, i) => {
+      const quoteNo  = q.quoteNo || "-";
+      const revision = q.revision || 1;
+      const date     = q.quoteDate || "-";
+      const hospital = q.hospital?.name || "-";
+      const total    = q.totalValueINR || 0;
+      const status   = q.status || "Draft";
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${quoteNo} (Rev ${revision})</td>
-      <td>${date}</td>
-      <td>${hospital}</td>
-      <td>₹ ${moneyINR(total)}</td>
-      <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-      <td class="actions">
-        <button class="view-btn" onclick="viewQuote(${i})">View</button>
-        <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
-        <button class="view-btn" onclick="editQuote(${i})">Edit</button>
-        <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+      const canDelete = currentUser && currentUser.uid === q.createdBy;
 
-  updateDashboard();
-}
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${quoteNo} (Rev ${revision})</td>
+        <td>${date}</td>
+        <td>${hospital}</td>
+        <td>₹ ${moneyINR(total)}</td>
+        <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
+        <td class="actions">
+          <button class="view-btn" onclick="viewQuote(${i})">View</button>
+          <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
+          <button class="view-btn" onclick="editQuote(${i})">Edit</button>
+          ${canDelete ? `<button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>` : ""}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-function updateDashboard() {
-  const total   = quotes.length;
-  const pending = quotes.filter(q => {
-    const s = (q.status || "draft").toLowerCase();
-    return s === "draft" || s === "submitted";
-  }).length;
-  const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
-  const rate = total ? Math.round((won / total) * 100) : 0;
+  function updateDashboard() {
+    const total   = quotes.length;
+    const pending = quotes.filter(q => {
+      const s = (q.status || "draft").toLowerCase();
+      return s === "draft" || s === "submitted";
+    }).length;
+    const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
+    const rate = total ? Math.round((won / total) * 100) : 0;
 
-  document.getElementById("statTotal").textContent   = total;
-  document.getElementById("statPending").textContent = pending;
-  document.getElementById("statWon").textContent     = won;
-  document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
-}
+    document.getElementById("statTotal").textContent   = total;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statWon").textContent     = won;
+    document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
+  }
 
   // ===== Filters =====
   function applyFilters() {
@@ -455,6 +472,7 @@ function updateDashboard() {
       const base = quotes.find(x => x.id === q.id);
       if (base) base.status = next;
       renderTable(filteredQuotes);
+      updateDashboard();
     } catch (err) {
       console.error("Failed to update status", err);
       alert("Failed to update status");
@@ -465,7 +483,6 @@ function updateDashboard() {
   function editQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
-    // Let quotes.html load it via ?id=...
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
@@ -473,6 +490,12 @@ function updateDashboard() {
   async function deleteQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
+
+    if (!currentUser || currentUser.uid !== q.createdBy) {
+      alert("You can delete only your own quotes.");
+      return;
+    }
+
     if (!confirm("Delete this quote from history?")) return;
 
     try {
@@ -480,6 +503,7 @@ function updateDashboard() {
       quotes = quotes.filter(x => x.id !== q.id);
       filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
       renderTable(filteredQuotes);
+      updateDashboard();
       detailsDiv.classList.add("hidden");
     } catch (err) {
       console.error("Failed to delete quote", err);
@@ -546,13 +570,20 @@ function updateDashboard() {
         </div>
 
         <div style="margin-top:1.5rem; text-align:right;">
-          <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">Close</button>
+          <button class="btn btn-secondary" id="detailsCloseBtn">Close</button>
         </div>
       </div>
     `;
 
     detailsDiv.innerHTML = html;
     detailsDiv.classList.remove("hidden");
+
+    const closeBtn = document.getElementById("detailsCloseBtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        detailsDiv.classList.add("hidden");
+      });
+    }
   }
 
   // ===== CSV Export =====
