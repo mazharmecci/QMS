@@ -1,4 +1,5 @@
 // firebase.js
+
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore,
@@ -8,10 +9,16 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  getDoc,   
+  getDoc,
   serverTimestamp
-
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"; // [web:117][web:127]
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"; // [web:199][web:223]
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
@@ -22,12 +29,16 @@ const firebaseConfig = {
   appId: "1:777790389934:web:1acd36f952445a1625373f"
 };
 
-// Only initialize once
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+// Single app instance
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-// Export Firestore instance and helpers
-export const db = getFirestore(app);
+// Core services
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Firestore re‑exports
 export {
+  db,
   collection,
   addDoc,
   updateDoc,
@@ -36,4 +47,13 @@ export {
   getDocs,
   getDoc,
   serverTimestamp
+};
+
+// Auth exports for use in other modules
+export {
+  auth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut
 };
