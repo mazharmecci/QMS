@@ -49,41 +49,39 @@ async function loadMasterItemsOnce() {
 }
 
 /* ========= Header population ========= */
-export function populateHeader() {
-  const header = getQuoteHeaderRaw();
-  if (!validateHeader(header)) return;
+function populateHeader() {
+  // Prefer in-memory header first
+  const header = window.currentQuoteHeader 
+    || JSON.parse(localStorage.getItem("quoteHeader") || "{}");
 
-  const getTextEl = id => document.getElementById(id);
+  if (!header || !header.quoteNo) {
+    console.warn("[populateHeader] No header found to populate.");
+    return;
+  }
 
-  getTextEl("metaQuoteNo").textContent = header.quoteNo || "";
-  getTextEl("metaQuoteDate").textContent = header.quoteDate || "";
-  getTextEl("metaYourRef").textContent = header.yourReference || "";
-  getTextEl("metaRefDate").textContent = header.refDate || "";
-  getTextEl("metaContactPerson").textContent = header.contactPerson || "";
-  getTextEl("metaPhone").textContent = header.contactPhone || "";
-  getTextEl("metaEmail").textContent = header.contactEmail || "";
-  getTextEl("metaOffice").textContent = header.officePhone || "";
-  getTextEl("toHospitalNameLine").textContent =
-    header.hospitalName || "Hospital / Client Name";
+  console.log("[populateHeader] Populating UI with header:", header);
 
-  const [line1, line2] = (header.hospitalAddress || "").split(",");
-  getTextEl("toHospitalAddressLine1").textContent = line1 || "";
-  getTextEl("toHospitalAddressLine2").textContent = line2 || "";
+  // Example DOM updates (adjust IDs to your actual markup)
+  document.getElementById("metaQuoteNo")?.textContent       = header.quoteNo || "";
+  document.getElementById("metaQuoteDate")?.textContent     = header.quoteDate || "";
+  document.getElementById("metaYourRef")?.textContent       = header.yourReference || "";
+  document.getElementById("metaRefDate")?.textContent       = header.refDate || "";
 
-  getTextEl("toAttn").textContent = header.kindAttn || "Attention";
+  document.getElementById("toHospitalNameLine")?.textContent    = header.hospitalName || "";
+  document.getElementById("toHospitalAddressLine1")?.textContent = header.hospitalAddress?.split(",")[0] || "";
+  document.getElementById("toHospitalAddressLine2")?.textContent = header.hospitalAddress?.split(",")[1] || "";
 
-  const noteEl = getTextEl("salesNoteBlock");
-  if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
+  document.getElementById("metaContactPerson")?.textContent = header.contactPerson || "";
+  document.getElementById("metaPhone")?.textContent         = header.contactPhone || "";
+  document.getElementById("metaEmail")?.textContent         = header.contactEmail || "";
+  document.getElementById("metaOffice")?.textContent        = header.officePhone || "";
 
-  const termsEl = getTextEl("termsTextBlock");
-  if (!termsEl) return;
+  document.getElementById("toAttn")?.textContent            = header.kindAttn || "";
+  document.getElementById("salesNoteBlock")?.textContent    = header.salesNote || "";
 
-  if (header.termsHtml) {
-    termsEl.innerHTML = header.termsHtml;
-  } else if (header.termsText) {
-    termsEl.textContent = header.termsText;
-  } else {
-    termsEl.textContent = "";
+  const termsEl = document.getElementById("termsTextBlock");
+  if (termsEl) {
+    termsEl.innerHTML = header.termsHtml || "";
   }
 }
 
