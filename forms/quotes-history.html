@@ -324,6 +324,15 @@
     return "status-" + s;
   }
 
+  // NEW: helper for Created By column
+  function createdByLabel(createdBy) {
+    if (!createdBy) return "-";
+    if (createdBy.includes("@")) {
+      return createdBy.split("@")[0]; // prefix before '@'
+    }
+    return createdBy;
+  }
+  
   // ===== Firestore load (base quotes only) =====
   async function loadQuotes() {
     const snap = await getDocs(collection(db, "quoteHistory"));
