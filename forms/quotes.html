@@ -909,6 +909,11 @@ Next lines: brief description"></textarea>
   function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData || typeof docData !== "object") return;
 
+    console.log("[hydrateLocalFromFirestoreDoc] ===== HYDRATE INIT =====");
+    console.log("[hydrateLocalFromFirestoreDoc] docId:", docId);
+    console.log("[hydrateLocalFromFirestoreDoc] docData.quoteNo:", docData.quoteNo);
+    console.log("[hydrateLocalFromFirestoreDoc] docData.items.length:", docData.items?.length);
+
     if (docId) {
       currentQuoteDocId = docId;
     }
@@ -948,45 +953,88 @@ Next lines: brief description"></textarea>
       quoteLines: []
     };
 
-    const quoteLines = (docData.items || []).map(item => ({
-      lineType: "instrument",
-      instrumentIndex: 0,
-      quantity: item.quantity || 1,
-      configItems: item.configItems || [],
-      additionalItems: item.additionalItems || []
-    }));
+    // ===== CRITICAL: Map Firestore items back to master instruments =====
+    const masterInstruments = getInstrumentsMaster();
+    console.log("[hydrateLocalFromFirestoreDoc] Master instruments count:", masterInstruments.length);
+    console.log("[hydrateLocalFromFirestoreDoc] Master instruments:', masterInstruments.map(i => ({ 
+      idx: masterInstruments.indexOf(i),
+      code: i.catalog || i.instrumentCode,
+      name: i.instrumentName || i.name 
+    })));
+
+    const quoteLines = (docData.items || []).map((item, itemIdx) => {
+      console.log(`[hydrateLocalFromFirestoreDoc] Processing item ${itemIdx}:`, item.instrumentCode);
+
+      // Find matching instrument by code
+      let instrumentIndex = 0;
+      if (item.instrumentCode) {
+        const matchIdx = masterInstruments.findIndex(
+          inst => (inst.catalog || inst.instrumentCode) === item.instrumentCode
+        );
+        if (matchIdx !== -1) {
+          instrumentIndex = matchIdx;
+          console.log(`[hydrateLocalFromFirestoreDoc]   → Matched to master index:`, matchIdx);
+        } else {
+          console.warn(
+            `[hydrateLocalFromFirestoreDoc]   → NO MATCH for code ${item.instrumentCode}, defaulting to index 0`
+          );
+        }
+      }
+
+      return {
+        lineType: "instrument",
+        instrumentIndex,
+        quantity: item.quantity || 1,
+        configItems: item.configItems || [],
+        additionalItems: item.additionalItems || []
+      };
+    });
 
     header.quoteLines = quoteLines;
+    console.log("[hydrateLocalFromFirestoreDoc] Final quoteLines:', quoteLines);
+    
     saveQuoteHeader(header);
+    console.log("[hydrateLocalFromFirestoreDoc] saveQuoteHeader called");
   }
 
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
     const quoteNoParam = getQueryParam("quoteNo");
 
+    console.log("[loadQuoteFromFirestoreIfNeeded] ===== LOAD INIT =====");
+    console.log("[loadQuoteFromFirestoreIfNeeded] quoteId from URL:', quoteId);
+    console.log("[loadQuoteFromFirestoreIfNeeded] quoteNoParam from URL:', quoteNoParam);
+
     if (quoteId) {
       try {
+        console.log("[loadQuoteFromFirestoreIfNeeded] Fetching from Firestore...");
         const ref = doc(db, "quoteHistory", quoteId);
         const snap = await getDoc(ref);
+        
         if (snap.exists()) {
+          console.log("[loadQuoteFromFirestoreIfNeeded] ✓ Document exists");
+          console.log("[loadQuoteFromFirestoreIfNeeded] Firestore data:', snap.data());
           hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
         } else {
-          console.warn("No quoteHistory document for id", quoteId);
+          console.warn("[loadQuoteFromFirestoreIfNeeded] ✗ No quoteHistory document for id', quoteId);
         }
       } catch (err) {
-        console.error("Error loading quote from Firestore:", err);
+        console.error("[loadQuoteFromFirestoreIfNeeded] Error loading quote from Firestore:', err);
       }
       return;
     }
 
     const existingHeader = getQuoteHeaderRaw();
+    console.log("[loadQuoteFromFirestoreIfNeeded] existingHeader.quoteNo:', existingHeader?.quoteNo);
+    
     if (existingHeader && existingHeader.quoteNo) {
+      console.log("[loadQuoteFromFirestoreIfNeeded] Using existing localStorage header");
       return;
     }
 
     if (quoteNoParam) {
       console.warn(
-        "Query by quoteNo not implemented; only ?id=<docId> is supported for now."
+        "[loadQuoteFromFirestoreIfNeeded] Query by quoteNo not implemented; only ?id=<docId> is supported."
       );
     }
   }
@@ -996,7 +1044,9 @@ Next lines: brief description"></textarea>
 
     await loadQuoteFromFirestoreIfNeeded();
 
+    console.log("[quotes.html] After loadQuoteFromFirestoreIfNeeded, calling populateHeader");
     populateHeader();
+    console.log("[quotes.html] After populateHeader, calling renderQuoteBuilder");
     renderQuoteBuilder();
 
     document.getElementById("backBtn")?.addEventListener("click", goBack);
@@ -1056,7 +1106,7 @@ Next lines: brief description"></textarea>
           await finalizeQuote(currentQuoteDocId);
         } finally {
           clickInProgress = false;
-          finalizeBtn.disabled = false; // or keep disabled if desired
+          finalizeBtn.disabled = false;
         }
       });
     }
