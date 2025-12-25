@@ -101,13 +101,31 @@ export function buildLineItemsFromCurrentQuote() {
  * =======================*/
 
 export function buildQuoteObject() {
-  const header = getQuoteHeaderRaw();
+  const rawHeader = getQuoteHeaderRaw() || {};
   const { instruments, lines } = getQuoteContext();
+
+  const header = {
+    quoteNo: rawHeader.quoteNo || "",
+    quoteDate: rawHeader.quoteDate || "",
+    yourReference: rawHeader.yourReference || "",
+    refDate: rawHeader.refDate || "",
+    hospitalName: rawHeader.hospitalName || "",
+    hospitalAddress: rawHeader.hospitalAddress || "",
+    contactPerson: rawHeader.contactPerson || "",
+    contactEmail: rawHeader.contactEmail || "",
+    contactPhone: rawHeader.contactPhone || "",
+    officePhone: rawHeader.officePhone || "",
+    status: rawHeader.status || "Submitted",
+    discount: Number(rawHeader.discount || 0),
+    salesNote: rawHeader.salesNote || "",
+    termsHtml: rawHeader.termsHtml || "",
+    termsText: rawHeader.termsText || ""
+  };
 
   let totalValueINR = 0;
   let gstValueINR = 0;
 
-  const items = lines.map(line => {
+  const items = (lines || []).map(line => {
     const inst = instruments[line.instrumentIndex] || {};
     const qty = Number(line.quantity || 1);
     const unitPrice = Number(inst.unitPrice || 0);
@@ -132,27 +150,27 @@ export function buildQuoteObject() {
   });
 
   return {
-    quoteNo: header.quoteNo || "",
-    quoteDate: header.quoteDate || "",
-    yourReference: header.yourReference || "",
-    refDate: header.refDate || "",
+    quoteNo: header.quoteNo,
+    quoteDate: header.quoteDate,
+    yourReference: header.yourReference,
+    refDate: header.refDate,
     hospital: {
-      name: header.hospitalName || "",
-      address: header.hospitalAddress || "",
-      contactPerson: header.contactPerson || "",
-      email: header.contactEmail || "",
-      phone: header.contactPhone || "",
-      officePhone: header.officePhone || ""
+      name: header.hospitalName,
+      address: header.hospitalAddress,
+      contactPerson: header.contactPerson,
+      email: header.contactEmail,
+      phone: header.contactPhone,
+      officePhone: header.officePhone
     },
-    status: header.status || "Submitted",
-    discount: Number(header.discount || 0),
+    status: header.status,
+    discount: header.discount,
     totalValueINR,
     gstValueINR,
     items,
-    salesNote: header.salesNote || "",
-    termsHtml: header.termsHtml || "",
-    termsText: header.termsText || ""
-    // createdBy injected at save time
+    salesNote: header.salesNote,
+    termsHtml: header.termsHtml,
+    termsText: header.termsText
+    // createdBy / createdByLabel injected at save time
   };
 }
 
