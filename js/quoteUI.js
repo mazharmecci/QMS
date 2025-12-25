@@ -841,12 +841,18 @@ function goBack() {
 }
 
 /* ========= Init wiring ========= */
+let initialized = false;
+
 document.addEventListener("DOMContentLoaded", () => {
+  if (initialized) return;
+  initialized = true;
+
+  console.log("[quoteUI] DOMContentLoaded init");
+
   populateHeader();
   renderQuoteBuilder();
 
   document.getElementById("backBtn")?.addEventListener("click", goBack);
-
   document
     .getElementById("openInstrumentModalBtn")
     ?.addEventListener("click", openInstrumentModal);
