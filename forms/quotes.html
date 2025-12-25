@@ -901,95 +901,71 @@ Next lines: brief description"></textarea>
     }, 150);
   }
 
-function getQueryParam(name) {
-  const params = new URLSearchParams(window.location.search);
-  return params.get(name);
-}
-
-function toDateInputValue(val) {
-  if (!val) return "";
-
-  // Firestore Timestamp (has toDate)
-  if (typeof val.toDate === "function") {
-    const d = val.toDate();
-    return d.toISOString().slice(0, 10);
+  function getQueryParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
   }
 
-  // ISO/date-like string
-  if (typeof val === "string") {
-    return val.length >= 10 ? val.slice(0, 10) : val;
+  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+    if (!docData || typeof docData !== "object") return;
+
+    if (docId) {
+      currentQuoteDocId = docId;
+    }
+
+    const hosp = docData.hospital || {};
+
+    const toDateInputValue = (val) => {
+      if (!val) return "";
+      if (typeof val.toDate === "function") {
+        const d = val.toDate();
+        return d.toISOString().slice(0, 10);
+      }
+      if (typeof val === "string") {
+        return val.length >= 10 ? val.slice(0, 10) : val;
+      }
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+    };
+
+    const header = {
+      quoteNo: docData.quoteNo || "",
+      quoteDate: toDateInputValue(docData.quoteDate),
+      hospitalName: hosp.name || "",
+      hospitalAddress: hosp.address || "",
+      contactPerson: hosp.contactPerson || "",
+      contactEmail: hosp.email || "",
+      contactPhone: hosp.phone || "",
+      officePhone: hosp.officePhone || "",
+      yourReference: docData.yourReference || "",
+      refDate: toDateInputValue(docData.refDate),
+      kindAttn: hosp.contactPerson || "",
+      salesNote: docData.salesNote || "",
+      termsHtml: docData.termsHtml || "",
+      termsText: docData.termsText || "",
+      discount: Number(docData.discount || 0),
+      status: docData.status || "Submitted",
+      quoteLines: []
+    };
+
+    const quoteLines = (docData.items || []).map(item => ({
+      lineType: "instrument",
+      instrumentIndex: 0,
+      quantity: item.quantity || 1,
+      configItems: item.configItems || [],
+      additionalItems: item.additionalItems || []
+    }));
+
+    header.quoteLines = quoteLines;
+    saveQuoteHeader(header);
   }
 
-  // Fallback: assume millis or Date-compatible
-  const d = new Date(val);
-  return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-}
+  async function loadQuoteFromFirestoreIfNeeded() {
+    const quoteId = getQueryParam("id");
+    const quoteNoParam = getQueryParam("quoteNo");
 
-function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-  if (!docData || typeof docData !== "object") return;
-
-  if (docId) {
-    currentQuoteDocId = docId;
-  }
-
-  const hosp = docData.hospital || {};
-
-  const header = {
-    quoteNo: docData.quoteNo || "",
-    quoteDate: toDateInputValue(docData.quoteDate),
-    hospitalName: hosp.name || "",
-    hospitalAddress: hosp.address || "",
-    contactPerson: hosp.contactPerson || "",
-    contactEmail: hosp.email || "",
-    contactPhone: hosp.phone || "",
-    officePhone: hosp.officePhone || "",
-    yourReference: docData.yourReference || "",
-    refDate: toDateInputValue(docData.refDate),
-    kindAttn: hosp.contactPerson || "",
-    salesNote: docData.salesNote || "",
-    termsHtml: docData.termsHtml || "",
-    termsText: docData.termsText || "",
-    discount: Number(docData.discount || 0),
-    status: docData.status || "Submitted",
-    quoteLines: []
-  };
-
-  const quoteLines = (docData.items || []).map(item => ({
-    lineType: "instrument",
-    instrumentIndex: 0,
-    quantity: item.quantity || 1,
-    configItems: item.configItems || [],
-    additionalItems: item.additionalItems || []
-  }));
-
-  header.quoteLines = quoteLines;
-  saveQuoteHeader(header);
-}
-
-async function loadQuoteFromFirestoreIfNeeded() {
-  const quoteId = getQueryParam("id");
-  const revId   = getQueryParam("revId");
-  const quoteNoParam = getQueryParam("quoteNo");
-
-  // If a header already exists with a quoteNo, do nothing
-  const existingHeader = getQuoteHeaderRaw();
-  if (existingHeader?.quoteNo && !quoteId && !revId) {
-    return;
-  }
-
-  if (quoteId) {
-    try {
-      if (revId) {
-        // Load specific revision snapshot: quoteHistory/{id}/revisions/{revId}
-        const revRef = doc(db, "quoteHistory", quoteId, "revisions", revId);
-        const revSnap = await getDoc(revRef);
-        if (revSnap.exists()) {
-          hydrateLocalFromFirestoreDoc(revSnap.data(), quoteId);
-        } else {
-          console.warn("No revision document for", quoteId, revId);
-        }
-      } else {
-        // Load latest/base document: quoteHistory/{id}
+    if (quoteId) {
+      try {
         const ref = doc(db, "quoteHistory", quoteId);
         const snap = await getDoc(ref);
         if (snap.exists()) {
@@ -997,19 +973,23 @@ async function loadQuoteFromFirestoreIfNeeded() {
         } else {
           console.warn("No quoteHistory document for id", quoteId);
         }
+      } catch (err) {
+        console.error("Error loading quote from Firestore:", err);
       }
-    } catch (err) {
-      console.error("Error loading quote from Firestore:", err);
+      return;
     }
-    return;
-  }
 
-  if (quoteNoParam) {
-    console.warn(
-      "Query by quoteNo not implemented; only ?id=<docId>[&revId=<revDocId>] is supported."
-    );
+    const existingHeader = getQuoteHeaderRaw();
+    if (existingHeader && existingHeader.quoteNo) {
+      return;
+    }
+
+    if (quoteNoParam) {
+      console.warn(
+        "Query by quoteNo not implemented; only ?id=<docId> is supported for now."
+      );
+    }
   }
-}
 
   document.addEventListener("DOMContentLoaded", async () => {
     console.log("[quotes.html] DOMContentLoaded");
