@@ -357,6 +357,7 @@
   }
 
 // ===== Table render =====
+  
 function renderTable(data = filteredQuotes) {
   tbody.innerHTML = "";
 
@@ -367,7 +368,8 @@ function renderTable(data = filteredQuotes) {
     const hospital   = q.hospital?.name || "-";
     const total      = q.totalValueINR || 0;
     const status     = q.status || "Draft";
-    const createdBy  = q.createdBy || "—";      // UID or friendly label
+
+    const createdByLabel = q.createdByLabel || q.createdBy || "—";
 
     const canDelete = currentUser && currentUser.uid === q.createdBy;
 
@@ -379,7 +381,7 @@ function renderTable(data = filteredQuotes) {
       <td>${hospital}</td>
       <td>₹ ${moneyINR(total)}</td>
       <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-      <td>${createdBy}</td>
+      <td>${createdByLabel}</td>
       <td class="actions">
         <button class="view-btn" onclick="viewQuote(${i})">View</button>
         <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
