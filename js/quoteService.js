@@ -1,4 +1,3 @@
-
 // quoteService.js
 
 import { fetchInstruments } from "./instrumentService.js";
@@ -7,6 +6,7 @@ import {
   collection,
   addDoc,
   doc,
+  setDoc,
   updateDoc,
   serverTimestamp,
   auth
@@ -20,8 +20,74 @@ export function getQuoteHeaderRaw() {
   return JSON.parse(localStorage.getItem("quoteHeader") || "{}");
 }
 
-export function saveQuoteHeader(header) {
+// ✅ Refactored saveQuoteHeader: captures DOM, preserves kindAttn, saves to localStorage + Firestore
+export async function saveQuoteHeader(header, docId = null) {
+  if (!header || typeof header !== "object") return;
+
+  const getEl = (id) => document.getElementById(id);
+
+  header.quoteNo       = getEl("metaQuoteNo")?.textContent || header.quoteNo || "";
+  header.quoteDate     = getEl("metaQuoteDate")?.textContent || header.quoteDate || "";
+  header.yourReference = getEl("metaYourRef")?.textContent || header.yourReference || "";
+  header.refDate       = getEl("metaRefDate")?.textContent || header.refDate || "";
+
+  header.hospitalName  = getEl("toHospitalNameLine")?.textContent || header.hospitalName || "";
+  header.hospitalAddress =
+    (getEl("toHospitalAddressLine1")?.textContent || "") + "," +
+    (getEl("toHospitalAddressLine2")?.textContent || header.hospitalAddress?.split(",")[1] || "");
+
+  header.contactPerson = getEl("metaContactPerson")?.textContent || header.contactPerson || "";
+  header.contactPhone  = getEl("metaPhone")?.textContent || header.contactPhone || "";
+  header.contactEmail  = getEl("metaEmail")?.textContent || header.contactEmail || "";
+  header.officePhone   = getEl("metaOffice")?.textContent || header.officePhone || "";
+
+  // ✅ FIXED: Kind Attn is read from its own DOM field, not contactPerson
+  const toAttnEl = getEl("toAttn");
+  if (toAttnEl) {
+    const attnText = toAttnEl.textContent?.trim();
+    header.kindAttn = attnText || header.kindAttn || "";
+  }
+
+  header.salesNote = getEl("salesNoteBlock")?.textContent || header.salesNote || "";
+
+  const termsEl = getEl("termsTextBlock");
+  if (termsEl) {
+    header.termsHtml = termsEl.innerHTML;
+    header.termsText = termsEl.innerText;
+  }
+
+  // Save to localStorage
   localStorage.setItem("quoteHeader", JSON.stringify(header));
+  console.log("[saveQuoteHeader] Header saved to localStorage:", header);
+
+  // Save to Firestore
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("No signed-in user; cannot save to Firestore.");
+
+    const firestoreData = {
+      ...header,
+      updatedAt: serverTimestamp(),
+      createdBy: user.uid,
+      createdByLabel: user.displayName || user.email || user.uid
+    };
+
+    if (docId || typeof window.currentQuoteDocId !== "undefined") {
+      const ref = doc(db, "quoteHistory", docId || window.currentQuoteDocId);
+      await setDoc(ref, firestoreData, { merge: true });
+      console.log("[saveQuoteHeader] Header also saved to Firestore:", docId || window.currentQuoteDocId);
+    } else {
+      const colRef = collection(db, "quoteHistory");
+      const newDoc = await addDoc(colRef, {
+        ...firestoreData,
+        createdAt: serverTimestamp()
+      });
+      window.currentQuoteDocId = newDoc.id;
+      console.log("[saveQuoteHeader] New Firestore doc created:", newDoc.id);
+    }
+  } catch (err) {
+    console.error("[saveQuoteHeader] Error saving header to Firestore:", err);
+  }
 }
 
 export function getInstrumentsMaster() {
@@ -116,6 +182,7 @@ export function buildQuoteObject() {
     contactEmail: rawHeader.contactEmail || "",
     contactPhone: rawHeader.contactPhone || "",
     officePhone: rawHeader.officePhone || "",
+    kindAttn: rawHeader.kindAttn || "",   // ✅ FIXED: include Kind Attn
     status: rawHeader.status || "Submitted",
     discount: Number(rawHeader.discount || 0),
     salesNote: rawHeader.salesNote || "",
@@ -163,6 +230,7 @@ export function buildQuoteObject() {
       phone: header.contactPhone,
       officePhone: header.officePhone
     },
+    kindAttn: header.kindAttn,   // ✅ FIXED: persist Kind Attn
     status: header.status,
     discount: header.discount,
     totalValueINR,
@@ -185,6 +253,7 @@ export function validateHeader(header) {
   if (!header.quoteDate) errors.push("Quote Date is missing");
   if (!header.hospitalName) errors.push("Hospital Name is missing");
   if (!header.hospitalAddress) errors.push("Hospital Address is missing");
+  if (!header.kindAttn) errors.push("Kind Attn is missing");   // ✅ ensure Kind Attn is validated
 
   if (errors.length) {
     alert("Validation errors:\n" + errors.join("\n"));
@@ -255,19 +324,10 @@ export async function finalizeQuote(rawArg = null) {
   if (typeof rawArg === "string") {
     docId = rawArg;
   } else if (rawArg && typeof rawArg === "object" && rawArg.target) {
-    console.warn(
-      "[finalizeQuote] called with PointerEvent; treating as new quote (docId = null)."
-    );
+    console.warn("[finalizeQuote] called with PointerEvent; treating as new quote (docId = null).");
   }
 
-  console.log(
-    "[finalizeQuote] CALLED with rawArg:",
-    rawArg,
-    "normalized docId:",
-    docId,
-    "at",
-    new Date().toISOString()
-  );
+  console.log("[finalizeQuote] CALLED with rawArg:", rawArg, "normalized docId:", docId);
 
   try {
     const header = getQuoteHeaderRaw();
@@ -281,6 +341,7 @@ export async function finalizeQuote(rawArg = null) {
       return;
     }
 
+    // --- Calculate totals ---
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
@@ -296,9 +357,9 @@ export async function finalizeQuote(rawArg = null) {
     });
 
     const gstPercent = 18;
-    const discount = Number(header.discount || 0);
-    const afterDisc = itemsTotal - discount;
-    const gstAmount = (afterDisc * gstPercent) / 100;
+    const discount   = Number(header.discount || 0);
+    const afterDisc  = itemsTotal - discount;
+    const gstAmount  = (afterDisc * gstPercent) / 100;
     const totalValue = afterDisc + gstAmount;
     const roundedTotal = Math.round(totalValue);
 
@@ -315,23 +376,11 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
+    // --- Local history ---
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter(
-      q => q.header && q.header.quoteNo === header.quoteNo
-    );
-    const lastRev = sameQuote.length
-      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
-      : 0;
-    const nextRev = lastRev + 1;
-
-    console.log(
-      "[finalizeQuote] sameQuote.length:",
-      sameQuote.length,
-      "lastRev:",
-      lastRev,
-      "nextRev:",
-      nextRev
-    );
+    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+    const lastRev   = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
+    const nextRev   = lastRev + 1;
 
     const now = new Date();
     const quoteLocal = {
@@ -352,11 +401,9 @@ export async function finalizeQuote(rawArg = null) {
 
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
-    console.log(
-      "[finalizeQuote] local history updated, total entries:",
-      existing.length
-    );
+    console.log("[finalizeQuote] local history updated, total entries:", existing.length);
 
+    // --- Firestore persistence ---
     const baseQuoteDoc = buildQuoteObject();
     const user = auth.currentUser;
     if (!user) {
@@ -379,15 +426,11 @@ export async function finalizeQuote(rawArg = null) {
     await appendRevisionSnapshot(savedId, firestoreData);
     console.log("[finalizeQuote] revision snapshot completed");
 
-    alert(
-      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`
-    );
+    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`);
     return savedId;
   } catch (err) {
     console.error("[finalizeQuote] Error saving quote to Firestore:", err);
-    alert(
-      "Quote saved to local history, but cloud save failed. Please try again later."
-    );
+    alert("Quote saved to local history, but cloud save failed. Please try again later.");
     return null;
   } finally {
     finalizeInProgress = false;
