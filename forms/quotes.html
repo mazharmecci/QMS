@@ -749,59 +749,94 @@ Next lines: brief description"></textarea>
 <div class="container">
   <table class="print-frame">
     <thead class="print-header">
-      <tr><td>
-        <div class="quote-header">
-          <div class="quote-header-body">
-            <div class="quote-left">
-              <div class="company-box">
-                <p><strong>ISTOS Medical Pvt Ltd.</strong> BSTN Heights, 2nd Cr J.C Indl Area Bakasipura Mn Rd, Yelachenhalli Bangalore-560062</p>
+      <tr>
+        <td>
+          <div class="quote-header">
+            <div class="quote-header-body">
+              <!-- Left side: company + hospital -->
+              <div class="quote-left">
+                <div class="company-box">
+                  <p>
+                    <strong>ISTOS Medical Pvt Ltd.</strong>
+                    BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
+                    Yelachenahalli, Bangalore-560062
+                  </p>
+                </div>
+
+                <div class="hospital-box">
+                  <p>
+                    <strong>To:</strong><br>
+                    <span id="toHospitalNameLine"></span><br>
+                    <span id="toHospitalAddressLine1"></span><br>
+                    <span id="toHospitalAddressLine2"></span>
+                  </p>
+                </div>
+
+                <div class="attn-box">
+                  <span><strong>Kind Attn:</strong></span>
+                  <span id="toAttn"></span>
+                </div>
               </div>
-              <div class="hospital-box">
-                <p><strong>To:</strong><br>
-                  <span id="toHospitalNameLine"></span><br>
-                  <span id="toHospitalAddressLine1"></span><br>
-                  <span id="toHospitalAddressLine2"></span>
-                </p>
-              </div>
-              <div class="attn-box">KIND ATTN: <span id="toAttn"></span></div>
-            </div>
-            <div class="quote-right">
-              <div class="quote-logo-wrap"><img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo"></div>
-              <div class="sales-box"><div class="sales-title">SALES QUOTATION</div></div>
-              <div class="quote-meta-grid">
-                <div class="label">Quote No.</div><div class="value" id="metaQuoteNo"></div>
-                <div class="label right">Quotation Date</div><div class="value value-small right" id="metaQuoteDate"></div>
-                <div class="label">Your Reference</div><div class="value value-small" id="metaYourRef"></div>
-                <div class="label right">Ref Date</div><div class="value value-small right" id="metaRefDate"></div>
-                <div class="label">Your Contact Person</div>
-                <div class="value value-small" id="metaContactPerson"></div>
-                <div class="label right">Handphone</div>
-                <div class="value value-small right" id="metaPhone"></div>
-                <div class="label">Email</div>
-                <div class="value value-small" id="metaEmail"></div>
-                <div class="label right">Office</div>
-                <div class="value value-small right" id="metaOffice"></div>
+
+              <!-- Right side: logo + meta -->
+              <div class="quote-right">
+                <div class="quote-logo-wrap">
+                  <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+                </div>
+
+                <div class="sales-box">
+                  <div class="sales-title">SALES QUOTATION</div>
+                </div>
+
+                <div class="quote-meta-grid">
+                  <div class="label">Quote No.</div>
+                  <div class="value" id="metaQuoteNo"></div>
+
+                  <div class="label right">Quotation Date</div>
+                  <div class="value value-small right" id="metaQuoteDate"></div>
+
+                  <div class="label">Your Reference</div>
+                  <div class="value value-small" id="metaYourRef"></div>
+
+                  <div class="label right">Ref Date</div>
+                  <div class="value value-small right" id="metaRefDate"></div>
+
+                  <div class="label">Your Contact Person</div>
+                  <div class="value value-small" id="metaContactPerson"></div>
+
+                  <div class="label right">Handphone</div>
+                  <div class="value value-small right" id="metaPhone"></div>
+
+                  <div class="label">Email</div>
+                  <div class="value value-small" id="metaEmail"></div>
+
+                  <div class="label right">Office</div>
+                  <div class="value value-small right" id="metaOffice"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </td></tr>
+        </td>
+      </tr>
     </thead>
 
     <tbody class="print-body">
       <tr>
         <td>
+          <!-- Sales note (free text) -->
           <div id="salesNoteBlock"></div>
 
+          <!-- Quote builder controls (edit-only) -->
           <div id="quoteBuilder" class="no-print">
-            <h3 class="no-print">Quote Builder</h3>
-            <div class="quote-actions no-print">
+            <h3>Quote Builder</h3>
+            <div class="quote-actions">
               <button type="button" class="btn-quote" id="openInstrumentModalBtn">
                 Manage Instruments
               </button>
             </div>
           </div>
 
+          <!-- Line items + summary -->
           <table id="quoteSummaryTable" class="quote-table">
             <thead>
               <tr>
@@ -816,9 +851,26 @@ Next lines: brief description"></textarea>
             <tbody id="quoteSummaryBody"></tbody>
           </table>
 
+          <!-- Terms & Conditions -->
           <div id="termsBlock">
             <h2>Terms and Conditions of Sale</h2>
+
+            <!-- Read-only view for print -->
             <div id="termsTextBlock"></div>
+
+            <!-- Editable area (edit mode only) -->
+            <div class="no-print" style="margin-top:0.75rem;">
+              <label for="termsTextarea">
+                <strong>Edit Terms &amp; Conditions</strong>
+              </label>
+              <textarea
+                id="termsTextarea"
+                rows="6"
+                style="width:100%; margin-top:0.5rem;"
+                placeholder="Enter terms and conditions for this quote..."
+              ></textarea>
+              <input type="hidden" id="termsHtmlInput">
+            </div>
           </div>
         </td>
       </tr>
@@ -841,10 +893,11 @@ Next lines: brief description"></textarea>
     </tfoot>
   </table>
 
-  <div style="margin-top:1.5rem; text-align:right;" class="no-print">
-  <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
-    ✅ Finalize &amp; Save to History
-  </button>
+  <!-- Finalize actions (edit-only) -->
+  <div class="no-print" style="margin-top:1.5rem; text-align:right;">
+    <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
+      ✅ Finalize &amp; Save to History
+    </button>
   </div>
 </div>
 
