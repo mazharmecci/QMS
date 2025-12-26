@@ -7,30 +7,30 @@
   <style>
     :root {
       --bg-gradient: radial-gradient(circle at 25% 25%, #3b82f6 0, #3f5a91 40%, #111827 90%);
-      --card-bg: rgba(15, 23, 42, 0.9);
+      --card-bg: #ffffff; /* white container */
       --accent: #3b82f6;
       --accent-soft: rgba(59, 130, 246, 0.18);
       --accent-soft-2: rgba(37, 99, 235, 0.25);
       --error: #f97373;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
+      --text-main: #0f172a;
+      --text-muted: #6b7280;
       --radius-lg: 18px;
       --radius-md: 12px;
       --radius-sm: 8px;
-      --shadow-soft: 0 24px 70px rgba(0, 0, 0, 0.6);
-      --border-subtle: 1px solid rgba(148, 163, 184, 0.2);
+      --shadow-soft: 0 24px 70px rgba(15, 23, 42, 0.45);
+      --border-subtle: 1px solid rgba(148, 163, 184, 0.26);
     }
-
+    
     /* ===== Base layout ===== */
-
+    
     body {
       margin: 0;
       min-height: 100vh;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
       color: var(--text-main);
-      background: #020617;
+      background: #020617; /* dark base behind gradient */
     }
-
+    
     .quotes-gradient {
       position: fixed;
       inset: 0;
@@ -39,18 +39,20 @@
       filter: blur(2px);
       z-index: -2;
     }
-
+    
     /* ===== Header (top bar) ===== */
-
+    
     header {
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(15, 23, 42, 0.98);
+      background: rgba(15, 23, 42, 0.9);
       border-bottom: var(--border-subtle);
       backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: #e5e7eb;
     }
-
+    
     .header-inner {
       max-width: 1320px;
       margin: 0 auto;
@@ -59,11 +61,11 @@
       gap: 12px;
       padding: 0.7rem 1.5rem;
     }
-
+    
     .back-btn {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--text-main);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
       padding: 0.4rem 0.9rem;
       border-radius: 999px;
       cursor: pointer;
@@ -71,13 +73,15 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      transition: all 0.18s ease-out;
     }
-
+    
     .back-btn:hover {
       background: rgba(15, 23, 42, 1);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.7);
+      transform: translateY(-1px);
     }
-
+    
     .header-title {
       flex: 1;
       text-align: center;
@@ -85,30 +89,30 @@
       font-size: 1.3rem;
       letter-spacing: 0.04em;
     }
-
+    
     /* ===== Main shell + container ===== */
-
+    
     .quotes-shell {
       min-height: calc(100vh - 56px);
       display: flex;
       justify-content: center;
       padding: 24px;
     }
-
+    
     .container {
       width: 100%;
-      max-width: 1380px; /* slightly wider for table breathing room */
+      max-width: 1380px;
       margin: 0 auto;
       border-radius: var(--radius-lg);
-      background: var(--card-bg);
+      background: var(--card-bg); /* white window */
       box-shadow: var(--shadow-soft);
-      backdrop-filter: blur(26px);
       border: var(--border-subtle);
       padding: 22px 24px 20px;
+      color: var(--text-main);
     }
-
+    
     /* ===== Section title ===== */
-
+    
     h2 {
       margin: 0 0 1rem 0;
       display: flex;
@@ -117,7 +121,7 @@
       font-size: 1.05rem;
       color: var(--text-main);
     }
-
+    
     h2 span {
       padding: 2px 8px;
       border-radius: 999px;
@@ -127,26 +131,27 @@
       background: var(--accent-soft);
       color: var(--accent);
     }
-
+    
     /* ===== Dashboard stats ===== */
-
+    
     .dashboard {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 1.1rem;
       margin-bottom: 1.6rem;
     }
-
+    
     .stat-card {
       position: relative;
       overflow: hidden;
       text-align: left;
       padding: 0.9rem 1rem;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
       border-radius: var(--radius-md);
       border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #e5e7eb;
     }
-
+    
     .stat-card::before {
       content: "";
       position: absolute;
@@ -155,21 +160,21 @@
       opacity: 0.25;
       z-index: -1;
     }
-
+    
     .stat-number {
       font-size: 1.7rem;
       font-weight: 600;
       color: var(--accent);
     }
-
+    
     .stat-label {
       color: var(--text-muted);
       font-size: 0.84rem;
       margin-top: 0.15rem;
     }
-
+    
     /* ===== Controls (filters + actions) ===== */
-
+    
     .controls {
       display: flex;
       gap: 0.75rem;
@@ -178,33 +183,34 @@
       margin-bottom: 1.25rem;
       padding: 0.9rem;
       border-radius: var(--radius-md);
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
       border: 1px solid rgba(148, 163, 184, 0.25);
+      color: #e5e7eb;
     }
-
+    
     .controls input,
     .controls select {
       padding: 0.45rem 0.8rem;
       border-radius: var(--radius-sm);
       border: 1px solid rgba(148, 163, 184, 0.4);
       background: rgba(15, 23, 42, 0.98);
-      color: var(--text-main);
+      color: #e5e7eb;
       font-size: 0.86rem;
     }
-
+    
     .controls input::placeholder {
       color: var(--text-muted);
     }
-
+    
     .controls input:focus,
     .controls select:focus {
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
     }
-
+    
     /* ===== Buttons ===== */
-
+    
     .btn {
       padding: 0.5rem 1rem;
       border-radius: 999px;
@@ -214,26 +220,26 @@
       font-size: 0.86rem;
       transition: all 0.18s ease-out;
     }
-
+    
     .btn-primary {
       background: linear-gradient(135deg, #3b82f6, #6366f1);
       color: #fff;
       box-shadow: 0 10px 20px rgba(37, 99, 235, 0.5);
     }
-
+    
     .btn-secondary {
       background: rgba(15, 23, 42, 0.95);
-      color: var(--text-main);
+      color: #e5e7eb;
       border: 1px solid rgba(148, 163, 184, 0.5);
     }
-
+    
     .btn:hover {
       transform: translateY(-1px);
       box-shadow: 0 12px 26px rgba(15, 23, 42, 0.6);
     }
-
+    
     /* ===== Table wrapper + table ===== */
-
+    
     .table-wrapper {
       margin: 0 auto;
       border-radius: var(--radius-md);
@@ -241,13 +247,14 @@
       background: rgba(15, 23, 42, 0.96);
       overflow: hidden;
       padding: 4px 6px;
+      color: #e5e7eb;
     }
-
+    
     table {
       width: 100%;
       border-collapse: collapse;
     }
-
+    
     th,
     td {
       padding: 0.6rem 1.1rem;
@@ -256,7 +263,7 @@
       border-bottom: 1px solid rgba(31, 41, 55, 0.9);
       white-space: nowrap;
     }
-
+    
     th {
       background: linear-gradient(to right, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9));
       font-weight: 600;
@@ -264,17 +271,17 @@
       cursor: pointer;
       user-select: none;
     }
-
+    
     tr:nth-child(even) td {
       background: rgba(15, 23, 42, 0.9);
     }
-
+    
     tr:hover td {
       background: rgba(15, 23, 42, 1);
     }
-
+    
     /* ===== Row actions ===== */
-
+    
     .actions button {
       margin-right: 0.3rem;
       padding: 0.32rem 0.7rem;
@@ -284,29 +291,29 @@
       font-size: 0.78rem;
       transition: all 0.16s;
     }
-
+    
     .view-btn {
       background: var(--accent-soft-2);
       color: var(--accent);
     }
-
+    
     .delete-btn {
       background: rgba(239, 68, 68, 0.18);
       color: #fecaca;
     }
-
+    
     .status-btn {
       background: rgba(34, 197, 94, 0.18);
       color: #bbf7d0;
     }
-
+    
     .actions button:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     }
-
+    
     /* ===== Status badges ===== */
-
+    
     .status-badge {
       padding: 0.2rem 0.65rem;
       border-radius: 999px;
@@ -314,42 +321,42 @@
       font-weight: 600;
       text-transform: uppercase;
     }
-
+    
     .status-submitted {
       background: rgba(250, 204, 21, 0.16);
       color: #facc15;
     }
-
+    
     .status-approved {
       background: rgba(34, 197, 94, 0.18);
       color: #4ade80;
     }
-
+    
     /* ===== Quote detail panel ===== */
-
+    
     .quote-details {
       margin-top: 1.6rem;
       padding: 1.2rem 1.25rem;
       background: rgba(15, 23, 42, 0.96);
       border-radius: var(--radius-md);
       border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #e5e7eb;
     }
-
+    
     .details-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 0.75rem 1.4rem;
       margin-bottom: 1.1rem;
     }
-
+    
     .details-grid p {
       margin: 0;
       font-size: 0.85rem;
-      color: var(--text-main);
     }
-
+    
     /* ===== Status timeline ===== */
-
+    
     .status-timeline {
       margin-top: 1.2rem;
       padding: 0.9rem 1.1rem;
@@ -357,18 +364,18 @@
       border-radius: var(--radius-sm);
       border-left: 3px solid var(--accent);
     }
-
+    
     .timeline-item {
       display: flex;
       gap: 0.75rem;
       padding: 0.45rem 0;
       border-bottom: 1px solid rgba(31, 41, 55, 0.8);
     }
-
+    
     .timeline-item:last-child {
       border-bottom: none;
     }
-
+    
     .timeline-dot {
       width: 9px;
       height: 9px;
@@ -377,48 +384,51 @@
       margin-top: 0.25rem;
       flex-shrink: 0;
     }
-
+    
     .timeline-content h4 {
       margin: 0 0 0.2rem 0;
       font-size: 0.8rem;
       color: var(--accent);
     }
-
+    
     .timeline-meta {
       font-size: 0.78rem;
       color: var(--text-muted);
     }
-
+    
+    /* ===== Utilities & responsive ===== */
+    
     .hidden {
       display: none;
     }
-
+    
     @media (max-width: 768px) {
       .quotes-shell {
         padding: 16px;
       }
-
+    
       .container {
         padding: 18px 14px;
         border-radius: 16px;
       }
-
+    
       .controls {
         flex-direction: column;
         align-items: stretch;
       }
-
+    
       th,
       td {
         font-size: 0.78rem;
         padding: 0.5rem 0.6rem;
       }
-
+    
       .actions button {
         font-size: 0.7rem;
         padding: 0.25rem 0.45rem;
       }
     }
+
   </style>
 </head>
 <body>
