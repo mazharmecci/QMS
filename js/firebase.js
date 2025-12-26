@@ -1,11 +1,9 @@
 // firebase.js
 
-import {
-  initializeApp,
-  getApps
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp, getApps, getApp } 
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
-import {
+import { 
   getFirestore,
   collection,
   addDoc,
@@ -18,7 +16,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-import {
+import { 
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -26,6 +24,7 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+// ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
   authDomain: "istos-qms.firebaseapp.com",
@@ -35,16 +34,16 @@ const firebaseConfig = {
   appId: "1:777790389934:web:1acd36f952445a1625373f"
 };
 
-// Ensure a single app instance
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+// ===== Ensure a single app instance =====
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Core services
+// ===== Core services =====
 const db   = getFirestore(app);
 const auth = getAuth(app);
 
-// Unified exports for use across the app
+// ===== Unified exports =====
 export {
-  // core instances
+  // Core instances
   db,
   auth,
 
@@ -60,7 +59,6 @@ export {
   serverTimestamp,
 
   // Auth helpers
-  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
