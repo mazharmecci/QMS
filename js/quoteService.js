@@ -301,31 +301,17 @@ export async function finalizeQuote(rawArg = null) {
   }
   finalizeInProgress = true;
 
-  let docId = null;
-  if (typeof rawArg === "string") {
-    docId = rawArg;
-  } else if (rawArg && typeof rawArg === "object" && rawArg.target) {
-    console.warn("[finalizeQuote] called with PointerEvent; treating as new quote (docId = null).");
-  }
-
-  console.log("[finalizeQuote] CALLED with rawArg:", rawArg, "normalized docId:", docId, "at", new Date().toISOString());
+  let docId = typeof rawArg === "string" ? rawArg : null;
 
   try {
     const user = auth.currentUser;
-    console.log("[finalizeQuote] auth.currentUser:", user);
-
     if (!user) {
       alert("You must be signed in to finalize quotes.");
       return null;
     }
 
     const header = getQuoteHeaderRaw();
-    console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
-
-    // Validate header before proceeding
-    if (!validateHeader(header)) {
-      return null;
-    }
+    if (!validateHeader(header)) return null;
 
     const { instruments, lines } = getQuoteContext();
     if (!Array.isArray(lines) || !lines.length) {
@@ -333,7 +319,10 @@ export async function finalizeQuote(rawArg = null) {
       return null;
     }
 
-    // Totals for local summary
+    // ✅ Set status to SUBMITTED on finalize
+    header.status = "SUBMITTED";
+
+    // Totals
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
@@ -370,11 +359,9 @@ export async function finalizeQuote(rawArg = null) {
 
     // Local revision history
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter(q => q.header && q.header.quoteNo === header.quoteNo);
+    const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
     const lastRev = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
     const nextRev = lastRev + 1;
-
-    console.log("[finalizeQuote] sameQuote.length:", sameQuote.length, "lastRev:", lastRev, "nextRev:", nextRev);
 
     const now = new Date();
     const quoteLocal = {
@@ -383,10 +370,10 @@ export async function finalizeQuote(rawArg = null) {
       summary,
       quoteNo: header.quoteNo,
       revision: nextRev,
-      status: "submitted",
+      status: "SUBMITTED",
       history: [
         {
-          status: "submitted",
+          status: "SUBMITTED",
           date: now.toISOString().slice(0, 10),
           time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         }
@@ -395,7 +382,6 @@ export async function finalizeQuote(rawArg = null) {
 
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
-    console.log("[finalizeQuote] local history updated, total entries:", existing.length);
 
     // Firestore payload
     const baseQuoteDoc = buildQuoteObject();
@@ -403,31 +389,98 @@ export async function finalizeQuote(rawArg = null) {
       ...baseQuoteDoc,
       revision: nextRev,
       localSummary: summary,
+      status: "SUBMITTED",
+      statusHistory: [
+        ...(baseQuoteDoc.statusHistory || []),
+        { status: "SUBMITTED", date: now.toISOString().slice(0, 10) }
+      ],
       createdBy: baseQuoteDoc.createdBy || user.uid,
       createdByLabel: user.displayName || user.email || user.uid
     };
 
-    console.log("[finalizeQuote] firestoreData.createdBy:", firestoreData.createdBy);
-
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
-    console.log("[finalizeQuote] base doc saved with id:", savedId);
+    if (!savedId) return null;
 
-    if (savedId) {
-      console.log("[finalizeQuote] appending revision snapshot...");
-      await appendRevisionSnapshot(savedId, firestoreData);
-      console.log("[finalizeQuote] revision snapshot completed");
+    await appendRevisionSnapshot(savedId, firestoreData);
 
-      alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) with full revision history.`);
-      return savedId;
-    } else {
-      alert("Quote saved to local history, but cloud save failed. Please try again later.");
-      return null;
-    }
+    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
+    return savedId;
   } catch (err) {
-    console.error("[finalizeQuote] Error saving quote to Firestore:", err);
-    alert("Quote saved to local history, but cloud save failed. Please try again later.");
+    console.error("[finalizeQuote] Error:", err);
+    alert("Quote saved locally, but cloud save failed.");
     return null;
   } finally {
     finalizeInProgress = false;
+  }
+}
+
+import { db, doc, updateDoc, getDoc, collection, getDocs } from "./firebase.js";
+
+/**
+ * Approve a specific quote revision and mark others as MINOR.
+ * @param {string} docId - Firestore document ID of the base quote.
+ */
+export async function approveQuoteRevision(docId) {
+  if (!docId) {
+    console.warn("[approveQuoteRevision] Missing docId");
+    return;
+  }
+
+  try {
+    const baseRef = doc(db, "quoteHistory", docId);
+    const baseSnap = await getDoc(baseRef);
+    if (!baseSnap.exists()) {
+      alert("Quote not found in Firestore.");
+      return;
+    }
+
+    const baseData = baseSnap.data();
+    const quoteNo = baseData.quoteNo || "UNKNOWN";
+
+    // ✅ Update base quote status to APPROVED
+    await updateDoc(baseRef, {
+      status: "APPROVED",
+      statusHistory: [
+        ...(baseData.statusHistory || []),
+        { status: "APPROVED", date: new Date().toISOString().slice(0, 10) }
+      ]
+    });
+    console.log("[approveQuoteRevision] Base quote marked APPROVED");
+
+    // ✅ Update revisions: mark latest as APPROVED, others as MINOR
+    const revRef = collection(db, "quoteHistory", docId, "revisions");
+    const revSnap = await getDocs(revRef);
+
+    let latestRevId = null;
+    let latestRevData = null;
+    let maxRev = 0;
+
+    revSnap.forEach(doc => {
+      const data = doc.data();
+      const rev = Number(data.revision || 0);
+      if (rev > maxRev) {
+        maxRev = rev;
+        latestRevId = doc.id;
+        latestRevData = data;
+      }
+    });
+
+    const updates = [];
+    revSnap.forEach(doc => {
+      const data = doc.data();
+      const rev = Number(data.revision || 0);
+      const ref = doc.ref;
+
+      const newStatus = rev === maxRev ? "APPROVED" : "MINOR";
+      updates.push(updateDoc(ref, { status: newStatus }));
+    });
+
+    await Promise.all(updates);
+    console.log("[approveQuoteRevision] Revisions updated: APPROVED + MINOR");
+
+    alert(`Quote ${quoteNo} (Rev ${maxRev}) marked as APPROVED. All older revisions set to MINOR.`);
+  } catch (err) {
+    console.error("[approveQuoteRevision] Error:", err);
+    alert("Failed to update quote status. Please try again.");
   }
 }
