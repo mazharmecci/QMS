@@ -8,16 +8,15 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  auth   // ✅ use the initialized auth instance
+  auth,
+  getDoc,
+  getDocs
 } from "./firebase.js";
 
 /* ========================
  * Local header & context
  * =======================*/
 
-/**
- * Get the current quote header object from localStorage.
- */
 export function getQuoteHeaderRaw() {
   try {
     return JSON.parse(localStorage.getItem("quoteHeader") || "{}");
@@ -27,10 +26,6 @@ export function getQuoteHeaderRaw() {
   }
 }
 
-/**
- * Save the current quote header object to localStorage.
- * @param {object} header
- */
 export function saveQuoteHeader(header) {
   try {
     localStorage.setItem("quoteHeader", JSON.stringify(header));
@@ -40,10 +35,6 @@ export function saveQuoteHeader(header) {
   }
 }
 
-/**
- * Get instruments master list (from localStorage or Firebase).
- * Ensures each instrument has suppliedCompleteWith field.
- */
 export function getInstrumentsMaster() {
   try {
     const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
@@ -58,9 +49,6 @@ export function getInstrumentsMaster() {
   }
 }
 
-/**
- * Get the current quote context: instruments + lines + header.
- */
 export function getQuoteContext() {
   const instruments = getInstrumentsMaster();
   const header = getQuoteHeaderRaw();
@@ -72,9 +60,6 @@ export function getQuoteContext() {
  * Line items & summary
  * =======================*/
 
-/**
- * Build line items from the current quote (for on-screen summary / local history).
- */
 export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
@@ -133,53 +118,46 @@ export function buildLineItemsFromCurrentQuote() {
  * Firestore-friendly object
  * =======================*/
 
-/**
- * Build Firestore-friendly quote document from current quote.
- * This is what goes into quoteHistory & its revisions.
- */
 export function buildQuoteObject(existingDoc = null) {
   const { header, instruments, lines } = getQuoteContext();
 
   let totalValueINR = 0;
   let gstValueINR = 0;
 
-  const items = Array.isArray(lines) ? lines.map(line => {
-    const inst = instruments[line.instrumentIndex] || {};
-    const qty = Number(line.quantity || 1);
-    const unitPrice = Number(inst.unitPrice || 0);
-    const totalPrice = qty * unitPrice;
-    totalValueINR += totalPrice;
+  const items = Array.isArray(lines)
+    ? lines.map(line => {
+        const inst = instruments[line.instrumentIndex] || {};
+        const qty = Number(line.quantity || 1);
+        const unitPrice = Number(inst.unitPrice || 0);
+        const totalPrice = qty * unitPrice;
+        totalValueINR += totalPrice;
 
-    const gstPercent = Number(inst.gstPercent || 0);
-    const gstAmount = totalPrice * (gstPercent / 100);
-    gstValueINR += gstAmount;
+        const gstPercent = Number(inst.gstPercent || 0);
+        const gstAmount = totalPrice * (gstPercent / 100);
+        gstValueINR += gstAmount;
 
-    return {
-      instrumentCode: inst.instrumentCode || "",
-      instrumentName: inst.instrumentName || "",
-      description: inst.longDescription || inst.description || "",
-      quantity: qty,
-      unitPrice,
-      totalPrice,
-      gstPercent,
-      configItems: Array.isArray(line.configItems) ? line.configItems : [],
-      additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
-    };
-  }) : [];
+        return {
+          instrumentCode: inst.instrumentCode || "",
+          instrumentName: inst.instrumentName || "",
+          description: inst.longDescription || inst.description || "",
+          quantity: qty,
+          unitPrice,
+          totalPrice,
+          gstPercent,
+          configItems: Array.isArray(line.configItems) ? line.configItems : [],
+          additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+        };
+      })
+    : [];
 
   const user = auth.currentUser;
   const createdByUid = user ? user.uid : null;
 
   return {
-    // identifiers
     quoteNo: header.quoteNo || "",
     quoteDate: header.quoteDate || "",
-
-    // reference fields
     yourReference: header.yourReference || "",
     refDate: header.refDate || "",
-
-    // hospital details
     hospital: {
       name: header.hospitalName || "",
       address: header.hospitalAddress || "",
@@ -188,25 +166,18 @@ export function buildQuoteObject(existingDoc = null) {
       phone: header.contactPhone || "",
       officePhone: header.officePhone || ""
     },
-
-    // status and financials
     status: header.status || "Submitted",
     discount: Number(header.discount || 0),
     totalValueINR,
     gstValueINR,
-
-    // line items (always present, even if empty)
     items,
-
-    // notes and terms
     salesNote: header.salesNote || "",
     termsHtml: header.termsHtml || "",
     termsText: header.termsText || "",
-
-    // Firestore audit fields
     createdBy: existingDoc?.createdBy || createdByUid
   };
 }
+
 /* ========================
  * Validation
  * =======================*/
@@ -222,7 +193,6 @@ export function validateHeader(header) {
     if (!header.hospitalName) errors.push("Hospital Name is missing");
     if (!header.hospitalAddress) errors.push("Hospital Address is missing");
 
-    // Optional: validate numeric fields
     if (header.discount != null && isNaN(Number(header.discount))) {
       errors.push("Discount must be a number");
     }
@@ -288,6 +258,7 @@ async function appendRevisionSnapshot(docId, data) {
     console.error("[appendRevisionSnapshot] Error writing revision snapshot:", err);
   }
 }
+
 /* ========================
  * Finalization & local history
  * =======================*/
@@ -319,10 +290,8 @@ export async function finalizeQuote(rawArg = null) {
       return null;
     }
 
-    // ✅ Set status to SUBMITTED on finalize
     header.status = "SUBMITTED";
 
-    // Totals
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
@@ -357,7 +326,6 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // Local revision history
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
     const lastRev = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
@@ -383,7 +351,6 @@ export async function finalizeQuote(rawArg = null) {
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
 
-    // Firestore payload
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
@@ -414,12 +381,10 @@ export async function finalizeQuote(rawArg = null) {
   }
 }
 
-import { db, doc, updateDoc, getDoc, collection, getDocs } from "./firebase.js";
+/* ========================
+ * Approve revision
+ * =======================*/
 
-/**
- * Approve a specific quote revision and mark others as MINOR.
- * @param {string} docId - Firestore document ID of the base quote.
- */
 export async function approveQuoteRevision(docId) {
   if (!docId) {
     console.warn("[approveQuoteRevision] Missing docId");
@@ -437,7 +402,6 @@ export async function approveQuoteRevision(docId) {
     const baseData = baseSnap.data();
     const quoteNo = baseData.quoteNo || "UNKNOWN";
 
-    // ✅ Update base quote status to APPROVED
     await updateDoc(baseRef, {
       status: "APPROVED",
       statusHistory: [
@@ -447,30 +411,24 @@ export async function approveQuoteRevision(docId) {
     });
     console.log("[approveQuoteRevision] Base quote marked APPROVED");
 
-    // ✅ Update revisions: mark latest as APPROVED, others as MINOR
     const revRef = collection(db, "quoteHistory", docId, "revisions");
     const revSnap = await getDocs(revRef);
 
-    let latestRevId = null;
-    let latestRevData = null;
     let maxRev = 0;
 
-    revSnap.forEach(doc => {
-      const data = doc.data();
+    revSnap.forEach(d => {
+      const data = d.data();
       const rev = Number(data.revision || 0);
       if (rev > maxRev) {
         maxRev = rev;
-        latestRevId = doc.id;
-        latestRevData = data;
       }
     });
 
     const updates = [];
-    revSnap.forEach(doc => {
-      const data = doc.data();
+    revSnap.forEach(d => {
+      const data = d.data();
       const rev = Number(data.revision || 0);
-      const ref = doc.ref;
-
+      const ref = d.ref;
       const newStatus = rev === maxRev ? "APPROVED" : "MINOR";
       updates.push(updateDoc(ref, { status: newStatus }));
     });
