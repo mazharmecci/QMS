@@ -8,8 +8,9 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  getAuth   // ✅ import from ./firebase.js, not "firebase/auth"
+  auth   // ✅ use the initialized auth instance
 } from "./firebase.js";
+
 
 /* ========================
  * Local header & context
