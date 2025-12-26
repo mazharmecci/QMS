@@ -17,7 +17,52 @@
         #0b1220;
       color: #0f172a;
     }
-
+     
+    /* Table as floating rows inside white window */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 6px;
+      margin-top: 0.5rem;
+    }
+    
+    table th,
+    table td {
+      padding: 0.6rem;          /* reduced padding */
+      text-align: left;
+      font-size: 0.85rem;       /* slightly smaller font */
+      line-height: 1.3;         /* tighter line height for compactness */
+    }
+    
+    table th {
+      background: rgba(241, 245, 249, 0.98);
+      color: #4b5563;
+      border-bottom: 1px solid rgba(203, 213, 225, 0.9);
+      font-weight: 600;         /* keep headers distinct */
+    }
+    
+    tbody tr {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); /* slightly lighter shadow */
+    }
+    
+    tbody td {
+      border-top: 1px solid rgba(226, 232, 240, 0.95);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+    }
+    
+    tbody tr td:first-child {
+      border-left: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 8px 0 0 8px; /* slightly smaller radius for compact look */
+    }
+    
+    tbody tr td:last-child {
+      border-right: 1px solid rgba(226, 232, 240, 0.95);
+      border-radius: 0 8px 8px 0;
+    }
+    
     th {
       cursor: pointer;
     }
@@ -150,50 +195,7 @@
     form button:hover {
       transform: translateY(-1px);
       box-shadow: 0 14px 30px rgba(37, 99, 235, 0.55);
-    }
-    
-    /* Table as floating rows inside white window */
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 6px;
-      margin-top: 0.5rem;
-    }
-    
-    table th,
-    table td {
-      padding: 0.8rem;
-      text-align: left;
-      font-size: 0.9rem;
-    }
-    
-    table th {
-      background: rgba(241, 245, 249, 0.98);
-      color: #4b5563;
-      border-bottom: 1px solid rgba(203, 213, 225, 0.9);
-    }
-    
-    tbody tr {
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-    }
-    
-    tbody td {
-      border-top: 1px solid rgba(226, 232, 240, 0.95);
-      border-bottom: 1px solid rgba(226, 232, 240, 0.95);
-    }
-    
-    tbody tr td:first-child {
-      border-left: 1px solid rgba(226, 232, 240, 0.95);
-      border-radius: 10px 0 0 10px;
-    }
-    
-    tbody tr td:last-child {
-      border-right: 1px solid rgba(226, 232, 240, 0.95);
-      border-radius: 0 10px 10px 0;
-    }
+    } 
     
     /* Actions as pills */
     .actions button {
