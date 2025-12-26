@@ -1319,6 +1319,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+
+// ✅ Button logout
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error("Failed to sign out", err);
+        alert("Could not log out. Please try again.");
+      }
+    });
+
+    window.navigate = navigate;
+
   // Expose only if inline HTML still uses onclick
   window.openConfigModal = openConfigModal;
   window.openAdditionalModal = openAdditionalModal;
