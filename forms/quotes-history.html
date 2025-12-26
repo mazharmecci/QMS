@@ -240,7 +240,7 @@
       border: 1px solid rgba(148, 163, 184, 0.25);
       background: rgba(15, 23, 42, 0.96);
       overflow: hidden;
-      padding: 4px 6px; /* small inner padding to let columns breathe */
+      padding: 4px 6px;
     }
 
     table {
@@ -250,7 +250,7 @@
 
     th,
     td {
-      padding: 0.6rem 1.1rem; /* wider horizontal padding */
+      padding: 0.6rem 1.1rem;
       text-align: left;
       font-size: 0.85rem;
       border-bottom: 1px solid rgba(31, 41, 55, 0.9);
@@ -315,30 +315,14 @@
       text-transform: uppercase;
     }
 
-    .status-draft {
-      background: rgba(148, 163, 184, 0.18);
-      color: #e5e7eb;
-    }
-
     .status-submitted {
       background: rgba(250, 204, 21, 0.16);
       color: #facc15;
     }
 
-    .status-approved,
-    .status-won {
+    .status-approved {
       background: rgba(34, 197, 94, 0.18);
       color: #4ade80;
-    }
-
-    .status-sent {
-      background: rgba(59, 130, 246, 0.18);
-      color: #93c5fd;
-    }
-
-    .status-lost {
-      background: rgba(248, 113, 113, 0.16);
-      color: #fecaca;
     }
 
     /* ===== Quote detail panel ===== */
@@ -405,13 +389,9 @@
       color: var(--text-muted);
     }
 
-    /* ===== Utilities ===== */
-
     .hidden {
       display: none;
     }
-
-    /* ===== Responsive ===== */
 
     @media (max-width: 768px) {
       .quotes-shell {
@@ -461,15 +441,15 @@
       </div>
       <div class="stat-card">
         <div class="stat-number" id="statPending">0</div>
-        <div class="stat-label">Pending (Draft/Submitted)</div>
+        <div class="stat-label">Submitted / Approved</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number" id="statWon">0</div>
-        <div class="stat-label">Won</div>
+        <div class="stat-number" id="statApproved">0</div>
+        <div class="stat-label">Approved</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number" id="statWinRate">--</div>
-        <div class="stat-label">Win Rate</div>
+        <div class="stat-number" id="statApprovalRate">--</div>
+        <div class="stat-label">Approval Rate</div>
       </div>
     </div>
 
@@ -479,7 +459,7 @@
     <div class="controls">
       <input id="filterQuoteNo" placeholder="Quote No...">
       <input id="filterHospital" placeholder="Hospital...">
-      <input id="filterStatus" placeholder="Status (Draft, Submitted...)">
+      <input id="filterStatus" placeholder="Status (Submitted / Approved)">
       <input id="filterDate" type="date">
       <button class="btn btn-secondary" onclick="applyFilters()">Filter</button>
       <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
@@ -503,9 +483,11 @@
         </thead>
         <tbody></tbody>
       </table>
+    </div>
 
-  <!-- Details -->
-  <div id="quoteDetails" class="hidden"></div>
+    <!-- Details -->
+    <div id="quoteDetails" class="hidden"></div>
+  </div>
 </div>
 
 <script type="module">
@@ -517,8 +499,20 @@
     deleteDoc,
     doc
   } from "../js/firebase.js";
+  import {
+    getAuth,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js"; // modular auth [web:184]
 
-  const QUOTES_URL = "quotes.html"; // relative path from this file
+  const QUOTES_URL = "quotes.html";
+
+  // ===== Auth state =====
+  const auth = getAuth();
+  let currentUserUid = null;
+
+  onAuthStateChanged(auth, (user) => {
+    currentUserUid = user ? user.uid : null;
+  });
 
   // ===== State =====
   let quotes = [];
@@ -541,34 +535,25 @@
   }
 
   function getStatusClass(status) {
-    const s = (status || "draft").toLowerCase();
+    const s = (status || "submitted").toLowerCase();
     return "status-" + s;
   }
 
   // Map auth UID → email prefix
   const USER_UID_TO_PREFIX = {
-    "MUkO1OZ2KCfWvvoMHAHcuQm4FjH3": "mazhar",  // mazhar@istos.in
-    "LIvqyOhAUkPpivMXbSK4sIB8I8T2": "s.khan"   // s.khan@istos.in
+    "MUkO1OZ2KCfWvvoMHAHcuQm4FjH3": "mazhar",
+    "LIvqyOhAUkPpivMXbSK4sIB8I8T2": "s.khan"
   };
 
-  // Helper for Created By column
   function createdByLabel(createdBy) {
     if (!createdBy) return "-";
-
-    // If we stored UID, translate to prefix
-    if (USER_UID_TO_PREFIX[createdBy]) {
-      return USER_UID_TO_PREFIX[createdBy];
-    }
-
-    // If we stored email directly
+    if (USER_UID_TO_PREFIX[createdBy]) return USER_UID_TO_PREFIX[createdBy];
     if (typeof createdBy === "string" && createdBy.includes("@")) {
-      return createdBy.split("@")[0]; // prefix before '@'
+      return createdBy.split("@")[0];
     }
-
-    // Fallback: show raw value
     return createdBy;
   }
-  
+
   // ===== Firestore load (base quotes only) =====
   async function loadQuotes() {
     const snap = await getDocs(collection(db, "quoteHistory"));
@@ -590,7 +575,6 @@
       ...d.data()
     }));
 
-    // sort by revision number if present, else createdAt
     return revisions.sort((a, b) => {
       const ra = Number(a.revision || 0);
       const rb = Number(b.revision || 0);
@@ -605,16 +589,16 @@
   // ===== Table render =====
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = "";
-  
+
     data.forEach((q, i) => {
       const quoteNo   = q.quoteNo || "-";
       const revision  = q.revision || 1;
       const date      = q.quoteDate || "-";
       const hospital  = q.hospital?.name || "-";
       const total     = q.totalValueINR || 0;
-      const status    = q.status || "Draft";
-      const creator   = createdByLabel(q.createdBy);   // 👈      
-  
+      const status    = q.status || "Submitted";
+      const creator   = createdByLabel(q.createdBy);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
@@ -623,7 +607,7 @@
         <td>${hospital}</td>
         <td>₹ ${moneyINR(total)}</td>
         <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
-        <td>${creator}</td>   <!-- NEW -->
+        <td>${creator}</td>
         <td class="actions">
           <button class="view-btn" onclick="viewQuote(${i})">View</button>
           <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
@@ -633,23 +617,27 @@
       `;
       tbody.appendChild(tr);
     });
-  
+
     updateDashboard();
   }
 
+  // ===== Dashboard: Submitted / Approved only =====
   function updateDashboard() {
-    const total   = quotes.length;
-    const pending = quotes.filter(q => {
-      const s = (q.status || "draft").toLowerCase();
-      return s === "draft" || s === "submitted";
+    const total = quotes.length;
+    const submittedOrApproved = quotes.filter(q => {
+      const s = (q.status || "submitted").toLowerCase();
+      return s === "submitted" || s === "approved";
     }).length;
-    const won  = quotes.filter(q => (q.status || "").toLowerCase() === "won").length;
-    const rate = total ? Math.round((won / total) * 100) : 0;
+    const approved = quotes.filter(q => (q.status || "").toLowerCase() === "approved").length;
+    const approvalRate = submittedOrApproved
+      ? Math.round((approved / submittedOrApproved) * 100)
+      : 0;
 
-    document.getElementById("statTotal").textContent   = total;
-    document.getElementById("statPending").textContent = pending;
-    document.getElementById("statWon").textContent     = won;
-    document.getElementById("statWinRate").textContent = total ? rate + "%" : "--";
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statPending").textContent = submittedOrApproved;
+    document.getElementById("statApproved").textContent = approved;
+    document.getElementById("statApprovalRate").textContent =
+      submittedOrApproved ? approvalRate + "%" : "--";
   }
 
   // ===== Filters =====
@@ -662,7 +650,7 @@
     filteredQuotes = quotes.filter(q => {
       const quoteNo  = (q.quoteNo || "").toLowerCase();
       const hospital = (q.hospital?.name || "").toLowerCase();
-      const status   = (q.status || "draft").toLowerCase();
+      const status   = (q.status || "submitted").toLowerCase();
       const date     = q.quoteDate || "";
 
       return (!fQuote    || quoteNo.includes(fQuote)) &&
@@ -699,7 +687,7 @@
         case "date":      av = a.quoteDate || ""; bv = b.quoteDate || ""; break;
         case "hospital":  av = a.hospital?.name || ""; bv = b.hospital?.name || ""; break;
         case "value":     av = a.totalValueINR || 0; bv = b.totalValueINR || 0; break;
-        case "status":    av = a.status || "Draft"; bv = b.status || "Draft"; break;
+        case "status":    av = a.status || "Submitted"; bv = b.status || "Submitted"; break;
         default: return 0;
       }
 
@@ -714,22 +702,22 @@
     renderTable(filteredQuotes);
   }
 
-  // ===== Status advance =====
+  // ===== Status advance (Submitted / Approved only) =====
   async function advanceStatus(index) {
     const q = filteredQuotes[index];
     if (!q) return;
 
-    const sequence = ["Draft","Submitted","Approved","Sent","Won","Lost"];
-    const current  = (q.status || "Draft");
-    const idx      = sequence.findIndex(s => s.toLowerCase() === current.toLowerCase());
-    const next     = sequence[Math.min(idx + 1, sequence.length - 1)];
+    const current = (q.status || "Submitted").toLowerCase();
+    const next = current === "submitted" ? "Approved" : "Submitted";
 
     q.status = next;
 
     try {
       await updateDoc(doc(db, "quoteHistory", q.id), { status: next });
+
       const base = quotes.find(x => x.id === q.id);
       if (base) base.status = next;
+
       renderTable(filteredQuotes);
     } catch (err) {
       console.error("Failed to update status", err);
@@ -737,17 +725,29 @@
     }
   }
 
-  // ===== Edit in quotes.html =====
+  // ===== Edit in quotes.html (owner-only) =====
   function editQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
+
+    if (!currentUserUid || q.createdBy !== currentUserUid) {
+      alert("You can only edit quotes you created.");
+      return;
+    }
+
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
-  // ===== Delete =====
+  // ===== Delete (owner-only) =====
   async function deleteQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
+
+    if (!currentUserUid || q.createdBy !== currentUserUid) {
+      alert("You can only delete quotes you created.");
+      return;
+    }
+
     if (!confirm("Delete this quote from history?")) return;
 
     try {
@@ -770,7 +770,6 @@
     const items = q.items || [];
     const hosp  = q.hospital || {};
 
-    // Load all revisions for this quote
     let revisions = [];
     try {
       revisions = await loadRevisionsForQuote(q.id);
@@ -785,7 +784,7 @@
           <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
           <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
           <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
-          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Draft"}</span></p>
+          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Submitted"}</span></p>
           <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
           <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
           <p><strong>Email:</strong> ${hosp.email || "-"}</p>
@@ -829,7 +828,6 @@
         </div>
     `;
 
-    // Revisions section
     html += `
       <h4>Revisions</h4>
     `;
@@ -883,7 +881,7 @@
         q.quoteDate || "",
         `"${(q.hospital?.name || "").replace(/"/g, '""')}"`,
         q.totalValueINR || 0,
-        q.status || "Draft"
+        q.status || "Submitted"
       ];
       lines.push(row.join(","));
     });
