@@ -17,6 +17,16 @@
         #0b1220;
       color: #0f172a;
     }
+
+    th {
+      cursor: pointer;
+    }
+    th.sorted-asc::after {
+      content: " ▲";
+    }
+    th.sorted-desc::after {
+      content: " ▼";
+    }
     
     /* Glassy header with inner layout */
     header {
@@ -248,8 +258,8 @@
       <thead>
         <tr>
           <th>#</th>
-          <th>Client Code</th>
-          <th>Client Name</th>
+          <th id="sortCode">Client Code</th>
+          <th id="sortName">Client Name</th>
           <th>Address</th>
           <th>Area</th>
           <th>Mobile</th>
@@ -260,19 +270,48 @@
       </thead>
       <tbody></tbody>
     </table>
-  </div>
 
   <!-- Page-specific script -->
   <script>
-    function goBack() {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.location.href = 'index.html';
-      }
-    }
-  </script>
+function goBack() {
+  location.href = "/index.html";
+}
 
+document.addEventListener("DOMContentLoaded", () => {
+  const table = document.getElementById("hospitalTable");
+  const tbody = table.querySelector("tbody");
+
+  function sortTable(colIndex, type = "string") {
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const sorted = rows.sort((a, b) => {
+      let A = a.children[colIndex].innerText.trim();
+      let B = b.children[colIndex].innerText.trim();
+
+      if (type === "number") {
+        A = parseFloat(A) || 0;
+        B = parseFloat(B) || 0;
+      } else {
+        A = A.toLowerCase();
+        B = B.toLowerCase();
+      }
+
+      if (A < B) return -1;
+      if (A > B) return 1;
+      return 0;
+    });
+
+    // Clear tbody and append sorted rows
+    tbody.innerHTML = "";
+    sorted.forEach(row => tbody.appendChild(row));
+  }
+
+  // Wire up sorting
+  document.getElementById("sortCode").addEventListener("click", () => sortTable(1, "string"));
+  document.getElementById("sortName").addEventListener("click", () => sortTable(2, "string"));
+});
+
+  </script>
+    
   <!-- Your own modules (firebase.js handles Firebase init with CDN imports) -->
   <script type="module" src="../js/firebase.js"></script>
   <script type="module" src="../js/hospitalService.js"></script>
