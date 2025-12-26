@@ -17,6 +17,7 @@
       --radius-sm: 8px;
       --shadow-soft: 0 24px 70px rgba(15, 23, 42, 0.45);
       --border-subtle: 1px solid rgba(148, 163, 184, 0.26);
+      --primary: #3b82f6; /* used in focus styles */
     }
     
     /* ===== Base layout ===== */
@@ -177,7 +178,7 @@
       box-shadow: 0 16px 32px rgba(37, 99, 235, 0.75);
     }
     
-    /* Subtle per-field tones, now on light inputs */
+    /* Subtle per-field tones */
     
     input[type="text"],
     input[type="email"] {
@@ -276,15 +277,15 @@
       border: 1px solid rgba(148, 163, 184, 0.7);
       border-radius: var(--radius-sm);
       resize: vertical;
-      background: #ffffff;                 /* white background */
+      background: #ffffff;
       font-family: system-ui, sans-serif;
       white-space: pre-wrap;
-      color: var(--text-main);             /* dark text */
+      color: var(--text-main);
     }
     
     #salesNote::placeholder {
       color: var(--text-muted);
-      white-space: pre-line;               /* keep your multiline placeholder formatting */
+      white-space: pre-line;
     }
     
     #salesNote:focus {
@@ -314,10 +315,10 @@
       padding: 1rem;
       border: 1px solid rgba(148, 163, 184, 0.7);
       border-radius: var(--radius-md);
-      background: #ffffff;                 /* white background */
+      background: #ffffff;
       font-size: 0.8rem;
       line-height: 1.5;
-      color: var(--text-main);             /* dark text */
+      color: var(--text-main);
       max-height: 360px;
       overflow-y: auto;
     }
@@ -351,7 +352,7 @@
       color: var(--text-muted);
     }
 
-    /* Quote signer highlight preserved */
+    /* Quote signer highlight */
     
     .quote-sender-highlight {
       background-color: #ffc94d;
@@ -388,6 +389,8 @@
   </style>
 </head>
 <body>
+  <div class="quote-setup-gradient"></div>
+
   <header>
     <div class="header-inner">
       <button type="button" class="back-btn" id="backBtn">← Back</button>
@@ -395,107 +398,109 @@
     </div>
   </header>
 
-<div class="container">
-  <h2>Quote Builder</h2>
+  <div class="quote-setup-shell">
+    <div class="container">
+      <h2>Quote Builder</h2>
 
-  <form id="quoteSetupForm">
-    <div class="form-row">
-      <select id="hospitalSelect" required>
-        <option value="">Select Hospital</option>
-      </select>
-    </div>
-
-    <input
-      type="text"
-      id="quoteNo"
-      placeholder="Quote No. (auto)"
-      readonly
-      title="Read-only auto-generated Quote No."
-    >
-
-    <div class="form-row">
-      <div class="date-field">
-        <input type="date" id="quoteDate" required>
-        <div class="tooltip">Quotation Date</div>
-      </div>
-
-      <div class="date-field">
-        <input type="date" id="refDate" required>
-        <div class="tooltip">Reference Date</div>
-      </div>
-    </div>
-
-    <select id="yourReference" required>
-      <option value="">Select Reference Type</option>
-      <option value="Telephonic">Telephonic</option>
-      <option value="Email">Email</option>
-      <option value="Email">Personal visit</option>
-    </select>
-
-    <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
-    <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
-
-    <div class="kind-attn-box">
-      KIND ATTN:
-      <input type="text" id="kindAttn" placeholder="Name" required>
-    </div>
-
-    <input type="text" id="contactPerson" placeholder="Contact Person" required>
-    <input type="text" id="contactPhone" placeholder="Handphone" required>
-    <input type="text" id="officePhone" placeholder="Office Phone">
-    <input type="email" id="contactEmail" placeholder="Email" required>
-
-    <div class="sales-note-block">
-      <label for="salesNote" class="sales-note-label">Personal message to customer</label>
-      <textarea
-        id="salesNote"
-        rows="4"
-        placeholder="Dear Sir,
-
-As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
-    </div>
-
-    <div id="termsTextBlock" contenteditable="true">
-      <div class="terms-section">
-        <p>
-          These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
-        </p>
-
-        <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
-
-        <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
-
-        <p><strong>Delivery and Title:</strong></p>
-        <div class="terms-indent">
-          <ol>
-            <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
-            <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
-            <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
-            <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
-          </ol>
+      <form id="quoteSetupForm">
+        <div class="form-row">
+          <select id="hospitalSelect" required>
+            <option value="">Select Hospital</option>
+          </select>
         </div>
 
-        <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
+        <input
+          type="text"
+          id="quoteNo"
+          placeholder="Quote No. (auto)"
+          readonly
+          title="Read-only auto-generated Quote No."
+        >
 
-        <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
+        <div class="form-row">
+          <div class="date-field">
+            <input type="date" id="quoteDate" required>
+            <div class="tooltip">Quotation Date</div>
+          </div>
 
-        <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
-      </div>
+          <div class="date-field">
+            <input type="date" id="refDate" required>
+            <div class="tooltip">Reference Date</div>
+          </div>
+        </div>
 
-      <div style="margin-top:40px; text-align:left;">
-        <p>------------------------------</p>
-        <p><strong>For ISTOS Medical Private Limited</strong></p>
-        <br><br>
-        <div class="quote-sender-highlight">Guest</div>
-      </div>
+        <select id="yourReference" required>
+          <option value="">Select Reference Type</option>
+          <option value="Telephonic">Telephonic</option>
+          <option value="Email">Email</option>
+          <option value="Personal visit">Personal visit</option>
+        </select>
+
+        <input type="text" id="hospitalName" placeholder="Hospital / Client Name" readonly required>
+        <input type="text" id="hospitalAddress" placeholder="Hospital Address" readonly required>
+
+        <div class="kind-attn-box">
+          KIND ATTN:
+          <input type="text" id="kindAttn" placeholder="Name" required>
+        </div>
+
+        <input type="text" id="contactPerson" placeholder="Contact Person" required>
+        <input type="text" id="contactPhone" placeholder="Handphone" required>
+        <input type="text" id="officePhone" placeholder="Office Phone">
+        <input type="email" id="contactEmail" placeholder="Email" required>
+
+        <div class="sales-note-block">
+          <label for="salesNote" class="sales-note-label">Personal message to customer</label>
+          <textarea
+            id="salesNote"
+            rows="4"
+            placeholder="Dear Sir,
+
+As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
+        </div>
+
+        <div id="termsTextBlock" contenteditable="true">
+          <div class="terms-section">
+            <p>
+              These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
+            </p>
+
+            <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
+
+            <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
+
+            <p><strong>Delivery and Title:</strong></p>
+            <div class="terms-indent">
+              <ol>
+                <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
+                <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
+                <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
+                <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
+              </ol>
+            </div>
+
+            <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
+
+            <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
+
+            <p><strong>Government Levies:</strong> GST EXTRA @ 18% on all offered products.</p>
+          </div>
+
+          <div style="margin-top:40px; text-align:left;">
+            <p>------------------------------</p>
+            <p><strong>For ISTOS Medical Private Limited</strong></p>
+            <br><br>
+            <div class="quote-sender-highlight" id="quoteSender">Guest</div>
+          </div>
+        </div>
+
+        <button type="submit">Proceed to Quote</button>
+      </form>
     </div>
-
-    <button type="submit">Proceed to Quote</button>
-  </form>
-</div>
+  </div>
 
 <script type="module">
-  import { auth, db } from "../js/firebase.js";   // ✅ import db and auth instances
+  import { auth, db } from "../js/firebase.js";
   import { onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { 
@@ -507,8 +512,14 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      window.location.href = 'index.html';
+      window.location.href = "index.html";
     }
+  }
+
+  // wire back button
+  const backBtn = document.getElementById("backBtn");
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
   }
 
   // ===== Determine current financial year string =====
@@ -578,11 +589,16 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 
   // ===== Populate hospital dropdown =====
   function populateHospitalDropdown() {
-    const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
-    const select = document.getElementById('hospitalSelect');
+    const hospitals = JSON.parse(localStorage.getItem("hospitals") || "[]");
+    const select = document.getElementById("hospitalSelect");
     select.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select Hospital";
+    select.appendChild(placeholder);
+
     hospitals.forEach((hosp, idx) => {
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = idx;
       opt.textContent = `${hosp.clientCode} - ${hosp.clientName}`;
       select.appendChild(opt);
@@ -591,16 +607,16 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 
   // ===== Fill hospital details =====
   function fillHospitalDetails() {
-    const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
-    const idx = document.getElementById('hospitalSelect').value;
-    if (idx === '') return;
+    const hospitals = JSON.parse(localStorage.getItem("hospitals") || "[]");
+    const idx = document.getElementById("hospitalSelect").value;
+    if (idx === "") return;
     const hosp = hospitals[idx];
     if (!hosp) return;
 
-    document.getElementById('hospitalName').value = hosp.clientName || '';
-    document.getElementById('hospitalAddress').value = hosp.address || '';
-    document.getElementById('contactPhone').value = hosp.mobile || '';
-    document.getElementById('contactEmail').value = hosp.email || '';
+    document.getElementById("hospitalName").value = hosp.clientName || "";
+    document.getElementById("hospitalAddress").value = hosp.address || "";
+    document.getElementById("contactPhone").value = hosp.mobile || "";
+    document.getElementById("contactEmail").value = hosp.email || "";
   }
 
   // ===== Dynamic quote sender name from auth email =====
@@ -616,32 +632,32 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     const prettyName = prefix
       .replace(/[._-]+/g, " ")
       .split(" ")
-      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
       .join(" ");
     quoteSenderEl.textContent = prettyName;
   });
 
   // ===== Submit handler =====
-  document.getElementById('quoteSetupForm').addEventListener('submit', async function (e) {
+  document.getElementById("quoteSetupForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const termsBlock = document.getElementById('termsTextBlock');
+    const termsBlock = document.getElementById("termsTextBlock");
     const headerData = {
-      quoteNo: document.getElementById('quoteNo').value || '',
-      quoteDate: document.getElementById('quoteDate').value || '',
-      yourReference: document.getElementById('yourReference').value || '',
-      refDate: document.getElementById('refDate').value || '',
-      hospitalName: document.getElementById('hospitalName').value || '',
-      hospitalAddress: document.getElementById('hospitalAddress').value || '',
-      kindAttn: document.getElementById('kindAttn').value || '',
-      contactPerson: document.getElementById('contactPerson').value || '',
-      contactPhone: document.getElementById('contactPhone').value || '',
-      contactEmail: document.getElementById('contactEmail').value || '',
-      officePhone: document.getElementById('officePhone').value || '',
-      salesNote: document.getElementById('salesNote').value || '',
+      quoteNo: document.getElementById("quoteNo").value || "",
+      quoteDate: document.getElementById("quoteDate").value || "",
+      yourReference: document.getElementById("yourReference").value || "",
+      refDate: document.getElementById("refDate").value || "",
+      hospitalName: document.getElementById("hospitalName").value || "",
+      hospitalAddress: document.getElementById("hospitalAddress").value || "",
+      kindAttn: document.getElementById("kindAttn").value || "",
+      contactPerson: document.getElementById("contactPerson").value || "",
+      contactPhone: document.getElementById("contactPhone").value || "",
+      contactEmail: document.getElementById("contactEmail").value || "",
+      officePhone: document.getElementById("officePhone").value || "",
+      salesNote: document.getElementById("salesNote").value || "",
       termsHtml: termsBlock.innerHTML,
       quoteLines: [],
-      status: "DRAFT"
+      status: "DRAFT",
     };
 
     try {
@@ -656,15 +672,18 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
         ...headerData,
         createdAt: serverTimestamp(),
         createdBy: user.uid,
-        createdByLabel: user.displayName || user.email || user.uid
+        createdByLabel: user.displayName || user.email || user.uid,
       });
 
       console.log("[quoteSetupForm] New quote saved to Firestore with id:", newDoc.id);
 
-      localStorage.setItem('quoteHeader', JSON.stringify({
-        ...headerData,
-        docId: newDoc.id
-      }));
+      localStorage.setItem(
+        "quoteHeader",
+        JSON.stringify({
+          ...headerData,
+          docId: newDoc.id,
+        })
+      );
 
       window.location.href = `quotes.html?id=${newDoc.id}`;
     } catch (err) {
@@ -676,14 +695,16 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   // ===== Initial values =====
   (async () => {
     const newQuoteNo = await generateQuoteNo();
-    document.getElementById('quoteNo').value = newQuoteNo;
+    document.getElementById("quoteNo").value = newQuoteNo;
 
     const todayISO = new Date().toISOString().slice(0, 10);
-    document.getElementById('quoteDate').value = todayISO;
-    document.getElementById('refDate').value = todayISO;
+    document.getElementById("quoteDate").value = todayISO;
+    document.getElementById("refDate").value = todayISO;
 
     populateHospitalDropdown();
-    document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
+    document
+      .getElementById("hospitalSelect")
+      .addEventListener("change", fillHospitalDetails);
   })();
 </script>
 
