@@ -481,7 +481,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
         <p>------------------------------</p>
         <p><strong>For ISTOS Medical Private Limited</strong></p>
         <br><br>
-        <div class="quote-sender-highlight">Naushad</div>
+        <div class="quote-sender-highlight"> </div>
       </div>
     </div>
 
@@ -489,7 +489,10 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   </form>
 </div>
 
-<script>
+<script type="module">
+  import { auth } from "../js/firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
   function goBack() {
     if (window.history.length > 1) window.history.back();
   }
@@ -527,6 +530,30 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     document.getElementById('contactEmail').value = hosp.email || '';
   }
 
+  // ===== Dynamic quote sender name from auth email =====
+  const quoteSenderEl = document.getElementById("quoteSender");
+
+  onAuthStateChanged(auth, (user) => {
+    if (!quoteSenderEl) return;
+
+    if (!user || !user.email) {
+      quoteSenderEl.textContent = "Guest";
+      return;
+    }
+
+    const email = user.email;
+    const prefix = email.split("@")[0] || "User";
+
+    const prettyName = prefix
+      .replace(/[._-]+/g, " ")
+      .split(" ")
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
+
+    quoteSenderEl.textContent = prettyName;
+  });
+
+  // ===== Events & submit handler =====
   document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
 
   document.getElementById('quoteSetupForm').addEventListener('submit', function (e) {
@@ -554,6 +581,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     window.location.href = 'quotes.html';
   });
 
+  // ===== Initial values =====
   document.getElementById('quoteNo').value = generateQuoteNo();
   const todayISO = new Date().toISOString().slice(0, 10);
   document.getElementById('quoteDate').value = todayISO;
