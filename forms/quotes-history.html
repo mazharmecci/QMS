@@ -493,6 +493,7 @@
 <script type="module">
   import {
     db,
+    auth,
     collection,
     getDocs,
     updateDoc,
@@ -500,16 +501,13 @@
     doc
   } from "../js/firebase.js";
   import {
-    getAuth,
     onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js"; // modular auth [web:184]
+  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
   const QUOTES_URL = "quotes.html";
 
   // ===== Auth state =====
-  const auth = getAuth();
   let currentUserUid = null;
-
   onAuthStateChanged(auth, (user) => {
     currentUserUid = user ? user.uid : null;
   });
