@@ -129,6 +129,9 @@ export function buildLineItemsFromCurrentQuote() {
   return items;
 }
 
+/* ========================
+ * Firestore-friendly object
+ * =======================*/
 
 /**
  * Build Firestore-friendly quote document from current quote.
@@ -165,7 +168,6 @@ export function buildQuoteObject(existingDoc = null) {
     };
   });
 
-  // ✅ Use the initialized auth instance
   const user = auth.currentUser;
   const createdByUid = user ? user.uid : null;
 
@@ -204,11 +206,6 @@ export function buildQuoteObject(existingDoc = null) {
  * Validation
  * =======================*/
 
-/**
- * Validate header before finalizing quote.
- * @param {object} header
- * @returns {boolean}
- */
 export function validateHeader(header) {
   const errors = [];
   if (!header.quoteNo) errors.push("Quote Number is missing");
@@ -273,12 +270,6 @@ async function appendRevisionSnapshot(docId, data) {
 
 let finalizeInProgress = false;
 
-/**
- * Finalize the current quote: compute totals, local revision, and save
- * to both local history and Firestore, with Firestore revision history.
- *
- * rawArg may be: Firestore docId string, a PointerEvent, or null/undefined.
- */
 export async function finalizeQuote(rawArg = null) {
   if (finalizeInProgress) {
     console.warn("[finalizeQuote] blocked: already in progress.");
@@ -305,7 +296,6 @@ export async function finalizeQuote(rawArg = null) {
   );
 
   try {
-    // ✅ Use the initialized auth instance
     const user = auth.currentUser;
     console.log("[finalizeQuote] auth.currentUser:", user);
 
@@ -323,21 +313,7 @@ export async function finalizeQuote(rawArg = null) {
       return;
     }
 
-    const { instruments, lines } = getQuoteContext();
-    if (!lines.length) {
-      alert("No instruments in this quote. Please add at least one instrument.");
-      finalizeInProgress = false;
-      return;
-    }
-
-    // … continue with building the quote object and saving to Firestore …
-  } catch (err) {
-    console.error("[finalizeQuote] Error saving quote to Firestore:", err);
-    alert("Failed to finalize quote. Please try again.");
-  } finally {
-    finalizeInProgress = false;
-  }
-}
+        const { instruments, lines } = getQuoteContext();
 
     // Totals for local summary
     let itemsTotal = 0;
