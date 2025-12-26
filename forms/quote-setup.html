@@ -495,9 +495,15 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 </div>
 
 <script type="module">
-  import { auth } from "../js/firebase.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  import { auth, db } from "../js/firebase.js";
+  import { 
+    onAuthStateChanged 
+  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  import { 
+    collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp 
+  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
+  // ===== Go back handler =====
   function goBack() {
     if (window.history.length > 1) {
       window.history.back();
@@ -506,18 +512,36 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     }
   }
 
-  function generateQuoteNo() {
-    const lastNo = localStorage.getItem('lastQuoteNo') || 'EQ/SQ/25-26/00000';
-    const parts = lastNo.split('/');
-    const num = parseInt(parts[parts.length - 1], 10) + 1;
-    const newNo = `EQ/SQ/25-26/${String(num).padStart(5, '0')}`;
-    localStorage.setItem('lastQuoteNo', newNo);
-    return newNo;
+  // ===== Fetch last quoteNo from Firestore =====
+  async function fetchLastQuoteNo() {
+    try {
+      const q = query(collection(db, "quoteHistory"), orderBy("quoteNo", "desc"), limit(1));
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        const lastDoc = snap.docs[0].data();
+        return lastDoc.quoteNo || "EQ/SQ/25-26/00000";
+      }
+      return "EQ/SQ/25-26/00000";
+    } catch (err) {
+      console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
+      return "EQ/SQ/25-26/00000";
+    }
   }
 
+  // ===== Generate next quoteNo =====
+  async function generateQuoteNo() {
+    const lastNo = await fetchLastQuoteNo();
+    const parts = lastNo.split("/");
+    const num = parseInt(parts[parts.length - 1], 10) + 1;
+    return `EQ/SQ/25-26/${String(num).padStart(5, "0")}`;
+  }
+
+  // ===== Populate hospital dropdown =====
   function populateHospitalDropdown() {
     const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
     const select = document.getElementById('hospitalSelect');
+    select.innerHTML = ""; // clear old options
     hospitals.forEach((hosp, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
@@ -526,6 +550,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     });
   }
 
+  // ===== Fill hospital details =====
   function fillHospitalDetails() {
     const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
     const idx = document.getElementById('hospitalSelect').value;
@@ -541,31 +566,24 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 
   // ===== Dynamic quote sender name from auth email =====
   const quoteSenderEl = document.getElementById("quoteSender");
-
   onAuthStateChanged(auth, (user) => {
     if (!quoteSenderEl) return;
-
     if (!user || !user.email) {
       quoteSenderEl.textContent = "Guest";
       return;
     }
-
     const email = user.email;
     const prefix = email.split("@")[0] || "User";
-
     const prettyName = prefix
       .replace(/[._-]+/g, " ")
       .split(" ")
       .map(p => p.charAt(0).toUpperCase() + p.slice(1))
       .join(" ");
-
     quoteSenderEl.textContent = prettyName;
   });
 
-  // ===== Events & submit handler =====
-  document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
-
-  document.getElementById('quoteSetupForm').addEventListener('submit', function (e) {
+  // ===== Submit handler =====
+  document.getElementById('quoteSetupForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const termsBlock = document.getElementById('termsTextBlock');
@@ -583,20 +601,54 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
       officePhone: document.getElementById('officePhone').value || '',
       salesNote: document.getElementById('salesNote').value || '',
       termsHtml: termsBlock.innerHTML,
-      quoteLines: []  // instrument will be added later in quotes.html
+      quoteLines: [],
+      status: "DRAFT"
     };
 
-    localStorage.setItem('quoteHeader', JSON.stringify(headerData));
-    window.location.href = 'quotes.html';
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be signed in to save quotes.");
+        return;
+      }
+
+      // Save to Firestore immediately
+      const colRef = collection(db, "quoteHistory");
+      const newDoc = await addDoc(colRef, {
+        ...headerData,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid,
+        createdByLabel: user.displayName || user.email || user.uid
+      });
+
+      console.log("[quoteSetupForm] New quote saved to Firestore with id:", newDoc.id);
+
+      // Save to localStorage for continuity in quotes.html
+      localStorage.setItem('quoteHeader', JSON.stringify({
+        ...headerData,
+        docId: newDoc.id
+      }));
+
+      // Redirect to quotes.html with docId in URL
+      window.location.href = `quotes.html?id=${newDoc.id}`;
+    } catch (err) {
+      console.error("[quoteSetupForm] Error saving quote to Firestore:", err);
+      alert("Failed to save quote. Please try again.");
+    }
   });
 
   // ===== Initial values =====
-  document.getElementById('quoteNo').value = generateQuoteNo();
-  const todayISO = new Date().toISOString().slice(0, 10);
-  document.getElementById('quoteDate').value = todayISO;
-  document.getElementById('refDate').value = todayISO;
+  (async () => {
+    const newQuoteNo = await generateQuoteNo();
+    document.getElementById('quoteNo').value = newQuoteNo;
 
-  populateHospitalDropdown();
+    const todayISO = new Date().toISOString().slice(0, 10);
+    document.getElementById('quoteDate').value = todayISO;
+    document.getElementById('refDate').value = todayISO;
+
+    populateHospitalDropdown();
+    document.getElementById('hospitalSelect').addEventListener('change', fillHospitalDetails);
+  })();
 </script>
 
 </body>
