@@ -7,84 +7,100 @@
   <style>
     
 /* GLOBAL */
-    body {
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-gradient);
-      background-attachment: fixed;
-      margin: 0;
-      padding: 0;
-      color: var(--text-main);
-    }
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  margin: 0;
+  padding: 0;
+  color: var(--text-main);
+}
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.97));
-      border-bottom: 1px solid rgba(148, 163, 184, 0.28);
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(20px);
-    }
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.97));
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+}
 
-    .header-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.1rem 2.5rem;
-    }
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* back left, logout right */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+}
 
-    .header-title {
-      font-size: 1.3rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #f9fafb;
-    }
+/* TITLE */
+.header-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f9fafb;
+}
+.header-title span {
+  color: var(--accent);
+}
 
-    .header-title span {
-      color: var(--accent);
-    }
+/* BACK BUTTON */
+.back-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  background: rgba(255,255,255,0.1);
+  color: #f9fafb; /* always visible */
+  cursor: pointer;
+  transition: background 0.16s ease-out, transform 0.12s ease-out;
+}
+.back-btn:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
 
-    .logout-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      background: rgba(15, 23, 42, 0.96);
-      color: var(--text-muted);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      transition:
-        background 0.16s ease-out,
-        color 0.16s ease-out,
-        border-color 0.16s ease-out,
-        transform 0.12s ease-out,
-        box-shadow 0.16s ease-out;
-    }
+/* LOGOUT BUTTON */
+.logout-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  background: rgba(15, 23, 42, 0.96);
+  color: #f9fafb; /* always visible text */
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  transition: background 0.16s ease-out, color 0.16s ease-out,
+              border-color 0.16s ease-out, transform 0.12s ease-out,
+              box-shadow 0.16s ease-out;
+}
+.logout-btn:hover {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(248, 113, 113, 0.45);
+}
 
-    .logout-btn:hover {
-      background: rgba(248, 113, 113, 0.16);
-      color: #fecaca;
-      border-color: rgba(248, 113, 113, 0.8);
-      transform: translateY(-1px);
-      box-shadow: 0 10px 24px rgba(248, 113, 113, 0.45);
-    }
-
-    .subheader {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 0.95rem;
-      color: var(--text-muted);
-    }
-
-    .subheader span {
-      color: var(--accent);
-    }
+/* SUBHEADER */
+.subheader {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+.subheader span {
+  color: var(--accent);
+}
 
 /* MAIN FRAME */
 .container {
@@ -821,12 +837,16 @@ table.quote-table .cat-sub strong {
 <body>
   <header>
     <div class="header-inner">
+      <!-- Back button far left -->
+      <button id="backBtn" class="back-btn">← Back</button>
+
+      <!-- Centered title -->
       <div class="header-title">
         ISTOS Medical Private Limited <span>- QMS</span>
       </div>
-      <button id="logoutBtn" class="logout-btn">
-        Logout
-      </button>
+
+      <!-- Logout button far right -->
+      <button id="logoutBtn" class="logout-btn">Logout</button>
     </div>
   </header>
 
@@ -1319,19 +1339,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-// ✅ Button logout
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      await signOut(auth);
-      window.location.href = "login.html";
-    } catch (err) {
-      console.error("Failed to sign out", err);
-      alert("Could not log out. Please try again.");
-    }
-  });
-}
+// Back button → go to index.html
+document.getElementById("backBtn")?.addEventListener("click", () => {
+  window.location.href = "index.html";
+});
+
+// Logout button → sign out
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+    window.location.href = "login.html";
+  } catch (err) {
+    console.error("Failed to sign out", err);
+    alert("Could not log out. Please try again.");
+  }
+});
 
   // Expose only if inline HTML still uses onclick
   window.openConfigModal = openConfigModal;
