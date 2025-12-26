@@ -1143,11 +1143,7 @@ Next lines: brief description"></textarea>
     addMasterItemToLine
   } from "../js/quoteUI.js";
 
-  import { db, doc, getDoc } from "../js/firebase.js";
-
-  // ✅ Import Firebase Auth helpers
-  import { getAuth, signOut } from "firebase/auth";
-  const auth = getAuth();
+  import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
 
   let currentQuoteDocId = null;
 
