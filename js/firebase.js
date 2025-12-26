@@ -13,7 +13,9 @@ import {
   getDocs,
   getDoc,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 import { 
@@ -57,6 +59,8 @@ export {
   getDoc,
   setDoc,
   serverTimestamp,
+  query,
+  where,
 
   // Auth helpers
   onAuthStateChanged,
