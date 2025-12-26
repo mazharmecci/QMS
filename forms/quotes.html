@@ -623,7 +623,7 @@
 <body>
 <header>
   <div class="header-inner">
-    <button type="button" class="back-btn" id="backBtn">← Back</button>
+    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
     <div class="header-title">ISTOS Medical Private Limited</div>
   </div>
 </header>
@@ -931,15 +931,12 @@ Next lines: brief description"></textarea>
   let currentQuoteDocId = null;
 
   function goBack() {
-    const before = window.location.href;
-    window.history.back();
-    setTimeout(() => {
-      const after = window.location.href;
-      if (after === before) {
-        window.location.href = HOME_URL;
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = 'index.html';
       }
-    }, 150);
-  }
+    }
 
   function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
