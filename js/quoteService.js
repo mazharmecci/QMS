@@ -11,7 +11,6 @@ import {
   auth   // ✅ use the initialized auth instance
 } from "./firebase.js";
 
-
 /* ========================
  * Local header & context
  * =======================*/
@@ -20,7 +19,12 @@ import {
  * Get the current quote header object from localStorage.
  */
 export function getQuoteHeaderRaw() {
-  return JSON.parse(localStorage.getItem("quoteHeader") || "{}");
+  try {
+    return JSON.parse(localStorage.getItem("quoteHeader") || "{}");
+  } catch (err) {
+    console.error("[getQuoteHeaderRaw] Failed to parse quoteHeader:", err);
+    return {};
+  }
 }
 
 /**
@@ -28,7 +32,12 @@ export function getQuoteHeaderRaw() {
  * @param {object} header
  */
 export function saveQuoteHeader(header) {
-  localStorage.setItem("quoteHeader", JSON.stringify(header));
+  try {
+    localStorage.setItem("quoteHeader", JSON.stringify(header));
+    console.log("[saveQuoteHeader] Header saved locally.");
+  } catch (err) {
+    console.error("[saveQuoteHeader] Failed to save header:", err);
+  }
 }
 
 /**
@@ -36,12 +45,17 @@ export function saveQuoteHeader(header) {
  * Ensures each instrument has suppliedCompleteWith field.
  */
 export function getInstrumentsMaster() {
-  const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
-  return instruments.map(inst => ({
-    ...inst,
-    suppliedCompleteWith:
-      inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
-  }));
+  try {
+    const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
+    return instruments.map(inst => ({
+      ...inst,
+      suppliedCompleteWith:
+        inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
+    }));
+  } catch (err) {
+    console.error("[getInstrumentsMaster] Failed to parse instruments:", err);
+    return [];
+  }
 }
 
 /**
@@ -111,8 +125,10 @@ export function buildLineItemsFromCurrentQuote() {
     });
   });
 
+  console.log("[buildLineItemsFromCurrentQuote] Built", items.length, "items.");
   return items;
 }
+
 
 /**
  * Build Firestore-friendly quote document from current quote.
@@ -149,9 +165,8 @@ export function buildQuoteObject(existingDoc = null) {
     };
   });
 
-  const auth = getAuth();
+  // ✅ Use the initialized auth instance
   const user = auth.currentUser;
-
   const createdByUid = user ? user.uid : null;
 
   return {
@@ -218,7 +233,7 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
 
   if (!data.createdBy) {
     console.warn(
-      "[saveBaseQuoteDocToFirestore] createdBy is missing; Firestore rules will reject this."
+      "[saveBaseQuoteDocToFirestore] createdBy is missing; Firestore rules may reject this."
     );
   }
 
@@ -290,19 +305,39 @@ export async function finalizeQuote(rawArg = null) {
   );
 
   try {
-    const auth = getAuth();
-    console.log("[finalizeQuote] auth.currentUser:", auth.currentUser);
+    // ✅ Use the initialized auth instance
+    const user = auth.currentUser;
+    console.log("[finalizeQuote] auth.currentUser:", user);
+
+    if (!user) {
+      alert("You must be signed in to finalize quotes.");
+      finalizeInProgress = false;
+      return;
+    }
 
     const header = getQuoteHeaderRaw();
     console.log("[finalizeQuote] header.quoteNo:", header.quoteNo);
 
-    if (!validateHeader(header)) return;
+    if (!validateHeader(header)) {
+      finalizeInProgress = false;
+      return;
+    }
 
     const { instruments, lines } = getQuoteContext();
     if (!lines.length) {
       alert("No instruments in this quote. Please add at least one instrument.");
+      finalizeInProgress = false;
       return;
     }
+
+    // … continue with building the quote object and saving to Firestore …
+  } catch (err) {
+    console.error("[finalizeQuote] Error saving quote to Firestore:", err);
+    alert("Failed to finalize quote. Please try again.");
+  } finally {
+    finalizeInProgress = false;
+  }
+}
 
     // Totals for local summary
     let itemsTotal = 0;
@@ -390,7 +425,12 @@ export async function finalizeQuote(rawArg = null) {
     const firestoreData = {
       ...baseQuoteDoc,
       revision: nextRev,
-      localSummary: summary
+      localSummary: summary,
+      // ✅ Ensure createdBy is always set
+      createdBy: baseQuoteDoc.createdBy || (auth.currentUser ? auth.currentUser.uid : null),
+      createdByLabel: auth.currentUser
+        ? auth.currentUser.displayName || auth.currentUser.email || auth.currentUser.uid
+        : "Unknown"
     };
 
     console.log(
