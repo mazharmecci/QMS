@@ -383,12 +383,12 @@
   </style>
 </head>
 <body>
-<header>
-  <div class="header-inner">
-    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
-    <div class="header-title">ISTOS Medical - Quote Setup</div>
-  </div>
-</header>
+  <header>
+    <div class="header-inner">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div class="header-title">ISTOS Medical - Quote setup</div>
+    </div>
+  </header>
 
 <div class="container">
   <h2>Quote Builder</h2>
@@ -494,8 +494,12 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
   function goBack() {
-    if (window.history.length > 1) window.history.back();
-  }
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
 
   function generateQuoteNo() {
     const lastNo = localStorage.getItem('lastQuoteNo') || 'EQ/SQ/25-26/00000';
