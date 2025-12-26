@@ -1023,14 +1023,14 @@ Next lines: brief description"></textarea>
     }
   }
 
- document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("[quotes.html] DOMContentLoaded");
 
   await loadQuoteFromFirestoreIfNeeded();
-
   populateHeader();
   renderQuoteBuilder();
 
+  // ✅ Sync terms block to header
   const termsEl = document.getElementById("termsTextBlock");
   if (termsEl) {
     const syncTermsToHeader = () => {
@@ -1040,48 +1040,58 @@ Next lines: brief description"></textarea>
       saveQuoteHeader(header);
       console.log("[terms] Synced termsHtml length:", header.termsHtml.length);
     };
-    termsEl.addEventListener("input", syncTermsToHeader);
-    termsEl.addEventListener("blur", syncTermsToHeader);
+    ["input", "blur"].forEach(evt => termsEl.addEventListener(evt, syncTermsToHeader));
   }
 
+  // ✅ Back button
   document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-  // Modal event bindings
-  [
+  // ✅ Modal bindings
+  const modalBindings = [
     ["openInstrumentModalBtn", openInstrumentModal],
     ["closeInstrumentModalBtn", closeInstrumentModal],
-    ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-  ].forEach(([id, handler]) => {
+    ["closeInstrumentModalFooterBtn", closeInstrumentModal],
+    ["openInstrumentPickerBtn", openInstrumentPicker],
+    ["closeInstrumentPickerBtn", closeInstrumentPicker],
+    ["closeItemModalBtn", closeItemModal],
+    ["cancelItemModalBtn", closeItemModal]
+  ];
+  modalBindings.forEach(([id, handler]) => {
     document.getElementById(id)?.addEventListener("click", handler);
   });
 
-  document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
-  document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
-
-  document.getElementById("closeItemModalBtn")?.addEventListener("click", closeItemModal);
-  document.getElementById("cancelItemModalBtn")?.addEventListener("click", closeItemModal);
+  // ✅ Item modal form
   document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
 
-  document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
-    document.getElementById("configPickerOverlay").style.display = "none";
-  });
-  document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", () => {
-    document.getElementById("additionalPickerOverlay").style.display = "none";
+  // ✅ Overlay closers
+  const overlayClosers = {
+    closeConfigPickerBtn: "configPickerOverlay",
+    closeAdditionalPickerBtn: "additionalPickerOverlay"
+  };
+  Object.entries(overlayClosers).forEach(([btnId, overlayId]) => {
+    document.getElementById(btnId)?.addEventListener("click", () => {
+      const el = document.getElementById(overlayId);
+      if (el) el.style.display = "none";
+    });
   });
 
-  // ✅ Finalize button → SUBMITTED
+  // ✅ Finalize button → SUBMITTED (debounced)
   const finalizeBtn = document.getElementById("finalizeQuoteBtn");
   if (finalizeBtn) {
-    let clickInProgress = false;
+    let lastClickTime = 0;
     finalizeBtn.addEventListener("click", async () => {
-      if (clickInProgress) return;
-      clickInProgress = true;
+      const now = Date.now();
+      if (now - lastClickTime < 3000) {
+        console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
+        return;
+      }
+      lastClickTime = now;
+
       finalizeBtn.disabled = true;
-      console.log("[quotes.html] finalize button clicked, docId:", currentQuoteDocId);
+      console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
       try {
         await finalizeQuote(currentQuoteDocId);
       } finally {
-        clickInProgress = false;
         finalizeBtn.disabled = false;
       }
     });
@@ -1092,6 +1102,10 @@ Next lines: brief description"></textarea>
   nextButtons.forEach(btn => {
     btn.addEventListener("click", async () => {
       const docId = btn.getAttribute("data-doc-id");
+      if (!docId) {
+        console.warn("[Next button] Missing data-doc-id");
+        return;
+      }
       console.log("[quotes.html] Next button clicked for docId:", docId);
       try {
         await approveQuoteRevision(docId);
@@ -1102,7 +1116,6 @@ Next lines: brief description"></textarea>
     });
   });
 });
-
 
   // Expose only if inline HTML still uses onclick
   window.openConfigModal = openConfigModal;
