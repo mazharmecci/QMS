@@ -877,12 +877,11 @@ Next lines: brief description"></textarea>
     </tfoot>
   </table>
 
-  <!-- Finalize actions (edit-only) -->
-  <div class="no-print" style="margin-top:1.5rem; text-align:right;">
-    <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
-      ✅ Finalize &amp; Save to History
-    </button>
-  </div>
+<!-- Finalize actions (edit-only) -->
+<div class="no-print" style="margin-top:1.5rem; text-align:right;">
+  <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
+    ✅ Finalize &amp; Save to History
+  </button>
 </div>
 
 <script type="module">
@@ -922,10 +921,8 @@ Next lines: brief description"></textarea>
     addMasterItemToLine
   } from "../js/quoteUI.js";
 
-  // Import Firestore helpers from your firebase.js (which should wrap firebase/firestore)
-  import { db, doc, getDoc, collection } from "../js/firebase.js";
+  import { db, doc, getDoc } from "../js/firebase.js";
 
-  const HOME_URL = "https://qms.istosmedical.com/";
   let currentQuoteDocId = null;
 
   function goBack() {
@@ -943,22 +940,14 @@ Next lines: brief description"></textarea>
 
   function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData || typeof docData !== "object") return;
-
-    if (docId) {
-      currentQuoteDocId = docId;
-    }
+    if (docId) currentQuoteDocId = docId;
 
     const hosp = docData.hospital || {};
 
     const toDateInputValue = (val) => {
       if (!val) return "";
-      if (typeof val.toDate === "function") {
-        const d = val.toDate();
-        return d.toISOString().slice(0, 10);
-      }
-      if (typeof val === "string") {
-        return val.length >= 10 ? val.slice(0, 10) : val;
-      }
+      if (typeof val.toDate === "function") return val.toDate().toISOString().slice(0, 10);
+      if (typeof val === "string") return val.length >= 10 ? val.slice(0, 10) : val;
       const d = new Date(val);
       return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
     };
@@ -998,10 +987,7 @@ Next lines: brief description"></textarea>
       );
 
       if (idx < 0) {
-        console.warn(
-          "[hydrateLocalFromFirestoreDoc] Instrument not found in master for item:",
-          item
-        );
+        console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
         idx = 0;
       }
 
@@ -1015,14 +1001,11 @@ Next lines: brief description"></textarea>
     });
 
     header.quoteLines = quoteLines;
-
     saveQuoteHeader(header);
   }
 
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
-    const quoteNoParam = getQueryParam("quoteNo");
-
     if (quoteId) {
       try {
         console.log("[quotes.html] Loading quote from Firestore for id:", quoteId);
@@ -1044,12 +1027,6 @@ Next lines: brief description"></textarea>
     } else {
       console.log("[quotes.html] Using existing local header (no Firestore id).");
     }
-
-    if (quoteNoParam) {
-      console.warn(
-        "Query by quoteNo not implemented; only ?id=<docId> is supported for now."
-      );
-    }
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -1064,74 +1041,47 @@ Next lines: brief description"></textarea>
     if (termsEl) {
       const syncTermsToHeader = () => {
         const header = getQuoteHeaderRaw();
-
-        const html = termsEl.innerHTML;
-        const plainText = termsEl.innerText || "";
-
-        header.termsHtml = html;
-        header.termsText = plainText;
+        header.termsHtml = termsEl.innerHTML;
+        header.termsText = termsEl.innerText || "";
         saveQuoteHeader(header);
-
-        console.log("[terms] Synced termsHtml length:", html.length);
+        console.log("[terms] Synced termsHtml length:", header.termsHtml.length);
       };
-
       termsEl.addEventListener("input", syncTermsToHeader);
       termsEl.addEventListener("blur", syncTermsToHeader);
     }
 
     document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-    const instrumentModalEvents = [
-      ["openInstrumentModalBtn", openInstrumentModal],
-      ["closeInstrumentModalBtn", closeInstrumentModal],
-      ["closeInstrumentModalFooterBtn", closeInstrumentModal]
-    ];
-    instrumentModalEvents.forEach(([id, handler]) => {
-      document.getElementById(id)?.addEventListener("click", handler);
+    // Modal event bindings
+    [["openInstrumentModalBtn", openInstrumentModal],
+     ["closeInstrumentModalBtn", closeInstrumentModal],
+     ["closeInstrumentModalFooterBtn", closeInstrumentModal]]
+      .forEach(([id, handler]) => {
+        document.getElementById(id)?.addEventListener("click", handler);
+      });
+
+    document.getElementById("openInstrumentPickerBtn")?.addEventListener("click", openInstrumentPicker);
+    document.getElementById("closeInstrumentPickerBtn")?.addEventListener("click", closeInstrumentPicker);
+
+    document.getElementById("closeItemModalBtn")?.addEventListener("click", closeItemModal);
+    document.getElementById("cancelItemModalBtn")?.addEventListener("click", closeItemModal);
+    document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+
+    document.getElementById("closeConfigPickerBtn")?.addEventListener("click", () => {
+      document.getElementById("configPickerOverlay").style.display = "none";
     });
-
-    document
-      .getElementById("openInstrumentPickerBtn")
-      ?.addEventListener("click", openInstrumentPicker);
-    document
-      .getElementById("closeInstrumentPickerBtn")
-      ?.addEventListener("click", closeInstrumentPicker);
-
-    document
-      .getElementById("closeItemModalBtn")
-      ?.addEventListener("click", closeItemModal);
-    document
-      .getElementById("cancelItemModalBtn")
-      ?.addEventListener("click", closeItemModal);
-    document
-      .getElementById("itemModalForm")
-      ?.addEventListener("submit", saveItemFromModal);
-
-    document
-      .getElementById("closeConfigPickerBtn")
-      ?.addEventListener("click", () => {
-        document.getElementById("configPickerOverlay").style.display = "none";
-      });
-    document
-      .getElementById("closeAdditionalPickerBtn")
-      ?.addEventListener("click", () => {
-        document.getElementById("additionalPickerOverlay").style.display = "none";
-      });
+    document.getElementById("closeAdditionalPickerBtn")?.addEventListener("click", () => {
+      document.getElementById("additionalPickerOverlay").style.display = "none";
+    });
 
     const finalizeBtn = document.getElementById("finalizeQuoteBtn");
     if (finalizeBtn) {
       let clickInProgress = false;
-
       finalizeBtn.addEventListener("click", async () => {
         if (clickInProgress) return;
         clickInProgress = true;
         finalizeBtn.disabled = true;
-
-        console.log(
-          "[quotes.html] finalize button clicked, docId:",
-          currentQuoteDocId
-        );
-
+        console.log("[quotes.html] finalize button clicked, docId:", currentQuoteDocId);
         try {
           await finalizeQuote(currentQuoteDocId);
         } finally {
@@ -1142,7 +1092,7 @@ Next lines: brief description"></textarea>
     }
   });
 
-  // expose functions for inline handlers if any external HTML needs them
+  // Expose only if inline HTML still uses onclick
   window.openConfigModal = openConfigModal;
   window.openAdditionalModal = openAdditionalModal;
   window.openItemModal = openItemModal;
