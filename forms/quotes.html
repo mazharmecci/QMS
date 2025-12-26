@@ -135,15 +135,28 @@ header {
   transform: translateY(-2px);
   box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
 }
+
 .company-box p {
   margin: 0;
   font-size: 10px;
   color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* keep nowrap/ellipsis only for generic one-liners */
 }
 
+.company-address {
+  margin: 0;
+  line-height: 1.3; /* keeps lines close but readable */
+  font-size: 12px;
+  white-space: normal;   /* allow wrapping */
+  overflow: visible;     /* show full text */
+  text-overflow: unset;  /* no ellipsis */
+}
+
+.company-address strong {
+  display: block; /* company name on its own line */
+  margin-bottom: 2px; /* tiny gap */
+}
+    
 .sales-box {
   flex: 0 0 auto;
   background: #d0d4d9; /* original gray */
@@ -922,10 +935,9 @@ Next lines: brief description"></textarea>
               <!-- Left side: company + hospital -->
               <div class="quote-left">
                 <div class="company-box">
-                  <p>
-                    <strong>ISTOS Medical Pvt Ltd.</strong>
-                    BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
-                    Yelachenahalli, Bangalore-560062
+                  <p class="company-address">
+                    <strong>ISTOS Medical Pvt Ltd.</strong><br>
+                    BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road, Yelachenahalli, Bangalore-560062
                   </p>
                 </div>
 
