@@ -3,18 +3,15 @@
 import { fetchInstruments } from "./instrumentService.js";
 import {
   db,
-  auth,
   collection,
   addDoc,
   doc,
   updateDoc,
   serverTimestamp,
+  auth,
   getDoc,
-  getDocs,
-  query,
-  where
+  getDocs
 } from "./firebase.js";
-
 
 /* ========================
  * Local header & context
@@ -293,35 +290,47 @@ export async function finalizeQuote(rawArg = null) {
       return null;
     }
 
-    // ✅ Always mark status as SUBMITTED on finalize
     header.status = "SUBMITTED";
 
-    // Build summary + lineItems (same as before)
-    const summary = buildSummaryFromLines(header, instruments, lines);
+    let itemsTotal = 0;
+    lines.forEach(line => {
+      const inst = instruments[line.instrumentIndex] || null;
+      if (inst) {
+        const qty = Number(line.quantity || 1);
+        itemsTotal += Number(inst.unitPrice || 0) * qty;
+      }
+      (line.additionalItems || []).forEach(item => {
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        itemsTotal += qtyNum * unitNum;
+      });
+    });
+
+    const gstPercent = 18;
+    const discount = Number(header.discount || 0);
+    const afterDisc = itemsTotal - discount;
+    const gstAmount = (afterDisc * gstPercent) / 100;
+    const totalValue = afterDisc + gstAmount;
+    const roundedTotal = Math.round(totalValue);
+
+    const summary = {
+      itemsTotal,
+      discount,
+      afterDiscount: afterDisc,
+      freight: "Included",
+      gstPercent,
+      gstAmount,
+      totalValue,
+      roundOff: roundedTotal - totalValue
+    };
+
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // Determine next revision
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
     const lastRev = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
     const nextRev = lastRev + 1;
 
-    // ✅ Duplicate guard    
-    
-    /**
-     * Check if a quote with the same quoteNo and revision already exists in Firestore.
-     * @param {string} quoteNo
-     * @param {number} revision
-     * @returns {Promise<boolean>} true if duplicate exists
-     */
-    async function doesQuoteExist(quoteNo, revision) {
-      const colRef = collection(db, "quoteHistory");
-      const q = query(colRef, where("quoteNo", "==", quoteNo), where("revision", "==", revision));
-      const snap = await getDocs(q);
-      return !snap.empty;
-    }
-
-    // Local history update
     const now = new Date();
     const quoteLocal = {
       header,
@@ -338,10 +347,10 @@ export async function finalizeQuote(rawArg = null) {
         }
       ]
     };
+
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
 
-    // Firestore payload
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
