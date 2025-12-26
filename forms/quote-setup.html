@@ -515,20 +515,17 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   // ===== Fetch last quoteNo from Firestore =====
   async function fetchLastQuoteNo() {
     try {
-      const q = query(
-        collection(db, "quotes"),  // ✅ use db from firebase.js
-        orderBy("quoteNo", "desc"),
-        limit(1)
-      );
+      const q = query(collection(db, "quoteHistory"), orderBy("quoteNo", "desc"), limit(1));
       const snap = await getDocs(q);
+
       if (!snap.empty) {
-        const data = snap.docs[0].data();
-        return data.quoteNo || null;
+        const lastDoc = snap.docs[0].data();
+        return lastDoc.quoteNo || "EQ/SQ/25-26/00000";
       }
-      return null;
+      return "EQ/SQ/25-26/00000";
     } catch (err) {
       console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
-      return null;
+      return "EQ/SQ/25-26/00000";
     }
   }
 
