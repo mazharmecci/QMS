@@ -623,7 +623,7 @@
 <body>
 <header>
   <div class="header-inner">
-    <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+    <button type="button" class="back-btn" id="backBtn">← Back</button>
     <div class="header-title">ISTOS Medical Private Limited</div>
   </div>
 </header>
@@ -745,123 +745,120 @@ Next lines: brief description"></textarea>
   </div>
 </div>
 
-  <!-- Main container -->
-  <div class="container">
-    <table class="print-frame">
-      <thead class="print-header">
-        <tr>
-          <td>
-            <div class="quote-header">
-              <div class="quote-header-body">
-                <!-- Left side: company + hospital -->
-                <div class="quote-left">
-                  <div class="company-box">
-                    <p>
-                      <strong>ISTOS Medical Pvt Ltd.</strong>
-                      BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
-                      Yelachenahalli, Bangalore-560062
-                    </p>
-                  </div>
-  
-                  <div class="hospital-box">
-                    <p>
-                      <strong>To:</strong><br>
-                      <span id="toHospitalNameLine"></span><br>
-                      <span id="toHospitalAddressLine1"></span><br>
-                      <span id="toHospitalAddressLine2"></span>
-                    </p>
-                  </div>
-  
-                  <div class="attn-box">
-                    <span><strong>Kind Attn:</strong></span>
-                    <span id="toAttn"></span>
-                  </div>
+<!-- Main container -->
+<div class="container">
+  <table class="print-frame">
+    <thead class="print-header">
+      <tr>
+        <td>
+          <div class="quote-header">
+            <div class="quote-header-body">
+              <!-- Left side: company + hospital -->
+              <div class="quote-left">
+                <div class="company-box">
+                  <p>
+                    <strong>ISTOS Medical Pvt Ltd.</strong>
+                    BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
+                    Yelachenahalli, Bangalore-560062
+                  </p>
                 </div>
-  
-                <!-- Right side: logo + meta -->
-                <div class="quote-right">
-                  <div class="quote-logo-wrap">
-                    <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
-                  </div>
-  
-                  <div class="sales-box">
-                    <div class="sales-title">SALES QUOTATION</div>
-                  </div>
-  
-                  <div class="quote-meta-grid">
-                    <div class="label">Quote No.</div>
-                    <div class="value" id="metaQuoteNo"></div>
-  
-                    <div class="label right">Quotation Date</div>
-                    <div class="value value-small right" id="metaQuoteDate"></div>
-  
-                    <div class="label">Your Reference</div>
-                    <div class="value value-small" id="metaYourRef"></div>
-  
-                    <div class="label right">Ref Date</div>
-                    <div class="value value-small right" id="metaRefDate"></div>
-  
-                    <div class="label">Your Contact Person</div>
-                    <div class="value value-small" id="metaContactPerson"></div>
-  
-                    <div class="label right">Handphone</div>
-                    <div class="value value-small right" id="metaPhone"></div>
-  
-                    <div class="label">Email</div>
-                    <div class="value value-small" id="metaEmail"></div>
-  
-                    <div class="label right">Office</div>
-                    <div class="value value-small right" id="metaOffice"></div>
-                  </div>
+
+                <div class="hospital-box">
+                  <p>
+                    <strong>To:</strong><br>
+                    <span id="toHospitalNameLine"></span><br>
+                    <span id="toHospitalAddressLine1"></span><br>
+                    <span id="toHospitalAddressLine2"></span>
+                  </p>
+                </div>
+
+                <div class="attn-box">
+                  <span><strong>Kind Attn:</strong></span>
+                  <span id="toAttn"></span>
+                </div>
+              </div>
+
+              <!-- Right side: logo + meta -->
+              <div class="quote-right">
+                <div class="quote-logo-wrap">
+                  <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+                </div>
+
+                <div class="sales-box">
+                  <div class="sales-title">SALES QUOTATION</div>
+                </div>
+
+                <div class="quote-meta-grid">
+                  <div class="label">Quote No.</div>
+                  <div class="value" id="metaQuoteNo"></div>
+
+                  <div class="label right">Quotation Date</div>
+                  <div class="value value-small right" id="metaQuoteDate"></div>
+
+                  <div class="label">Your Reference</div>
+                  <div class="value value-small" id="metaYourRef"></div>
+
+                  <div class="label right">Ref Date</div>
+                  <div class="value value-small right" id="metaRefDate"></div>
+
+                  <div class="label">Your Contact Person</div>
+                  <div class="value value-small" id="metaContactPerson"></div>
+
+                  <div class="label right">Handphone</div>
+                  <div class="value value-small right" id="metaPhone"></div>
+
+                  <div class="label">Email</div>
+                  <div class="value value-small" id="metaEmail"></div>
+
+                  <div class="label right">Office</div>
+                  <div class="value value-small right" id="metaOffice"></div>
                 </div>
               </div>
             </div>
-          </td>
-        </tr>
-      </thead>
-  
-      <tbody class="print-body">
-        <tr>
-          <td>
-            <!-- Sales note (free text) -->
-            <div id="salesNoteBlock"></div>
-  
-            <!-- Quote builder controls (edit-only) -->
-            <div id="quoteBuilder" class="no-print">
-              <h3>Quote Builder</h3>
-              <div class="quote-actions">
-                <button type="button" class="btn-quote" id="openInstrumentModalBtn">
-                  Manage Instruments
-                </button>
-              </div>
+          </div>
+        </td>
+      </tr>
+    </thead>
+
+    <tbody class="print-body">
+      <tr>
+        <td>
+          <!-- Sales note (free text) -->
+          <div id="salesNoteBlock"></div>
+
+          <!-- Quote builder controls (edit-only) -->
+          <div id="quoteBuilder" class="no-print">
+            <h3>Quote Builder</h3>
+            <div class="quote-actions">
+              <button type="button" class="btn-quote" id="openInstrumentModalBtn">
+                Manage Instruments
+              </button>
             </div>
-  
-            <!-- Line items + summary -->
-            <table id="quoteSummaryTable" class="quote-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Cat / Material No.<br>Description</th>
-                  <th>Quantity</th>
-                  <th>Unit Price (INR)</th>
-                  <th>Total Price (INR)</th>
-                </tr>
-              </thead>
-              <tbody id="quoteBuilderBody"></tbody>
-              <tbody id="quoteSummaryBody"></tbody>
-            </table>
-  
-            <!-- Terms & Conditions -->
-            <div id="termsBlock">
-              <h2>Terms and Conditions of Sale</h2>
-              <!-- Single editable block, also used for print -->
-              <div id="termsTextBlock" contenteditable="true"></div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </div>
+
+          <!-- Line items + summary -->
+          <table id="quoteSummaryTable" class="quote-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Cat / Material No.<br>Description</th>
+                <th>Quantity</th>
+                <th>Unit Price (INR)</th>
+                <th>Total Price (INR)</th>
+              </tr>
+            </thead>
+            <tbody id="quoteBuilderBody"></tbody>
+            <tbody id="quoteSummaryBody"></tbody>
+          </table>
+
+          <!-- Terms & Conditions -->
+          <div id="termsBlock">
+            <h2>Terms and Conditions of Sale</h2>
+            <div id="termsTextBlock" contenteditable="true"></div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
 
     <tfoot class="print-footer">
       <tr>
@@ -925,22 +922,19 @@ Next lines: brief description"></textarea>
     addMasterItemToLine
   } from "../js/quoteUI.js";
 
-  // ✅ Import Firestore instance and helpers from firebase.js
-import { db, doc, getDoc, collection } from "../js/firebase.js";
-
-</script>
-
+  // Import Firestore helpers from your firebase.js (which should wrap firebase/firestore)
+  import { db, doc, getDoc, collection } from "../js/firebase.js";
 
   const HOME_URL = "https://qms.istosmedical.com/";
   let currentQuoteDocId = null;
 
   function goBack() {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.location.href = 'index.html';
-      }
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "index.html";
     }
+  }
 
   function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
@@ -989,7 +983,6 @@ import { db, doc, getDoc, collection } from "../js/firebase.js";
       quoteLines: []
     };
 
-    // Map Firestore items back to instruments master via code/name
     const instruments = getInstrumentsMaster();
     console.log("[hydrateLocalFromFirestoreDoc] docData.items:", docData.items);
 
@@ -1009,7 +1002,7 @@ import { db, doc, getDoc, collection } from "../js/firebase.js";
           "[hydrateLocalFromFirestoreDoc] Instrument not found in master for item:",
           item
         );
-        idx = 0; // fallback so UI still renders
+        idx = 0;
       }
 
       return {
@@ -1023,11 +1016,9 @@ import { db, doc, getDoc, collection } from "../js/firebase.js";
 
     header.quoteLines = quoteLines;
 
-    // Overwrite localStorage header with latest Firestore data
     saveQuoteHeader(header);
   }
 
-  // Always prefer Firestore when ?id= is present
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
     const quoteNoParam = getQueryParam("quoteNo");
@@ -1045,15 +1036,11 @@ import { db, doc, getDoc, collection } from "../js/firebase.js";
       } catch (err) {
         console.error("Error loading quote from Firestore:", err);
       }
-      // Do not fall back to stale local header.
       return;
     }
 
-    // No id in URL → keep existing behavior (new or in-progress local quote)
-    // Pseudo around your existing code
     if (currentQuoteDocId) {
       console.log("[quotes.html] Editing Firestore quote:", currentQuoteDocId);
-      // load from Firestore, then saveQuoteHeader(headerFromFirestore);
     } else {
       console.log("[quotes.html] Using existing local header (no Firestore id).");
     }
@@ -1073,25 +1060,24 @@ import { db, doc, getDoc, collection } from "../js/firebase.js";
     populateHeader();
     renderQuoteBuilder();
 
-  // Keep Terms & Conditions in header in sync with editable block (plain text only)
-  const termsEl = document.getElementById("termsTextBlock");
-  if (termsEl) {
-    const syncTermsToHeader = () => {
-      const header = getQuoteHeaderRaw();
-  
-      const html = termsEl.innerHTML;               // full formatted HTML
-      const plainText = termsEl.innerText || "";    // optional, for search/debug
-  
-      header.termsHtml = html;
-      header.termsText = plainText;                 // keep if you still want text
-      saveQuoteHeader(header);
-  
-      console.log("[terms] Synced termsHtml length:", html.length);
-    };
-  
-    termsEl.addEventListener("input", syncTermsToHeader);
-    termsEl.addEventListener("blur", syncTermsToHeader);
-  }
+    const termsEl = document.getElementById("termsTextBlock");
+    if (termsEl) {
+      const syncTermsToHeader = () => {
+        const header = getQuoteHeaderRaw();
+
+        const html = termsEl.innerHTML;
+        const plainText = termsEl.innerText || "";
+
+        header.termsHtml = html;
+        header.termsText = plainText;
+        saveQuoteHeader(header);
+
+        console.log("[terms] Synced termsHtml length:", html.length);
+      };
+
+      termsEl.addEventListener("input", syncTermsToHeader);
+      termsEl.addEventListener("blur", syncTermsToHeader);
+    }
 
     document.getElementById("backBtn")?.addEventListener("click", goBack);
 
@@ -1156,7 +1142,7 @@ import { db, doc, getDoc, collection } from "../js/firebase.js";
     }
   });
 
-  // expose functions for inline handlers
+  // expose functions for inline handlers if any external HTML needs them
   window.openConfigModal = openConfigModal;
   window.openAdditionalModal = openAdditionalModal;
   window.openItemModal = openItemModal;
