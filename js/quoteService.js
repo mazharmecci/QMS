@@ -1,21 +1,17 @@
 // quoteService.js
 
+import { db, auth } from "./firebase.js";  // your own firebase.js exports
 import {
-  db,
   collection,
   addDoc,
   doc,
   updateDoc,
   serverTimestamp,
-  auth,
   getDoc,
   getDocs,
   query,
   where
-} from "./firebase.js";   // ✅ adjust path if needed
-
-import { fetchInstruments } from "./instrumentService.js";
-;
+} from "firebase/firestore";               // ✅ import helpers directly
 
 /* ========================
  * Local header & context
