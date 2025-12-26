@@ -938,20 +938,12 @@ Next lines: brief description"></textarea>
     return params.get(name);
   }
 
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+   function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData || typeof docData !== "object") return;
     if (docId) currentQuoteDocId = docId;
-
+  
     const hosp = docData.hospital || {};
-
-    const toDateInputValue = (val) => {
-      if (!val) return "";
-      if (typeof val.toDate === "function") return val.toDate().toISOString().slice(0, 10);
-      if (typeof val === "string") return val.length >= 10 ? val.slice(0, 10) : val;
-      const d = new Date(val);
-      return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-    };
-
+  
     const header = {
       quoteNo: docData.quoteNo || "",
       quoteDate: toDateInputValue(docData.quoteDate),
@@ -971,26 +963,28 @@ Next lines: brief description"></textarea>
       status: docData.status || "Submitted",
       quoteLines: []
     };
-
+  
     const instruments = getInstrumentsMaster();
-    console.log("[hydrateLocalFromFirestoreDoc] docData.items:", docData.items);
-
-    const quoteLines = (docData.items || []).map(item => {
+    const items = Array.isArray(docData.items) ? docData.items : [];
+  
+    console.log("[hydrateLocalFromFirestoreDoc] items length:", items.length);
+  
+    const quoteLines = items.map(item => {
       const code = item.instrumentCode || item.code || "";
       const name = item.instrumentName || item.name || "";
-
+  
       let idx = instruments.findIndex(inst =>
-        (inst.instrumentCode && inst.instrumentCode === code) ||
-        (inst.catalog && inst.catalog === code) ||
-        (inst.instrumentName && inst.instrumentName === name) ||
-        (inst.name && inst.name === name)
+        inst.instrumentCode === code ||
+        inst.catalog === code ||
+        inst.instrumentName === name ||
+        inst.name === name
       );
-
+  
       if (idx < 0) {
         console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
         idx = 0;
       }
-
+  
       return {
         lineType: "instrument",
         instrumentIndex: idx,
@@ -999,7 +993,7 @@ Next lines: brief description"></textarea>
         additionalItems: item.additionalItems || []
       };
     });
-
+  
     header.quoteLines = quoteLines;
     saveQuoteHeader(header);
   }
