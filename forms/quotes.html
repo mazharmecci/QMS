@@ -1259,11 +1259,7 @@ Next lines: brief description"></textarea>
 
     // ===== Go back handler =====
     function goBack() {
-      if (history.length > 1) {
-        history.back();
-      } else {
-        location.href = "/index.html";
-      }
+      location.href = "/index.html";
     }
 
     // ✅ Wire back button
