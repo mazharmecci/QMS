@@ -237,14 +237,37 @@ header {
 
 /* PRINT-FRIENDLY OVERRIDES */
 @media print {
-  .company-box,
-  .sales-box,
-  .attn-box,
+  .company-box {
+    background: #d0d4d9 !important; /* keep gray */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sales-box {
+    background: #d0d4d9 !important; /* keep gray */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .attn-box {
+    background: #add8e6 !important; /* keep blue */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .quote-meta-grid {
-    background: #fff !important;
+    background: #fff !important; /* keep white for readability */
     box-shadow: none !important;
     border: 1px solid #ccc;
   }
+}
+
   .quote-meta-grid .label {
     font-size: 8px;
     font-weight: 500;
