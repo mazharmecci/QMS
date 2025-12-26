@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
       th.addEventListener("click", () => sortTable(index, type));
     }
   });
-
+}); // <-- this was missing
   </script>
     
   <!-- Your own modules (firebase.js handles Firebase init with CDN imports) -->
@@ -336,3 +336,4 @@ document.addEventListener("DOMContentLoaded", () => {
   <script type="module" src="../js/hospitalUI.js"></script>
 </body>
 </html>
+
