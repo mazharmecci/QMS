@@ -257,7 +257,7 @@
     <table id="hospitalTable">
       <thead>
         <tr>
-          <th>#</th>
+          <th id="sortNumber">#</th>
           <th id="sortCode">Client Code</th>
           <th id="sortName">Client Name</th>
           <th>Address</th>
@@ -280,9 +280,13 @@ function goBack() {
 document.addEventListener("DOMContentLoaded", () => {
   const table = document.getElementById("hospitalTable");
   const tbody = table.querySelector("tbody");
+  let sortState = {}; // track sort direction per column
 
   function sortTable(colIndex, type = "string") {
     const rows = Array.from(tbody.querySelectorAll("tr"));
+    const asc = !sortState[colIndex]; // toggle direction
+    sortState[colIndex] = asc;
+
     const sorted = rows.sort((a, b) => {
       let A = a.children[colIndex].innerText.trim();
       let B = b.children[colIndex].innerText.trim();
@@ -295,20 +299,34 @@ document.addEventListener("DOMContentLoaded", () => {
         B = B.toLowerCase();
       }
 
-      if (A < B) return -1;
-      if (A > B) return 1;
+      if (A < B) return asc ? -1 : 1;
+      if (A > B) return asc ? 1 : -1;
       return 0;
     });
 
     // Clear tbody and append sorted rows
     tbody.innerHTML = "";
     sorted.forEach(row => tbody.appendChild(row));
+
+    // Reset header classes
+    table.querySelectorAll("th").forEach(th => th.classList.remove("sorted-asc","sorted-desc"));
+    const th = table.querySelectorAll("th")[colIndex];
+    th.classList.add(asc ? "sorted-asc" : "sorted-desc");
   }
 
-  // Wire up sorting
-  document.getElementById("sortCode").addEventListener("click", () => sortTable(1, "string"));
-  document.getElementById("sortName").addEventListener("click", () => sortTable(2, "string"));
-});
+  // ✅ Wire up sorting in a clean loop
+  const sortBindings = [
+    { id: "sortNumber", index: 0, type: "number" }, // #
+    { id: "sortCode",   index: 1, type: "string" }, // Client Code
+    { id: "sortName",   index: 2, type: "string" }  // Client Name
+  ];
+  
+  sortBindings.forEach(({ id, index, type }) => {
+    const th = document.getElementById(id);
+    if (th) {
+      th.addEventListener("click", () => sortTable(index, type));
+    }
+  });
 
   </script>
     
