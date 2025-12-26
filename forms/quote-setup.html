@@ -512,30 +512,78 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     }
   }
 
-  // ===== Fetch last quoteNo from Firestore =====
-  async function fetchLastQuoteNo() {
-    try {
-      const q = query(collection(db, "quoteHistory"), orderBy("quoteNo", "desc"), limit(1));
-      const snap = await getDocs(q);
+// ===== Determine current financial year string =====
+// Indian FY runs Apr 1 – Mar 31
+function getFinancialYearString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // Jan=1, Dec=12
 
-      if (!snap.empty) {
-        const lastDoc = snap.docs[0].data();
-        return lastDoc.quoteNo || "EQ/SQ/25-26/00000";
-      }
-      return "EQ/SQ/25-26/00000";
-    } catch (err) {
-      console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
-      return "EQ/SQ/25-26/00000";
+  // If month is April or later, FY starts this year and ends next year
+  if (month >= 4) {
+    const startYY = String(year).slice(-2);
+    const endYY   = String(year + 1).slice(-2);
+    return `${startYY}-${endYY}`;
+  } else {
+    // Jan–Mar: FY started last year and ends this year
+    const startYY = String(year - 1).slice(-2);
+    const endYY   = String(year).slice(-2);
+    return `${startYY}-${endYY}`;
+  }
+}
+
+// ===== Fetch last quoteNo from Firestore =====
+async function fetchLastQuoteNo() {
+  try {
+    const q = query(
+      collection(db, "quoteHistory"),
+      orderBy("quoteNo", "desc"),
+      limit(1)
+    );
+    const snap = await getDocs(q);
+
+    if (!snap.empty) {
+      const lastDoc = snap.docs[0].data();
+      const lastNo = lastDoc?.quoteNo;
+      console.log("[fetchLastQuoteNo] Found last quoteNo:", lastNo);
+      return lastNo || `EQ/SQ/${getFinancialYearString()}/00000`;
     }
+
+    console.warn("[fetchLastQuoteNo] No quotes found in Firestore.");
+    return `EQ/SQ/${getFinancialYearString()}/00000`;
+  } catch (err) {
+    console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
+    return `EQ/SQ/${getFinancialYearString()}/00000`;
+  }
+}
+
+// ===== Generate next quoteNo =====
+async function generateQuoteNo() {
+  const lastNo = await fetchLastQuoteNo();
+  const currentFY = getFinancialYearString();
+
+  // Defensive parsing
+  const parts = (lastNo || "").split("/");
+  const fyPart = parts.length >= 3 ? parts[2] : currentFY;
+  const rawNum = parts[parts.length - 1];
+  const num = isNaN(parseInt(rawNum, 10)) ? 0 : parseInt(rawNum, 10);
+
+  let nextNum;
+  let newFY;
+
+  if (fyPart === currentFY) {
+    // Same FY → increment
+    nextNum = num + 1;
+    newFY = currentFY;
+  } else {
+    // New FY → reset counter
+    nextNum = 1;
+    newFY = currentFY;
   }
 
-  // ===== Generate next quoteNo =====
-  async function generateQuoteNo() {
-    const lastNo = await fetchLastQuoteNo();
-    const parts = lastNo.split("/");
-    const num = parseInt(parts[parts.length - 1], 10) + 1;
-    return `EQ/SQ/25-26/${String(num).padStart(5, "0")}`;
-  }
+  const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(5, "0")}`;
+  console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
+  return newNo;
+}
 
   // ===== Populate hospital dropdown =====
   function populateHospitalDropdown() {
