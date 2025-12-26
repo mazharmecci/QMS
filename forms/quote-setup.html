@@ -495,13 +495,12 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
 </div>
 
 <script type="module">
-  import { auth, db } from "../js/firebase.js";
-  import { 
-    onAuthStateChanged 
-  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+  import { auth, db } from "../js/firebase.js";   // ✅ import db and auth instances
+  import { onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { 
     collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp 
-  } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   // ===== Go back handler =====
   function goBack() {
@@ -512,84 +511,76 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     }
   }
 
-// ===== Determine current financial year string =====
-// Indian FY runs Apr 1 – Mar 31
-function getFinancialYearString(date = new Date()) {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1; // Jan=1, Dec=12
-
-  // If month is April or later, FY starts this year and ends next year
-  if (month >= 4) {
-    const startYY = String(year).slice(-2);
-    const endYY   = String(year + 1).slice(-2);
-    return `${startYY}-${endYY}`;
-  } else {
-    // Jan–Mar: FY started last year and ends this year
-    const startYY = String(year - 1).slice(-2);
-    const endYY   = String(year).slice(-2);
-    return `${startYY}-${endYY}`;
+  // ===== Determine current financial year string =====
+  function getFinancialYearString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // Jan=1, Dec=12
+    if (month >= 4) {
+      const startYY = String(year).slice(-2);
+      const endYY   = String(year + 1).slice(-2);
+      return `${startYY}-${endYY}`;
+    } else {
+      const startYY = String(year - 1).slice(-2);
+      const endYY   = String(year).slice(-2);
+      return `${startYY}-${endYY}`;
+    }
   }
-}
 
-// ===== Fetch last quoteNo from Firestore =====
-async function fetchLastQuoteNo() {
-  try {
-    const q = query(
-      collection(db, "quoteHistory"),
-      orderBy("quoteNo", "desc"),
-      limit(1)
-    );
-    const snap = await getDocs(q);
+  // ===== Fetch last quoteNo from Firestore =====
+  async function fetchLastQuoteNo() {
+    try {
+      const q = query(
+        collection(db, "quoteHistory"),
+        orderBy("quoteNo", "desc"),
+        limit(1)
+      );
+      const snap = await getDocs(q);
 
-    if (!snap.empty) {
-      const lastDoc = snap.docs[0].data();
-      const lastNo = lastDoc?.quoteNo;
-      console.log("[fetchLastQuoteNo] Found last quoteNo:", lastNo);
-      return lastNo || `EQ/SQ/${getFinancialYearString()}/00000`;
+      if (!snap.empty) {
+        const lastDoc = snap.docs[0].data();
+        const lastNo = lastDoc?.quoteNo;
+        console.log("[fetchLastQuoteNo] Found last quoteNo:", lastNo);
+        return lastNo || `EQ/SQ/${getFinancialYearString()}/00000`;
+      }
+      console.warn("[fetchLastQuoteNo] No quotes found in Firestore.");
+      return `EQ/SQ/${getFinancialYearString()}/00000`;
+    } catch (err) {
+      console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
+      return `EQ/SQ/${getFinancialYearString()}/00000`;
+    }
+  }
+
+  // ===== Generate next quoteNo =====
+  async function generateQuoteNo() {
+    const lastNo = await fetchLastQuoteNo();
+    const currentFY = getFinancialYearString();
+
+    const parts = (lastNo || "").split("/");
+    const fyPart = parts.length >= 3 ? parts[2] : currentFY;
+    const rawNum = parts[parts.length - 1];
+    const num = isNaN(parseInt(rawNum, 10)) ? 0 : parseInt(rawNum, 10);
+
+    let nextNum;
+    let newFY;
+
+    if (fyPart === currentFY) {
+      nextNum = num + 1;
+      newFY = currentFY;
+    } else {
+      nextNum = 1;
+      newFY = currentFY;
     }
 
-    console.warn("[fetchLastQuoteNo] No quotes found in Firestore.");
-    return `EQ/SQ/${getFinancialYearString()}/00000`;
-  } catch (err) {
-    console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
-    return `EQ/SQ/${getFinancialYearString()}/00000`;
+    const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(5, "0")}`;
+    console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
+    return newNo;
   }
-}
-
-// ===== Generate next quoteNo =====
-async function generateQuoteNo() {
-  const lastNo = await fetchLastQuoteNo();
-  const currentFY = getFinancialYearString();
-
-  // Defensive parsing
-  const parts = (lastNo || "").split("/");
-  const fyPart = parts.length >= 3 ? parts[2] : currentFY;
-  const rawNum = parts[parts.length - 1];
-  const num = isNaN(parseInt(rawNum, 10)) ? 0 : parseInt(rawNum, 10);
-
-  let nextNum;
-  let newFY;
-
-  if (fyPart === currentFY) {
-    // Same FY → increment
-    nextNum = num + 1;
-    newFY = currentFY;
-  } else {
-    // New FY → reset counter
-    nextNum = 1;
-    newFY = currentFY;
-  }
-
-  const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(5, "0")}`;
-  console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
-  return newNo;
-}
 
   // ===== Populate hospital dropdown =====
   function populateHospitalDropdown() {
     const hospitals = JSON.parse(localStorage.getItem('hospitals') || '[]');
     const select = document.getElementById('hospitalSelect');
-    select.innerHTML = ""; // clear old options
+    select.innerHTML = "";
     hospitals.forEach((hosp, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
@@ -660,7 +651,6 @@ async function generateQuoteNo() {
         return;
       }
 
-      // Save to Firestore immediately
       const colRef = collection(db, "quoteHistory");
       const newDoc = await addDoc(colRef, {
         ...headerData,
@@ -671,13 +661,11 @@ async function generateQuoteNo() {
 
       console.log("[quoteSetupForm] New quote saved to Firestore with id:", newDoc.id);
 
-      // Save to localStorage for continuity in quotes.html
       localStorage.setItem('quoteHeader', JSON.stringify({
         ...headerData,
         docId: newDoc.id
       }));
 
-      // Redirect to quotes.html with docId in URL
       window.location.href = `quotes.html?id=${newDoc.id}`;
     } catch (err) {
       console.error("[quoteSetupForm] Error saving quote to Firestore:", err);
