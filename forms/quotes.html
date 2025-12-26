@@ -145,18 +145,19 @@ header {
 
 .company-address {
   margin: 0;
-  line-height: 1.3; /* keeps lines close but readable */
-  font-size: 12px;
-  white-space: normal;   /* allow wrapping */
-  overflow: visible;     /* show full text */
-  text-overflow: unset;  /* no ellipsis */
+  line-height: 1.2; /* keeps it compact */
+  font-size: 11px;
+  white-space: nowrap;     /* prevent wrapping */
+  overflow: hidden;        /* hide overflow if too long */
+  text-overflow: ellipsis; /* show "..." if it doesn’t fit */
 }
 
 .company-address strong {
-  display: block; /* company name on its own line */
-  margin-bottom: 2px; /* tiny gap */
+  display: inline;         /* keep company name inline with address */
+  font-size: 11.5px;       /* slightly larger for emphasis */
+  margin-right: 4px;       /* small gap between name and address */
 }
-    
+   
 .sales-box {
   flex: 0 0 auto;
   background: #d0d4d9; /* original gray */
