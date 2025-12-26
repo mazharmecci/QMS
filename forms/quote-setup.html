@@ -251,7 +251,7 @@
       outline: none;
     }
     
-    /* ===== Sales note (dark/glass block) ===== */
+    /* ===== Sales note (white block) ===== */
     
     .sales-note-block {
       grid-column: span 2;
@@ -273,22 +273,27 @@
       min-height: 90px;
       padding: 0.6rem 0.75rem;
       font-size: 0.8rem;
-      border: 1px solid rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.7);
       border-radius: var(--radius-sm);
       resize: vertical;
-      background: rgba(15, 23, 42, 0.98);
+      background: #ffffff;                 /* white background */
       font-family: system-ui, sans-serif;
       white-space: pre-wrap;
-      color: #e5e7eb;
+      color: var(--text-main);             /* dark text */
+    }
+    
+    #salesNote::placeholder {
+      color: var(--text-muted);
+      white-space: pre-line;               /* keep your multiline placeholder formatting */
     }
     
     #salesNote:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
     }
     
-    /* ===== Terms block (dark/glass panel) ===== */
+    /* ===== Terms block (white panel) ===== */
     
     .terms-heading {
       grid-column: span 2;
@@ -307,12 +312,12 @@
       grid-column: span 2;
       margin-top: 0.4rem;
       padding: 1rem;
-      border: 1px solid rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.7);
       border-radius: var(--radius-md);
-      background: rgba(15, 23, 42, 0.98);
+      background: #ffffff;                 /* white background */
       font-size: 0.8rem;
       line-height: 1.5;
-      color: #e5e7eb;
+      color: var(--text-main);             /* dark text */
       max-height: 360px;
       overflow-y: auto;
     }
@@ -322,7 +327,7 @@
     }
     
     #termsTextBlock strong {
-      color: #f9fafb;
+      color: var(--text-main);
       font-weight: 700;
     }
     
@@ -345,7 +350,7 @@
       font-weight: 600;
       color: var(--text-muted);
     }
-    
+
     /* Quote signer highlight preserved */
     
     .quote-sender-highlight {
@@ -481,7 +486,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
         <p>------------------------------</p>
         <p><strong>For ISTOS Medical Private Limited</strong></p>
         <br><br>
-        <div class="quote-sender-highlight"> </div>
+        <div class="quote-sender-highlight">Guest</div>
       </div>
     </div>
 
