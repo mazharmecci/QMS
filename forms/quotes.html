@@ -1339,10 +1339,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-// Back button → go to index.html
-document.getElementById("backBtn")?.addEventListener("click", () => {
-  window.location.href = "index.html";
-});
+// ===== Go back handler =====
+function goBack() {
+  if (history.length > 1) {
+    history.back();
+  } else {
+    location.href = "index.html";
+  }
+}
+
+// Wire back button
+document.getElementById("backBtn")?.addEventListener("click", goBack);
+
 
 // Logout button → sign out
 document.getElementById("logoutBtn")?.addEventListener("click", async () => {
