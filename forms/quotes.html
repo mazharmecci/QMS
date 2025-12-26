@@ -925,7 +925,11 @@ Next lines: brief description"></textarea>
     addMasterItemToLine
   } from "../js/quoteUI.js";
 
-  import { db, doc, getDoc } from "../js/firebase.js";
+  // ✅ Import Firestore instance and helpers from firebase.js
+import { db, doc, getDoc, collection } from "../js/firebase.js";
+
+</script>
+
 
   const HOME_URL = "https://qms.istosmedical.com/";
   let currentQuoteDocId = null;
