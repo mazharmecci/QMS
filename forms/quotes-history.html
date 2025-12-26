@@ -9,15 +9,15 @@
       --bg-gradient: radial-gradient(circle at 25% 25%, #3b82f6 0, #3f5a91 40%, #111827 90%);
       --card-bg: #ffffff; /* white container */
       --accent: #3b82f6;
-      --accent-soft: rgba(59, 130, 246, 0.18);
-      --accent-soft-2: rgba(37, 99, 235, 0.25);
+      --accent-soft: rgba(59, 130, 246, 0.12);
+      --accent-soft-2: rgba(37, 99, 235, 0.16);
       --error: #f97373;
       --text-main: #0f172a;
       --text-muted: #6b7280;
       --radius-lg: 18px;
       --radius-md: 12px;
       --radius-sm: 8px;
-      --shadow-soft: 0 24px 70px rgba(15, 23, 42, 0.45);
+      --shadow-soft: 0 18px 50px rgba(15, 23, 42, 0.35);
       --border-subtle: 1px solid rgba(148, 163, 184, 0.26);
     }
     
@@ -40,17 +40,18 @@
       z-index: -2;
     }
     
-    /* ===== Header (top bar) ===== */
+    /* ===== Header (top bar) – keep dark/glossy ===== */
     
     header {
       position: sticky;
       top: 0;
       z-index: 20;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.95);
       border-bottom: var(--border-subtle);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       color: #e5e7eb;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.7);
     }
     
     .header-inner {
@@ -64,7 +65,7 @@
     
     .back-btn {
       border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.9);
       color: #e5e7eb;
       padding: 0.4rem 0.9rem;
       border-radius: 999px;
@@ -74,11 +75,12 @@
       align-items: center;
       gap: 6px;
       transition: all 0.18s ease-out;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.7);
     }
     
     .back-btn:hover {
       background: rgba(15, 23, 42, 1);
-      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.7);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.8);
       transform: translateY(-1px);
     }
     
@@ -132,7 +134,7 @@
       color: var(--accent);
     }
     
-    /* ===== Dashboard stats ===== */
+    /* ===== Dashboard stats – soften to light cards ===== */
     
     .dashboard {
       display: grid;
@@ -146,18 +148,19 @@
       overflow: hidden;
       text-align: left;
       padding: 0.9rem 1rem;
-      background: rgba(15, 23, 42, 0.96);
+      background: #f9fafb;
       border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-main);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.15);
     }
     
     .stat-card::before {
       content: "";
       position: absolute;
       inset: -1px;
-      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.5), transparent 55%);
-      opacity: 0.25;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.2), transparent 55%);
+      opacity: 0.7;
       z-index: -1;
     }
     
@@ -173,7 +176,7 @@
       margin-top: 0.15rem;
     }
     
-    /* ===== Controls (filters + actions) ===== */
+    /* ===== Controls (filters + actions) – light strip ===== */
     
     .controls {
       display: flex;
@@ -183,18 +186,18 @@
       margin-bottom: 1.25rem;
       padding: 0.9rem;
       border-radius: var(--radius-md);
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      color: #e5e7eb;
+      background: #f3f4f6;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: var(--text-main);
     }
     
     .controls input,
     .controls select {
       padding: 0.45rem 0.8rem;
       border-radius: var(--radius-sm);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(15, 23, 42, 0.98);
-      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: #ffffff;
+      color: var(--text-main);
       font-size: 0.86rem;
     }
     
@@ -206,7 +209,7 @@
     .controls select:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
     }
     
     /* ===== Buttons ===== */
@@ -224,30 +227,31 @@
     .btn-primary {
       background: linear-gradient(135deg, #3b82f6, #6366f1);
       color: #fff;
-      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.5);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.45);
     }
     
     .btn-secondary {
-      background: rgba(15, 23, 42, 0.95);
-      color: #e5e7eb;
-      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: #e5e7eb;
+      color: #111827;
+      border: 1px solid rgba(148, 163, 184, 0.7);
     }
     
     .btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.6);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.25);
     }
     
-    /* ===== Table wrapper + table ===== */
+    /* ===== Table wrapper + table – white list area ===== */
     
     .table-wrapper {
       margin: 0 auto;
       border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: #ffffff;
       overflow: hidden;
       padding: 4px 6px;
-      color: #e5e7eb;
+      color: var(--text-main);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
     }
     
     table {
@@ -260,24 +264,28 @@
       padding: 0.6rem 1.1rem;
       text-align: left;
       font-size: 0.85rem;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      border-bottom: 1px solid #e5e7eb;
       white-space: nowrap;
     }
     
     th {
-      background: linear-gradient(to right, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9));
+      background: linear-gradient(to right, #f3f4f6, #e5e7eb);
       font-weight: 600;
-      color: var(--text-muted);
+      color: #4b5563;
       cursor: pointer;
       user-select: none;
     }
     
     tr:nth-child(even) td {
-      background: rgba(15, 23, 42, 0.9);
+      background: #f9fafb;
+    }
+    
+    tr:nth-child(odd) td {
+      background: #ffffff;
     }
     
     tr:hover td {
-      background: rgba(15, 23, 42, 1);
+      background: #e5f2ff;
     }
     
     /* ===== Row actions ===== */
@@ -298,18 +306,18 @@
     }
     
     .delete-btn {
-      background: rgba(239, 68, 68, 0.18);
-      color: #fecaca;
+      background: rgba(239, 68, 68, 0.12);
+      color: #b91c1c;
     }
     
     .status-btn {
-      background: rgba(34, 197, 94, 0.18);
-      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.12);
+      color: #15803d;
     }
     
     .actions button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
     }
     
     /* ===== Status badges ===== */
@@ -323,24 +331,25 @@
     }
     
     .status-submitted {
-      background: rgba(250, 204, 21, 0.16);
-      color: #facc15;
+      background: rgba(250, 204, 21, 0.12);
+      color: #854d0e;
     }
     
     .status-approved {
-      background: rgba(34, 197, 94, 0.18);
-      color: #4ade80;
+      background: rgba(34, 197, 94, 0.12);
+      color: #166534;
     }
     
-    /* ===== Quote detail panel ===== */
+    /* ===== Quote detail panel – light card ===== */
     
     .quote-details {
       margin-top: 1.6rem;
       padding: 1.2rem 1.25rem;
-      background: rgba(15, 23, 42, 0.96);
+      background: #f9fafb;
       border-radius: var(--radius-md);
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      color: var(--text-main);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
     }
     
     .details-grid {
@@ -355,21 +364,24 @@
       font-size: 0.85rem;
     }
     
-    /* ===== Status timeline ===== */
+    /* ===== Status timeline – soft strip ===== */
     
     .status-timeline {
       margin-top: 1.2rem;
       padding: 0.9rem 1.1rem;
-      background: rgba(15, 23, 42, 0.98);
+      background: #ffffff;
       border-radius: var(--radius-sm);
       border-left: 3px solid var(--accent);
+      border-top: 1px solid rgba(148, 163, 184, 0.4);
+      border-right: 1px solid rgba(148, 163, 184, 0.4);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
     }
     
     .timeline-item {
       display: flex;
       gap: 0.75rem;
       padding: 0.45rem 0;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.8);
+      border-bottom: 1px solid #e5e7eb;
     }
     
     .timeline-item:last-child {
