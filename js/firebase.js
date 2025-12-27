@@ -1,5 +1,3 @@
-// firebase.js
-
 import { initializeApp, getApps, getApp } 
   from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
@@ -24,6 +22,13 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
 // ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
@@ -38,14 +43,16 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // ===== Core services =====
-const db   = getFirestore(app);
-const auth = getAuth(app);
+const db      = getFirestore(app);
+const auth    = getAuth(app);
+const storage = getStorage(app);
 
 // ===== Unified exports =====
 export {
   // Core instances
   db,
   auth,
+  storage,
 
   // Firestore helpers
   collection,
@@ -62,5 +69,10 @@ export {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  signOut
+  signOut,
+
+  // Storage helpers
+  ref,
+  uploadBytes,
+  getDownloadURL
 };
