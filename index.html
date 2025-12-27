@@ -422,46 +422,71 @@
     </div>
   </main>
 
-  <script type="module">
-    import { auth, signOut } from "./js/firebase.js";
+<script type="module">
+  import { auth, signOut } from "./js/firebase.js";
 
-    function navigate(page) {
-      window.location.href = `forms/${page}`;
+  /**
+   * Auth check: redirect non‑auth users to login
+   */
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      // Not logged in → force redirect
+      window.location.href = "login.html";
     }
+  });
 
-    function exportBackup() {
-      const data = {
-        hospitals: JSON.parse(localStorage.getItem("hospitals") || "[]"),
-        instruments: JSON.parse(localStorage.getItem("instruments") || "[]"),
-        quotes: JSON.parse(localStorage.getItem("quotes") || "[]"),
-        quoteHeader: JSON.parse(localStorage.getItem("quoteHeader") || "{}")
-      };
+  /**
+   * Navigate to a form page
+   * @param {string} page - target page filename
+   */
+  function navigate(page) {
+    window.location.href = `forms/${page}`;
+  }
 
-      const json = JSON.stringify(data, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
+  /**
+   * Export localStorage data as JSON backup
+   */
+  function exportBackup() {
+    const data = {
+      hospitals: JSON.parse(localStorage.getItem("hospitals") || "[]"),
+      instruments: JSON.parse(localStorage.getItem("instruments") || "[]"),
+      quotes: JSON.parse(localStorage.getItem("quotes") || "[]"),
+      quoteHeader: JSON.parse(localStorage.getItem("quoteHeader") || "{}")
+    };
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "qms-backup-" + new Date().toISOString().slice(0, 10) + ".json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `qms-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Handle logout
+   */
+  async function handleLogout() {
+    try {
+      await signOut(auth);
+      window.location.href = "login.html";
+    } catch (err) {
+      console.error("Failed to sign out", err);
+      alert("Could not log out. Please try again.");
     }
+  }
 
-    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "login.html";
-      } catch (err) {
-        console.error("Failed to sign out", err);
-        alert("Could not log out. Please try again.");
-      }
-    });
+  // Wire up logout button if present
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", handleLogout);
+  }
 
-    window.navigate = navigate;
-    window.exportBackup = exportBackup;
-  </script>
+  // Expose functions globally if needed
+  window.navigate = navigate;
+  window.exportBackup = exportBackup;
+</script>
 </body>
 </html>
