@@ -637,132 +637,151 @@ td.actions {
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
-  // ===== Delete (owner-only) =====
-  async function deleteQuote(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
-
-    if (!currentUserUid || q.createdBy !== currentUserUid) {
-      alert("You can only delete quotes you created.");
-      return;
+    // ===== Globals =====
+    const detailsDiv = document.getElementById("detailsDiv");
+    
+    // ===== Delete (owner-only) =====
+    async function deleteQuote(index) {
+      const q = filteredQuotes[index];
+      if (!q) return;
+    
+      // Ownership check
+      if (!currentUserUid || q.createdBy !== currentUserUid) {
+        alert("You can only delete quotes you created.");
+        return;
+      }
+    
+      // Confirm deletion
+      if (!confirm("Delete this quote from history?")) return;
+    
+      try {
+        // Delete from Firestore
+        await deleteDoc(doc(db, "quoteHistory", q.id));
+    
+        // Update local arrays
+        quotes = quotes.filter(x => x.id !== q.id);
+        filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
+    
+        // Re-render table
+        renderTable(filteredQuotes);
+    
+        // Hide details panel
+        detailsDiv.classList.add("hidden");
+      } catch (err) {
+        console.error("Failed to delete quote", err);
+        alert("Failed to delete quote");
+      }
     }
-
-    if (!confirm("Delete this quote from history?")) return;
-
-    try {
-      await deleteDoc(doc(db, "quoteHistory", q.id));
-      quotes = quotes.filter(x => x.id !== q.id);
-      filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
-      renderTable(filteredQuotes);
-      detailsDiv.classList.add("hidden");
-    } catch (err) {
-      console.error("Failed to delete quote", err);
-      alert("Failed to delete quote");
-    }
-  }
-
-  // ===== Detail view (base + revisions) =====
-  async function viewQuote(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
-
-    const items = q.items || [];
-    const hosp  = q.hospital || {};
-
-    let revisions = [];
-    try {
-      revisions = await loadRevisionsForQuote(q.id);
-    } catch (err) {
-      console.error("Failed to load revisions", err);
-    }
-
-    let html = `
-      <div class="quote-details">
-        <h3>Quote Details - ${q.quoteNo || ""}</h3>
-        <div class="details-grid">
-          <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
-          <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
-          <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
-          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Submitted"}</span></p>
-          <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
-          <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
-          <p><strong>Email:</strong> ${hosp.email || "-"}</p>
-          <p><strong>Address:</strong> ${hosp.address || "-"}</p>
-        </div>
-
-        <h4>Line Items (Latest)</h4>
-        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
-          <thead>
-            <tr style="background:#f0f4f8;">
-              <th>Instrument</th>
-              <th>Code</th>
-              <th style="text-align:right;">Qty</th>
-              <th style="text-align:right;">Unit Price</th>
-              <th style="text-align:right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    items.forEach(li => {
-      html += `
-        <tr>
-          <td>${li.instrumentName || ""}</td>
-          <td>${li.instrumentCode || ""}</td>
-          <td style="text-align:right;">${li.quantity || 0}</td>
-          <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
-          <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
-        </tr>
+    
+    // ===== Detail view (base + revisions) =====
+    async function viewQuote(index) {
+      const q = filteredQuotes[index];
+      if (!q) return;
+    
+      const items = q.items || [];
+      const hosp  = q.hospital || {};
+    
+      // Load revisions
+      let revisions = [];
+      try {
+        revisions = await loadRevisionsForQuote(q.id);
+      } catch (err) {
+        console.error("Failed to load revisions", err);
+      }
+    
+      // Build HTML
+      let html = `
+        <div class="quote-details">
+          <h3>Quote Details - ${q.quoteNo || ""}</h3>
+          <div class="details-grid">
+            <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
+            <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
+            <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
+            <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Submitted"}</span></p>
+            <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
+            <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
+            <p><strong>Email:</strong> ${hosp.email || "-"}</p>
+            <p><strong>Address:</strong> ${hosp.address || "-"}</p>
+          </div>
+    
+          <h4>Line Items (Latest)</h4>
+          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
+            <thead>
+              <tr style="background:#f0f4f8;">
+                <th>Instrument</th>
+                <th>Code</th>
+                <th style="text-align:right;">Qty</th>
+                <th style="text-align:right;">Unit Price</th>
+                <th style="text-align:right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
       `;
-    });
-
-    html += `
-          </tbody>
-        </table>
-
-        <h4>Summary (Latest)</h4>
-        <div class="details-grid">
-          <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
-          <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
-        </div>
-    `;
-
-    html += `
-      <h4>Revisions</h4>
-    `;
-
-    if (revisions.length) {
-      html += `<ul style="margin-top:0.5rem;">`;
-      revisions.forEach(r => {
-        const revNo = r.revision || "?";
-        const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
-        const createdAt =
-          r.createdAt && r.createdAt.toDate
-            ? r.createdAt.toDate().toISOString().slice(0, 10)
-            : "";
+    
+      items.forEach(li => {
         html += `
-          <li style="margin-bottom:4px;">
-            <strong>Rev ${revNo}</strong>
-            &nbsp;|&nbsp; Date: ${createdAt || "-"}
-            &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
-          </li>
+          <tr>
+            <td>${li.instrumentName || ""}</td>
+            <td>${li.instrumentCode || ""}</td>
+            <td style="text-align:right;">${li.quantity || 0}</td>
+            <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
+            <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
+          </tr>
         `;
       });
-      html += `</ul>`;
-    } else {
-      html += `<p>No revision snapshots found.</p>`;
+    
+      html += `
+            </tbody>
+          </table>
+    
+          <h4>Summary (Latest)</h4>
+          <div class="details-grid">
+            <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
+            <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
+          </div>
+    
+          <h4>Revisions</h4>
+      `;
+    
+      if (revisions.length) {
+        html += `<ul style="margin-top:0.5rem;">`;
+        revisions.forEach(r => {
+          const revNo = r.revision || "?";
+          const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
+          const createdAt =
+            r.createdAt && r.createdAt.toDate
+              ? r.createdAt.toDate().toISOString().slice(0, 10)
+              : "-";
+          html += `
+            <li style="margin-bottom:4px;">
+              <strong>Rev ${revNo}</strong>
+              &nbsp;|&nbsp; Date: ${createdAt}
+              &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
+            </li>
+          `;
+        });
+        html += `</ul>`;
+      } else {
+        html += `<p>No revision snapshots found.</p>`;
+      }
+    
+      html += `
+          <div style="margin-top:1.5rem; text-align:right;">
+            <button id="closeDetails" class="btn btn-secondary">Close</button>
+          </div>
+        </div>
+      `;
+    
+      // Render into detailsDiv
+      detailsDiv.innerHTML = html;
+      detailsDiv.classList.remove("hidden");
+    
+      // Wire up close button
+      document.getElementById("closeDetails").addEventListener("click", () => {
+        detailsDiv.classList.add("hidden");
+      });
     }
 
-    html += `
-        <div style="margin-top:1.5rem; text-align:right;">
-          <button class="btn btn-secondary" onclick="detailsDiv.classList.add('hidden')">Close</button>
-        </div>
-      </div>
-    `;
-
-    detailsDiv.innerHTML = html;
-    detailsDiv.classList.remove("hidden");
-  }
 
   // ===== CSV Export =====
   function exportCSV() {
@@ -795,6 +814,9 @@ td.actions {
   }
 
   // ===== Wire globals =====
+
+  const detailsDiv = document.getElementById("detailsDiv"); // <-- add this line
+  
   window.goBack        = goBack;
   window.applyFilters  = applyFilters;
   window.clearFilters  = clearFilters;
