@@ -249,16 +249,20 @@
 <!-- Firebase service logic -->
 <script type="module">
   import { auth, onAuthStateChanged } from "../js/firebase.js";
-  import "../js/istosService.js"; // ✅ correct relative path from forms/ to js/
+  import { initServiceForm } from "../js/istosService.js"; // export a setup function from istosService.js
 
   // Auth guard: redirect if not logged in
   onAuthStateChanged(auth, user => {
     if (!user) {
       alert("You must be logged in to upload photos.");
       window.location.href = "login.html";
+    } else {
+      // Initialize service form logic only if authenticated
+      initServiceForm();
     }
   });
 </script>
+
 
 </body>
 </html>
