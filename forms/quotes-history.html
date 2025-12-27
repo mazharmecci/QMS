@@ -7,7 +7,7 @@
   <style>
     :root {
       --bg-gradient: radial-gradient(circle at 25% 25%, #3b82f6 0, #3f5a91 40%, #111827 90%);
-      --card-bg: #ffffff; /* white container */
+      --card-bg: #ffffff;
       --accent: #3b82f6;
       --accent-soft: rgba(59, 130, 246, 0.12);
       --accent-soft-2: rgba(37, 99, 235, 0.16);
@@ -20,8 +20,8 @@
       --shadow-soft: 0 18px 50px rgba(15, 23, 42, 0.35);
       --border-subtle: 1px solid rgba(148, 163, 184, 0.26);
     }
-    
-/* ===== Base layout ===== */
+
+    /* ===== Base layout ===== */
 
 body {
   margin: 0;
@@ -252,14 +252,15 @@ h2 span {
   padding: 4px 6px;
   color: var(--text-main);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  overflow-x: scroll;   /* enable horizontal scroll */
+  overflow-x: auto;   /* enable horizontal scroll */
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch; /* smooth scroll on laptops/touchpads */
 }
 
-table { 
-  width: max-content; /* table grows to fit all columns */   
-  border-collapse: collapse; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;   /* ensure all columns fit */
+}
 
 th,
 td {
@@ -292,16 +293,10 @@ tr:hover td {
 
 /* ===== Row actions ===== */
 
-.actions { 
-  display: flex; 
-  flex-wrap: wrap; /* allow wrapping */ 
-  gap: 4px; 
+.actions {
+  display: flex;
+  flex-wrap: wrap; /* allow wrapping */
 }
-
-td.actions { 
-  white-space: normal; /* override nowrap */ 
-}
-    
 .actions button {
   margin-right: 0.3rem;
   margin-bottom: 4px;
@@ -334,7 +329,6 @@ td.actions {
 
 <div class="quotes-shell">
   <div class="container">
-    <!-- Dashboard -->
     <div class="dashboard">
       <div class="stat-card">
         <div class="stat-number" id="statTotal">0</div>
@@ -356,7 +350,6 @@ td.actions {
 
     <h2>📋 Saved Quotes</h2>
 
-    <!-- Filters -->
     <div class="controls">
       <input id="filterQuoteNo" placeholder="Quote No...">
       <input id="filterHospital" placeholder="Hospital...">
@@ -367,9 +360,7 @@ td.actions {
       <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
     </div>
 
-    <!-- Table centered & widened -->
     <div class="table-wrapper">
-      <div id="detailsDiv" class="hidden"></div>
       <table id="quoteTable">
         <thead>
         <tr>
@@ -385,10 +376,10 @@ td.actions {
         </thead>
         <tbody></tbody>
       </table>
-    </div>
 
-    <!-- Details -->
-    <div id="quoteDetails" class="hidden"></div>
+      <!-- INLINE DETAILS PANEL -->
+      <div id="detailsDiv" class="hidden"></div>
+    </div>
   </div>
 </div>
 
@@ -408,19 +399,17 @@ td.actions {
 
   const QUOTES_URL = "quotes.html";
 
-  // ===== Auth state =====
   let currentUserUid = null;
   onAuthStateChanged(auth, (user) => {
     currentUserUid = user ? user.uid : null;
   });
 
-  // ===== State =====
   let quotes = [];
   let filteredQuotes = [];
   let sortConfig = { key: null, direction: "asc" };
 
   const tbody = document.querySelector("#quoteTable tbody");
-  const detailsDiv = document.getElementById("quoteDetails");
+  const detailsDiv = document.getElementById("detailsDiv");
 
   function goBack() {
     if (history.length > 1) history.back();
@@ -439,7 +428,6 @@ td.actions {
     return "status-" + s;
   }
 
-  // Map auth UID → email prefix
   const USER_UID_TO_PREFIX = {
     "MUkO1OZ2KCfWvvoMHAHcuQm4FjH3": "mazhar",
     "LIvqyOhAUkPpivMXbSK4sIB8I8T2": "s.khan"
@@ -454,7 +442,6 @@ td.actions {
     return createdBy;
   }
 
-  // ===== Firestore load (base quotes only) =====
   async function loadQuotes() {
     const snap = await getDocs(collection(db, "quoteHistory"));
     quotes = snap.docs.map(d => ({
@@ -465,7 +452,6 @@ td.actions {
     renderTable();
   }
 
-  // ===== Helper: load all revisions for a quote =====
   async function loadRevisionsForQuote(quoteId) {
     const revColRef = collection(db, "quoteHistory", quoteId, "revisions");
     const revSnap = await getDocs(revColRef);
@@ -486,7 +472,6 @@ td.actions {
     });
   }
 
-  // ===== Table render =====
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = "";
 
@@ -510,8 +495,8 @@ td.actions {
         <td>${creator}</td>
         <td class="actions">
           <button class="view-btn" onclick="viewQuote(${i})">View</button>
-          <button class="status-btn" onclick="advanceStatus(${i})">Next</button>
           <button class="view-btn" onclick="editQuote(${i})">Edit</button>
+          <button class="view-btn" onclick="advanceStatus(${i})">Next</button>
           <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
         </td>
       `;
@@ -521,7 +506,6 @@ td.actions {
     updateDashboard();
   }
 
-  // ===== Dashboard: Submitted / Approved only =====
   function updateDashboard() {
     const total = quotes.length;
     const submittedOrApproved = quotes.filter(q => {
@@ -540,7 +524,6 @@ td.actions {
       submittedOrApproved ? approvalRate + "%" : "--";
   }
 
-  // ===== Filters =====
   function applyFilters() {
     const fQuote    = document.getElementById("filterQuoteNo").value.trim().toLowerCase();
     const fHospital = document.getElementById("filterHospital").value.trim().toLowerCase();
@@ -571,7 +554,6 @@ td.actions {
     renderTable(filteredQuotes);
   }
 
-  // ===== Sorting =====
   function sortBy(key) {
     if (sortConfig.key === key) {
       sortConfig.direction = sortConfig.direction === "asc" ? "desc" : "asc";
@@ -602,7 +584,6 @@ td.actions {
     renderTable(filteredQuotes);
   }
 
-  // ===== Status advance (Submitted / Approved only) =====
   async function advanceStatus(index) {
     const q = filteredQuotes[index];
     if (!q) return;
@@ -625,7 +606,6 @@ td.actions {
     }
   }
 
-  // ===== Edit in quotes.html (owner-only) =====
   function editQuote(index) {
     const q = filteredQuotes[index];
     if (!q) return;
@@ -638,153 +618,135 @@ td.actions {
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
-    // ===== Globals =====
-    const detailsDiv = document.getElementById("detailsDiv");
-    
-    // ===== Delete (owner-only) =====
-    async function deleteQuote(index) {
-      const q = filteredQuotes[index];
-      if (!q) return;
-    
-      // Ownership check
-      if (!currentUserUid || q.createdBy !== currentUserUid) {
-        alert("You can only delete quotes you created.");
-        return;
-      }
-    
-      // Confirm deletion
-      if (!confirm("Delete this quote from history?")) return;
-    
-      try {
-        // Delete from Firestore
-        await deleteDoc(doc(db, "quoteHistory", q.id));
-    
-        // Update local arrays
-        quotes = quotes.filter(x => x.id !== q.id);
-        filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
-    
-        // Re-render table
-        renderTable(filteredQuotes);
-    
-        // Hide details panel
-        detailsDiv.classList.add("hidden");
-      } catch (err) {
-        console.error("Failed to delete quote", err);
-        alert("Failed to delete quote");
-      }
+  async function deleteQuote(index) {
+    const q = filteredQuotes[index];
+    if (!q) return;
+
+    if (!currentUserUid || q.createdBy !== currentUserUid) {
+      alert("You can only delete quotes you created.");
+      return;
     }
-    
-    // ===== Detail view (base + revisions) =====
-    async function viewQuote(index) {
-      const q = filteredQuotes[index];
-      if (!q) return;
-    
-      const items = q.items || [];
-      const hosp  = q.hospital || {};
-    
-      // Load revisions
-      let revisions = [];
-      try {
-        revisions = await loadRevisionsForQuote(q.id);
-      } catch (err) {
-        console.error("Failed to load revisions", err);
-      }
-    
-      // Build HTML
-      let html = `
-        <div class="quote-details">
-          <h3>Quote Details - ${q.quoteNo || ""}</h3>
-          <div class="details-grid">
-            <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
-            <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
-            <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
-            <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Submitted"}</span></p>
-            <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
-            <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
-            <p><strong>Email:</strong> ${hosp.email || "-"}</p>
-            <p><strong>Address:</strong> ${hosp.address || "-"}</p>
-          </div>
-    
-          <h4>Line Items (Latest)</h4>
-          <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
-            <thead>
-              <tr style="background:#f0f4f8;">
-                <th>Instrument</th>
-                <th>Code</th>
-                <th style="text-align:right;">Qty</th>
-                <th style="text-align:right;">Unit Price</th>
-                <th style="text-align:right;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
+
+    if (!confirm("Delete this quote from history?")) return;
+
+    try {
+      await deleteDoc(doc(db, "quoteHistory", q.id));
+
+      quotes = quotes.filter(x => x.id !== q.id);
+      filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
+
+      renderTable(filteredQuotes);
+      detailsDiv.classList.add("hidden");
+    } catch (err) {
+      console.error("Failed to delete quote", err);
+      alert("Failed to delete quote");
+    }
+  }
+
+  async function viewQuote(index) {
+    const q = filteredQuotes[index];
+    if (!q) return;
+
+    const items = q.items || [];
+    const hosp  = q.hospital || {};
+
+    let revisions = [];
+    try {
+      revisions = await loadRevisionsForQuote(q.id);
+    } catch (err) {
+      console.error("Failed to load revisions", err);
+    }
+
+    let html = `
+      <div class="quote-details">
+        <h3>Quote Details - ${q.quoteNo || ""}</h3>
+        <div class="details-grid">
+          <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
+          <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
+          <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Submitted"}</span></p>
+          <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
+          <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
+          <p><strong>Email:</strong> ${hosp.email || "-"}</p>
+          <p><strong>Address:</strong> ${hosp.address || "-"}</p>
+        </div>
+
+        <h4>Line Items (Latest)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
+          <thead>
+            <tr style="background:#f0f4f8;">
+              <th>Instrument</th>
+              <th>Code</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Unit Price</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    items.forEach(li => {
+      html += `
+        <tr>
+          <td>${li.instrumentName || ""}</td>
+          <td>${li.instrumentCode || ""}</td>
+          <td style="text-align:right;">${li.quantity || 0}</td>
+          <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
+          <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
+        </tr>
       `;
-    
-      items.forEach(li => {
+    });
+
+    html += `
+          </tbody>
+        </table>
+
+        <h4>Summary (Latest)</h4>
+        <div class="details-grid">
+          <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
+          <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
+        </div>
+
+        <h4>Revisions</h4>
+    `;
+
+    if (revisions.length) {
+      html += `<ul style="margin-top:0.5rem;">`;
+      revisions.forEach(r => {
+        const revNo = r.revision || "?";
+        const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
+        const createdAt =
+          r.createdAt && r.createdAt.toDate
+            ? r.createdAt.toDate().toISOString().slice(0, 10)
+            : "-";
         html += `
-          <tr>
-            <td>${li.instrumentName || ""}</td>
-            <td>${li.instrumentCode || ""}</td>
-            <td style="text-align:right;">${li.quantity || 0}</td>
-            <td style="text-align:right;">₹ ${moneyINR(li.unitPrice)}</td>
-            <td style="text-align:right;">₹ ${moneyINR(li.totalPrice)}</td>
-          </tr>
+          <li style="margin-bottom:4px;">
+            <strong>Rev ${revNo}</strong>
+            &nbsp;|&nbsp; Date: ${createdAt}
+            &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
+          </li>
         `;
       });
-    
-      html += `
-            </tbody>
-          </table>
-    
-          <h4>Summary (Latest)</h4>
-          <div class="details-grid">
-            <p><strong>GST @ ${items[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
-            <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
-          </div>
-    
-          <h4>Revisions</h4>
-      `;
-    
-      if (revisions.length) {
-        html += `<ul style="margin-top:0.5rem;">`;
-        revisions.forEach(r => {
-          const revNo = r.revision || "?";
-          const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
-          const createdAt =
-            r.createdAt && r.createdAt.toDate
-              ? r.createdAt.toDate().toISOString().slice(0, 10)
-              : "-";
-          html += `
-            <li style="margin-bottom:4px;">
-              <strong>Rev ${revNo}</strong>
-              &nbsp;|&nbsp; Date: ${createdAt}
-              &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
-            </li>
-          `;
-        });
-        html += `</ul>`;
-      } else {
-        html += `<p>No revision snapshots found.</p>`;
-      }
-    
-      html += `
-          <div style="margin-top:1.5rem; text-align:right;">
-            <button id="closeDetails" class="btn btn-secondary">Close</button>
-          </div>
-        </div>
-      `;
-    
-      // Render into detailsDiv
-      detailsDiv.innerHTML = html;
-      detailsDiv.classList.remove("hidden");
-    
-      // Wire up close button
-      document.getElementById("closeDetails").addEventListener("click", () => {
-        detailsDiv.classList.add("hidden");
-      });
+      html += `</ul>`;
+    } else {
+      html += `<p>No revision snapshots found.</p>`;
     }
 
+    html += `
+        <div style="margin-top:1.5rem; text-align:right;">
+          <button id="closeDetails" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    `;
 
-  // ===== CSV Export =====
+    detailsDiv.innerHTML = html;
+    detailsDiv.classList.remove("hidden");
+
+    document.getElementById("closeDetails").addEventListener("click", () => {
+      detailsDiv.classList.add("hidden");
+    });
+  }
+
   function exportCSV() {
     if (!quotes.length) {
       alert("No quotes to export.");
@@ -814,8 +776,6 @@ td.actions {
     URL.revokeObjectURL(url);
   }
 
-  // ===== Wire globals =====
-  
   window.goBack        = goBack;
   window.applyFilters  = applyFilters;
   window.clearFilters  = clearFilters;
@@ -833,6 +793,5 @@ td.actions {
 
   loadQuotes();
 </script>
-
 </body>
 </html>
