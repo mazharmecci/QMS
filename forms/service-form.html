@@ -246,23 +246,26 @@
     </div>
   </div>
 
-<!-- Firebase service logic -->
-<script type="module">
-  import { auth, onAuthStateChanged } from "../js/firebase.js";
-  import { initServiceForm } from "../js/istosService.js"; // export a setup function from istosService.js
-
-  // Auth guard: redirect if not logged in
-  onAuthStateChanged(auth, user => {
-    if (!user) {
-      alert("You must be logged in to upload photos.");
-      window.location.href = "login.html";
-    } else {
-      // Initialize service form logic only if authenticated
-      initServiceForm();
-    }
-  });
-</script>
-
+  <!-- Firebase service logic -->
+  <script type="module">
+    import { auth, onAuthStateChanged } from "../js/firebase.js";
+    import { initServiceForm } from "../js/istosService.js"; // exported setup function
+  
+    // Auth guard: only initialize form if user is logged in
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        alert("You must be logged in to upload photos.");
+        window.location.href = "login.html";
+      } else {
+        try {
+          initServiceForm();
+          console.log("Service form initialized for user:", user.uid);
+        } catch (err) {
+          console.error("Failed to initialize service form:", err);
+        }
+      }
+    });
+  </script>
 
 </body>
 </html>
