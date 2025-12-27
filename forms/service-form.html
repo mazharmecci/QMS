@@ -246,18 +246,20 @@
     </div>
   </div>
 
-  <!-- Firebase service logic -->
-  <script type="module">
-    import { auth, onAuthStateChanged } from "../js/firebase.js";
-    import "./istosService.js";
+<!-- Firebase service logic -->
+<script type="module">
+  import { auth, onAuthStateChanged } from "../js/firebase.js";
+  import "../js/istosService.js"; // ✅ correct relative path from forms/ to js/
 
-    // Auth guard: redirect if not logged in
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        alert("You must be logged in to upload photos.");
-        window.location.href = "login.html";
-      }
-    });
-  </script>
+  // Auth guard: redirect if not logged in
+  onAuthStateChanged(auth, user => {
+    if (!user) {
+      alert("You must be logged in to upload photos.");
+      window.location.href = "login.html";
+    }
+  });
+</script>
+
 </body>
 </html>
+
