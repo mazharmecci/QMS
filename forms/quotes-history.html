@@ -252,15 +252,14 @@ h2 span {
   padding: 4px 6px;
   color: var(--text-main);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
-  overflow-x: auto;   /* enable horizontal scroll */
+  overflow-x: scroll;   /* enable horizontal scroll */
   overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; /* smooth scroll on laptops/touchpads */
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;   /* ensure all columns fit */
-}
+table { 
+  width: max-content; /* table grows to fit all columns */   
+  border-collapse: collapse; }
 
 th,
 td {
@@ -293,10 +292,16 @@ tr:hover td {
 
 /* ===== Row actions ===== */
 
-.actions {
-  display: flex;
-  flex-wrap: wrap; /* allow wrapping */
+.actions { 
+  display: flex; 
+  flex-wrap: wrap; /* allow wrapping */ 
+  gap: 4px; 
 }
+
+td.actions { 
+  white-space: normal; /* override nowrap */ 
+}
+    
 .actions button {
   margin-right: 0.3rem;
   margin-bottom: 4px;
