@@ -188,30 +188,76 @@
   </style>
 </head>
 <body>
+  <!-- Background gradient -->
   <div class="quote-setup-gradient"></div>
 
+  <!-- Sticky header -->
   <header>
     <div class="header-inner">
+      <button class="back-btn" onclick="navigate('index.html')">← Back</button>
       <div class="header-title">Service Visit Form</div>
     </div>
   </header>
 
+  <!-- Main shell -->
   <div class="quote-setup-shell">
     <div class="container">
       <h2>Log Service Visit</h2>
-      <form id="serviceVisitForm">
-        <input id="instrumentSerial" placeholder="Instrument Serial" required />
-        <textarea id="diagnostics" placeholder="Diagnostics"></textarea>
-        <textarea id="actionsTaken" placeholder="Actions Taken"></textarea>
 
-        <input id="photosInput" type="file" accept="image/*" multiple />
+      <form id="serviceVisitForm">
+        <!-- Instrument Serial -->
+        <input 
+          id="instrumentSerial" 
+          name="instrumentSerial" 
+          type="text" 
+          placeholder="Instrument Serial" 
+          required 
+        />
+
+        <!-- Diagnostics -->
+        <textarea 
+          id="diagnostics" 
+          name="diagnostics" 
+          placeholder="Diagnostics"
+        ></textarea>
+
+        <!-- Actions Taken -->
+        <textarea 
+          id="actionsTaken" 
+          name="actionsTaken" 
+          placeholder="Actions Taken"
+        ></textarea>
+
+        <!-- Photo Upload -->
+        <div class="form-row">
+          <input 
+            id="photosInput" 
+            name="photosInput" 
+            type="file" 
+            accept="image/*" 
+            multiple 
+          />
+        </div>
         <div id="photosPreview" class="photo-gallery"></div>
 
+        <!-- Submit -->
         <button type="submit">Save Visit</button>
       </form>
     </div>
   </div>
 
-  <script type="module" src="../js/istosService.js"></script>
+  <!-- Firebase service logic -->
+  <script type="module">
+    import { auth, onAuthStateChanged } from "../js/firebase.js";
+    import "./istosService.js";
+
+    // Auth guard: redirect if not logged in
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        alert("You must be logged in to upload photos.");
+        window.location.href = "login.html";
+      }
+    });
+  </script>
 </body>
 </html>
