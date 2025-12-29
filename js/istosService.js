@@ -85,33 +85,50 @@ function getEquipmentName() {
 }
 
 // --- Helper: upload photos to Firebase Storage ---
+// --- FIXED: Verbose photo upload with debugging ---
 async function uploadPhotos(equipmentName, serial, visitId, files) {
-  if (!files?.length) return [];
+  console.log("🖼️ Uploading photos:", files?.length || 0, "files");
   
+  if (!files?.length) {
+    console.log("⚠️ No files to upload");
+    return [];
+  }
+
   const urls = [];
-  for (const file of Array.from(files)) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    console.log(`📁 Uploading file ${i + 1}/${files.length}:`, file.name, file.size, "bytes");
+    
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const path = `service-photos/${equipmentName}/${serial}/${visitId}/${safeName}`;
     const storageRef = ref(storage, path);
 
     const metadata = {
-      contentType: file.type,
+      contentType: file.type || 'image/jpeg',
       customMetadata: {
         engineerId: auth.currentUser.uid,
         equipmentName,
         serial,
-        visitId
+        visitId,
+        uploadedAt: new Date().toISOString()
       }
     };
 
     try {
-      await uploadBytes(storageRef, file, metadata);
+      console.log(`🔄 Uploading to path: ${path}`);
+      const snapshot = await uploadBytes(storageRef, file, metadata);
+      console.log("✅ Upload snapshot:", snapshot);
+      
       const url = await getDownloadURL(storageRef);
+      console.log("🔗 Download URL:", url);
       urls.push(url);
     } catch (err) {
-      console.error(`Failed to upload ${file.name}:`, err);
+      console.error(`❌ Failed to upload ${file.name}:`, err);
+      // Continue with other files
     }
   }
+  
+  console.log("📊 Upload complete. Final URLs:", urls);
   return urls;
 }
 
