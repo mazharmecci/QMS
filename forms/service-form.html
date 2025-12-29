@@ -539,35 +539,59 @@
       }
     }
 
+    // FIXED: Works WITHOUT index (fetches all, filters locally)
     async function getSerialsForEquipment(equipmentName) {
+      console.log("🔍 Fetching serials for:", equipmentName);
+      
       try {
-        const q = query(
-          collection(db, "serviceVisits"),
-          where("equipmentName", "==", equipmentName)
+        // Get ALL visits (no index needed)
+        const snapshot = await getDocs(collection(db, "serviceVisits"));
+        const allVisits = snapshot.docs.map(doc => doc.data());
+        
+        // Filter locally by exact match
+        const matchingVisits = allVisits.filter(visit => 
+          String(visit.equipmentName || '').trim() === String(equipmentName).trim()
         );
-        const snapshot = await getDocs(q);
-        return [...new Set(snapshot.docs.map(doc => doc.data().instrumentSerial))];
+        
+        // Get unique serials (exclude empty/null)
+        const serials = [...new Set(
+          matchingVisits
+            .map(visit => visit.instrumentSerial)
+            .filter(serial => serial && String(serial).trim())
+        )].sort(); // Alphabetical sort
+        
+        console.log(`✅ Found ${serials.length} serials for "${equipmentName}":`, serials);
+        return serials;
       } catch (error) {
-        console.error("Error fetching serials:", error);
+        console.error("❌ Error fetching serials:", error);
         return [];
       }
     }
-
+    
     function populateSerialDropdown(dropdownId, serials) {
       const dropdown = document.getElementById(dropdownId);
-      if (!dropdown) return;
-
+      if (!dropdown) {
+        console.error("❌ Dropdown not found:", dropdownId);
+        return;
+      }
+    
       dropdown.innerHTML = '<option value="">Select Serial Number</option>';
-      serials.forEach(serial => {
+      
+      // Sort serials alphabetically and limit to 50
+      serials.slice(0, 50).sort().forEach(serial => {
         const option = document.createElement("option");
         option.value = serial;
         option.textContent = serial;
         dropdown.appendChild(option);
       });
+      
+      // "+ New Serial" option (shows count)
       const newOption = document.createElement("option");
       newOption.value = "__new";
-      newOption.textContent = "+ Enter New Serial";
+      newOption.textContent = `+ Add New (${serials.length} existing)`;
       dropdown.appendChild(newOption);
+      
+      console.log(`✅ Populated "${dropdownId}" with ${serials.length} serials`);
     }
 
     // Render History
