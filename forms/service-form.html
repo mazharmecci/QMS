@@ -296,6 +296,45 @@
         height: 60px;
       }
     }
+
+     .dropdown-group {
+      margin-bottom: 1rem;
+    }
+  
+    .dropdown-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: #333;
+    }
+    
+    .styled-dropdown {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: linear-gradient(white, #f9f9f9);
+      font-size: 0.95rem;
+      color: #444;
+      appearance: none; /* remove default arrow */
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%23444' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 0.8rem center;
+      background-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .styled-dropdown:focus {
+      border-color: #0078d7;
+      box-shadow: 0 0 0 3px rgba(0,120,215,0.2);
+      outline: none;
+    }
+    
+    .section-note {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -432,25 +471,30 @@
         <button type="submit">💾 Save Service Visit</button>
       </form>
 
-      <!-- EQUIPMENT HISTORY SECTION -->
-      <h3>📋 Equipment Service History</h3>
+      <!-- Equipment History Section -->
+      <h3>Equipment History</h3>
+      <p class="section-note">Select equipment and serial number to view past service visits.</p>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-        <!-- History Equipment Dropdown -->
-        <select id="historyEquipmentName">
-          <option value="">Select Equipment</option>
-          <!-- Same options as form above - populated by JS -->
+      <div class="dropdown-group">
+        <!-- Equipment Dropdown -->
+        <label for="historyEquipmentName" class="dropdown-label">Equipment Name</label>
+        <select id="historyEquipmentName" class="styled-dropdown">
+          <option value="">🔍 Choose Equipment</option>
+          <!-- Equipment options populated here -->
         </select>
-        
-        <!-- History Serial Dropdown -->
-        <select id="historySerial">
-          <option value="">Select Serial Number</option>
+      </div>
+      
+      <div class="dropdown-group">
+        <!-- Serial Dropdown -->
+        <label for="historySerial" class="dropdown-label">Serial Number</label>
+        <select id="historySerial" class="styled-dropdown">
+          <option value="">🔍 Choose Serial Number</option>
+          <!-- Serial options populated dynamically -->
         </select>
       </div>
       
       <ul id="historyList" class="history-list"></ul>
-    </div>
-  </div>
+
 
   <!-- LIGHTBOX MODAL -->
   <div id="photoLightbox" class="lightbox">
