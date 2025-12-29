@@ -5,337 +5,446 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Service Visit Form</title>
   <style>
-    :root {
-      --bg-gradient: radial-gradient(circle at 25% 25%, #3b82f6 0, #3f5a91 40%, #020617 100%);
-      --card-bg: #ffffff;
-      --accent: #3b82f6;
-      --accent-soft: rgba(59, 130, 246, 0.18);
-      --text-main: #0f172a;
-      --text-muted: #6b7280;
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --radius-sm: 8px;
-      --shadow-soft: 0 24px 70px rgba(15, 23, 42, 0.45);
-      --border-subtle: 1px solid rgba(148, 163, 184, 0.26);
-      --primary: #3b82f6;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-      color: var(--text-main);
-      background: #020617;
-    }
-
-    .quote-setup-gradient {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-gradient);
-      opacity: 0.9;
-      filter: blur(2px);
-      z-index: -2;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(15, 23, 42, 0.94);
-      border-bottom: var(--border-subtle);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      color: #e5e7eb;
-    }
-
-    .header-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0.7rem 1.5rem;
-    }
-
-    .back-btn {
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      padding: 0.4rem 0.9rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-
-    .back-btn:hover {
-      background: rgba(15, 23, 42, 1);
-      transform: translateY(-1px);
-    }
-
-    .header-title {
-      flex: 1;
-      text-align: center;
-      font-weight: 600;
-      font-size: 1.35rem;
-      letter-spacing: 0.04em;
-    }
-
-    .quote-setup-shell {
-      min-height: calc(100vh - 56px);
-      display: flex;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 22px 24px 20px;
-      background: var(--card-bg);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-soft);
-      border: var(--border-subtle);
-      color: var(--text-main);
-    }
-
-    h2, h3 {
-      color: var(--text-main);
-      margin: 0 0 1rem 0;
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-    }
-
-    h2::after, h3::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, rgba(148, 163, 184, 0.6), transparent);
-    }
-
-    form {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem 1.1rem;
-    }
-
-    form input,
-    form select,
-    form textarea {
-      padding: 0.7rem 0.95rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      font-size: 0.9rem;
-      background: rgba(248, 250, 252, 0.9);
-      color: var(--text-main);
-      transition: border-color 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    form input::placeholder,
-    form select::placeholder,
-    form textarea::placeholder {
-      color: var(--text-muted);
-    }
-
-    form input:focus,
-    form select:focus,
-    form textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      background: #ffffff;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
-    }
-
-    form textarea {
-      grid-column: span 2;
-      min-height: 90px;
-      resize: vertical;
-    }
-
-    form button {
-      grid-column: span 2;
-      padding: 0.9rem 1.2rem;
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      color: #fff;
-      border: none;
-      border-radius: 999px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.18s ease-out;
-      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.6);
-    }
-
-    form button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 16px 32px rgba(37, 99, 235, 0.75);
-    }
-
-    .photo-gallery {
-      grid-column: span 2;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .photo-gallery img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: var(--radius-sm);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-    }
-
-    .history-list {
-      list-style: none;
-      padding: 0;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    
-    .visit-summary {
-      font-weight: 600;
-      margin-bottom: 8px;
-      padding: 8px;
-      background: #f8fafc;
-      border-radius: 6px;
-    }
-    
-    .visit-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 8px;
-    }
-    
-    .history-photo {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border: 2px solid #e2e8f0;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .history-photo:hover {
-      transform: scale(1.05);
-      border-color: var(--accent);
-    }
-
-    .lightbox {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.95);
-    }
-    
-    .lightbox-content {
-      margin: auto;
-      display: block;
-      max-width: 90%;
-      max-height: 90%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-    
-    #lightboxCaption {
-      margin: auto;
-      display: block;
-      text-align: center;
-      color: #ccc;
-      padding: 10px 0;
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-    }
-    
-    .close {
-      position: absolute;
-      top: 20px;
-      right: 35px;
-      color: #fff;
-      font-size: 40px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 10000;
-    }
-
-    .close:hover {
-      color: #ff6b6b;
-    }
-
-    @media (max-width: 768px) {
-      .quote-setup-shell {
-        padding: 16px;
-      }
-      .container {
-        padding: 18px 14px;
-        border-radius: 16px;
-      }
-      form {
-        grid-template-columns: 1fr;
-      }
-      form button {
-        grid-column: span 1;
-      }
-      .history-photo {
-        width: 60px;
-        height: 60px;
-      }
-    }
-
-     .dropdown-group {
-      margin-bottom: 1rem;
-    }
+  :root {
+  /* Colors */
+  --bg-gradient: radial-gradient(circle at 25% 25%, #3b82f6 0%, #3f5a91 40%, #020617 100%);
+  --card-bg: #ffffff;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.18);
+  --accent-glow: rgba(59, 130, 246, 0.5);
+  --text-main: #0f172a;
+  --text-muted: #6b7280;
+  --text-light: #e5e7eb;
+  --border-subtle: rgba(148, 163, 184, 0.26);
   
-    .dropdown-label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-      color: #333;
-    }
-    
-    .styled-dropdown {
-      width: 100%;
-      padding: 0.6rem 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: linear-gradient(white, #f9f9f9);
-      font-size: 0.95rem;
-      color: #444;
-      appearance: none; /* remove default arrow */
-      background-image: url("data:image/svg+xml;utf8,<svg fill='%23444' height='20' viewBox='0 0 24 24' width='20'><path d='M7 10l5 5 5-5z'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 0.8rem center;
-      background-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    .styled-dropdown:focus {
-      border-color: #0078d7;
-      box-shadow: 0 0 0 3px rgba(0,120,215,0.2);
-      outline: none;
-    }
-    
-    .section-note {
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 1rem;
-    }
-  </style>
+  /* Spacing & Radius */
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-full: 999px;
+  
+  /* Shadows */
+  --shadow-soft: 0 24px 70px rgba(15, 23, 42, 0.45);
+  --shadow-input: 0 0 0 1px var(--accent-glow);
+  
+  /* Transitions */
+  --transition-fast: 0.18s ease-out;
+  --transition-smooth: 0.2s ease;
+}
+
+/* BASE */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  color: var(--text-main);
+  background: #020617;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* BACKGROUND */
+.quote-setup-gradient {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-gradient);
+  opacity: 0.9;
+  filter: blur(2px);
+  z-index: -2;
+}
+
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(15, 23, 42, 0.94);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(20px);
+  color: var(--text-light);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1.5rem;
+}
+
+.back-btn {
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-light);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.back-btn:hover {
+  background: rgba(15, 23, 42, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.header-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 2.5vw, 1.35rem);
+  letter-spacing: 0.025em;
+}
+
+/* LAYOUT */
+.quote-setup-shell {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.container {
+  width: 100%;
+  max-width: 850px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border-subtle);
+}
+
+/* TYPOGRAPHY */
+h2, h3 {
+  color: var(--text-main);
+  margin: 0 0 1.5rem;
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+h2::after, h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(148, 163, 184, 0.6), transparent);
+}
+
+/* FORM */
+form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem 1.25rem;
+}
+
+/* FORM CONTROLS */
+input, select, textarea {
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  background: rgba(248, 250, 252, 0.95);
+  color: var(--text-main);
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+input::placeholder,
+select::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #ffffff;
+  box-shadow: var(--shadow-input);
+}
+
+textarea {
+  grid-column: 1 / -1;
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* BUTTONS */
+button {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 12px 26px rgba(59, 130, 246, 0.4);
+  grid-column: 1 / -1;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.5);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* PHOTO GALLERY */
+.photo-gallery {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.photo-gallery img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.photo-gallery img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+/* HISTORY */
+.history-list {
+  list-style: none;
+  padding: 0;
+  max-height: 450px;
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+
+.visit-summary {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--accent);
+}
+
+.visit-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.5);
+  border-radius: var(--radius-md);
+}
+
+.history-photo {
+  width: 85px;
+  height: 85px;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.history-photo:hover {
+  transform: scale(1.08);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+/* HISTORY FILTERS */
+.history-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+/* LIGHTBOX */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(4px);
+}
+
+.lightbox-content {
+  max-width: 90%;
+  max-height: 90%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-md);
+}
+
+#lightboxCaption {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ccc;
+  text-align: center;
+  padding: 1rem;
+  width: 90%;
+  font-size: 0.95rem;
+}
+
+.close {
+  position: absolute;
+  top: 1.5rem;
+  right: 2rem;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color var(--transition-smooth);
+  z-index: 10001;
+}
+
+.close:hover {
+  color: #ff6b6b;
+}
+
+/* LOADING SPINNER */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.98);
+  backdrop-filter: blur(12px);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(24px);
+  box-shadow: var(--shadow-soft);
+}
+
+.spinner {
+  width: 64px;
+  height: 64px;
+  border: 4px solid rgba(59, 130, 246, 0.2);
+  border-top: 4px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner-text {
+  color: var(--text-light);
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.spinner-subtext {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .quote-setup-shell {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    margin: 0.5rem;
+  }
+  
+  form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .history-filters {
+    grid-template-columns: 1fr;
+  }
+  
+  .history-photo {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .header-inner {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1.25rem;
+  }
+  
+  .spinner-container {
+    padding: 2rem;
+    margin: 1rem;
+  }
+}
+
+/* UTILITY */
+.section-note {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+  font-style: italic;
+}
+
+.hidden {
+  display: none !important;
+}
+</style>
 </head>
 <body>
   <!-- Background gradient -->
@@ -496,336 +605,392 @@
       <ul id="historyList" class="history-list"></ul>
 
 
-  <!-- LIGHTBOX MODAL -->
-  <div id="photoLightbox" class="lightbox">
-    <span class="close">&times;</span>
-    <img class="lightbox-content" id="lightboxImage" />
-    <div id="lightboxCaption"></div>
-  </div>
+      <!-- LIGHTBOX MODAL -->
+      <div id="photoLightbox" class="lightbox">
+        <span class="close">&times;</span>
+        <img class="lightbox-content" id="lightboxImage" />
+        <div id="lightboxCaption"></div>
+      </div>
 
   <!-- Firebase service logic -->
-  <script type="module">
-    import { 
-      auth, 
-      db, 
-      onAuthStateChanged,
-      collection, 
-      query, 
-      where, 
-      orderBy, 
-      getDocs 
-    } from "../js/firebase.js";
-    
-    import { initServiceForm } from "../js/istosService.js";
+<!-- COMPLETE FIREBASE SCRIPT -->
+<script type="module">
+  import { 
+    auth, 
+    db, 
+    onAuthStateChanged,
+    collection, 
+    getDocs 
+  } from "../js/firebase.js";
+  
+  import { initServiceForm } from "../js/istosService.js";
 
-    let currentGallery = [];
-    let currentIndex = 0;
-    let startX = 0;
-    let endX = 0;
+  // GLOBAL STATE
+  let currentGallery = [];
+  let currentIndex = 0;
+  let startX = 0;
+  let endX = 0;
 
-    // Firestore Helpers
-    async function getEquipmentHistory(serial) {
-      try {
-        const q = query(
-          collection(db, "serviceVisits"),
-          where("instrumentSerial", "==", serial),
-          orderBy("createdAt", "desc")
-        );
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => doc.data());
-      } catch (error) {
-        console.error("Error fetching history:", error);
-        return [];
-      }
+  // SPINNER UTILITIES
+  function showSpinner() {
+    const spinner = document.getElementById("loadingSpinner");
+    const submitBtn = document.querySelector("#serviceVisitForm button[type='submit']");
+    if (spinner) spinner.style.display = "flex";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+    }
+  }
+
+  function hideSpinner() {
+    const spinner = document.getElementById("loadingSpinner");
+    const submitBtn = document.querySelector("#serviceVisitForm button[type='submit']");
+    if (spinner) spinner.style.display = "none";
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "💾 Save Service Visit";
+    }
+  }
+
+  // FIRESTORE HELPERS (Index-Free - Production Optimized)
+  async function getEquipmentHistory(serial) {
+    console.log("📜 Fetching history for serial:", serial);
+    try {
+      const snapshot = await getDocs(collection(db, "serviceVisits"));
+      const history = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(visit => visit.instrumentSerial === serial)
+        .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      
+      console.log(`✅ Found ${history.length} visits for ${serial}`);
+      return history;
+    } catch (error) {
+      console.error("❌ Error fetching history:", error);
+      return [];
+    }
+  }
+
+  async function getSerialsForEquipment(equipmentName) {
+    console.log("🔍 Fetching serials for:", equipmentName);
+    try {
+      const snapshot = await getDocs(collection(db, "serviceVisits"));
+      const serials = [...new Set(
+        snapshot.docs
+          .map(doc => doc.data())
+          .filter(visit => String(visit.equipmentName || '').trim() === String(equipmentName).trim())
+          .map(visit => visit.instrumentSerial)
+          .filter(serial => serial && String(serial).trim())
+      )].sort();
+      
+      console.log(`✅ Found ${serials.length} serials for "${equipmentName}":`, serials);
+      return serials;
+    } catch (error) {
+      console.error("❌ Error fetching serials:", error);
+      return [];
+    }
+  }
+
+  function populateSerialDropdown(dropdownId, serials) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) {
+      console.error("❌ Dropdown not found:", dropdownId);
+      return;
     }
 
-    // FIXED: Works WITHOUT index (fetches all, filters locally)
-    async function getSerialsForEquipment(equipmentName) {
-      console.log("🔍 Fetching serials for:", equipmentName);
-      
-      try {
-        // Get ALL visits (no index needed)
-        const snapshot = await getDocs(collection(db, "serviceVisits"));
-        const allVisits = snapshot.docs.map(doc => doc.data());
-        
-        // Filter locally by exact match
-        const matchingVisits = allVisits.filter(visit => 
-          String(visit.equipmentName || '').trim() === String(equipmentName).trim()
-        );
-        
-        // Get unique serials (exclude empty/null)
-        const serials = [...new Set(
-          matchingVisits
-            .map(visit => visit.instrumentSerial)
-            .filter(serial => serial && String(serial).trim())
-        )].sort(); // Alphabetical sort
-        
-        console.log(`✅ Found ${serials.length} serials for "${equipmentName}":`, serials);
-        return serials;
-      } catch (error) {
-        console.error("❌ Error fetching serials:", error);
-        return [];
-      }
-    }
+    dropdown.innerHTML = '<option value="">Select Serial Number</option>';
     
-    function populateSerialDropdown(dropdownId, serials) {
-      const dropdown = document.getElementById(dropdownId);
-      if (!dropdown) {
-        console.error("❌ Dropdown not found:", dropdownId);
-        return;
-      }
+    serials.slice(0, 50).sort().forEach(serial => {
+      const option = document.createElement("option");
+      option.value = serial;
+      option.textContent = serial;
+      dropdown.appendChild(option);
+    });
+
+    const newOption = document.createElement("option");
+    newOption.value = "__new";
+    newOption.textContent = `+ Add New (${serials.length} existing)`;
+    dropdown.appendChild(newOption);
     
-      dropdown.innerHTML = '<option value="">Select Serial Number</option>';
-      
-      // Sort serials alphabetically and limit to 50
-      serials.slice(0, 50).sort().forEach(serial => {
-        const option = document.createElement("option");
-        option.value = serial;
-        option.textContent = serial;
-        dropdown.appendChild(option);
+    console.log(`✅ Populated "${dropdownId}" with ${serials.length} serials`);
+  }
+
+  // HISTORY RENDERING (Complete Bulletproof Version)
+  function renderHistory(history) {
+    const list = document.getElementById("historyList");
+    if (!list) return;
+    
+    list.innerHTML = history.length 
+      ? ""
+      : '<li style="text-align:center;padding:2rem;color:var(--text-muted);">No service history found</li>';
+
+    history.forEach((visit, visitIndex) => {
+      console.log(`Visit ${visitIndex}:`, {
+        date: visit.createdAt?.toDate?.()?.toLocaleString(),
+        engineer: visit.engineerName,
+        photos: visit.photos?.length || 0
       });
-      
-      // "+ New Serial" option (shows count)
-      const newOption = document.createElement("option");
-      newOption.value = "__new";
-      newOption.textContent = `+ Add New (${serials.length} existing)`;
-      dropdown.appendChild(newOption);
-      
-      console.log(`✅ Populated "${dropdownId}" with ${serials.length} serials`);
-    }
 
-    // Render History
-    function renderHistory(history) {
-      const list = document.getElementById("historyList");
-      if (!list) return;
-      list.innerHTML = "";
-    
-      if (history.length === 0) {
-        list.innerHTML = '<li style="text-align:center; color:var(--text-muted);">No service history found</li>';
-        return;
-      }
-    
-      history.forEach((visit, visitIndex) => {
-        // DEBUG: Log photos data
-        console.log(`Visit ${visitIndex}:`, {
-          hasPhotos: !!visit.photos,
-          photosType: typeof visit.photos,
-          isArray: Array.isArray(visit.photos),
-          photosLength: visit.photos?.length,
-          photosSample: visit.photos?.slice(0, 2) // First 2 URLs
-        });
-    
-        const li = document.createElement("li");
-        li.style.cssText = `
-          margin-bottom: 1rem; 
-          padding: 1rem; 
-          border: 1px solid #e2e8f0; 
-          border-radius: 8px; 
-          background: #f8fafc;
-        `;
-    
-        // Summary
-        const summary = document.createElement("div");
-        summary.className = "visit-summary";
-        summary.textContent = `${visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'} - ${visit.engineerName || 'Unknown'}: ${visit.actionsTaken || 'No actions logged'}`;
-        li.appendChild(summary);
-    
-        // PHOTOS GALLERY - BULLETPROOF VERSION
-        if (visit.photos && Array.isArray(visit.photos) && visit.photos.length > 0) {
-          console.log(`✅ Rendering ${visit.photos.length} photos for this visit`);
-          
-          const gallery = document.createElement("div");
-          gallery.className = "visit-gallery";
-          gallery.style.cssText = "display: flex; flex-wrap: wrap; gap: 8px; padding: 8px;";
-    
-          visit.photos.slice(0, 6).forEach((url, idx) => { // Limit to 6 photos
-            if (typeof url === 'string' && url.startsWith('http')) {
-              const img = document.createElement("img");
-              img.src = url;
-              img.alt = `Service photo ${idx + 1}`;
-              img.className = "history-photo";
-              img.loading = "lazy";
-              img.onerror = () => { 
-                console.warn(`Failed to load photo: ${url}`);
-                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIGZpbGw9IiM0QjU1NjMiLz4KPHRleHQgeD0iNDAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlCMkI2QSI+Z3JheTwvdGV4dD4KPC9zdmc+'; // Fallback image
-              };
-    
-              img.addEventListener("click", () => {
-                currentGallery = visit.photos;
-                currentIndex = idx;
-                openLightbox(url, `${visit.engineerName || 'Engineer'} - ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Service photo'} (${idx + 1}/${visit.photos.length})`);
-              });
-    
-              gallery.appendChild(img);
-            }
-          });
-    
-          if (visit.photos.length > 6) {
-            const moreBtn = document.createElement("button");
-            moreBtn.textContent = `+${visit.photos.length - 6} more`;
-            moreBtn.style.cssText = "padding: 0.5rem 1rem; background: var(--accent-soft); color: var(--accent); border: none; border-radius: 20px; cursor: pointer; font-size: 0.8rem;";
-            moreBtn.onclick = () => {
-              // Show all photos in lightbox starting from first
-              currentGallery = visit.photos;
-              currentIndex = 0;
-              openLightbox(visit.photos[0], `${visit.engineerName} - Full gallery (${visit.photos.length} photos)`);
-            };
-            gallery.appendChild(moreBtn);
+      const li = document.createElement("li");
+      li.style.cssText = `
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      `;
+
+      // SUMMARY
+      const summary = document.createElement("div");
+      summary.className = "visit-summary";
+      summary.innerHTML = `
+        <strong>${visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'}</strong><br>
+        <small>${visit.engineerName || 'Unknown'} • ${visit.instrumentSerial}</small>
+      `;
+      li.appendChild(summary);
+
+      // CONTENT PREVIEW
+      const preview = document.createElement("div");
+      preview.style.cssText = "margin:1rem 0;color:var(--text-muted);font-size:0.9rem;line-height:1.4;";
+      preview.innerHTML = `
+        <strong>Issue:</strong> ${visit.diagnostics || 'N/A'}<br>
+        <strong>Actions:</strong> ${visit.actionsTaken?.slice(0, 100) || 'No actions'}...
+      `;
+      li.appendChild(preview);
+
+      // PHOTOS GALLERY
+      if (visit.photos?.length > 0) {
+        const gallery = document.createElement("div");
+        gallery.className = "visit-gallery";
+        gallery.style.cssText = "display:flex;flex-wrap:wrap;gap:0.75rem;padding:1rem;background:rgba(248,250,252,0.5);border-radius:12px;";
+
+        visit.photos.slice(0, 6).forEach((url, idx) => {
+          if (typeof url === 'string' && url.startsWith('http')) {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = `Service photo ${idx + 1}`;
+            img.className = "history-photo";
+            img.style.cssText = "width:85px;height:85px;object-fit:cover;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all 0.2s;";
+            img.loading = "lazy";
+            
+            img.onerror = () => img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIGZpbGw9IiM0QjU1NjMiLz4KPHRleHQgeD0iNDAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlCMkI2QSI+Z3JheTwvdGV4dD4KPC9zdmc+';
+
+            img.addEventListener("click", () => {
+              currentGallery = visit.photos || [];
+              currentIndex = idx;
+              openLightbox(url, `${visit.engineerName || 'Service'} - ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Photo'} (${idx + 1}/${visit.photos.length})`);
+            });
+            
+            gallery.appendChild(img);
           }
-    
-          li.appendChild(gallery);
-        } else {
-          console.log(`❌ No photos for this visit (photos: ${visit.photos})`);
-          // Show placeholder
-          const noPhotos = document.createElement("div");
-          noPhotos.textContent = "📷 No photos attached";
-          noPhotos.style.cssText = "padding: 1rem; color: var(--text-muted); font-style: italic;";
-          li.appendChild(noPhotos);
+        });
+
+        if (visit.photos.length > 6) {
+          const moreBtn = document.createElement("button");
+          moreBtn.textContent = `+${visit.photos.length - 6} more`;
+          moreBtn.style.cssText = "padding:0.5rem 1rem;background:var(--accent-soft);color:var(--accent);border:none;border-radius:20px;cursor:pointer;font-size:0.85rem;font-weight:500;";
+          moreBtn.onclick = () => {
+            currentGallery = visit.photos;
+            currentIndex = 0;
+            openLightbox(visit.photos[0], `${visit.engineerName} - Full gallery (${visit.photos.length} photos)`);
+          };
+          gallery.appendChild(moreBtn);
         }
-    
-        list.appendChild(li);
-      });
-    }
 
-    // Lightbox
-    function openLightbox(url, captionText) {
-      const lightbox = document.getElementById("photoLightbox");
-      const lightboxImg = document.getElementById("lightboxImage");
-      const caption = document.getElementById("lightboxCaption");
-      if (!lightbox || !lightboxImg || !caption) return;
-
-      lightbox.style.display = "block";
-      lightboxImg.src = url;
-      caption.textContent = captionText;
-    }
-
-    function closeLightbox() {
-      const lightbox = document.getElementById("photoLightbox");
-      if (lightbox) lightbox.style.display = "none";
-    }
-
-    function initLightboxHandlers() {
-      const closeBtn = document.querySelector(".close");
-      if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
-
-      const lightbox = document.getElementById("photoLightbox");
-      if (lightbox) {
-        lightbox.addEventListener("click", (e) => {
-          if (e.target === lightbox) closeLightbox();
-        });
-
-        lightbox.addEventListener("touchstart", (e) => {
-          startX = e.changedTouches[0].screenX;
-        });
-        lightbox.addEventListener("touchend", (e) => {
-          endX = e.changedTouches[0].screenX;
-          handleSwipe();
-        });
+        li.appendChild(gallery);
+      } else {
+        const noPhotos = document.createElement("div");
+        noPhotos.textContent = "📷 No photos attached";
+        noPhotos.style.cssText = "padding:1.25rem;color:var(--text-muted);font-style:italic;text-align:center;";
+        li.appendChild(noPhotos);
       }
 
-      document.addEventListener("keydown", (e) => {
-        const lightbox = document.getElementById("photoLightbox");
-        if (lightbox?.style.display === "block" && currentGallery.length > 0) {
-          if (e.key === "ArrowRight") {
-            currentIndex = (currentIndex + 1) % currentGallery.length;
-            openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
-          } else if (e.key === "ArrowLeft") {
-            currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
-            openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
-          } else if (e.key === "Escape") {
-            closeLightbox();
-          }
-        }
+      list.appendChild(li);
+    });
+  }
+
+  // LIGHTBOX FUNCTIONS (Complete)
+  function openLightbox(url, captionText) {
+    const lightbox = document.getElementById("photoLightbox");
+    const lightboxImg = document.getElementById("lightboxImage");
+    const caption = document.getElementById("lightboxCaption");
+    if (!lightbox || !lightboxImg || !caption) return;
+
+    lightbox.style.display = "block";
+    lightboxImg.src = url;
+    caption.textContent = captionText;
+  }
+
+  function closeLightbox() {
+    const lightbox = document.getElementById("photoLightbox");
+    if (lightbox) lightbox.style.display = "none";
+  }
+
+  function initLightboxHandlers() {
+    // Close button
+    const closeBtn = document.querySelector(".close");
+    if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
+
+    // Lightbox overlay
+    const lightbox = document.getElementById("photoLightbox");
+    if (lightbox) {
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      // Touch swipe support
+      lightbox.addEventListener("touchstart", (e) => {
+        startX = e.changedTouches[0].screenX;
+      });
+      lightbox.addEventListener("touchend", (e) => {
+        endX = e.changedTouches[0].screenX;
+        handleSwipe();
       });
     }
 
-    function handleSwipe() {
-      const threshold = 50;
+    // Keyboard navigation
+    document.addEventListener("keydown", (e) => {
       const lightbox = document.getElementById("photoLightbox");
       if (lightbox?.style.display === "block" && currentGallery.length > 0) {
-        if (endX - startX > threshold) {
-          currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
-          openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
-        } else if (startX - endX > threshold) {
-          currentIndex = (currentIndex + 1) % currentGallery.length;
-          openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
+        switch(e.key) {
+          case "ArrowRight":
+            currentIndex = (currentIndex + 1) % currentGallery.length;
+            openLightbox(currentGallery[currentIndex], `Photo ${currentIndex + 1}`);
+            break;
+          case "ArrowLeft":
+            currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
+            openLightbox(currentGallery[currentIndex], `Photo ${currentIndex + 1}`);
+            break;
+          case "Escape":
+            closeLightbox();
+            break;
         }
-      }
-    }
-
-    // Main Initialization
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        alert("You must be logged in to access service records.");
-        window.location.href = "login.html";
-        return;
-      }
-
-      try {
-        await initServiceForm?.();
-        console.log("Service form initialized for user:", user.uid);
-
-        // Auto-fill
-        const engineerField = document.getElementById("engineerName");
-        const dateField = document.getElementById("visitDateTime");
-        if (engineerField) engineerField.value = user.displayName || user.email.split("@")[0];
-        if (dateField) dateField.value = new Date().toLocaleString();
-
-        // Equipment → Serials (Form)
-        const equipmentDropdown = document.getElementById("equipmentName");
-        if (equipmentDropdown) {
-          equipmentDropdown.addEventListener("change", async (e) => {
-            const equipmentName = e.target.value;
-            if (!equipmentName) return;
-            const serials = await getSerialsForEquipment(equipmentName);
-            populateSerialDropdown("serialDropdown", serials);
-          });
-        }
-
-        // Equipment → Serials (History)
-        const historyEquipmentDropdown = document.getElementById("historyEquipmentName");
-        if (historyEquipmentDropdown) {
-          // Copy options from form dropdown
-          const formEquipment = document.getElementById("equipmentName");
-          if (formEquipment) {
-            historyEquipmentDropdown.innerHTML = formEquipment.innerHTML;
-          }
-
-          historyEquipmentDropdown.addEventListener("change", async (e) => {
-            const equipmentName = e.target.value;
-            if (!equipmentName) return;
-            const serials = await getSerialsForEquipment(equipmentName);
-            populateSerialDropdown("historySerial", serials);
-          });
-        }
-
-        // History Serial → History
-        const historySerialDropdown = document.getElementById("historySerial");
-        if (historySerialDropdown) {
-          historySerialDropdown.addEventListener("change", async (e) => {
-            const serial = e.target.value;
-            if (!serial || serial === "__new") return;
-            const history = await getEquipmentHistory(serial);
-            renderHistory(history);
-          });
-        }
-
-        // Serial dropdown → new serial input toggle
-        const serialDropdown = document.getElementById("serialDropdown");
-        const newSerialInput = document.getElementById("newSerialInput");
-        if (serialDropdown && newSerialInput) {
-          serialDropdown.addEventListener("change", (e) => {
-            newSerialInput.style.display = e.target.value === "__new" ? "block" : "none";
-            if (e.target.value !== "__new") newSerialInput.value = "";
-          });
-        }
-
-        initLightboxHandlers();
-
-      } catch (err) {
-        console.error("Failed to initialize service form:", err);
       }
     });
-  </script>
+  }
+
+  function handleSwipe() {
+    const threshold = 50;
+    const lightbox = document.getElementById("photoLightbox");
+    if (lightbox?.style.display === "block" && currentGallery.length > 0) {
+      if (endX - startX > threshold) {
+        // Swipe left
+        currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
+        openLightbox(currentGallery[currentIndex], `Photo ${currentIndex + 1}`);
+      } else if (startX - endX > threshold) {
+        // Swipe right
+        currentIndex = (currentIndex + 1) % currentGallery.length;
+        openLightbox(currentGallery[currentIndex], `Photo ${currentIndex + 1}`);
+      }
+    }
+  }
+
+  // PHOTO PREVIEW (For form upload)
+  function initPhotoPreview() {
+    const photosInput = document.getElementById("photosInput");
+    const photosPreview = document.getElementById("photosPreview");
+    
+    if (photosInput && photosPreview) {
+      photosInput.addEventListener("change", (e) => {
+        photosPreview.innerHTML = "";
+        Array.from(e.target.files).slice(0, 8).forEach((file, idx) => {
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(file);
+          img.alt = file.name;
+          img.style.cssText = "width:100px;height:100px;object-fit:cover;border-radius:8px;margin:0.25rem;cursor:pointer;";
+          img.onclick = () => URL.revokeObjectURL(img.src);
+          photosPreview.appendChild(img);
+        });
+      });
+    }
+  }
+
+  // MAIN INITIALIZATION
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      alert("You must be logged in to access service records.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    console.log("✅ Authenticated:", user.email);
+
+    try {
+      // Initialize external form handler
+      await initServiceForm?.();
+      
+      // Auto-fill engineer & date
+      const engineerField = document.getElementById("engineerName");
+      const dateField = document.getElementById("visitDateTime");
+      if (engineerField) engineerField.value = user.displayName || user.email.split("@")[0];
+      if (dateField) dateField.value = new Date().toLocaleString();
+
+      // Copy equipment options to history dropdown
+      const equipmentDropdown = document.getElementById("equipmentName");
+      const historyEquipmentDropdown = document.getElementById("historyEquipmentName");
+      if (equipmentDropdown && historyEquipmentDropdown) {
+        historyEquipmentDropdown.innerHTML = equipmentDropdown.innerHTML;
+      }
+
+      // FORM EVENT HANDLERS
+      // Equipment → Serials (Form)
+      if (equipmentDropdown) {
+        equipmentDropdown.addEventListener("change", async (e) => {
+          const equipmentName = e.target.value.trim();
+          if (!equipmentName) return;
+          
+          const serials = await getSerialsForEquipment(equipmentName);
+          populateSerialDropdown("serialDropdown", serials);
+        });
+      }
+
+      // Serial toggle (Form)
+      const serialDropdown = document.getElementById("serialDropdown");
+      const newSerialInput = document.getElementById("newSerialInput");
+      if (serialDropdown && newSerialInput) {
+        serialDropdown.addEventListener("change", (e) => {
+          const showNew = e.target.value === "__new";
+          newSerialInput.classList.toggle("show", showNew);
+          newSerialInput.style.display = showNew ? "block" : "none";
+          if (!showNew) newSerialInput.value = "";
+        });
+      }
+
+      // HISTORY EVENT HANDLERS
+      // Equipment → Serials (History)
+      if (historyEquipmentDropdown) {
+        historyEquipmentDropdown.addEventListener("change", async (e) => {
+          const equipmentName = e.target.value.trim();
+          if (!equipmentName) return;
+          
+          const serials = await getSerialsForEquipment(equipmentName);
+          populateSerialDropdown("historySerial", serials);
+        });
+      }
+
+      // Serial → History
+      const historySerialDropdown = document.getElementById("historySerial");
+      if (historySerialDropdown) {
+        historySerialDropdown.addEventListener("change", async (e) => {
+          const serial = e.target.value.trim();
+          if (!serial || serial === "__new") return;
+          
+          const history = await getEquipmentHistory(serial);
+          renderHistory(history);
+        });
+      }
+
+      // Initialize UI components
+      initPhotoPreview();
+      initLightboxHandlers();
+      
+      console.log("🚀 Service form fully initialized");
+
+    } catch (err) {
+      console.error("❌ Failed to initialize service form:", err);
+      alert("Failed to initialize. Please refresh.");
+    }
+  });
+</script>
+
 </body>
 </html>
