@@ -9,7 +9,7 @@ import {
   uploadBytes, 
   getDownloadURL,
   serverTimestamp
-} from "./firebase.js";  // adjust path if needed
+} from "./firebase.js";
 
 // --- Helper: decode JWT payload for debugging ---
 function decodeToken(token) {
@@ -41,20 +41,66 @@ async function logAuthToken() {
   }
 }
 
-// --- Helper: upload photos to Firebase Storage with metadata ---
-async function uploadPhotos(serial, visitId, files) {
+// --- Helper: get serial number (handles dropdown + new input) ---
+function getSerialNumber() {
+  // Check dropdown first
+  const serialDropdown = document.getElementById("serialDropdown");
+  const newSerialInput = document.getElementById("newSerialInput");
+  
+  if (!serialDropdown) {
+    console.error("Serial dropdown not found");
+    return null;
+  }
+
+  const dropdownValue = serialDropdown.value.trim();
+  
+  // If "new serial" selected, use the text input
+  if (dropdownValue === "__new") {
+    if (!newSerialInput || !newSerialInput.value.trim()) {
+      throw new Error("Please enter a new serial number.");
+    }
+    return newSerialInput.value.trim();
+  }
+  
+  // Otherwise use dropdown value
+  if (!dropdownValue) {
+    throw new Error("Please select a serial number.");
+  }
+  
+  return dropdownValue;
+}
+
+// --- Helper: get equipment name ---
+function getEquipmentName() {
+  const equipmentSelect = document.getElementById("equipmentName");
+  if (!equipmentSelect) {
+    console.error("Equipment dropdown not found");
+    return null;
+  }
+  const value = equipmentSelect.value.trim();
+  if (!value) {
+    throw new Error("Please select equipment.");
+  }
+  return value;
+}
+
+// --- Helper: upload photos to Firebase Storage ---
+async function uploadPhotos(equipmentName, serial, visitId, files) {
+  if (!files?.length) return [];
+  
   const urls = [];
-  for (const file of files) {
-    const safeName = file.name.replace(/\s+/g, "_");
-    const path = `service-photos/${serial}/${visitId}/${safeName}`;
+  for (const file of Array.from(files)) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const path = `service-photos/${equipmentName}/${serial}/${visitId}/${safeName}`;
     const storageRef = ref(storage, path);
 
-    // Attach engineerId and visitId in metadata
     const metadata = {
       contentType: file.type,
       customMetadata: {
         engineerId: auth.currentUser.uid,
-        visitId: visitId
+        equipmentName,
+        serial,
+        visitId
       }
     };
 
@@ -64,30 +110,35 @@ async function uploadPhotos(serial, visitId, files) {
       urls.push(url);
     } catch (err) {
       console.error(`Failed to upload ${file.name}:`, err);
-      throw err; // stop if upload fails
     }
   }
   return urls;
 }
 
 // --- Helper: save service visit to Firestore ---
-async function saveServiceVisit(serial, diagnostics, actions, files) {
+async function saveServiceVisit(formData) {
   if (!auth.currentUser) {
-    throw new Error("User must be signed in to save a service visit.");
+    throw new Error("User must be signed in.");
   }
 
-  // Debug: log token before saving
   await logAuthToken();
 
-  const visitId = `visit-${Date.now()}`;
-  const photoUrls = files?.length ? await uploadPhotos(serial, visitId, Array.from(files)) : [];
+  const visitId = `visit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const photoUrls = await uploadPhotos(
+    formData.equipmentName, 
+    formData.serial, 
+    visitId, 
+    formData.files
+  );
 
   const visitDoc = {
-    instrumentSerial: serial,
-    diagnostics,
-    actionsTaken: actions,
-    photos: photoUrls,
+    equipmentName: formData.equipmentName,
+    instrumentSerial: formData.serial,
+    diagnostics: formData.diagnostics,
+    actionsTaken: formData.actionsTaken,
+    engineerName: formData.engineerName,
     engineerId: auth.currentUser.uid,
+    photos: photoUrls,
     createdAt: serverTimestamp()
   };
 
@@ -99,29 +150,67 @@ async function saveServiceVisit(serial, diagnostics, actions, files) {
 export function initServiceForm() {
   const form = document.getElementById("serviceVisitForm");
   if (!form) {
-    console.warn("Service Visit Form not found in DOM.");
+    console.warn("Service Visit Form not found.");
     return;
   }
 
-  form.addEventListener("submit", async e => {
+  // Photo preview
+  const photosInput = document.getElementById("photosInput");
+  const photosPreview = document.getElementById("photosPreview");
+  
+  if (photosInput && photosPreview) {
+    photosInput.addEventListener("change", (e) => {
+      photosPreview.innerHTML = "";
+      Array.from(e.target.files).forEach(file => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.className = "photo-gallery img";
+        photosPreview.appendChild(img);
+      });
+    });
+  }
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const serial = document.getElementById("instrumentSerial").value.trim();
-    const diagnostics = document.getElementById("diagnostics").value.trim();
-    const actions = document.getElementById("actionsTaken").value.trim();
-    const files = document.getElementById("photosInput").files;
-
-    if (!serial) {
-      alert("Instrument serial is required.");
-      return;
-    }
-
+    
     try {
-      const visitId = await saveServiceVisit(serial, diagnostics, actions, files);
-      alert(`Visit ${visitId} saved successfully!`);
+      // Safely extract form data
+      const equipmentName = getEquipmentName();
+      const serial = getSerialNumber();
+      const diagnostics = document.getElementById("diagnostics")?.value?.trim() || "";
+      const actionsTaken = document.getElementById("actionsTaken")?.value?.trim() || "";
+      const engineerName = document.getElementById("engineerName")?.value?.trim() || "";
+      const files = document.getElementById("photosInput")?.files || [];
+
+      if (!actionsTaken) {
+        alert("Actions taken is required.");
+        return;
+      }
+
+      const formData = {
+        equipmentName,
+        serial,
+        diagnostics,
+        actionsTaken,
+        engineerName,
+        files
+      };
+
+      console.log("Saving service visit:", formData);
+
+      const visitId = await saveServiceVisit(formData);
+      
+      alert(`✅ Service visit ${visitId.slice(-8)} saved successfully!`);
+      
+      // Reset form
+      form.reset();
+      photosPreview.innerHTML = "";
+      
     } catch (err) {
       console.error("Error saving visit:", err);
-      alert("Could not save service visit. Please try again.");
+      alert(`❌ Error: ${err.message}`);
     }
   });
+
+  console.log("✅ Service form handlers attached.");
 }
