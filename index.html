@@ -5,7 +5,6 @@
   <title>QMS - Quotation Management System</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="/path/to/favicon.png">
-
   <style>
     :root {
       --bg-gradient: radial-gradient(circle at top, #1f2937 0, #718bc1 50%, #718bc1 100%);
@@ -17,7 +16,7 @@
       --card-border: 1px solid rgba(148, 163, 184, 0.28);
       --text-main: #e5e7eb;
       --text-muted: #9ca3af;
-      --radius-lg: 16px; /* same shape as before */
+      --radius-lg: 16px;
       --shadow-soft: 0 20px 60px rgba(0, 0, 0, 0.65);
     }
 
@@ -34,6 +33,7 @@
       margin: 0;
       padding: 0;
       color: var(--text-main);
+      min-height: 100vh;
     }
 
     header {
@@ -52,13 +52,13 @@
       justify-content: space-between;
       max-width: 1200px;
       margin: 0 auto;
-      padding: 1.1rem 2.5rem;
+      padding: clamp(0.75rem, 3vw, 1.1rem) clamp(1rem, 4vw, 2.5rem);
     }
 
     .header-title {
-      font-size: 1.3rem;
+      font-size: clamp(1rem, 4vw, 1.3rem);
       font-weight: 600;
-      letter-spacing: 0.12em;
+      letter-spacing: clamp(0.05em, 0.1vw, 0.12em);
       text-transform: uppercase;
       color: #f9fafb;
     }
@@ -70,21 +70,18 @@
     .logout-btn {
       border: none;
       border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 0.8rem;
+      padding: clamp(0.4rem, 1.5vw, 0.6rem) clamp(0.8rem, 3vw, 1.4rem);
+      font-size: clamp(0.75rem, 2.5vw, 0.8rem);
       background: rgba(15, 23, 42, 0.96);
       color: var(--text-muted);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 0.4rem;
       border: 1px solid rgba(148, 163, 184, 0.5);
-      transition:
-        background 0.16s ease-out,
-        color 0.16s ease-out,
-        border-color 0.16s ease-out,
-        transform 0.12s ease-out,
-        box-shadow 0.16s ease-out;
+      transition: all 0.2s ease-out;
+      font-weight: 500;
+      white-space: nowrap;
     }
 
     .logout-btn:hover {
@@ -97,23 +94,25 @@
 
     .subheader {
       text-align: center;
-      margin-top: 1rem;
-      font-size: 0.95rem;
+      margin: clamp(1rem, 4vw, 1.5rem) 0;
+      font-size: clamp(0.85rem, 3vw, 0.95rem);
       color: var(--text-muted);
+      padding: 0 clamp(1rem, 5vw, 2.5rem);
     }
 
     .subheader span {
       color: var(--accent);
     }
 
-    /* Keep grid and card sizing exactly as before */
+    /* MOBILE-FIRST: Single column cards */
     .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* unchanged */
-      gap: 2rem;                                                   /* unchanged */
-      padding: 3rem 2.5rem 3.5rem;                                 /* unchanged */
-      max-width: 1200px;                                           /* unchanged */
+      display: flex;
+      flex-direction: column;
+      gap: clamp(1.25rem, 4vw, 2rem);
+      padding: clamp(1.25rem, 5vw, 3rem) clamp(1rem, 4vw, 2.5rem);
+      max-width: 1200px;
       margin: 0 auto;
+      padding-bottom: 4rem;
     }
 
     .card {
@@ -125,21 +124,20 @@
       border-radius: var(--radius-lg);
       border: var(--card-border);
       box-shadow: var(--shadow-soft);
-      padding: 1.75rem 1.6rem; /* unchanged padding => same size */
+      padding: clamp(1.25rem, 5vw, 1.75rem) clamp(1.25rem, 5vw, 1.6rem);
       text-align: left;
       cursor: pointer;
       overflow: hidden;
-      transform: translateY(10px);
+      transform: translateY(8px);
       opacity: 0;
       animation: fadeInUp 0.6s ease forwards;
-      transition:
-        transform 0.18s ease-out,
-        box-shadow 0.18s ease-out,
-        border-color 0.18s ease-out,
-        background 0.18s ease-out,
-        filter 0.18s ease-out;
+      transition: all 0.2s ease-out;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
     }
 
+    /* Staggered animations */
     .card:nth-child(1) { animation-delay: 0.05s; }
     .card:nth-child(2) { animation-delay: 0.12s; }
     .card:nth-child(3) { animation-delay: 0.19s; }
@@ -148,6 +146,7 @@
     .card:nth-child(6) { animation-delay: 0.40s; }
     .card:nth-child(7) { animation-delay: 0.47s; }
     .card:nth-child(8) { animation-delay: 0.54s; }
+    .card:nth-child(9) { animation-delay: 0.61s; }
 
     .card::before {
       content: "";
@@ -162,58 +161,62 @@
       );
       opacity: 0;
       mix-blend-mode: screen;
-      transition: opacity 0.18s ease-out;
+      transition: opacity 0.2s ease-out;
       pointer-events: none;
+      border-radius: var(--radius-lg);
     }
 
-    .card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+    .card:hover,
+    .card:active {
+      transform: translateY(-4px);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.85);
       border-color: rgba(129, 140, 248, 0.9);
-      filter: saturate(1.06);
+      filter: saturate(1.08);
     }
 
-    .card:hover::before {
-      opacity: 0.18;
+    .card:hover::before,
+    .card:active::before {
+      opacity: 0.2;
     }
 
     .card-header-line {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.4rem;
+      margin-bottom: clamp(0.75rem, 2vw, 1rem);
+      flex-shrink: 0;
     }
 
     .emoji-badge {
-      font-size: 1.5rem;
+      font-size: clamp(1.25rem, 5vw, 1.5rem);
       line-height: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 32px;
-      height: 32px;
+      width: clamp(40px, 12vw, 52px);
+      height: clamp(40px, 12vw, 52px);
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.95);
       border: 1px solid rgba(148, 163, 184, 0.7);
+      flex-shrink: 0;
     }
 
     .emoji-icon {
-      width: 26px;
-      height: 26px;
-      display: inline-block;
-      vertical-align: middle;
+      width: clamp(24px, 8vw, 36px);
+      height: clamp(24px, 8vw, 36px);
       object-fit: contain;
     }
 
     .card-pill {
-      font-size: 0.7rem;
+      font-size: clamp(0.65rem, 2vw, 0.7rem);
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      padding: 0.15rem 0.55rem;
+      padding: clamp(0.2rem, 1vw, 0.3rem) clamp(0.5rem, 2vw, 0.75rem);
       border-radius: 999px;
       background: var(--primary-soft);
       color: var(--primary);
       font-weight: 600;
+      white-space: nowrap;
     }
 
     .card-pill--master {
@@ -227,46 +230,51 @@
     }
 
     .card h2 {
-      margin: 0.45rem 0 0.35rem;
+      margin: clamp(0.5rem, 2vw, 1rem) 0 clamp(0.25rem, 1vw, 0.5rem);
       color: #f9fafb;
-      font-size: 1.15rem;
+      font-size: clamp(1rem, 4vw, 1.15rem);
       font-weight: 600;
+      line-height: 1.3;
+      flex-grow: 0;
     }
 
     .card p {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      margin: 0;
+      font-size: clamp(0.8rem, 3vw, 0.9rem);
+      margin: 0 0 clamp(0.75rem, 3vw, 1.15rem) 0;
+      line-height: 1.45;
+      flex-grow: 1;
     }
 
     .card-footer {
-      margin-top: 1.15rem;
+      margin-top: auto;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: clamp(0.75rem, 2.5vw, 0.8rem);
       color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .card-footer span {
       display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.4rem;
     }
 
     .chevron {
-      font-size: 1rem;
-      transition: transform 0.18s ease-out;
+      font-size: clamp(0.95rem, 3vw, 1rem);
+      transition: transform 0.2s ease-out;
     }
 
     .card:hover .chevron {
-      transform: translateX(4px);
+      transform: translateX(6px);
     }
 
     @keyframes fadeInUp {
       0% {
         opacity: 0;
-        transform: translateY(16px);
+        transform: translateY(12px);
       }
       100% {
         opacity: 1;
@@ -274,23 +282,46 @@
       }
     }
 
-    @media (max-width: 640px) {
-      .header-inner {
-        padding: 0.9rem 1.5rem;
-      }
-      .header-title {
-        font-size: 1.05rem;
-        letter-spacing: 0.1em;
-      }
+    /* TABLET: 2-column optional */
+    @media (min-width: 768px) {
       .container {
-        padding: 2rem 1.25rem 2.5rem;
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        display: grid !important;
       }
+      
+      .header-inner {
+        padding: 1rem 2rem;
+      }
+    }
+
+    /* DESKTOP: Enhanced spacing */
+    @media (min-width: 1024px) {
+      .container {
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 2.5rem;
+        padding: 3rem 3rem 4rem;
+      }
+      
       .card {
-        padding: 1.4rem 1.35rem; /* keep your smaller mobile padding */
+        padding: 2rem 2rem;
+        min-height: 160px;
+      }
+    }
+
+    /* Landscape mobile fix */
+    @media (max-width: 480px) and (orientation: landscape) {
+      .container {
+        padding: 1rem;
+        gap: 1rem;
+      }
+      
+      .card {
+        padding: 1rem;
+        min-height: 120px;
       }
     }
   </style>
+
 </head>
 <body>
   <header>
