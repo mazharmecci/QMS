@@ -7,9 +7,27 @@ import {
   setDoc, 
   ref, 
   uploadBytes, 
-  getDownloadURL 
+  getDownloadURL,
+  serverTimestamp
 } from "./firebase.js";  // adjust path if needed
 
+// --- Helper: log ID token for debugging ---
+async function logAuthToken() {
+  if (!auth.currentUser) {
+    console.error("No user is signed in!");
+    return null;
+  }
+  try {
+    const token = await auth.currentUser.getIdToken(/* forceRefresh */ true);
+    console.log("Firebase ID Token:", token);
+    return token;
+  } catch (err) {
+    console.error("Failed to fetch ID token:", err);
+    return null;
+  }
+}
+
+// --- Helper: upload photos to Firebase Storage ---
 async function uploadPhotos(serial, visitId, files) {
   const urls = [];
   for (const file of files) {
@@ -29,10 +47,14 @@ async function uploadPhotos(serial, visitId, files) {
   return urls;
 }
 
+// --- Helper: save service visit to Firestore ---
 async function saveServiceVisit(serial, diagnostics, actions, files) {
   if (!auth.currentUser) {
     throw new Error("User must be signed in to save a service visit.");
   }
+
+  // Debug: log token before saving
+  await logAuthToken();
 
   const visitId = `visit-${Date.now()}`;
   const photoUrls = files?.length ? await uploadPhotos(serial, visitId, Array.from(files)) : [];
