@@ -601,7 +601,14 @@ button:disabled {
           <!-- Equipment options populated here -->
         </select>
       </div>
-      
+        
+      <input 
+        id="historyHospitalName" 
+        type="text" 
+        placeholder="🏥 Filter by Hospital (optional)" 
+        style="margin-bottom:1rem;padding:0.75rem;border:1px solid #e2e8f0;border-radius:8px;"
+      />      
+     
       <div class="dropdown-group">
         <!-- Serial Dropdown -->
         <label for="historySerial" class="dropdown-label">Serial Number</label>
@@ -612,7 +619,6 @@ button:disabled {
       </div>
       
       <ul id="historyList" class="history-list"></ul>
-
 
       <!-- LIGHTBOX MODAL -->
       <div id="photoLightbox" class="lightbox">
