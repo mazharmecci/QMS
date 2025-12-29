@@ -612,8 +612,6 @@ button:disabled {
         <div id="lightboxCaption"></div>
       </div>
 
-  <!-- Firebase service logic -->
-<!-- COMPLETE FIREBASE SCRIPT -->
 <script type="module">
   import { 
     auth, 
@@ -652,7 +650,7 @@ button:disabled {
     }
   }
 
-  // FIRESTORE HELPERS (Index-Free - Production Optimized)
+  // 🔍 FIRESTORE HELPERS
   async function getEquipmentHistory(serial) {
     console.log("📜 Fetching history for serial:", serial);
     try {
@@ -714,8 +712,7 @@ button:disabled {
     console.log(`✅ Populated "${dropdownId}" with ${serials.length} serials`);
   }
 
-
- // 🏆 MAIN HISTORY RENDERING (Production Optimized)
+  // 🏆 MAIN HISTORY RENDERING
   function renderHistory(history) {
     const list = document.getElementById("historyList");
     if (!list) return;
@@ -734,15 +731,14 @@ button:disabled {
   function createVisitCard(visit, index) {
     const li = document.createElement("li");
     li.className = "history-item";
-    li.dataset-visitId = visit.id || index;
+    li.dataset.visitId = visit.id || `visit-${index}`;
     
     li.style.cssText = `
-      --visit-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       margin-bottom: 1.75rem;
       padding: 1.5rem;
       border: 1px solid #e2e8f0;
       border-radius: 16px;
-      background: var(--visit-bg);
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
       max-width: 100%;
       overflow: visible;
       transition: all 0.2s ease;
@@ -758,17 +754,10 @@ button:disabled {
   function createVisitHeader(visit) {
     const date = visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date';
     return `
-      <div style="
-        margin-bottom: 1rem; 
-        padding-bottom: 1rem; 
-        border-bottom: 2px solid rgba(59,130,246,0.1);
-      ">
-        <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;color:var(--text-main);">
-          ${date}
-        </div>
+      <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:2px solid rgba(59,130,246,0.1);">
+        <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;color:var(--text-main);">${date}</div>
         <div style="color:var(--text-muted);font-size:0.9rem;">
-          👨‍🔧 ${visit.engineerName || 'Unknown Engineer'} 
-          • 🔢 ${visit.instrumentSerial || 'N/A'}
+          👨‍🔧 ${visit.engineerName || 'Unknown Engineer'} • 🔢 ${visit.instrumentSerial || 'N/A'}
         </div>
       </div>
     `;
@@ -790,47 +779,35 @@ button:disabled {
     return html;
   }
 
-  // 🔍 EXPANDABLE SECTION (HTML Template)
+  // 🔍 EXPANDABLE SECTION (Fixed HTML)
   function createExpandableSectionHTML(title, content) {
-    const isLong = content.length > 150;
+    const isLong = (content || '').length > 150;
     return `
       <div class="expandable-section" data-content="${title.toLowerCase().replace(/\s+/g, '-')}" style="margin-bottom:1.25rem;border:1px solid rgba(148,163,184,0.2);border-radius:12px;overflow:hidden;">
         <div class="section-header" style="
-          padding: 1rem 1.25rem;
-          background: rgba(59,130,246,0.08);
-          font-weight: 600;
-          font-size: 0.95rem;
-          cursor: ${isLong ? 'pointer' : 'default'};
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          user-select: none;
-          border-bottom: 1px solid rgba(148,163,184,0.1);
-          border-radius: 8px 8px 0 0;
+          padding:1rem 1.25rem;background:rgba(59,130,246,0.08);font-weight:600;font-size:0.95rem;
+          cursor:${isLong ? 'pointer' : 'default'};display:flex;align-items:center;gap:0.75rem;
+          user-select:none;border-bottom:1px solid rgba(148,163,184,0.1);border-radius:8px 8px 0 0;
         ">${title} ${isLong ? '▼' : ''}</div>
         <div class="section-content" style="
-          padding: 1.25rem;
-          background: white;
-          color: var(--text-main);
-          line-height: 1.6;
-          font-size: 0.9rem;
-          border-radius: 0 0 8px 8px;
-          ${isLong ? 'max-height:120px;overflow:hidden;' : ''}
+          padding:1.25rem;background:white;color:var(--text-main);line-height:1.6;font-size:0.9rem;
+          border-radius:0 0 8px 8px;${isLong ? 'max-height:120px;overflow:hidden;' : ''}
         ">${escapeHtml(content)}</div>
       </div>
     `;
   }
 
-  // 🖼️ PHOTO GALLERY (HTML Template)
+  // 🖼️ PHOTO GALLERY (FIXED - No undefined idx)
   function createPhotoGalleryHTML(visit) {
     let photoHtml = '';
     const photosToShow = (visit.photos || []).slice(0, 4);
+    const visitId = visit.id || `visit-${Date.now()}`;
     
     photosToShow.forEach((url, idx) => {
       if (typeof url === 'string' && url.startsWith('http')) {
         photoHtml += `
           <img src="${url}" alt="Photo ${idx + 1}" class="history-photo" 
-               data-visit-id="${visit.id || 'visit-' + idx}"
+               data-visit-id="${visitId}"
                style="width:85px;height:85px;object-fit:cover;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(0,0,0,0.1);flex-shrink:0;"
                loading="lazy">
         `;
@@ -839,7 +816,7 @@ button:disabled {
 
     const morePhotos = (visit.photos || []).length - 4;
     const moreBtn = morePhotos > 0 ? `
-      <button class="gallery-more-btn" data-visit-id="${visit.id || 'visit-' + idx}" style="
+      <button class="gallery-more-btn" data-visit-id="${visitId}" style="
         padding:0.75rem 1.25rem;background:linear-gradient(135deg,#3b82f6,#22c1c3);
         color:white;border:none;border-radius:25px;cursor:pointer;font-size:0.9rem;font-weight:600;
         transition:all 0.2s ease;min-width:140px;height:85px;display:flex;align-items:center;justify-content:center;
@@ -847,7 +824,7 @@ button:disabled {
     ` : '';
 
     return `
-      <div class="visit-gallery" data-visit-id="${visit.id || 'visit-' + idx}" style="
+      <div class="visit-gallery" data-visit-id="${visitId}" style="
         display:flex;flex-wrap:wrap;gap:0.75rem;padding:1.25rem;background:rgba(248,250,252,0.6);
         border-radius:12px;border:1px solid rgba(148,163,184,0.2);margin-top:1rem;
       ">
