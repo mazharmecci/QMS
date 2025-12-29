@@ -170,6 +170,67 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
+     .history-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .visit-summary {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    
+    .visit-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .history-photo {
+      width: 120px;
+      height: auto;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+     .lightbox {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 9999;
+      padding-top: 60px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.9);
+    }
+    
+    .lightbox-content {
+      margin: auto;
+      display: block;
+      max-width: 90%;
+      max-height: 80%;
+    }
+    
+    #lightboxCaption {
+      margin: auto;
+      display: block;
+      text-align: center;
+      color: #ccc;
+      padding: 10px;
+    }
+    
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 35px;
+      color: #fff;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     @media (max-width: 768px) {
       .quote-setup-shell {
         padding: 16px;
@@ -214,6 +275,24 @@
           required 
         />
 
+        <!-- Engineer (auto-filled) -->
+        <input 
+          id="engineerName" 
+          name="engineerName" 
+          type="text" 
+          placeholder="Engineer Name" 
+          readonly 
+        />
+
+        <!-- Date/Time (auto-filled) -->
+        <input 
+          id="visitDateTime" 
+          name="visitDateTime" 
+          type="text" 
+          placeholder="Date & Time" 
+          readonly 
+        />
+
         <!-- Diagnostics -->
         <textarea 
           id="diagnostics" 
@@ -243,29 +322,247 @@
         <!-- Submit -->
         <button type="submit">Save Visit</button>
       </form>
+
+      <!-- Equipment History -->
+      <h3>Equipment History</h3>
+      <div id="equipmentHistory">
+        <p>Enter a serial number above to view past service visits.</p>
+        <ul id="historyList"></ul>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase service logic -->
-  <script type="module">
-    import { auth, onAuthStateChanged } from "../js/firebase.js";
-    import { initServiceForm } from "../js/istosService.js"; // exported setup function
+        <!-- Submit -->
+        <button type="submit">Save Visit</button>
+      </form>
+    </div>
+  </div>
+
+<!-- Firebase service logic -->
+<script type="module">
+  import { 
+    auth, 
+    db, 
+    onAuthStateChanged,
+    collection, 
+    query, 
+    where, 
+    orderBy, 
+    getDocs 
+  } from "../js/firebase.js";  // Use your main Firebase config (v10+)
   
-    // Auth guard: only initialize form if user is logged in
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        alert("You must be logged in to upload photos.");
-        window.location.href = "login.html";
-      } else {
-        try {
-          initServiceForm();
-          console.log("Service form initialized for user:", user.uid);
-        } catch (err) {
-          console.error("Failed to initialize service form:", err);
+  import { initServiceForm } from "../js/istosService.js";
+
+  let currentGallery = [];
+  let currentIndex = 0;
+  let startX = 0;
+  let endX = 0;
+
+  // Helper: fetch equipment history
+  async function getEquipmentHistory(serial) {
+    try {
+      const q = query(
+        collection(db, "serviceVisits"),
+        where("instrumentSerial", "==", serial),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => doc.data());
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      return [];
+    }
+  }
+
+  // Render history list with photo gallery + lightbox
+  function renderHistory(history) {
+    const list = document.getElementById("historyList");
+    if (!list) {
+      console.warn("historyList element not found");
+      return;
+    }
+    
+    list.innerHTML = "";
+
+    history.forEach(visit => {
+      const li = document.createElement("li");
+
+      // Summary
+      const summary = document.createElement("div");
+      summary.className = "visit-summary";
+      summary.textContent = `${visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'} - ${visit.engineerName}: ${visit.actionsTaken}`;
+      li.appendChild(summary);
+
+      // Gallery
+      if (visit.photos && visit.photos.length > 0) {
+        const gallery = document.createElement("div");
+        gallery.className = "visit-gallery";
+
+        visit.photos.forEach((url, idx) => {
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "Service photo";
+          img.className = "history-photo";
+          img.loading = "lazy"; // Performance
+
+          // Lightbox click handler
+          img.addEventListener("click", () => {
+            currentGallery = visit.photos;
+            currentIndex = idx;
+            openLightbox(url, `${visit.engineerName} - ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Service photo'}`);
+          });
+
+          gallery.appendChild(img);
+        });
+
+        li.appendChild(gallery);
+      }
+
+      list.appendChild(li);
+    });
+  }
+
+  // Lightbox functions
+  function openLightbox(url, captionText) {
+    const lightbox = document.getElementById("photoLightbox");
+    const lightboxImg = document.getElementById("lightboxImage");
+    const caption = document.getElementById("lightboxCaption");
+    
+    if (!lightbox || !lightboxImg || !caption) {
+      console.warn("Lightbox elements not found");
+      return;
+    }
+
+    lightbox.style.display = "block";
+    lightboxImg.src = url;
+    caption.textContent = captionText;
+  }
+
+  function closeLightbox() {
+    const lightbox = document.getElementById("photoLightbox");
+    if (lightbox) {
+      lightbox.style.display = "none";
+    }
+  }
+
+  // Close lightbox handlers
+  function initLightboxHandlers() {
+    // Close button
+    const closeBtn = document.querySelector(".close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", closeLightbox);
+    }
+
+    // Overlay click to close
+    const lightbox = document.getElementById("photoLightbox");
+    if (lightbox) {
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) {
+          closeLightbox();
+        }
+      });
+    }
+
+    // Keyboard navigation
+    document.addEventListener("keydown", (e) => {
+      const lightbox = document.getElementById("photoLightbox");
+      if (lightbox && lightbox.style.display === "block") {
+        if (e.key === "ArrowRight" && currentGallery.length > 0) {
+          currentIndex = (currentIndex + 1) % currentGallery.length;
+          openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
+        } else if (e.key === "ArrowLeft" && currentGallery.length > 0) {
+          currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
+          openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
+        } else if (e.key === "Escape") {
+          closeLightbox();
         }
       }
     });
-  </script>
+
+    // Touch/swipe support
+    if (lightbox) {
+      lightbox.addEventListener("touchstart", (e) => {
+        startX = e.changedTouches[0].screenX;
+      });
+      
+      lightbox.addEventListener("touchend", (e) => {
+        endX = e.changedTouches[0].screenX;
+        handleSwipe();
+      });
+    }
+  }
+
+  function handleSwipe() {
+    const threshold = 50;
+    const lightbox = document.getElementById("photoLightbox");
+    
+    if (lightbox && lightbox.style.display === "block" && currentGallery.length > 0) {
+      if (endX - startX > threshold) {
+        // Swipe right → previous
+        currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
+        openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
+      } else if (startX - endX > threshold) {
+        // Swipe left → next
+        currentIndex = (currentIndex + 1) % currentGallery.length;
+        openLightbox(currentGallery[currentIndex], "Photo " + (currentIndex + 1));
+      }
+    }
+  }
+
+  // Main initialization
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      alert("You must be logged in to access service records.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    try {
+      // Initialize service form
+      await initServiceForm();
+      console.log("Service form initialized for user:", user.uid);
+
+      // Auto-fill form fields
+      const engineerField = document.getElementById("engineerName");
+      const dateField = document.getElementById("visitDateTime");
+      
+      if (engineerField) {
+        engineerField.value = user.displayName || user.email.split("@")[0];
+      }
+      if (dateField) {
+        dateField.value = new Date().toLocaleString();
+      }
+
+      // Serial number history lookup
+      const serialField = document.getElementById("instrumentSerial");
+      if (serialField) {
+        serialField.addEventListener("blur", async (e) => {
+          const serial = e.target.value.trim();
+          if (!serial) return;
+          
+          const history = await getEquipmentHistory(serial);
+          renderHistory(history);
+        });
+      }
+
+      // Initialize lightbox handlers after DOM is ready
+      initLightboxHandlers();
+
+    } catch (err) {
+      console.error("Failed to initialize service form:", err);
+      alert("Failed to initialize service form. Please refresh and try again.");
+    }
+  });
+
+</script>
+
+  <!-- Lightbox Modal -->
+<div id="photoLightbox" class="lightbox">
+  <span class="close">&times;</span>
+  <img class="lightbox-content" id="lightboxImage" />
+  <div id="lightboxCaption"></div>
+</div>
+
 
 </body>
 </html>
