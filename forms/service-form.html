@@ -461,7 +461,7 @@ button:disabled {
   <!-- Main shell -->
   <div class="quote-setup-shell">
     <div class="container">
-  <h2><img src="..images/istosmini.png" alt="ISTOS Logo" style="width:28px; height:28px; vertical-align:middle; margin-right:8px;" />Log Service Visit</h2>
+  <h2><img src="../images/istosmini.png" alt="ISTOS Logo" style="width:28px; height:28px; vertical-align:middle; margin-right:8px;" />Log Service Visit</h2>
       
       <!-- SERVICE FORM -->
       <form id="serviceVisitForm">
@@ -524,21 +524,32 @@ button:disabled {
           style="grid-column: span 2;"
         />
 
-        <!-- Equipment Serial Number Dropdown -->
-        <select id="serialDropdown" name="instrumentSerial" required>
-          <option value="">Select Serial Number</option>
-          <option value="__new">+ Enter New Serial</option>
-        </select>
+        <!-- Serial Number Dropdown -->
+        <div style="margin-bottom:12px;">
+          <label for="serialDropdown" style="display:block; font-size:0.85rem; color:#555; margin-bottom:4px;">Equipment Serial Number</label>
+          <select 
+            id="serialDropdown" 
+            name="instrumentSerial" 
+            required 
+            style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:0.95rem; background-color:#fff; color:#333;"
+          >
+            <option value="">Select Serial Number</option>
+            <option value="__new">+ Enter New Serial</option>
+          </select>
+        </div>
         
         <!-- New Serial Input (hidden) -->
-        <input 
-          id="newSerialInput" 
-          name="newSerialInput" 
-          type="text" 
-          placeholder="Enter New Serial Number" 
-          style="display:none;" 
-        />
-
+        <div id="newSerialWrapper" style="margin-bottom:12px; display:none;">
+          <label for="newSerialInput" style="display:block; font-size:0.85rem; color:#555; margin-bottom:4px;">Enter New Serial Number</label>
+          <input 
+            id="newSerialInput" 
+            name="newSerialInput" 
+            type="text" 
+            placeholder="Enter New Serial Number" 
+            style="width:100%; padding:8px 12px; border:1px solid #ccc; border-radius:6px; font-size:0.95rem; color:#333;"
+          />
+        </div>
+        
         <!-- Engineer Name -->
         <div style="margin-bottom:12px;">
           <label for="engineerName" style="display:block; font-size:0.85rem; color:#555; margin-bottom:4px;">Engineer Name</label>
@@ -1036,11 +1047,22 @@ button:disabled {
 
       const serialDropdown = document.getElementById("serialDropdown");
       const newSerialInput = document.getElementById("newSerialInput");
-      if (serialDropdown && newSerialInput) {
+      const newSerialWrapper = document.getElementById("newSerialWrapper"); // optional wrapper div
+      
+      if (serialDropdown) {
         serialDropdown.addEventListener("change", (e) => {
-          const showNew = e.target.value === "__new";
-          newSerialInput.style.display = showNew ? "block" : "none";
-          if (!showNew) newSerialInput.value = "";
+          const isNewSerial = e.target.value === "__new";
+      
+          if (newSerialInput) {
+            newSerialInput.value = isNewSerial ? newSerialInput.value : "";
+            newSerialInput.required = isNewSerial;
+          }
+      
+          if (newSerialWrapper) {
+            newSerialWrapper.style.display = isNewSerial ? "block" : "none";
+          } else if (newSerialInput) {
+            newSerialInput.style.display = isNewSerial ? "block" : "none";
+          }
         });
       }
 
