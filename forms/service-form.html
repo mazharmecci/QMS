@@ -715,98 +715,230 @@ button:disabled {
   }
 
   // HISTORY RENDERING (Complete Bulletproof Version)
-  function renderHistory(history) {
-    const list = document.getElementById("historyList");
-    if (!list) return;
-    
-    list.innerHTML = history.length 
-      ? ""
-      : '<li style="text-align:center;padding:2rem;color:var(--text-muted);">No service history found</li>';
+function renderHistory(history) {
+  const list = document.getElementById("historyList");
+  if (!list) return;
+  
+  list.innerHTML = history.length 
+    ? ""
+    : '<li style="text-align:center;padding:3rem;color:var(--text-muted);">No service history found</li>';
 
-    history.forEach((visit, visitIndex) => {
-      console.log(`Visit ${visitIndex}:`, {
-        date: visit.createdAt?.toDate?.()?.toLocaleString(),
-        engineer: visit.engineerName,
-        photos: visit.photos?.length || 0
+  history.forEach((visit, visitIndex) => {
+    console.log(`Visit ${visitIndex}:`, {
+      date: visit.createdAt?.toDate?.()?.toLocaleString(),
+      engineer: visit.engineerName,
+      diagnosticsLength: visit.diagnostics?.length || 0,
+      actionsLength: visit.actionsTaken?.length || 0,
+      photos: visit.photos?.length || 0
+    });
+
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.style.cssText = `
+      margin-bottom: 1.75rem;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      max-width: 100%;
+      overflow: visible;
+    `;
+
+    // HEADER
+    const header = document.createElement("div");
+    header.style.cssText = "margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(59,130,246,0.1);";
+    header.innerHTML = `
+      <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;">
+        ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'}
+      </div>
+      <div style="color:var(--text-muted);font-size:0.9rem;">
+        👨‍🔧 ${visit.engineerName || 'Unknown'} • 🔢 ${visit.instrumentSerial}
+      </div>
+    `;
+    li.appendChild(header);
+
+    // EXPANDABLE CONTENT SECTIONS
+    const content = document.createElement("div");
+    content.style.cssText = "margin-bottom:1.5rem;";
+
+    // DIAGNOSTICS (Expandable)
+    const diagnosticsSection = createExpandableSection(
+      "🔍 Diagnostics / Observations",
+      visit.diagnostics || "No diagnostics recorded",
+      visit.diagnostics?.length > 150
+    );
+    content.appendChild(diagnosticsSection);
+
+    // ACTIONS TAKEN (Expandable) 
+    const actionsSection = createExpandableSection(
+      "🔧 Actions Taken / Resolution", 
+      visit.actionsTaken || "No actions recorded",
+      visit.actionsTaken?.length > 150
+    );
+    content.appendChild(actionsSection);
+
+    li.appendChild(content);
+
+    // PHOTOS GALLERY (Always visible)
+    if (visit.photos?.length > 0) {
+      const gallery = document.createElement("div");
+      gallery.className = "visit-gallery";
+      gallery.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 1.25rem;
+        background: rgba(248,250,252,0.6);
+        border-radius: 12px;
+        border: 1px solid rgba(148,163,184,0.2);
+        margin-top: 1rem;
+      `;
+
+      // Show first 4 photos + "more" button
+      visit.photos.slice(0, 4).forEach((url, idx) => {
+        if (typeof url === 'string' && url.startsWith('http')) {
+          const img = createHistoryPhoto(url, idx, visit.photos.length);
+          gallery.appendChild(img);
+        }
       });
 
-      const li = document.createElement("li");
-      li.style.cssText = `
-        margin-bottom: 1.5rem;
-        padding: 1.25rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      `;
-
-      // SUMMARY
-      const summary = document.createElement("div");
-      summary.className = "visit-summary";
-      summary.innerHTML = `
-        <strong>${visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'}</strong><br>
-        <small>${visit.engineerName || 'Unknown'} • ${visit.instrumentSerial}</small>
-      `;
-      li.appendChild(summary);
-
-      // CONTENT PREVIEW
-      const preview = document.createElement("div");
-      preview.style.cssText = "margin:1rem 0;color:var(--text-muted);font-size:0.9rem;line-height:1.4;";
-      preview.innerHTML = `
-        <strong>Issue:</strong> ${visit.diagnostics || 'N/A'}<br>
-        <strong>Actions:</strong> ${visit.actionsTaken?.slice(0, 100) || 'No actions'}...
-      `;
-      li.appendChild(preview);
-
-      // PHOTOS GALLERY
-      if (visit.photos?.length > 0) {
-        const gallery = document.createElement("div");
-        gallery.className = "visit-gallery";
-        gallery.style.cssText = "display:flex;flex-wrap:wrap;gap:0.75rem;padding:1rem;background:rgba(248,250,252,0.5);border-radius:12px;";
-
-        visit.photos.slice(0, 6).forEach((url, idx) => {
-          if (typeof url === 'string' && url.startsWith('http')) {
-            const img = document.createElement("img");
-            img.src = url;
-            img.alt = `Service photo ${idx + 1}`;
-            img.className = "history-photo";
-            img.style.cssText = "width:85px;height:85px;object-fit:cover;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;transition:all 0.2s;";
-            img.loading = "lazy";
-            
-            img.onerror = () => img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIGZpbGw9IiM0QjU1NjMiLz4KPHRleHQgeD0iNDAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlCMkI2QSI+Z3JheTwvdGV4dD4KPC9zdmc+';
-
-            img.addEventListener("click", () => {
-              currentGallery = visit.photos || [];
-              currentIndex = idx;
-              openLightbox(url, `${visit.engineerName || 'Service'} - ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Photo'} (${idx + 1}/${visit.photos.length})`);
-            });
-            
-            gallery.appendChild(img);
-          }
-        });
-
-        if (visit.photos.length > 6) {
-          const moreBtn = document.createElement("button");
-          moreBtn.textContent = `+${visit.photos.length - 6} more`;
-          moreBtn.style.cssText = "padding:0.5rem 1rem;background:var(--accent-soft);color:var(--accent);border:none;border-radius:20px;cursor:pointer;font-size:0.85rem;font-weight:500;";
-          moreBtn.onclick = () => {
-            currentGallery = visit.photos;
-            currentIndex = 0;
-            openLightbox(visit.photos[0], `${visit.engineerName} - Full gallery (${visit.photos.length} photos)`);
-          };
-          gallery.appendChild(moreBtn);
-        }
-
-        li.appendChild(gallery);
-      } else {
-        const noPhotos = document.createElement("div");
-        noPhotos.textContent = "📷 No photos attached";
-        noPhotos.style.cssText = "padding:1.25rem;color:var(--text-muted);font-style:italic;text-align:center;";
-        li.appendChild(noPhotos);
+      if (visit.photos.length > 4) {
+        const moreBtn = document.createElement("button");
+        moreBtn.innerHTML = `+${visit.photos.length - 4} more photos`;
+        moreBtn.style.cssText = `
+          padding: 0.75rem 1.25rem;
+          background: linear-gradient(135deg, var(--accent), #22c1c3);
+          color: white;
+          border: none;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          min-width: 140px;
+          height: 85px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `;
+        moreBtn.onclick = () => {
+          currentGallery = visit.photos;
+          currentIndex = 0;
+          openLightbox(visit.photos[0], `${visit.engineerName} - Full gallery (${visit.photos.length} photos)`);
+        };
+        moreBtn.onmouseover = () => moreBtn.style.transform = 'scale(1.05)';
+        moreBtn.onmouseout = () => moreBtn.style.transform = 'scale(1)';
+        gallery.appendChild(moreBtn);
       }
 
-      list.appendChild(li);
-    });
+      li.appendChild(gallery);
+    } else {
+      const noPhotos = document.createElement("div");
+      noPhotos.innerHTML = "📷 No photos attached";
+      noPhotos.style.cssText = `
+        padding: 1.5rem;
+        color: var(--text-muted);
+        font-style: italic;
+        text-align: center;
+        background: rgba(248,250,252,0.5);
+        border-radius: 12px;
+        border: 2px dashed rgba(148,163,184,0.3);
+        margin-top: 1rem;
+      `;
+      li.appendChild(noPhotos);
+    }
+
+    list.appendChild(li);
+  });
+}
+
+// HELPER: Create expandable text section
+function createExpandableSection(title, content, isLong) {
+  const section = document.createElement("div");
+  section.style.cssText = "margin-bottom:1.25rem;border:1px solid rgba(148,163,184,0.2);border-radius:12px;overflow:hidden;";
+  
+  const header = document.createElement("div");
+  header.style.cssText = `
+    padding: 1rem 1.25rem;
+    background: rgba(59,130,246,0.08);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    user-select: none;
+    border-bottom: 1px solid rgba(148,163,184,0.1);
+  `;
+  header.innerHTML = `${title} ${isLong ? '▼' : ''}`;
+  
+  const textContent = document.createElement("div");
+  textContent.style.cssText = `
+    padding: 1.25rem;
+    background: white;
+    color: var(--text-main);
+    line-height: 1.6;
+    font-size: 0.9rem;
+    ${isLong ? 'max-height:120px;overflow:hidden;' : ''}
+  `;
+  textContent.textContent = content;
+  
+  section.appendChild(header);
+  section.appendChild(textContent);
+  
+  // Make expandable if long content
+  if (isLong) {
+    let isExpanded = false;
+    header.onclick = () => {
+      isExpanded = !isExpanded;
+      textContent.style.maxHeight = isExpanded ? 'none' : '120px';
+      textContent.style.overflow = isExpanded ? 'visible' : 'hidden';
+      header.innerHTML = `${title} ${isExpanded ? '▲' : '▼'}`;
+    };
   }
+  
+  return section;
+}
+
+// HELPER: Create history photo
+function createHistoryPhoto(url, idx, totalPhotos) {
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = `Service photo ${idx + 1}`;
+  img.className = "history-photo";
+  img.style.cssText = `
+    width: 85px;
+    height: 85px;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  `;
+  img.loading = "lazy";
+  
+  img.onerror = () => {
+    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIGZpbGw9IiM0QjU1NjMiLz4KPHRleHQgeD0iNDAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlCMkI2QSI+Z3JheTwvdGV4dD4KPC9zdmc+';
+  };
+  
+  img.addEventListener("click", () => {
+    currentGallery = visit.photos || [];
+    currentIndex = idx;
+    openLightbox(url, `Photo ${idx + 1} of ${totalPhotos}`);
+  });
+  
+  img.onmouseover = () => {
+    img.style.transform = 'scale(1.08)';
+    img.style.borderColor = 'var(--accent)';
+  };
+  img.onmouseout = () => {
+    img.style.transform = 'scale(1)';
+    img.style.borderColor = '#e2e8f0';
+  };
+  
+  return img;
+}
 
   // LIGHTBOX FUNCTIONS (Complete)
   function openLightbox(url, captionText) {
