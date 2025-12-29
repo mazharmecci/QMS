@@ -255,7 +255,7 @@
   <!-- Sticky header -->
   <header>
     <div class="header-inner">
-      <button class="back-btn" onclick="navigate('index.html')">← Back</button>
+      <button class="back-btn" onclick="history.back()">← Back</button>
       <div class="header-title">Service Visit Form</div>
     </div>
   </header>
@@ -563,6 +563,12 @@
   <div id="lightboxCaption"></div>
 </div>
 
+<script>
+// Navigation helper function
+function navigate(page) {
+  window.location.href = page;
+}
+</script>
 
 </body>
 </html>
