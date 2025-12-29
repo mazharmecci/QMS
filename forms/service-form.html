@@ -715,142 +715,217 @@ button:disabled {
   }
 
   // HISTORY RENDERING (Complete Bulletproof Version)
+// 🏆 REFINED HISTORY RENDERING - Ultra Clean & Performant
 function renderHistory(history) {
   const list = document.getElementById("historyList");
   if (!list) return;
-  
+
+  // Empty or "No results" state
   list.innerHTML = history.length 
     ? ""
     : '<li style="text-align:center;padding:3rem;color:var(--text-muted);">No service history found</li>';
 
-  history.forEach((visit, visitIndex) => {
-    console.log(`Visit ${visitIndex}:`, {
-      date: visit.createdAt?.toDate?.()?.toLocaleString(),
-      engineer: visit.engineerName,
-      diagnosticsLength: visit.diagnostics?.length || 0,
-      actionsLength: visit.actionsTaken?.length || 0,
-      photos: visit.photos?.length || 0
-    });
-
-    const li = document.createElement("li");
-    li.className = "history-item";
-    li.style.cssText = `
-      margin-bottom: 1.75rem;
-      padding: 1.5rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      max-width: 100%;
-      overflow: visible;
-    `;
-
-    // HEADER
-    const header = document.createElement("div");
-    header.style.cssText = "margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(59,130,246,0.1);";
-    header.innerHTML = `
-      <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;">
-        ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date'}
-      </div>
-      <div style="color:var(--text-muted);font-size:0.9rem;">
-        👨‍🔧 ${visit.engineerName || 'Unknown'} • 🔢 ${visit.instrumentSerial}
-      </div>
-    `;
-    li.appendChild(header);
-
-    // EXPANDABLE CONTENT SECTIONS
-    const content = document.createElement("div");
-    content.style.cssText = "margin-bottom:1.5rem;";
-
-    // DIAGNOSTICS (Expandable)
-    const diagnosticsSection = createExpandableSection(
-      "🔍 Diagnostics / Observations",
-      visit.diagnostics || "No diagnostics recorded",
-      visit.diagnostics?.length > 150
-    );
-    content.appendChild(diagnosticsSection);
-
-    // ACTIONS TAKEN (Expandable) 
-    const actionsSection = createExpandableSection(
-      "🔧 Actions Taken / Resolution", 
-      visit.actionsTaken || "No actions recorded",
-      visit.actionsTaken?.length > 150
-    );
-    content.appendChild(actionsSection);
-
-    li.appendChild(content);
-
-    // PHOTOS GALLERY (Always visible)
-    if (visit.photos?.length > 0) {
-      const gallery = document.createElement("div");
-      gallery.className = "visit-gallery";
-      gallery.style.cssText = `
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        padding: 1.25rem;
-        background: rgba(248,250,252,0.6);
-        border-radius: 12px;
-        border: 1px solid rgba(148,163,184,0.2);
-        margin-top: 1rem;
-      `;
-
-      // Show first 4 photos + "more" button
-      visit.photos.slice(0, 4).forEach((url, idx) => {
-        if (typeof url === 'string' && url.startsWith('http')) {
-          const img = createHistoryPhoto(url, idx, visit.photos.length);
-          gallery.appendChild(img);
-        }
-      });
-
-      if (visit.photos.length > 4) {
-        const moreBtn = document.createElement("button");
-        moreBtn.innerHTML = `+${visit.photos.length - 4} more photos`;
-        moreBtn.style.cssText = `
-          padding: 0.75rem 1.25rem;
-          background: linear-gradient(135deg, var(--accent), #22c1c3);
-          color: white;
-          border: none;
-          border-radius: 25px;
-          cursor: pointer;
-          font-size: 0.9rem;
-          font-weight: 600;
-          transition: all 0.2s ease;
-          min-width: 140px;
-          height: 85px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `;
-        moreBtn.onclick = () => {
-          currentGallery = visit.photos;
-          currentIndex = 0;
-          openLightbox(visit.photos[0], `${visit.engineerName} - Full gallery (${visit.photos.length} photos)`);
-        };
-        moreBtn.onmouseover = () => moreBtn.style.transform = 'scale(1.05)';
-        moreBtn.onmouseout = () => moreBtn.style.transform = 'scale(1)';
-        gallery.appendChild(moreBtn);
-      }
-
-      li.appendChild(gallery);
-    } else {
-      const noPhotos = document.createElement("div");
-      noPhotos.innerHTML = "📷 No photos attached";
-      noPhotos.style.cssText = `
-        padding: 1.5rem;
-        color: var(--text-muted);
-        font-style: italic;
-        text-align: center;
-        background: rgba(248,250,252,0.5);
-        border-radius: 12px;
-        border: 2px dashed rgba(148,163,184,0.3);
-        margin-top: 1rem;
-      `;
-      li.appendChild(noPhotos);
-    }
-
+  history.forEach((visit, index) => {
+    const li = createVisitCard(visit, index);
     list.appendChild(li);
   });
 }
+
+// 🧩 SINGLE RESPONSIBILITY: Build complete visit card
+function createVisitCard(visit, index) {
+  const li = document.createElement("li");
+  li.className = "history-item";
+  li.dataset-visitId = visit.id || index;
+  
+  li.style.cssText = `
+    --visit-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    margin-bottom: 1.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: var(--visit-bg);
+    max-width: 100%;
+    overflow: visible;
+    transition: all 0.2s ease;
+  `;
+
+  li.innerHTML = createVisitHeader(visit) + createVisitContent(visit);
+  attachVisitInteractions(li, visit);
+  
+  return li;
+}
+
+// 📊 HEADER BUILDER
+function createVisitHeader(visit) {
+  const date = visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date';
+  return `
+    <div style="
+      margin-bottom: 1rem; 
+      padding-bottom: 1rem; 
+      border-bottom: 2px solid rgba(59,130,246,0.1);
+    ">
+      <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;color:var(--text-main);">
+        ${date}
+      </div>
+      <div style="color:var(--text-muted);font-size:0.9rem;">
+        👨‍🔧 ${visit.engineerName || 'Unknown Engineer'} 
+        • 🔢 ${visit.instrumentSerial || 'N/A'}
+      </div>
+    </div>
+  `;
+}
+
+// 📝 CONTENT BUILDER (Expandable Sections)
+function createVisitContent(visit) {
+  let html = `
+    <div style="margin-bottom:1.5rem;">
+      ${createExpandableSection("🔍 Diagnostics", visit.diagnostics || "No diagnostics recorded")}
+      ${createExpandableSection("🔧 Actions Taken", visit.actionsTaken || "No actions recorded")}
+    </div>
+  `;
+
+  // Photos section
+  html += visit.photos?.length 
+    ? createPhotoGallery(visit)
+    : createNoPhotosPlaceholder();
+
+  return html;
+}
+
+// 🔍 EXPANDABLE SECTION FACTORY
+function createExpandableSection(title, content, isLong = content.length > 150) {
+  const expandedClass = isLong ? '' : 'always-expanded';
+  return `
+    <div class="expandable-section ${expandedClass}" data-content="${title.toLowerCase()}">
+      <div class="section-header" style="
+        padding: 1rem 1.25rem;
+        background: rgba(59,130,246,0.08);
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: ${isLong ? 'pointer' : 'default'};
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        user-select: none;
+        border-bottom: 1px solid rgba(148,163,184,0.1);
+        border-radius: 8px 8px 0 0;
+      ">${title} ${isLong ? '▼' : ''}</div>
+      <div class="section-content" style="
+        padding: 1.25rem;
+        background: white;
+        color: var(--text-main);
+        line-height: 1.6;
+        font-size: 0.9rem;
+        border-radius: 0 0 8px 8px;
+        ${isLong ? 'max-height:120px;overflow:hidden;' : 'min-height:80px;'}
+      ">${escapeHtml(content)}</div>
+    </div>
+  `;
+}
+
+// 🖼️ PHOTO GALLERY BUILDER
+function createPhotoGallery(visit) {
+  let photoHtml = '';
+  const photosToShow = visit.photos.slice(0, 4);
+  
+  photosToShow.forEach((url, idx) => {
+    if (typeof url === 'string' && url.startsWith('http')) {
+      photoHtml += `
+        <img src="${url}" 
+             alt="Photo ${idx + 1}" 
+             class="history-photo"
+             data-gallery="${visit.id || 'gallery-' + idx}"
+             style="
+               width: 85px; height: 85px; object-fit: cover;
+               border: 2px solid #e2e8f0; border-radius: 12px;
+               cursor: pointer; transition: all 0.25s ease;
+               box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+               flex-shrink: 0;
+             "
+             loading="lazy">
+      `;
+    }
+  });
+
+  const morePhotos = visit.photos.length - 4;
+  const moreBtn = morePhotos > 0 ? `
+    <button class="gallery-more-btn" data-gallery="${visit.id || 'gallery-' + index}" style="
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, #3b82f6, #22c1c3);
+      color: white; border: none; border-radius: 25px;
+      cursor: pointer; font-size: 0.9rem; font-weight: 600;
+      transition: all 0.2s ease; min-width: 140px; height: 85px;
+      display: flex; align-items: center; justify-content: center;
+    ">+${morePhotos} photos</button>
+  ` : '';
+
+  return `
+    <div class="visit-gallery" data-gallery="${visit.id || 'gallery-' + index}" style="
+      display: flex; flex-wrap: wrap; gap: 0.75rem;
+      padding: 1.25rem; background: rgba(248,250,252,0.6);
+      border-radius: 12px; border: 1px solid rgba(148,163,184,0.2);
+      margin-top: 1rem;
+    ">
+      ${photoHtml}
+      ${moreBtn}
+    </div>
+  `;
+}
+
+// 📷 NO PHOTOS PLACEHOLDER
+function createNoPhotosPlaceholder() {
+  return `
+    <div style="
+      padding: 1.5rem; color: var(--text-muted); font-style: italic;
+      text-align: center; background: rgba(248,250,252,0.5);
+      border-radius: 12px; border: 2px dashed rgba(148,163,184,0.3);
+      margin-top: 1rem;
+    ">📷 No photos attached</div>
+  `;
+}
+
+// 🎯 ATTACH INTERACTIONS (Single Responsibility)
+function attachVisitInteractions(li, visit) {
+  // Expandable sections
+  li.querySelectorAll('.section-header').forEach(header => {
+    header.addEventListener('click', function() {
+      const content = this.nextElementSibling;
+      const isExpanded = content.style.maxHeight === 'none';
+      
+      content.style.maxHeight = isExpanded ? '120px' : 'none';
+      content.style.overflow = isExpanded ? 'hidden' : 'visible';
+      this.innerHTML = this.innerHTML.replace(/[▼▲]/g, '') + (isExpanded ? '▼' : '▲');
+    });
+  });
+
+  // Photo gallery
+  li.querySelectorAll('.history-photo, .gallery-more-btn').forEach(el => {
+    el.addEventListener('click', function() {
+      currentGallery = visit.photos || [];
+      currentIndex = 0;
+      openLightbox(visit.photos[0], `${visit.engineerName || 'Service'} - ${visit.createdAt?.toDate?.()?.toLocaleString()} (${currentGallery.length} photos)`);
+    });
+  });
+
+  // Hover effects
+  li.querySelectorAll('.history-photo').forEach(img => {
+    img.addEventListener('mouseenter', () => {
+      img.style.transform = 'scale(1.08)';
+      img.style.borderColor = '#3b82f6';
+    });
+    img.addEventListener('mouseleave', () => {
+      img.style.transform = 'scale(1)';
+      img.style.borderColor = '#e2e8f0';
+    });
+  });
+}
+
+// 🔒 HTML ESCAPE (Security)
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
 
 // HELPER: Create expandable text section
 function createExpandableSection(title, content, isLong) {
@@ -901,7 +976,7 @@ function createExpandableSection(title, content, isLong) {
 }
 
 // HELPER: Create history photo
-function createHistoryPhoto(url, idx, totalPhotos) {
+function createHistoryPhoto(url, idx, totalPhotos, visit) {
   const img = document.createElement("img");
   img.src = url;
   img.alt = `Service photo ${idx + 1}`;
@@ -922,10 +997,11 @@ function createHistoryPhoto(url, idx, totalPhotos) {
     img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIGZpbGw9IiM0QjU1NjMiLz4KPHRleHQgeD0iNDAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlCMkI2QSI+Z3JheTwvdGV4dD4KPC9zdmc+';
   };
   
+  // ✅ FIXED: Use passed visit parameter
   img.addEventListener("click", () => {
     currentGallery = visit.photos || [];
     currentIndex = idx;
-    openLightbox(url, `Photo ${idx + 1} of ${totalPhotos}`);
+    openLightbox(url, `${visit.engineerName || 'Service'} - ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Photo'} (${idx + 1}/${totalPhotos})`);
   });
   
   img.onmouseover = () => {
