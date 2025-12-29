@@ -461,11 +461,7 @@ button:disabled {
   <!-- Main shell -->
   <div class="quote-setup-shell">
     <div class="container">
-      <h2>
-  <img src="images/istosmini.png" alt="ISTOS Logo" style="width:28px; height:28px; vertical-align:middle; margin-right:8px;" />
-  Log Service Visit
-</h2>
-
+  <h2><img src="..images/istosmini.png" alt="ISTOS Logo" style="width:28px; height:28px; vertical-align:middle; margin-right:8px;" />Log Service Visit</h2>
       
       <!-- SERVICE FORM -->
       <form id="serviceVisitForm">
@@ -543,27 +539,29 @@ button:disabled {
           style="display:none;" 
         />
 
-        <!-- Engineer Name (auto-filled) -->
-        <label for="engineerName" style="display:block; font-size:0.85rem; color:#555; margin-bottom:4px;">Engineer Name</label>
-        <input 
-          id="engineerName" 
-          name="engineerName" 
-          type="text" 
-          placeholder="Engineer Name" 
-          readonly 
-          style="background-color:#FFD966; border:1px solid #ccc; padding:8px 12px; border-radius:6px; width:100%; font-weight:500; color:#333;"
-        />
+        <!-- Engineer Name -->
+        <div style="margin-bottom:12px;">
+          <label for="engineerName" style="display:block; font-size:0.85rem; color:#555; margin-bottom:4px;">Engineer Name</label>
+          <input 
+            id="engineerName" 
+            name="engineerName" 
+            type="text" 
+            readonly 
+            style="background-color:#FFD966; border:1px solid #ccc; padding:8px 12px; border-radius:6px; width:100%; font-weight:500; color:#333;"
+          />
+        </div>
         
-        <!-- Date/Time (auto-filled) -->
-        <label for="visitDateTime" style="display:block; font-size:0.85rem; color:#555; margin:12px 0 4px;">Date & Time</label>
-        <input 
-          id="visitDateTime" 
-          name="visitDateTime" 
-          type="text" 
-          placeholder="Date & Time" 
-          readonly 
-          style="background-color:#FFD966; border:1px solid #ccc; padding:8px 12px; border-radius:6px; width:100%; font-weight:500; color:#333;"
-        />
+        <!-- Date & Time -->
+        <div style="margin-bottom:12px;">
+          <label for="visitDateTime" style="display:block; font-size:0.85rem; color:#555; margin-bottom:4px;">Date & Time</label>
+          <input 
+            id="visitDateTime" 
+            name="visitDateTime" 
+            type="text" 
+            readonly 
+            style="background-color:#FFD966; border:1px solid #ccc; padding:8px 12px; border-radius:6px; width:100%; font-weight:500; color:#333;"
+          />
+        </div>
 
         <!-- Diagnostics -->
         <textarea 
