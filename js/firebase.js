@@ -34,7 +34,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAGuxdjp21tEUq_itkSlEpe-LqM0s28fVk",
   authDomain: "istos-qms.firebaseapp.com",
   projectId: "istos-qms",
-  storageBucket: "istos-qms.appspot.com",
+  storageBucket: "istos-qms.firebasestorage.app",
   messagingSenderId: "777790389934",
   appId: "1:777790389934:web:1acd36f952445a1625373f"
 };
