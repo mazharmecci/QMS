@@ -714,309 +714,203 @@ button:disabled {
     console.log(`✅ Populated "${dropdownId}" with ${serials.length} serials`);
   }
 
-  // HISTORY RENDERING (Complete Bulletproof Version)
-// 🏆 REFINED HISTORY RENDERING - Ultra Clean & Performant
-function renderHistory(history) {
-  const list = document.getElementById("historyList");
-  if (!list) return;
 
-  // Empty or "No results" state
-  list.innerHTML = history.length 
-    ? ""
-    : '<li style="text-align:center;padding:3rem;color:var(--text-muted);">No service history found</li>';
+ // 🏆 MAIN HISTORY RENDERING (Production Optimized)
+  function renderHistory(history) {
+    const list = document.getElementById("historyList");
+    if (!list) return;
 
-  history.forEach((visit, index) => {
-    const li = createVisitCard(visit, index);
-    list.appendChild(li);
-  });
-}
+    list.innerHTML = history.length 
+      ? ""
+      : '<li style="text-align:center;padding:3rem;color:var(--text-muted);">No service history found</li>';
 
-// 🧩 SINGLE RESPONSIBILITY: Build complete visit card
-function createVisitCard(visit, index) {
-  const li = document.createElement("li");
-  li.className = "history-item";
-  li.dataset-visitId = visit.id || index;
-  
-  li.style.cssText = `
-    --visit-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    margin-bottom: 1.75rem;
-    padding: 1.5rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    background: var(--visit-bg);
-    max-width: 100%;
-    overflow: visible;
-    transition: all 0.2s ease;
-  `;
-
-  li.innerHTML = createVisitHeader(visit) + createVisitContent(visit);
-  attachVisitInteractions(li, visit);
-  
-  return li;
-}
-
-// 📊 HEADER BUILDER
-function createVisitHeader(visit) {
-  const date = visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date';
-  return `
-    <div style="
-      margin-bottom: 1rem; 
-      padding-bottom: 1rem; 
-      border-bottom: 2px solid rgba(59,130,246,0.1);
-    ">
-      <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;color:var(--text-main);">
-        ${date}
-      </div>
-      <div style="color:var(--text-muted);font-size:0.9rem;">
-        👨‍🔧 ${visit.engineerName || 'Unknown Engineer'} 
-        • 🔢 ${visit.instrumentSerial || 'N/A'}
-      </div>
-    </div>
-  `;
-}
-
-// 📝 CONTENT BUILDER (Expandable Sections)
-function createVisitContent(visit) {
-  let html = `
-    <div style="margin-bottom:1.5rem;">
-      ${createExpandableSection("🔍 Diagnostics", visit.diagnostics || "No diagnostics recorded")}
-      ${createExpandableSection("🔧 Actions Taken", visit.actionsTaken || "No actions recorded")}
-    </div>
-  `;
-
-  // Photos section
-  html += visit.photos?.length 
-    ? createPhotoGallery(visit)
-    : createNoPhotosPlaceholder();
-
-  return html;
-}
-
-// 🔍 EXPANDABLE SECTION FACTORY
-function createExpandableSection(title, content, isLong = content.length > 150) {
-  const expandedClass = isLong ? '' : 'always-expanded';
-  return `
-    <div class="expandable-section ${expandedClass}" data-content="${title.toLowerCase()}">
-      <div class="section-header" style="
-        padding: 1rem 1.25rem;
-        background: rgba(59,130,246,0.08);
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: ${isLong ? 'pointer' : 'default'};
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        user-select: none;
-        border-bottom: 1px solid rgba(148,163,184,0.1);
-        border-radius: 8px 8px 0 0;
-      ">${title} ${isLong ? '▼' : ''}</div>
-      <div class="section-content" style="
-        padding: 1.25rem;
-        background: white;
-        color: var(--text-main);
-        line-height: 1.6;
-        font-size: 0.9rem;
-        border-radius: 0 0 8px 8px;
-        ${isLong ? 'max-height:120px;overflow:hidden;' : 'min-height:80px;'}
-      ">${escapeHtml(content)}</div>
-    </div>
-  `;
-}
-
-// 🖼️ PHOTO GALLERY BUILDER
-function createPhotoGallery(visit) {
-  let photoHtml = '';
-  const photosToShow = visit.photos.slice(0, 4);
-  
-  photosToShow.forEach((url, idx) => {
-    if (typeof url === 'string' && url.startsWith('http')) {
-      photoHtml += `
-        <img src="${url}" 
-             alt="Photo ${idx + 1}" 
-             class="history-photo"
-             data-gallery="${visit.id || 'gallery-' + idx}"
-             style="
-               width: 85px; height: 85px; object-fit: cover;
-               border: 2px solid #e2e8f0; border-radius: 12px;
-               cursor: pointer; transition: all 0.25s ease;
-               box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-               flex-shrink: 0;
-             "
-             loading="lazy">
-      `;
-    }
-  });
-
-  const morePhotos = visit.photos.length - 4;
-  const moreBtn = morePhotos > 0 ? `
-    <button class="gallery-more-btn" data-gallery="${visit.id || 'gallery-' + index}" style="
-      padding: 0.75rem 1.25rem;
-      background: linear-gradient(135deg, #3b82f6, #22c1c3);
-      color: white; border: none; border-radius: 25px;
-      cursor: pointer; font-size: 0.9rem; font-weight: 600;
-      transition: all 0.2s ease; min-width: 140px; height: 85px;
-      display: flex; align-items: center; justify-content: center;
-    ">+${morePhotos} photos</button>
-  ` : '';
-
-  return `
-    <div class="visit-gallery" data-gallery="${visit.id || 'gallery-' + index}" style="
-      display: flex; flex-wrap: wrap; gap: 0.75rem;
-      padding: 1.25rem; background: rgba(248,250,252,0.6);
-      border-radius: 12px; border: 1px solid rgba(148,163,184,0.2);
-      margin-top: 1rem;
-    ">
-      ${photoHtml}
-      ${moreBtn}
-    </div>
-  `;
-}
-
-// 📷 NO PHOTOS PLACEHOLDER
-function createNoPhotosPlaceholder() {
-  return `
-    <div style="
-      padding: 1.5rem; color: var(--text-muted); font-style: italic;
-      text-align: center; background: rgba(248,250,252,0.5);
-      border-radius: 12px; border: 2px dashed rgba(148,163,184,0.3);
-      margin-top: 1rem;
-    ">📷 No photos attached</div>
-  `;
-}
-
-// 🎯 ATTACH INTERACTIONS (Single Responsibility)
-function attachVisitInteractions(li, visit) {
-  // Expandable sections
-  li.querySelectorAll('.section-header').forEach(header => {
-    header.addEventListener('click', function() {
-      const content = this.nextElementSibling;
-      const isExpanded = content.style.maxHeight === 'none';
-      
-      content.style.maxHeight = isExpanded ? '120px' : 'none';
-      content.style.overflow = isExpanded ? 'hidden' : 'visible';
-      this.innerHTML = this.innerHTML.replace(/[▼▲]/g, '') + (isExpanded ? '▼' : '▲');
+    history.forEach((visit, index) => {
+      const li = createVisitCard(visit, index);
+      list.appendChild(li);
     });
-  });
-
-  // Photo gallery
-  li.querySelectorAll('.history-photo, .gallery-more-btn').forEach(el => {
-    el.addEventListener('click', function() {
-      currentGallery = visit.photos || [];
-      currentIndex = 0;
-      openLightbox(visit.photos[0], `${visit.engineerName || 'Service'} - ${visit.createdAt?.toDate?.()?.toLocaleString()} (${currentGallery.length} photos)`);
-    });
-  });
-
-  // Hover effects
-  li.querySelectorAll('.history-photo').forEach(img => {
-    img.addEventListener('mouseenter', () => {
-      img.style.transform = 'scale(1.08)';
-      img.style.borderColor = '#3b82f6';
-    });
-    img.addEventListener('mouseleave', () => {
-      img.style.transform = 'scale(1)';
-      img.style.borderColor = '#e2e8f0';
-    });
-  });
-}
-
-// 🔒 HTML ESCAPE (Security)
-function escapeHtml(text) {
-  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-  return text.replace(/[&<>"']/g, m => map[m]);
-}
-
-
-// HELPER: Create expandable text section
-function createExpandableSection(title, content, isLong) {
-  const section = document.createElement("div");
-  section.style.cssText = "margin-bottom:1.25rem;border:1px solid rgba(148,163,184,0.2);border-radius:12px;overflow:hidden;";
-  
-  const header = document.createElement("div");
-  header.style.cssText = `
-    padding: 1rem 1.25rem;
-    background: rgba(59,130,246,0.08);
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    user-select: none;
-    border-bottom: 1px solid rgba(148,163,184,0.1);
-  `;
-  header.innerHTML = `${title} ${isLong ? '▼' : ''}`;
-  
-  const textContent = document.createElement("div");
-  textContent.style.cssText = `
-    padding: 1.25rem;
-    background: white;
-    color: var(--text-main);
-    line-height: 1.6;
-    font-size: 0.9rem;
-    ${isLong ? 'max-height:120px;overflow:hidden;' : ''}
-  `;
-  textContent.textContent = content;
-  
-  section.appendChild(header);
-  section.appendChild(textContent);
-  
-  // Make expandable if long content
-  if (isLong) {
-    let isExpanded = false;
-    header.onclick = () => {
-      isExpanded = !isExpanded;
-      textContent.style.maxHeight = isExpanded ? 'none' : '120px';
-      textContent.style.overflow = isExpanded ? 'visible' : 'hidden';
-      header.innerHTML = `${title} ${isExpanded ? '▲' : '▼'}`;
-    };
   }
-  
-  return section;
-}
 
-// HELPER: Create history photo
-function createHistoryPhoto(url, idx, totalPhotos, visit) {
-  const img = document.createElement("img");
-  img.src = url;
-  img.alt = `Service photo ${idx + 1}`;
-  img.className = "history-photo";
-  img.style.cssText = `
-    width: 85px;
-    height: 85px;
-    object-fit: cover;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  `;
-  img.loading = "lazy";
-  
-  img.onerror = () => {
-    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMzUiIGZpbGw9IiM0QjU1NjMiLz4KPHRleHQgeD0iNDAiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlCMkI2QSI+Z3JheTwvdGV4dD4KPC9zdmc+';
-  };
-  
-  // ✅ FIXED: Use passed visit parameter
-  img.addEventListener("click", () => {
-    currentGallery = visit.photos || [];
-    currentIndex = idx;
-    openLightbox(url, `${visit.engineerName || 'Service'} - ${visit.createdAt?.toDate?.()?.toLocaleString() || 'Photo'} (${idx + 1}/${totalPhotos})`);
-  });
-  
-  img.onmouseover = () => {
-    img.style.transform = 'scale(1.08)';
-    img.style.borderColor = 'var(--accent)';
-  };
-  img.onmouseout = () => {
-    img.style.transform = 'scale(1)';
-    img.style.borderColor = '#e2e8f0';
-  };
-  
-  return img;
-}
+  // 🧩 BUILD VISIT CARD
+  function createVisitCard(visit, index) {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.dataset-visitId = visit.id || index;
+    
+    li.style.cssText = `
+      --visit-bg: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      margin-bottom: 1.75rem;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: var(--visit-bg);
+      max-width: 100%;
+      overflow: visible;
+      transition: all 0.2s ease;
+    `;
 
-  // LIGHTBOX FUNCTIONS (Complete)
+    li.innerHTML = createVisitHeader(visit) + createVisitContent(visit);
+    attachVisitInteractions(li, visit);
+    
+    return li;
+  }
+
+  // 📊 VISIT HEADER
+  function createVisitHeader(visit) {
+    const date = visit.createdAt?.toDate?.()?.toLocaleString() || 'Unknown date';
+    return `
+      <div style="
+        margin-bottom: 1rem; 
+        padding-bottom: 1rem; 
+        border-bottom: 2px solid rgba(59,130,246,0.1);
+      ">
+        <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;color:var(--text-main);">
+          ${date}
+        </div>
+        <div style="color:var(--text-muted);font-size:0.9rem;">
+          👨‍🔧 ${visit.engineerName || 'Unknown Engineer'} 
+          • 🔢 ${visit.instrumentSerial || 'N/A'}
+        </div>
+      </div>
+    `;
+  }
+
+  // 📝 VISIT CONTENT
+  function createVisitContent(visit) {
+    let html = `
+      <div style="margin-bottom:1.5rem;">
+        ${createExpandableSectionHTML("🔍 Diagnostics", visit.diagnostics || "No diagnostics recorded")}
+        ${createExpandableSectionHTML("🔧 Actions Taken", visit.actionsTaken || "No actions recorded")}
+      </div>
+    `;
+
+    html += visit.photos?.length 
+      ? createPhotoGalleryHTML(visit)
+      : createNoPhotosPlaceholderHTML();
+
+    return html;
+  }
+
+  // 🔍 EXPANDABLE SECTION (HTML Template)
+  function createExpandableSectionHTML(title, content) {
+    const isLong = content.length > 150;
+    return `
+      <div class="expandable-section" data-content="${title.toLowerCase().replace(/\s+/g, '-')}" style="margin-bottom:1.25rem;border:1px solid rgba(148,163,184,0.2);border-radius:12px;overflow:hidden;">
+        <div class="section-header" style="
+          padding: 1rem 1.25rem;
+          background: rgba(59,130,246,0.08);
+          font-weight: 600;
+          font-size: 0.95rem;
+          cursor: ${isLong ? 'pointer' : 'default'};
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          user-select: none;
+          border-bottom: 1px solid rgba(148,163,184,0.1);
+          border-radius: 8px 8px 0 0;
+        ">${title} ${isLong ? '▼' : ''}</div>
+        <div class="section-content" style="
+          padding: 1.25rem;
+          background: white;
+          color: var(--text-main);
+          line-height: 1.6;
+          font-size: 0.9rem;
+          border-radius: 0 0 8px 8px;
+          ${isLong ? 'max-height:120px;overflow:hidden;' : ''}
+        ">${escapeHtml(content)}</div>
+      </div>
+    `;
+  }
+
+  // 🖼️ PHOTO GALLERY (HTML Template)
+  function createPhotoGalleryHTML(visit) {
+    let photoHtml = '';
+    const photosToShow = (visit.photos || []).slice(0, 4);
+    
+    photosToShow.forEach((url, idx) => {
+      if (typeof url === 'string' && url.startsWith('http')) {
+        photoHtml += `
+          <img src="${url}" alt="Photo ${idx + 1}" class="history-photo" 
+               data-visit-id="${visit.id || 'visit-' + idx}"
+               style="width:85px;height:85px;object-fit:cover;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(0,0,0,0.1);flex-shrink:0;"
+               loading="lazy">
+        `;
+      }
+    });
+
+    const morePhotos = (visit.photos || []).length - 4;
+    const moreBtn = morePhotos > 0 ? `
+      <button class="gallery-more-btn" data-visit-id="${visit.id || 'visit-' + idx}" style="
+        padding:0.75rem 1.25rem;background:linear-gradient(135deg,#3b82f6,#22c1c3);
+        color:white;border:none;border-radius:25px;cursor:pointer;font-size:0.9rem;font-weight:600;
+        transition:all 0.2s ease;min-width:140px;height:85px;display:flex;align-items:center;justify-content:center;
+      ">+${morePhotos} photos</button>
+    ` : '';
+
+    return `
+      <div class="visit-gallery" data-visit-id="${visit.id || 'visit-' + idx}" style="
+        display:flex;flex-wrap:wrap;gap:0.75rem;padding:1.25rem;background:rgba(248,250,252,0.6);
+        border-radius:12px;border:1px solid rgba(148,163,184,0.2);margin-top:1rem;
+      ">
+        ${photoHtml}${moreBtn}
+      </div>
+    `;
+  }
+
+  // 📷 NO PHOTOS
+  function createNoPhotosPlaceholderHTML() {
+    return `
+      <div style="padding:1.5rem;color:var(--text-muted);font-style:italic;text-align:center;background:rgba(248,250,252,0.5);border-radius:12px;border:2px dashed rgba(148,163,184,0.3);margin-top:1rem;">
+        📷 No photos attached
+      </div>
+    `;
+  }
+
+  // 🎯 ATTACH INTERACTIONS
+  function attachVisitInteractions(li, visit) {
+    // Expandable sections
+    li.querySelectorAll('.section-header').forEach(header => {
+      header.addEventListener('click', function() {
+        const content = this.parentNode.querySelector('.section-content');
+        const isExpanded = content.style.maxHeight === 'none' || !content.style.maxHeight;
+        
+        content.style.maxHeight = isExpanded ? '120px' : 'none';
+        content.style.overflow = isExpanded ? 'hidden' : 'visible';
+        const arrow = this.textContent.includes('▼') ? '▲' : '▼';
+        this.innerHTML = this.innerHTML.replace(/[▼▲]/g, '') + arrow;
+      });
+    });
+
+    // Photos & gallery buttons
+    li.querySelectorAll('.history-photo, .gallery-more-btn').forEach(el => {
+      el.addEventListener('click', function() {
+        currentGallery = visit.photos || [];
+        currentIndex = 0;
+        if (currentGallery.length > 0) {
+          openLightbox(currentGallery[0], `${visit.engineerName || 'Service'} - Full gallery (${currentGallery.length} photos)`);
+        }
+      });
+    });
+
+    // Photo hover effects
+    li.querySelectorAll('.history-photo').forEach(img => {
+      img.addEventListener('mouseenter', () => {
+        img.style.transform = 'scale(1.08)';
+        img.style.borderColor = '#3b82f6';
+      });
+      img.addEventListener('mouseleave', () => {
+        img.style.transform = 'scale(1)';
+        img.style.borderColor = '#e2e8f0';
+      });
+    });
+  }
+
+  // 🔒 SECURITY: HTML Escape
+  function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text?.toString().replace(/[&<>"']/g, m => map[m]) || '';
+  }
+
+  // 🖼️ LIGHTBOX FUNCTIONS
   function openLightbox(url, captionText) {
     const lightbox = document.getElementById("photoLightbox");
     const lightboxImg = document.getElementById("lightboxImage");
@@ -1034,18 +928,15 @@ function createHistoryPhoto(url, idx, totalPhotos, visit) {
   }
 
   function initLightboxHandlers() {
-    // Close button
     const closeBtn = document.querySelector(".close");
     if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
 
-    // Lightbox overlay
     const lightbox = document.getElementById("photoLightbox");
     if (lightbox) {
       lightbox.addEventListener("click", (e) => {
         if (e.target === lightbox) closeLightbox();
       });
 
-      // Touch swipe support
       lightbox.addEventListener("touchstart", (e) => {
         startX = e.changedTouches[0].screenX;
       });
@@ -1055,7 +946,6 @@ function createHistoryPhoto(url, idx, totalPhotos, visit) {
       });
     }
 
-    // Keyboard navigation
     document.addEventListener("keydown", (e) => {
       const lightbox = document.getElementById("photoLightbox");
       if (lightbox?.style.display === "block" && currentGallery.length > 0) {
@@ -1081,18 +971,16 @@ function createHistoryPhoto(url, idx, totalPhotos, visit) {
     const lightbox = document.getElementById("photoLightbox");
     if (lightbox?.style.display === "block" && currentGallery.length > 0) {
       if (endX - startX > threshold) {
-        // Swipe left
         currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
         openLightbox(currentGallery[currentIndex], `Photo ${currentIndex + 1}`);
       } else if (startX - endX > threshold) {
-        // Swipe right
         currentIndex = (currentIndex + 1) % currentGallery.length;
         openLightbox(currentGallery[currentIndex], `Photo ${currentIndex + 1}`);
       }
     }
   }
 
-  // PHOTO PREVIEW (For form upload)
+  // 📸 PHOTO UPLOAD PREVIEW
   function initPhotoPreview() {
     const photosInput = document.getElementById("photosInput");
     const photosPreview = document.getElementById("photosPreview");
@@ -1100,11 +988,11 @@ function createHistoryPhoto(url, idx, totalPhotos, visit) {
     if (photosInput && photosPreview) {
       photosInput.addEventListener("change", (e) => {
         photosPreview.innerHTML = "";
-        Array.from(e.target.files).slice(0, 8).forEach((file, idx) => {
+        Array.from(e.target.files).slice(0, 8).forEach((file) => {
           const img = document.createElement("img");
           img.src = URL.createObjectURL(file);
           img.alt = file.name;
-          img.style.cssText = "width:100px;height:100px;object-fit:cover;border-radius:8px;margin:0.25rem;cursor:pointer;";
+          img.style.cssText = "width:100px;height:100px;object-fit:cover;border-radius:8px;margin:0.25rem;cursor:pointer;border:2px solid #e2e8f0;";
           img.onclick = () => URL.revokeObjectURL(img.src);
           photosPreview.appendChild(img);
         });
@@ -1112,7 +1000,7 @@ function createHistoryPhoto(url, idx, totalPhotos, visit) {
     }
   }
 
-  // MAIN INITIALIZATION
+  // 🚀 MAIN INITIALIZATION
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       alert("You must be logged in to access service records.");
@@ -1123,78 +1011,68 @@ function createHistoryPhoto(url, idx, totalPhotos, visit) {
     console.log("✅ Authenticated:", user.email);
 
     try {
-      // Initialize external form handler
       await initServiceForm?.();
       
-      // Auto-fill engineer & date
+      // Auto-fill
       const engineerField = document.getElementById("engineerName");
       const dateField = document.getElementById("visitDateTime");
       if (engineerField) engineerField.value = user.displayName || user.email.split("@")[0];
       if (dateField) dateField.value = new Date().toLocaleString();
 
-      // Copy equipment options to history dropdown
+      // Copy equipment options
       const equipmentDropdown = document.getElementById("equipmentName");
       const historyEquipmentDropdown = document.getElementById("historyEquipmentName");
       if (equipmentDropdown && historyEquipmentDropdown) {
         historyEquipmentDropdown.innerHTML = equipmentDropdown.innerHTML;
       }
 
-      // FORM EVENT HANDLERS
-      // Equipment → Serials (Form)
+      // EVENT HANDLERS
       if (equipmentDropdown) {
         equipmentDropdown.addEventListener("change", async (e) => {
           const equipmentName = e.target.value.trim();
           if (!equipmentName) return;
-          
           const serials = await getSerialsForEquipment(equipmentName);
           populateSerialDropdown("serialDropdown", serials);
         });
       }
 
-      // Serial toggle (Form)
       const serialDropdown = document.getElementById("serialDropdown");
       const newSerialInput = document.getElementById("newSerialInput");
       if (serialDropdown && newSerialInput) {
         serialDropdown.addEventListener("change", (e) => {
           const showNew = e.target.value === "__new";
-          newSerialInput.classList.toggle("show", showNew);
           newSerialInput.style.display = showNew ? "block" : "none";
           if (!showNew) newSerialInput.value = "";
         });
       }
 
-      // HISTORY EVENT HANDLERS
-      // Equipment → Serials (History)
       if (historyEquipmentDropdown) {
         historyEquipmentDropdown.addEventListener("change", async (e) => {
           const equipmentName = e.target.value.trim();
           if (!equipmentName) return;
-          
           const serials = await getSerialsForEquipment(equipmentName);
           populateSerialDropdown("historySerial", serials);
         });
       }
 
-      // Serial → History
       const historySerialDropdown = document.getElementById("historySerial");
       if (historySerialDropdown) {
         historySerialDropdown.addEventListener("change", async (e) => {
           const serial = e.target.value.trim();
           if (!serial || serial === "__new") return;
-          
           const history = await getEquipmentHistory(serial);
           renderHistory(history);
         });
       }
 
-      // Initialize UI components
+      // Initialize UI
       initPhotoPreview();
       initLightboxHandlers();
       
       console.log("🚀 Service form fully initialized");
 
     } catch (err) {
-      console.error("❌ Failed to initialize service form:", err);
+      console.error("❌ Failed to initialize:", err);
       alert("Failed to initialize. Please refresh.");
     }
   });
