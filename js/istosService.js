@@ -10,7 +10,6 @@ import {
   getDownloadURL 
 } from "./firebase.js";  // adjust path if needed
 
-// --- Helper: upload photos to Firebase Storage ---
 async function uploadPhotos(serial, visitId, files) {
   const urls = [];
   for (const file of files) {
@@ -24,13 +23,17 @@ async function uploadPhotos(serial, visitId, files) {
       urls.push(url);
     } catch (err) {
       console.error(`Failed to upload ${file.name}:`, err);
+      throw err; // stop if upload fails
     }
   }
   return urls;
 }
 
-// --- Helper: save service visit to Firestore ---
 async function saveServiceVisit(serial, diagnostics, actions, files) {
+  if (!auth.currentUser) {
+    throw new Error("User must be signed in to save a service visit.");
+  }
+
   const visitId = `visit-${Date.now()}`;
   const photoUrls = files?.length ? await uploadPhotos(serial, visitId, Array.from(files)) : [];
 
@@ -39,8 +42,8 @@ async function saveServiceVisit(serial, diagnostics, actions, files) {
     diagnostics,
     actionsTaken: actions,
     photos: photoUrls,
-    engineerId: auth.currentUser?.uid || "anonymous",
-    createdAt: new Date()
+    engineerId: auth.currentUser.uid,
+    createdAt: serverTimestamp()
   };
 
   await setDoc(doc(db, "serviceVisits", visitId), visitDoc);
