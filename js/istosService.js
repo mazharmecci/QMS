@@ -11,6 +11,19 @@ import {
   serverTimestamp
 } from "./firebase.js";  // adjust path if needed
 
+// --- Helper: decode JWT payload for debugging ---
+function decodeToken(token) {
+  try {
+    const parts = token.split(".");
+    const payload = JSON.parse(atob(parts[1]));
+    console.log("Decoded token payload:", payload);
+    return payload;
+  } catch (err) {
+    console.error("Failed to decode token:", err);
+    return null;
+  }
+}
+
 // --- Helper: log ID token for debugging ---
 async function logAuthToken() {
   if (!auth.currentUser) {
@@ -20,6 +33,7 @@ async function logAuthToken() {
   try {
     const token = await auth.currentUser.getIdToken(/* forceRefresh */ true);
     console.log("Firebase ID Token:", token);
+    decodeToken(token);
     return token;
   } catch (err) {
     console.error("Failed to fetch ID token:", err);
@@ -27,7 +41,7 @@ async function logAuthToken() {
   }
 }
 
-// --- Helper: upload photos to Firebase Storage ---
+// --- Helper: upload photos to Firebase Storage with metadata ---
 async function uploadPhotos(serial, visitId, files) {
   const urls = [];
   for (const file of files) {
@@ -35,8 +49,17 @@ async function uploadPhotos(serial, visitId, files) {
     const path = `service-photos/${serial}/${visitId}/${safeName}`;
     const storageRef = ref(storage, path);
 
+    // Attach engineerId and visitId in metadata
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        engineerId: auth.currentUser.uid,
+        visitId: visitId
+      }
+    };
+
     try {
-      await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file, metadata);
       const url = await getDownloadURL(storageRef);
       urls.push(url);
     } catch (err) {
