@@ -110,7 +110,18 @@ form.addEventListener("submit", async e => {
   await renderTable();
 });
 
-/* ========= Render table ========= */
+/* ========= Render table with search (no # column) ========= */
+const searchInput = document.getElementById("searchInput");
+let searchQuery = "";
+
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    searchQuery = searchInput.value.trim().toLowerCase();
+    currentPage = 1;
+    renderTable();
+  });
+}
+
 export async function renderTable() {
   try {
     instruments = await fetchInstruments(); // always pull fresh from Firebase
@@ -125,21 +136,29 @@ export async function renderTable() {
 
   tableBody.innerHTML = "";
 
-  const totalPages = Math.ceil(instruments.length / pageSize) || 1;
+  // 1) Filter by equipment name / description
+  let filtered = instruments;
+  if (searchQuery) {
+    filtered = instruments.filter(inst => {
+      const name = (inst.instrumentName || inst.description || "").toLowerCase();
+      const desc = (inst.longDescription || "").toLowerCase();
+      return name.includes(searchQuery) || desc.includes(searchQuery);
+    });
+  }
+
+  // 2) Pagination based on filtered list
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
 
   const start = (currentPage - 1) * pageSize;
   const end = start + pageSize;
 
-  instruments.slice(start, end).forEach((inst, i) => {
-    const idx = start + i;        // absolute index in instruments[]
-    const displayIndex = idx + 1; // 1-based number for "#" column
+  filtered.slice(start, end).forEach(inst => {
+    // Use index in the full array for edit/delete
+    const idx = instruments.indexOf(inst);
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <!-- # -->
-      <td>${displayIndex}</td>
-
       <!-- Equip-Name -->
       <td><strong>${inst.instrumentName || inst.description || ""}</strong></td>
 
