@@ -132,8 +132,8 @@ export async function renderTable() {
   const end = start + pageSize;
 
   instruments.slice(start, end).forEach((inst, i) => {
-    const idx = start + i;          // absolute index in instruments[]
-    const displayIndex = idx + 1;   // 1-based number for "#" column
+    const idx = start + i;        // absolute index in instruments[]
+    const displayIndex = idx + 1; // 1-based number for "#" column
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -142,35 +142,35 @@ export async function renderTable() {
 
       <!-- Equip-Name -->
       <td><strong>${inst.instrumentName || inst.description || ""}</strong></td>
-    
+
       <!-- Equip-Desc -->
       <td><strong>${inst.longDescription || ""}</strong></td>
-    
+
       <!-- Origin -->
       <td>${inst.origin || ""}</td>
-    
+
       <!-- Catalog -->
       <td>${inst.catalog || ""}</td>
-    
+
       <!-- HSN -->
       <td>${inst.hsn || ""}</td>
-    
+
       <!-- Code -->
       <td>${inst.instrumentCode || ""}</td>
-    
+
       <!-- Price -->
       <td class="price-cell">${formatPriceDisplay(inst.unitPrice)}</td>
-    
+
       <!-- GST Type -->
       <td>${inst.gstType || ""}</td>
-    
+
       <!-- GST % -->
       <td>${inst.gstPercent || ""}</td>
-    
+
       <!-- Actions -->
       <td class="actions">
         <button type="button" class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
-        <button type="button" class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
+        <button type="button" class="delete-btn" onclick="deleteInstrumentRow(${idx})">Delete</button>
       </td>
     `;
     tableBody.appendChild(row);
