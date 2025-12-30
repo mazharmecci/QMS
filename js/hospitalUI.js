@@ -48,7 +48,7 @@ export async function renderTable() {
 
 // 🔹 Generate next client code
 function getNextClientCode() {
-  if (!hospitals.length) return "HOSP-01";
+  if (!hospitals.length) return "HO-01";
 
   const nums = hospitals
     .map(h => h.clientCode || "")
@@ -61,7 +61,7 @@ function getNextClientCode() {
   const maxNum = nums.length ? Math.max(...nums) : 0;
   const nextNum = maxNum + 1;
 
-  return "HOSP-" + String(nextNum).padStart(2, "0");
+  return "HO-" + String(nextNum).padStart(2, "0");
 }
 
 // 🔹 Handle form submit
