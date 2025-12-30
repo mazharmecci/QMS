@@ -14,11 +14,13 @@ const unitPriceInput = document.getElementById("unitPrice");
 const mainItemNameInput = document.getElementById("mainItemName");
 const descriptionTextarea = document.getElementById("description");
 const suppliedWithInput = document.getElementById("suppliedWithInput");
+const searchInput = document.getElementById("searchInput");
 
 let instruments = [];
 let currentPage = 1;
 const pageSize = 10;
 let editIndex = null;
+let searchQuery = "";
 
 /* ========= Toast helper ========= */
 export function showToast(message, type = "success", duration = 1800) {
@@ -61,6 +63,15 @@ function parsePriceValue(v) {
 
 function formatPriceDisplay(v) {
   return "₹ " + Number(v || 0).toLocaleString("en-IN");
+}
+
+/* ========= Search wiring ========= */
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    searchQuery = searchInput.value.trim().toLowerCase();
+    currentPage = 1;
+    renderTable();
+  });
 }
 
 /* ========= Form submit ========= */
@@ -106,34 +117,20 @@ form.addEventListener("submit", async e => {
   unitPriceInput.value = "";
   form.classList.remove("active");
 
-  // Always refresh from Firebase after save
   await renderTable();
 });
 
 /* ========= Render table with search (no # column) ========= */
-const searchInput = document.getElementById("searchInput");
-let searchQuery = "";
-
-if (searchInput) {
-  searchInput.addEventListener("input", () => {
-    searchQuery = searchInput.value.trim().toLowerCase();
-    currentPage = 1;
-    renderTable();
-  });
-}
-
 export async function renderTable() {
   try {
-    instruments = await fetchInstruments(); // always pull fresh from Firebase
+    instruments = await fetchInstruments();
   } catch (err) {
     console.error(err);
     showToast("Failed to load instruments", "error");
     return;
   }
 
-  // Optional: keep a local cache in sync
   localStorage.setItem("instruments", JSON.stringify(instruments));
-
   tableBody.innerHTML = "";
 
   // 1) Filter by equipment name / description
@@ -154,7 +151,7 @@ export async function renderTable() {
   const end = start + pageSize;
 
   filtered.slice(start, end).forEach(inst => {
-    // Use index in the full array for edit/delete
+    // index in full array so edit/delete still work on original instruments[]
     const idx = instruments.indexOf(inst);
 
     const row = document.createElement("tr");
@@ -228,7 +225,7 @@ window.deleteInstrumentRow = async function(i) {
   try {
     await deleteInstrument(inst.id);
     showToast("Instrument deleted");
-    await renderTable(); // refresh from Firebase
+    await renderTable();
   } catch (err) {
     console.error(err);
     showToast("Failed to delete instrument", "error");
@@ -251,5 +248,5 @@ window.prevPage = function() {
 
 /* ========= Initial render ========= */
 document.addEventListener("DOMContentLoaded", () => {
-  renderTable(); // always pull from Firebase on load
+  renderTable();
 });
