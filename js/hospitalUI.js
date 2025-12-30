@@ -33,7 +33,7 @@ export async function renderTable() {
       <td>${h.area || ""}</td>
       <td>${h.mobile || ""}</td>
       <td>${h.email || ""}</td>
-      <td>${h.pan || ""}</td>
+      <td>${h.gst || ""}</td>
       <td class="actions">
         <button class="edit-btn" onclick="editHospital(${index})">Edit</button>
         <button class="delete-btn" onclick="deleteHospitalUI(${index})">Delete</button>
