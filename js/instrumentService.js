@@ -1,5 +1,13 @@
 // instrumentService.js
-import { db, collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "./firebase.js";
+import {
+  db,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDocs
+} from "./firebase.js";
 
 const instrumentsRef = collection(db, "instruments");
 
@@ -23,7 +31,9 @@ function normalizeInstrument(raw = {}) {
 export async function fetchInstruments() {
   try {
     const snapshot = await getDocs(instrumentsRef);
-    const list = snapshot.docs.map(d => normalizeInstrument({ id: d.id, ...d.data() }));
+    const list = snapshot.docs.map(d =>
+      normalizeInstrument({ id: d.id, ...d.data() })
+    );
     localStorage.setItem("instruments", JSON.stringify(list));
     return list;
   } catch (err) {
