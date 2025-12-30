@@ -386,7 +386,7 @@
   </div>
 </div>
 
-<!-- Page-specific helpers -->
+<!-- Page-specific helpers and sort 1st column in the above table -->
 <script>
   function goBack() {
     if (window.history.length > 1) {
@@ -398,6 +398,17 @@
   function toggleForm() {
     document.getElementById('instrumentForm').classList.toggle('active');
   }
+
+  function updateRowNumbers() {
+  const tbody = document.querySelector('#instrumentTable tbody');
+  const rows = tbody.querySelectorAll('tr');
+  rows.forEach((row, index) => {
+    const firstCell = row.querySelector('td');
+    if (firstCell) {
+      firstCell.textContent = index + 1; // 1‑based numbering
+    }
+  });
+}
 </script>
 
 <!-- Modules -->
