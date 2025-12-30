@@ -132,9 +132,14 @@ export async function renderTable() {
   const end = start + pageSize;
 
   instruments.slice(start, end).forEach((inst, i) => {
-    const idx = start + i;
+    const idx = start + i;          // absolute index in instruments[]
+    const displayIndex = idx + 1;   // 1-based number for "#" column
+
     const row = document.createElement("tr");
     row.innerHTML = `
+      <!-- # -->
+      <td>${displayIndex}</td>
+
       <!-- Equip-Name -->
       <td><strong>${inst.instrumentName || inst.description || ""}</strong></td>
     
@@ -168,7 +173,7 @@ export async function renderTable() {
         <button type="button" class="delete-btn" onclick="deleteInstrument(${idx})">Delete</button>
       </td>
     `;
-        tableBody.appendChild(row);
+    tableBody.appendChild(row);
   });
 
   pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
