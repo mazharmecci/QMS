@@ -328,6 +328,31 @@
       background: rgba(220, 53, 69, 0.95);
     }
 
+     .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    
+    #searchInput {
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      background: rgba(248, 250, 252, 0.95);
+      color: #0f172a;
+      min-width: 220px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    
+    #searchInput:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+      background: #ffffff;
+    }
+
   </style>
 </head>
 <body>
@@ -343,7 +368,16 @@
 <div class="container">
   <div class="top-bar">
     <h2>Instrument Master</h2>
-    <button type="button" onclick="toggleForm()">Add Instrument</button>
+  
+    <div class="top-bar-right">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search equipment name / description..."
+        autocomplete="off"
+      />
+      <button type="button" onclick="toggleForm()">Add Instrument</button>
+    </div>
   </div>
 
   <form id="instrumentForm">
@@ -410,7 +444,21 @@
     }
   });
 }
+
+const searchInput = document.getElementById("searchInput");
+let searchQuery = "";
+
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    searchQuery = searchInput.value.trim().toLowerCase();
+    currentPage = 1;
+    renderTable(); // re-render with filter
+  });
+}
+
 </script>
+
+
 
 <!-- Modules -->
 <script type="module" src="../js/firebase.js"></script>
