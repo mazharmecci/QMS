@@ -232,6 +232,47 @@
       border-color: rgba(148, 163, 184, 0.6);
     }
 
+    .hospital-search-row {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    
+    .hospital-search-row h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #0f172a;
+    }
+    
+    #hospitalSearch {
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      background: rgba(248, 250, 252, 0.95);
+      color: #0f172a;
+      min-width: 240px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    
+    #hospitalSearch:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+      background: #ffffff;
+    }
+    
+    @media (max-width: 640px) {
+      .hospital-search-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -254,8 +295,17 @@
       <input type="text" id="pan" placeholder="PAN Number">
       <button type="submit">Save Hospital</button>
     </form>
-
-    <h2>Hospital List</h2>
+  
+    <div class="hospital-search-row">
+      <h2>Hospital List</h2>
+      <input
+        type="text"
+        id="hospitalSearch"
+        placeholder="Search hospital name / area / mobile..."
+        autocomplete="off"
+      >
+    </div>
+  
     <table id="hospitalTable">
       <thead>
         <tr>
@@ -272,6 +322,7 @@
       </thead>
       <tbody></tbody>
     </table>
+  </div>
 
   <!-- Page-specific script -->
   <script>
@@ -330,6 +381,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 }); // <-- this was missing
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const table = document.getElementById("hospitalTable");
+  const tbody = table.querySelector("tbody");
+  const searchInput = document.getElementById("hospitalSearch");
+  let sortState = {};
+
+  // sortTable(...) and sortBindings as you already have
+
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.trim().toLowerCase();
+      const rows = tbody.querySelectorAll("tr");
+
+      rows.forEach(row => {
+        const name   = (row.children[2]?.innerText || "").toLowerCase(); // Client Name
+        const area   = (row.children[4]?.innerText || "").toLowerCase(); // Area
+        const mobile = (row.children[5]?.innerText || "").toLowerCase(); // Mobile
+
+        const match = !query ||
+          name.includes(query) ||
+          area.includes(query) ||
+          mobile.includes(query);
+
+        row.style.display = match ? "" : "none";
+      });
+    });
+  }
+});
+
   </script>
     
   <!-- Your own modules (firebase.js handles Firebase init with CDN imports) -->
