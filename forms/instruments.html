@@ -432,33 +432,6 @@
     document.getElementById('instrumentForm').classList.toggle('active');
   }
 </script>
-  
-<script>
-  function updateRowNumbers() {
-  const tbody = document.querySelector('#instrumentTable tbody');
-  const rows = tbody.querySelectorAll('tr');
-  rows.forEach((row, index) => {
-    const firstCell = row.querySelector('td');
-    if (firstCell) {
-      firstCell.textContent = index + 1; // 1‑based numbering
-    }
-  });
-}
-
-const searchInput = document.getElementById("searchInput");
-let searchQuery = "";
-
-if (searchInput) {
-  searchInput.addEventListener("input", () => {
-    searchQuery = searchInput.value.trim().toLowerCase();
-    currentPage = 1;
-    renderTable(); // re-render with filter
-  });
-}
-
-</script>
-
-
 
 <!-- Modules -->
 <script type="module" src="../js/firebase.js"></script>
