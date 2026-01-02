@@ -1,11 +1,13 @@
 import {
   auth,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  db
 } from "./firebase.js";
+import { doc, getDoc } from "firebase/firestore";
 
 const form = document.getElementById("loginForm");
-const emailEl = document.getElementById("email");
+const identifierEl = document.getElementById("identifier"); // can be email OR username
 const passwordEl = document.getElementById("password");
 const togglePwdBtn = document.getElementById("togglePwd");
 const forgotBtn = document.getElementById("forgotPasswordBtn");
@@ -36,22 +38,35 @@ form?.addEventListener("submit", async (e) => {
   setError("");
   setInfo("");
 
-  const email = emailEl.value.trim();
+  const identifier = identifierEl.value.trim(); // username OR email
   const password = passwordEl.value;
 
-  if (!email || !password) {
-    setError("Enter both email and password.");
+  if (!identifier || !password) {
+    setError("Enter both username/email and password.");
     return;
   }
 
   try {
+    let email = identifier;
+
+    // 🔑 If identifier is not an email, lookup synthetic email in Firestore
+    if (!identifier.includes("@")) {
+      const userDoc = await getDoc(doc(db, "users", identifier));
+      if (!userDoc.exists()) {
+        setError("User not found.");
+        return;
+      }
+      email = userDoc.data().email; // synthetic email
+    }
+
+    // ✅ Authenticate with Firebase
     await signInWithEmailAndPassword(auth, email, password);
-    window.location.href = "index.html"; // or quotes.html dashboard
+    window.location.href = "index.html"; // redirect to dashboard
   } catch (err) {
     console.error(err);
     const code = err.code || "";
     if (code === "auth/user-not-found" || code === "auth/wrong-password") {
-      setError("Invalid email or password.");
+      setError("Invalid username/email or password.");
     } else {
       setError("Unable to sign in. Please try again.");
     }
@@ -62,13 +77,24 @@ forgotBtn?.addEventListener("click", async () => {
   setError("");
   setInfo("");
 
-  const email = emailEl.value.trim();
-  if (!email) {
-    setError("Enter your email first to receive a reset link.");
+  const identifier = identifierEl.value.trim();
+  if (!identifier) {
+    setError("Enter your username/email first to receive a reset link.");
     return;
   }
 
   try {
+    let email = identifier;
+
+    if (!identifier.includes("@")) {
+      const userDoc = await getDoc(doc(db, "users", identifier));
+      if (!userDoc.exists()) {
+        setError("User not found.");
+        return;
+      }
+      email = userDoc.data().email;
+    }
+
     await sendPasswordResetEmail(auth, email);
     setInfo("Password reset link sent. Check your inbox.");
   } catch (err) {
