@@ -1,14 +1,21 @@
-// js/auth-login.js - Complete Firebase v11 Auth for ISTOS QMS (uses your firebase.js)
-import { 
+// js/auth-login.js
+// Username + password login using Firestore users collection + Firebase Auth
+
+import {
   auth,
-  signInWithEmailAndPassword, 
-  sendPasswordResetEmail, 
-  onAuthStateChanged 
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  db,
+  collection,
+  query,
+  where,
+  getDocs
 } from './firebase.js';
 
-// DOM elements
+/* ========== DOM References ========== */
 const form = document.getElementById('loginForm');
-const identifierEl = document.getElementById('identifier');
+const identifierEl = document.getElementById('identifier');   // Username field
 const passwordEl = document.getElementById('password');
 const togglePwdBtn = document.getElementById('togglePwd');
 const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
@@ -16,7 +23,7 @@ const rememberMeEl = document.getElementById('rememberMe');
 const authErrorEl = document.getElementById('authError');
 const authInfoEl = document.getElementById('authInfo');
 
-// Utility functions
+/* ========== Helpers ========== */
 function setError(msg) {
   authErrorEl.textContent = msg;
   authErrorEl.hidden = false;
@@ -34,62 +41,80 @@ function clearMessages() {
   authInfoEl.hidden = true;
 }
 
-// Password visibility toggle
+/* ========== Password visibility ========== */
 togglePwdBtn.addEventListener('click', () => {
-  const type = passwordEl.getAttribute('type') === 'password' ? 'text' : 'password';
-  passwordEl.setAttribute('type', type);
-  togglePwdBtn.textContent = type === 'password' ? '👁' : '🙈';
+  const currentType = passwordEl.getAttribute('type');
+  const nextType = currentType === 'password' ? 'text' : 'password';
+  passwordEl.setAttribute('type', nextType);
+  togglePwdBtn.textContent = nextType === 'password' ? '👁' : '🙈';
 });
 
-// Check auth state and auto-redirect if logged in
+/* ========== Username → email lookup ========== */
+// username is what user types (e.g. "Chaitra")
+// Firestore doc has fields: { username: "Chaitra", email: "chaitra@istos-qms.firebaseapp.com", ... }
+async function findUserByUsername(username) {
+  const q = query(
+    collection(db, 'users'),
+    where('username', '==', username)
+  );
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    const err = new Error('auth/user-not-found');
+    err.code = 'auth/user-not-found';
+    throw err;
+  }
+
+  const docSnap = snap.docs[0];
+  const data = docSnap.data();
+
+  if (!data.email) {
+    const err = new Error('auth/invalid-user');
+    err.code = 'auth/invalid-user';
+    throw err;
+  }
+
+  return {
+    email: data.email,
+    username: data.username || username,
+    role: data.role || 'employee',
+    permissions: data.permissions || [],
+    id: docSnap.id
+  };
+}
+
+/* ========== Auto-fill "remembered" username & auto-redirect ========== */
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // Load remember me if set
-    const savedCreds = localStorage.getItem('qmsRemember');
-    if (savedCreds) {
-      try {
-        const { identifier, remember } = JSON.parse(savedCreds);
-        if (remember) {
-          identifierEl.value = identifier;
-          rememberMeEl.checked = true;
-        }
-      } catch (e) {
-        localStorage.removeItem('qmsRemember');
+  const remembered = localStorage.getItem('qmsRememberUser');
+  if (remembered) {
+    try {
+      const data = JSON.parse(remembered);
+      if (data.username) {
+        identifierEl.value = data.username;
+        rememberMeEl.checked = !!data.remember;
       }
+    } catch {
+      localStorage.removeItem('qmsRememberUser');
     }
-    window.location.href = 'index.html'; // Redirect to QMS dashboard
+  }
+
+  if (user) {
+    // Already logged in → go to dashboard
+    window.location.href = 'index.html';
   }
 });
 
-// Login form submit
+/* ========== Submit: username + password login ========== */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearMessages();
 
-  let email = identifierEl.value.trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
-  if (!emailRegex.test(email)) {
-    setError('Please enter a valid email address (must contain @ and domain).');
-    identifierEl.focus();
-    identifierEl.select();
-    return;
-  }
-  
-  email = email.toLowerCase();
+  const username = identifierEl.value.trim();   // e.g. "Chaitra"
   const password = passwordEl.value;
-  
-  if (!password || password.length < 6) {
-    setError('Password must be at least 6 characters.');
-    passwordEl.focus();
-    return;
-  }
 
-  const remember = rememberMeEl.checked;
-  if (remember) {
-    localStorage.setItem('qmsRemember', JSON.stringify({ identifier: email, remember: true, timestamp: Date.now() }));
-  } else {
-    localStorage.removeItem('qmsRemember');
+  if (!username || !password) {
+    setError('Enter your username and password.');
+    return;
   }
 
   const submitBtn = form.querySelector('button[type="submit"]');
@@ -97,51 +122,98 @@ form.addEventListener('submit', async (e) => {
   submitBtn.textContent = 'Signing in...';
   submitBtn.disabled = true;
 
-  console.log('Attempting login for:', email); // DEBUG
-
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    console.log('Attempting username login for:', username);
+
+    // 1) Look up Firestore user by username
+    const userMeta = await findUserByUsername(username);
+
+    // 2) Use mapped email for Firebase Auth sign-in
+    await signInWithEmailAndPassword(auth, userMeta.email, password);
+
+    // 3) Persist basic profile locally for UI
+    const remember = rememberMeEl.checked;
+    if (remember) {
+      localStorage.setItem(
+        'qmsRememberUser',
+        JSON.stringify({
+          username: userMeta.username,
+          remember: true,
+          ts: Date.now()
+        })
+      );
+    } else {
+      localStorage.removeItem('qmsRememberUser');
+    }
+
+    localStorage.setItem(
+      'qmsCurrentUser',
+      JSON.stringify({
+        username: userMeta.username,
+        role: userMeta.role,
+        permissions: userMeta.permissions,
+        ts: Date.now()
+      })
+    );
+
+    setInfo('Login successful. Redirecting...');
+    window.location.href = 'index.html';
   } catch (error) {
-    console.error('Login error:', error.code, error.message);
-    // Error handling unchanged...
+    console.error('Login error:', error.code || error.message, error);
+    const code = error.code || error.message;
+
+    if (code === 'auth/user-not-found') {
+      setError('Username not found. Contact admin if this is unexpected.');
+    } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      setError('Incorrect password. Please try again.');
+    } else if (code === 'auth/user-disabled') {
+      setError('Account disabled. Contact admin.');
+    } else if (code === 'auth/too-many-requests') {
+      setError('Too many attempts. Please wait a minute and try again.');
+    } else if (code === 'auth/network-request-failed') {
+      setError('Network error. Check your internet connection.');
+    } else if (code === 'auth/invalid-user') {
+      setError('User record is misconfigured. Contact admin.');
+    } else {
+      setError('Login failed. Please try again.');
+    }
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
   }
 });
 
-// Forgot password
+/* ========== Forgot password (by username) ========== */
 forgotPasswordBtn.addEventListener('click', async () => {
   clearMessages();
-  const email = identifierEl.value.trim().toLowerCase();
-  
-  if (!email) {
-    setError('Enter your email first to receive a reset link.');
+  const username = identifierEl.value.trim();
+
+  if (!username) {
+    setError('Enter your username so a reset link can be sent.');
     return;
   }
 
-  // Disable during request
   const originalText = forgotPasswordBtn.textContent;
   forgotPasswordBtn.textContent = 'Sending...';
   forgotPasswordBtn.disabled = true;
 
   try {
-    await sendPasswordResetEmail(auth, email);
-    setInfo('Password reset link sent to ' + email + '. Check your inbox (and spam).');
+    // Find user to get their email
+    const userMeta = await findUserByUsername(username);
+    await sendPasswordResetEmail(auth, userMeta.email);
+    setInfo('Password reset link sent to ' + userMeta.email + '. Check your inbox and spam folder.');
   } catch (error) {
-    console.error('Reset error:', error.code);
-    switch (error.code) {
-      case 'auth/user-not-found':
-        setError('No account found with that email.');
-        break;
-      case 'auth/invalid-email':
-        setError('Invalid email format.');
-        break;
-      case 'auth/too-many-requests':
-        setError('Too many requests. Try again later.');
-        break;
-      default:
-        setError('Could not send reset email. Try again.');
+    console.error('Password reset error:', error.code || error.message);
+    const code = error.code || error.message;
+
+    if (code === 'auth/user-not-found') {
+      setError('Username not found. Contact admin.');
+    } else if (code === 'auth/invalid-email') {
+      setError('User email is invalid. Contact admin.');
+    } else if (code === 'auth/too-many-requests') {
+      setError('Too many reset attempts. Try again later.');
+    } else {
+      setError('Could not send reset email. Try again.');
     }
   } finally {
     forgotPasswordBtn.textContent = originalText;
@@ -149,16 +221,13 @@ forgotPasswordBtn.addEventListener('click', async () => {
   }
 });
 
-// Keyboard shortcuts
+/* ========== Small UX tweaks ========== */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target === identifierEl) {
     passwordEl.focus();
   }
 });
 
-// Expose globally for debugging/other pages
+/* ========== Expose for debugging ========== */
 window.__qmsAuth = auth;
-window.__qmsDebugLogin = async (email, password) => {
-  console.log('Debug login:', email);
-  await signInWithEmailAndPassword(auth, email, password);
-};
+window.__qmsDebugFindUser = findUserByUsername;
