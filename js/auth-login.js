@@ -1,104 +1,178 @@
-import {
+// js/auth-login.js - Complete Firebase v11 Auth for ISTOS QMS (uses your firebase.js)
+import { 
   auth,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  db
-} from "./firebase.js";
-import { doc, getDoc } from "firebase/firestore";
+  signInWithEmailAndPassword, 
+  sendPasswordResetEmail, 
+  onAuthStateChanged 
+} from './firebase.js';
 
-const form = document.getElementById("loginForm");
-const identifierEl = document.getElementById("identifier"); // username OR email
-const passwordEl = document.getElementById("password");
-const togglePwdBtn = document.getElementById("togglePwd");
-const forgotBtn = document.getElementById("forgotPasswordBtn");
-const errorEl = document.getElementById("authError");
-const infoEl = document.getElementById("authInfo");
+// DOM elements
+const form = document.getElementById('loginForm');
+const identifierEl = document.getElementById('identifier');
+const passwordEl = document.getElementById('password');
+const togglePwdBtn = document.getElementById('togglePwd');
+const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+const rememberMeEl = document.getElementById('rememberMe');
+const authErrorEl = document.getElementById('authError');
+const authInfoEl = document.getElementById('authInfo');
 
+// Utility functions
 function setError(msg) {
-  if (!errorEl) return;
-  errorEl.textContent = msg;
-  errorEl.hidden = !msg;
-  if (infoEl) infoEl.hidden = true;
+  authErrorEl.textContent = msg;
+  authErrorEl.hidden = false;
+  authInfoEl.hidden = true;
 }
 
 function setInfo(msg) {
-  if (!infoEl) return;
-  infoEl.textContent = msg;
-  infoEl.hidden = !msg;
-  if (errorEl) errorEl.hidden = true;
+  authInfoEl.textContent = msg;
+  authInfoEl.hidden = false;
+  authErrorEl.hidden = true;
 }
 
-togglePwdBtn?.addEventListener("click", () => {
-  const isPassword = passwordEl.type === "password";
-  passwordEl.type = isPassword ? "text" : "password";
+function clearMessages() {
+  authErrorEl.hidden = true;
+  authInfoEl.hidden = true;
+}
+
+// Password visibility toggle
+togglePwdBtn.addEventListener('click', () => {
+  const type = passwordEl.getAttribute('type') === 'password' ? 'text' : 'password';
+  passwordEl.setAttribute('type', type);
+  togglePwdBtn.textContent = type === 'password' ? '👁' : '🙈';
 });
 
-form?.addEventListener("submit", async (e) => {
+// Check auth state and auto-redirect if logged in
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // Load remember me if set
+    const savedCreds = localStorage.getItem('qmsRemember');
+    if (savedCreds) {
+      try {
+        const { identifier, remember } = JSON.parse(savedCreds);
+        if (remember) {
+          identifierEl.value = identifier;
+          rememberMeEl.checked = true;
+        }
+      } catch (e) {
+        localStorage.removeItem('qmsRemember');
+      }
+    }
+    window.location.href = 'index.html'; // Redirect to QMS dashboard
+  }
+});
+
+// Login form submit
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  setError("");
-  setInfo("");
+  clearMessages();
 
-  const identifier = identifierEl.value.trim();
+  const email = identifierEl.value.trim().toLowerCase();
   const password = passwordEl.value;
+  const remember = rememberMeEl.checked;
 
-  if (!identifier || !password) {
-    setError("Enter both username/email and password.");
+  if (!email || !password) {
+    setError('Enter your email and password.');
     return;
   }
 
+  // Save remember me preference
+  if (remember) {
+    localStorage.setItem('qmsRemember', JSON.stringify({ 
+      identifier: email, 
+      remember: true,
+      timestamp: Date.now()
+    }));
+  } else {
+    localStorage.removeItem('qmsRemember');
+  }
+
+  // Disable submit during request
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Signing in...';
+  submitBtn.disabled = true;
+
   try {
-    let email = identifier;
-
-    // 🔑 If identifier is not an email, lookup synthetic email in Firestore
-    if (!identifier.includes("@")) {
-      const userDoc = await getDoc(doc(db, "users", identifier));
-      if (!userDoc.exists()) {
-        setError("User not found.");
-        return;
-      }
-      email = userDoc.data().email; // synthetic email
-    }
-
-    // ✅ Authenticate with Firebase
     await signInWithEmailAndPassword(auth, email, password);
-    window.location.href = "index.html"; // redirect to dashboard
-  } catch (err) {
-    console.error(err);
-    const code = err.code || "";
-    if (code === "auth/user-not-found" || code === "auth/wrong-password") {
-      setError("Invalid username/email or password.");
-    } else {
-      setError("Unable to sign in. Please try again.");
+    // onAuthStateChanged handles redirect
+  } catch (error) {
+    console.error('Login error:', error.code, error.message);
+    switch (error.code) {
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        setError('Invalid email or password.');
+        break;
+      case 'auth/invalid-credential':
+      case 'auth/invalid-email':
+        setError('Invalid email or credentials.');
+        break;
+      case 'auth/user-disabled':
+        setError('Account disabled. Contact support.');
+        break;
+      case 'auth/too-many-requests':
+        setError('Too many failed attempts. Try again in 60s.');
+        break;
+      case 'auth/network-request-failed':
+        setError('Network error. Check your connection.');
+        break;
+      default:
+        setError('Login failed. Please try again.');
     }
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
   }
 });
 
-forgotBtn?.addEventListener("click", async () => {
-  setError("");
-  setInfo("");
-
-  const identifier = identifierEl.value.trim();
-  if (!identifier) {
-    setError("Enter your username/email first to receive a reset link.");
+// Forgot password
+forgotPasswordBtn.addEventListener('click', async () => {
+  clearMessages();
+  const email = identifierEl.value.trim().toLowerCase();
+  
+  if (!email) {
+    setError('Enter your email first to receive a reset link.');
     return;
   }
 
+  // Disable during request
+  const originalText = forgotPasswordBtn.textContent;
+  forgotPasswordBtn.textContent = 'Sending...';
+  forgotPasswordBtn.disabled = true;
+
   try {
-    let email = identifier;
-
-    if (!identifier.includes("@")) {
-      const userDoc = await getDoc(doc(db, "users", identifier));
-      if (!userDoc.exists()) {
-        setError("User not found.");
-        return;
-      }
-      email = userDoc.data().email;
-    }
-
     await sendPasswordResetEmail(auth, email);
-    setInfo("Password reset link sent. Check your inbox.");
-  } catch (err) {
-    console.error(err);
-    setError("Could not send password reset email.");
+    setInfo('Password reset link sent to ' + email + '. Check your inbox (and spam).');
+  } catch (error) {
+    console.error('Reset error:', error.code);
+    switch (error.code) {
+      case 'auth/user-not-found':
+        setError('No account found with that email.');
+        break;
+      case 'auth/invalid-email':
+        setError('Invalid email format.');
+        break;
+      case 'auth/too-many-requests':
+        setError('Too many requests. Try again later.');
+        break;
+      default:
+        setError('Could not send reset email. Try again.');
+    }
+  } finally {
+    forgotPasswordBtn.textContent = originalText;
+    forgotPasswordBtn.disabled = false;
   }
 });
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target === identifierEl) {
+    passwordEl.focus();
+  }
+});
+
+// Expose globally for debugging/other pages
+window.__qmsAuth = auth;
+window.__qmsDebugLogin = async (email, password) => {
+  console.log('Debug login:', email);
+  await signInWithEmailAndPassword(auth, email, password);
+};
