@@ -7,7 +7,7 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 
 const form = document.getElementById("loginForm");
-const identifierEl = document.getElementById("identifier"); // can be email OR username
+const identifierEl = document.getElementById("identifier"); // username OR email
 const passwordEl = document.getElementById("password");
 const togglePwdBtn = document.getElementById("togglePwd");
 const forgotBtn = document.getElementById("forgotPasswordBtn");
@@ -38,7 +38,7 @@ form?.addEventListener("submit", async (e) => {
   setError("");
   setInfo("");
 
-  const identifier = identifierEl.value.trim(); // username OR email
+  const identifier = identifierEl.value.trim();
   const password = passwordEl.value;
 
   if (!identifier || !password) {
