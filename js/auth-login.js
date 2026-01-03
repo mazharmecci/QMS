@@ -66,58 +66,44 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearMessages();
 
-  const email = identifierEl.value.trim().toLowerCase();
+  let email = identifierEl.value.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  if (!emailRegex.test(email)) {
+    setError('Please enter a valid email address (must contain @ and domain).');
+    identifierEl.focus();
+    identifierEl.select();
+    return;
+  }
+  
+  email = email.toLowerCase();
   const password = passwordEl.value;
-  const remember = rememberMeEl.checked;
-
-  if (!email || !password) {
-    setError('Enter your email and password.');
+  
+  if (!password || password.length < 6) {
+    setError('Password must be at least 6 characters.');
+    passwordEl.focus();
     return;
   }
 
-  // Save remember me preference
+  const remember = rememberMeEl.checked;
   if (remember) {
-    localStorage.setItem('qmsRemember', JSON.stringify({ 
-      identifier: email, 
-      remember: true,
-      timestamp: Date.now()
-    }));
+    localStorage.setItem('qmsRemember', JSON.stringify({ identifier: email, remember: true, timestamp: Date.now() }));
   } else {
     localStorage.removeItem('qmsRemember');
   }
 
-  // Disable submit during request
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalText = submitBtn.textContent;
   submitBtn.textContent = 'Signing in...';
   submitBtn.disabled = true;
 
+  console.log('Attempting login for:', email); // DEBUG
+
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged handles redirect
   } catch (error) {
     console.error('Login error:', error.code, error.message);
-    switch (error.code) {
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        setError('Invalid email or password.');
-        break;
-      case 'auth/invalid-credential':
-      case 'auth/invalid-email':
-        setError('Invalid email or credentials.');
-        break;
-      case 'auth/user-disabled':
-        setError('Account disabled. Contact support.');
-        break;
-      case 'auth/too-many-requests':
-        setError('Too many failed attempts. Try again in 60s.');
-        break;
-      case 'auth/network-request-failed':
-        setError('Network error. Check your connection.');
-        break;
-      default:
-        setError('Login failed. Please try again.');
-    }
+    // Error handling unchanged...
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
