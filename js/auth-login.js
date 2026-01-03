@@ -50,13 +50,8 @@ togglePwdBtn.addEventListener('click', () => {
 });
 
 /* ========== Username → email lookup ========== */
-// username is what user types (e.g. "Chaitra")
-// Firestore doc has fields: { username: "Chaitra", email: "chaitra@istos-qms.firebaseapp.com", ... }
 async function findUserByUsername(username) {
-  const q = query(
-    collection(db, 'users'),
-    where('username', '==', username)
-  );
+  const q = query(collection(db, 'users'), where('username', '==', username));
   const snap = await getDocs(q);
 
   if (snap.empty) {
@@ -83,7 +78,7 @@ async function findUserByUsername(username) {
   };
 }
 
-/* ========== Auto-fill "remembered" username & auto-redirect ========== */
+/* ========== Auto-fill "remembered" username ========== */
 onAuthStateChanged(auth, (user) => {
   const remembered = localStorage.getItem('qmsRememberUser');
   if (remembered) {
@@ -97,11 +92,6 @@ onAuthStateChanged(auth, (user) => {
       localStorage.removeItem('qmsRememberUser');
     }
   }
-
-  if (user) {
-    // Already logged in → go to dashboard
-    window.location.href = 'index.html';
-  }
 });
 
 /* ========== Submit: username + password login ========== */
@@ -109,7 +99,7 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearMessages();
 
-  const username = identifierEl.value.trim();   // e.g. "Chaitra"
+  const username = identifierEl.value.trim();
   const password = passwordEl.value;
 
   if (!username || !password) {
@@ -131,33 +121,45 @@ form.addEventListener('submit', async (e) => {
     // 2) Use mapped email for Firebase Auth sign-in
     await signInWithEmailAndPassword(auth, userMeta.email, password);
 
-    // 3) Persist basic profile locally for UI
+    // 3) Persist profile locally
     const remember = rememberMeEl.checked;
     if (remember) {
-      localStorage.setItem(
-        'qmsRememberUser',
-        JSON.stringify({
-          username: userMeta.username,
-          remember: true,
-          ts: Date.now()
-        })
-      );
+      localStorage.setItem('qmsRememberUser', JSON.stringify({
+        username: userMeta.username,
+        remember: true,
+        ts: Date.now()
+      }));
     } else {
       localStorage.removeItem('qmsRememberUser');
     }
 
-    localStorage.setItem(
-      'qmsCurrentUser',
-      JSON.stringify({
-        username: userMeta.username,
-        role: userMeta.role,
-        permissions: userMeta.permissions,
-        ts: Date.now()
-      })
-    );
+    localStorage.setItem('qmsCurrentUser', JSON.stringify({
+      username: userMeta.username,
+      role: userMeta.role,
+      permissions: userMeta.permissions,
+      ts: Date.now()
+    }));
 
+    // 4) Redirect based on role/permissions
     setInfo('Login successful. Redirecting...');
-    window.location.href = 'index.html';
+
+    if (userMeta.role === 'manager') {
+      // Manager → full QMS dashboard
+      window.location.href = 'index.html';
+    } else if (userMeta.permissions.includes('task-manager') && userMeta.permissions.includes('service-form')) {
+      // Employee like Praveen → Task + Service
+      window.location.href = 'workflow-selector.html'; // optional selector page
+    } else if (userMeta.permissions.includes('task-manager')) {
+      // Pooja & Chaitra → Task Manager only
+      window.location.href = 'http://task.istosmedical.com/index.html';
+    } else if (userMeta.permissions.includes('service-form')) {
+      // Service-only employee
+      window.location.href = 'https://qms.istosmedical.com/forms/service-form.html';
+    } else {
+      // Unauthorized
+      window.location.href = 'unauthorized.html';
+    }
+
   } catch (error) {
     console.error('Login error:', error.code || error.message, error);
     const code = error.code || error.message;
@@ -198,7 +200,6 @@ forgotPasswordBtn.addEventListener('click', async () => {
   forgotPasswordBtn.disabled = true;
 
   try {
-    // Find user to get their email
     const userMeta = await findUserByUsername(username);
     await sendPasswordResetEmail(auth, userMeta.email);
     setInfo('Password reset link sent to ' + userMeta.email + '. Check your inbox and spam folder.');
