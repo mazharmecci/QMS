@@ -1,4 +1,3 @@
-// scripts/patchAssigneeIds.js
 const admin = require("firebase-admin");
 
 // Load service account credentials
@@ -11,52 +10,62 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-async function patchAssigneeIds() {
-  const tasksSnap = await db.collection("employeeTasks").get();
-  const usersSnap = await db.collection("users").get();
+async function patchAssigneeIds({ dryRun = false } = {}) {
+  console.log(`🔍 Starting patch${dryRun ? " (dry run)" : ""}...`);
 
+  const [tasksSnap, usersSnap] = await Promise.all([
+    db.collection("employeeTasks").get(),
+    db.collection("users").get()
+  ]);
+
+  // Build a map of username → UID
   const userMap = {};
-  usersSnap.forEach((docSnap) => {
-    const data = docSnap.data();
-    if (data.username) {
-      userMap[data.username] = docSnap.id;
+  usersSnap.forEach(doc => {
+    const data = doc.data();
+    if (data.username && data.uid) {
+      userMap[data.username] = data.uid;
     }
   });
 
   let updatedCount = 0;
+  let skippedCount = 0;
 
   for (const taskDoc of tasksSnap.docs) {
     const task = taskDoc.data();
     const taskId = taskDoc.id;
 
-    // Only fix when assigneeId is same as assignee (old bug)
-    if (!task.assignee || task.assigneeId !== task.assignee) continue;
-
-    const correctUid = userMap[task.assignee];
-    if (!correctUid) {
-      console.warn(
-        `No UID found for assignee "${task.assignee}" in task ${taskId}`
-      );
+    // Skip if assigneeId is already correct or missing assignee
+    if (!task.assignee || task.assigneeId !== task.assignee) {
+      skippedCount++;
       continue;
     }
 
-    try {
-      await db.collection("employeeTasks").doc(taskId).update({
-        assigneeId: correctUid
-      });
-      console.log(`✅ Updated task ${taskId}: assigneeId → ${correctUid}`);
-      updatedCount++;
-    } catch (err) {
-      console.error(`❌ Failed to update task ${taskId}:`, err);
+    const correctUid = userMap[task.assignee];
+    if (!correctUid) {
+      console.warn(`⚠️ No UID found for assignee "${task.assignee}" in task ${taskId}`);
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`📝 Would update task ${taskId}: assigneeId → ${correctUid}`);
+    } else {
+      try {
+        await db.collection("employeeTasks").doc(taskId).update({ assigneeId: correctUid });
+        console.log(`✅ Updated task ${taskId}: assigneeId → ${correctUid}`);
+        updatedCount++;
+      } catch (err) {
+        console.error(`❌ Failed to update task ${taskId}:`, err);
+      }
     }
   }
 
-  console.log(`🎯 Patch complete. ${updatedCount} tasks updated.`);
+  console.log(`🎯 Patch complete. ${updatedCount} tasks updated, ${skippedCount} skipped.`);
 }
 
-patchAssigneeIds()
+// Run patch
+patchAssigneeIds({ dryRun: false })
   .then(() => process.exit(0))
   .catch((err) => {
-    console.error(err);
+    console.error("❌ Patch failed:", err);
     process.exit(1);
   });
