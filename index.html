@@ -37,6 +37,25 @@
     line-height: 1.5;
   }
 
+  .card-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    position: relative;
+  }
+  
+  .card-disabled:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: #333;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
   header {
     position: sticky;
     top: 0;
@@ -496,6 +515,35 @@
   </div>
 </div>
   </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let localUser = {};
+  try {
+    localUser = JSON.parse(localStorage.getItem("qmsCurrentUser") || "{}");
+  } catch {
+    console.warn("⚠️ Failed to parse qmsCurrentUser");
+  }
+
+  const isManager = localUser.role === "manager";
+  const employeeAllowed = ["service-form.html", "task-form.html"];
+
+  document.querySelectorAll(".card").forEach(card => {
+    const onclickAttr = card.getAttribute("onclick");
+
+    if (!isManager && onclickAttr) {
+      const match = onclickAttr.match(/navigate\('([^']+)'\)/);
+      const targetPage = match ? match[1] : null;
+
+      if (!employeeAllowed.includes(targetPage)) {
+        card.classList.add("card-disabled");
+        card.removeAttribute("onclick"); // prevent navigation
+        card.setAttribute("title", "Restricted to managers"); // tooltip
+      }
+    }
+  });
+});
+</script>
 
 <script type="module">
   import { auth, signOut } from "./js/firebase.js";
