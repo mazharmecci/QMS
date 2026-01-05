@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employee Dashboard</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="employee-view">
+  <div class="shell">
+    <section class="card">
+      <div class="card-inner">
+        <!-- Header -->
+        <div class="header-row">
+          <div class="logo-wrap">
+            <img src="../images/istos-logo.jpg" alt="ISTOS Logo" />
+            <div class="title-block">
+              <h1>Employee Dashboard</h1>
+              <p class="subtitle">View tasks you created or assigned to you.</p>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <a href="../forms/task-form.html" class="back-pill">← Back to Task Form</a>
+            <button id="logoutBtn" type="button" class="back-pill">Logout</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Filter -->
+        <div class="filter-row">
+          <label for="taskFilter"><strong>Filter:</strong></label>
+          <select id="taskFilter">
+            <option value="all" selected>All My Tasks</option>
+            <option value="assigned">Assigned to Me</option>
+            <option value="created">Created by Me</option>
+          </select>
+          <button id="btnRefresh" class="btn-secondary">Refresh</button>
+        </div>
+
+        <!-- Task Table -->
+        <table id="taskTable" class="task-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Priority</th>
+              <th>Assignee</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6">Loading tasks...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <!-- Script -->
+  <script type="module" src="../js/taskscript.js"></script>
+</body>
+</html>
