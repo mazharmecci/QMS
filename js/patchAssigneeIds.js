@@ -34,8 +34,8 @@ async function patchAssigneeIds({ dryRun = false } = {}) {
     const task = taskDoc.data();
     const taskId = taskDoc.id;
 
-    // Skip if assigneeId is already correct or missing assignee
-    if (!task.assignee || task.assigneeId !== task.assignee) {
+    // Skip if no assignee
+    if (!task.assignee) {
       skippedCount++;
       continue;
     }
@@ -46,16 +46,21 @@ async function patchAssigneeIds({ dryRun = false } = {}) {
       continue;
     }
 
-    if (dryRun) {
-      console.log(`📝 Would update task ${taskId}: assigneeId → ${correctUid}`);
-    } else {
-      try {
-        await db.collection("employeeTasks").doc(taskId).update({ assigneeId: correctUid });
-        console.log(`✅ Updated task ${taskId}: assigneeId → ${correctUid}`);
-        updatedCount++;
-      } catch (err) {
-        console.error(`❌ Failed to update task ${taskId}:`, err);
+    // Patch if assigneeId is missing OR not equal to correct UID
+    if (!task.assigneeId || task.assigneeId !== correctUid) {
+      if (dryRun) {
+        console.log(`📝 Would update task ${taskId}: assigneeId → ${correctUid}`);
+      } else {
+        try {
+          await db.collection("employeeTasks").doc(taskId).update({ assigneeId: correctUid });
+          console.log(`✅ Updated task ${taskId}: assigneeId → ${correctUid}`);
+          updatedCount++;
+        } catch (err) {
+          console.error(`❌ Failed to update task ${taskId}:`, err);
+        }
       }
+    } else {
+      skippedCount++;
     }
   }
 
