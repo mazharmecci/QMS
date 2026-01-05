@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ISTOS Manager Dashboard</title>  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="manager-view">
+  <div class="shell">
+    <section class="card">
+      <div class="card-inner">
+        <!-- Header row with logo + title + back link -->
+        <div class="header-row">
+          <div class="logo-wrap">
+            <img src="istos-logo.png" alt="ISTOS Logo" />
+            <div class="title-block">
+              <h1>ISTOS Manager Dashboard</h1>
+              <p class="subtitle">
+                Monitor all team tasks and update status quickly.
+              </p>
+            </div>
+          </div>
+          <a href="index.html" class="back-pill">← Back to Workspace</a>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Card header with title + refresh -->
+        <div class="card-header">
+          <div>
+            <h3>All Team Tasks</h3>
+            <span>Filter by team member or update task completion.</span>
+          </div>
+          <button class="btn-primary" id="btnRefresh">⟳ Refresh</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+          <div class="form-row">
+            <label for="teamMember">Filter by Team Member</label>
+            <select id="teamMember">
+              <option value="" selected>All members</option>
+              <option value="Pooja">Pooja</option>
+              <option value="Chaitra">Chaitra</option>
+              <option value="Mazhar">Mazhar</option>
+              <option value="Praveen">Praveen</option>
+              <option value="Sarfaraz">Sarfaraz</option>
+              <option value="Sridhar">Sridhar</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Task table -->
+        <table id="taskTable">
+          <thead>
+            <tr>
+              <th>Task Title</th>
+              <th>Description</th>
+              <th>Priority</th>
+              <th>Assignee</th>            
+              <th>Assignor</th>
+              <th>Status</th>
+              <th style="width:1%">Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        
+        <!-- Manager pagination row just below the table -->
+        <div id="mgrPagination" class="table-pagination"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <!-- Script -->
+  <script type="module" src="../js/taskscript.js"></script>
+</body>
+</html>
