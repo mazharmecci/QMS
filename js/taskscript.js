@@ -47,7 +47,7 @@ function populateUserBadge() {
       ${localUser.username}
     `;
     userBadge.style.cursor = "pointer";
-
+  
     userBadge.onclick = () => {
       if (profileModal && profileContent) {
         profileContent.innerHTML = `
