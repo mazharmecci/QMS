@@ -4,41 +4,81 @@ import {
   db,
   collection,
   addDoc,
-  getDocs,       // ✅ for listing tasks
-  updateDoc,     // ✅ for marking completed
-  deleteDoc,     // ✅ for deleting
+  getDocs,
+  updateDoc,
+  deleteDoc,
   doc,
+  query,
+  where,
   serverTimestamp,
   onAuthStateChanged,
   signOut
 } from './firebase.js';
 
 // ============================
-// AUTH + LOGOUT PILL
+// Shared: Toast + Profile Badge
+// ============================
+function showToast(msg) {
+  const toastEl = document.getElementById("toast");
+  if (!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.style.display = "block";
+  setTimeout(() => (toastEl.style.display = "none"), 3000);
+}
+
+function populateUserBadge() {
+  const userBadge = document.getElementById("userBadge");
+  const profileModal = document.getElementById("profileModal");
+  const profileContent = document.getElementById("profileContent");
+  const localUser = JSON.parse(localStorage.getItem("qmsCurrentUser") || "{}");
+
+  if (userBadge && localUser?.username) {
+    userBadge.textContent = `👤 ${localUser.username}`;
+    userBadge.style.cursor = "pointer";
+    userBadge.addEventListener("click", () => {
+      if (profileModal && profileContent) {
+        profileContent.innerHTML = `
+          <p><strong>Username:</strong> ${localUser.username}</p>
+          <p><strong>Role:</strong> ${localUser.role}</p>
+          <p><strong>Permissions:</strong> ${localUser.permissions?.join(", ") || "None"}</p>
+          <p><strong>Logged in:</strong> ${new Date(localUser.ts).toLocaleString()}</p>
+        `;
+        profileModal.style.display = "block";
+      }
+    });
+  }
+
+  const closeBtn = document.getElementById("closeProfile");
+  if (closeBtn && profileModal) {
+    closeBtn.addEventListener("click", () => {
+      profileModal.style.display = "none";
+    });
+  }
+}
+
+// ============================
+// AUTH + LOGOUT + Profile
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    // Watch auth state
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("Task-manager auth state: logged in", user.uid);
-      } else {
-        console.log("Task-manager auth state: signed out");
-        // Grace period before redirect
-        setTimeout(() => {
-          if (!auth.currentUser) {
-            window.location.href = "/login.html"; // ✅ unified QMS login
-          }
-        }, 1000);
-      }
-    });
+  populateUserBadge();
 
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("Auth state: logged in", user.uid);
+    } else {
+      console.log("Auth state: signed out");
+      setTimeout(() => {
+        if (!auth.currentUser) window.location.href = "/login.html";
+      }, 1000);
+    }
+  });
+
+  if (logoutBtn) {
     logoutBtn.addEventListener("click", async () => {
       const originalText = logoutBtn.textContent;
       logoutBtn.disabled = true;
       logoutBtn.textContent = "Signing out...";
-
       try {
         await signOut(auth);
         localStorage.removeItem("qmsCurrentUser");
@@ -63,58 +103,54 @@ document.addEventListener("DOMContentLoaded", () => {
   const spinner = document.getElementById("spinner");
   const roleSelect = document.getElementById("roleSelect");
   const creatorSelect = document.getElementById("creatorSelect");
-  const toastEl = document.getElementById("toast");
-
-  function showToast(msg) {
-    if (!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.style.display = "block";
-    setTimeout(() => (toastEl.style.display = "none"), 3000);
-  }
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      console.warn("No Firebase user logged in for task form");
       setTimeout(() => {
-        if (!auth.currentUser) {
-          window.location.href = "/login.html";
-        }
+        if (!auth.currentUser) window.location.href = "/login.html";
       }, 1000);
       return;
     }
 
-    // Attach submit handler once
     taskForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (spinner) spinner.style.display = "block";
 
       const role = roleSelect?.value || "employee";
       const creatorUsername = creatorSelect?.value || "";
+      const assigneeName = document.getElementById("assignee")?.value || "";
+      let assigneeId = null;
+
+      try {
+        const snap = await getDocs(query(collection(db, "users"), where("username", "==", assigneeName)));
+        if (!snap.empty) assigneeId = snap.docs[0].id;
+      } catch (err) {
+        console.warn("Assignee lookup failed:", err);
+      }
 
       const task = {
         title: document.getElementById("title")?.value.trim() || "",
         description: document.getElementById("description")?.value.trim() || "",
         priority: document.getElementById("priority")?.value || "Low",
-        assignee: document.getElementById("assignee")?.value || "",
+        assignee: assigneeName,
+        assigneeId: assigneeId || "",
         status: "Pending",
         createdBy: creatorUsername || user.email || "Unknown",
         createdByUid: user.uid,
         createdAt: serverTimestamp()
       };
 
-      console.log("📝 Creating task:", task);
-
       try {
         await addDoc(collection(db, "employeeTasks"), task);
         showToast("✅ Task saved");
         taskForm.reset();
       } catch (err) {
-        console.error("❌ Error saving task:", err);
+        console.error("Error saving task:", err);
         showToast("⚠️ Error saving task: " + err.message);
       } finally {
         if (spinner) spinner.style.display = "none";
       }
-    }, { once: true }); // ensure only one listener
+    }, { once: true });
   });
 });
 
@@ -125,16 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const table = document.querySelector("#taskTable tbody");
   const filterSelect = document.getElementById("taskFilter");
   const refreshBtn = document.getElementById("btnRefresh");
-  const toastEl = document.getElementById("toast");
 
   if (!table || !document.body.classList.contains("employee-view")) return;
-
-  function showToast(msg) {
-    if (!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.style.display = "block";
-    setTimeout(() => (toastEl.style.display = "none"), 3000);
-  }
 
   let currentFilter = "all";
 
@@ -169,20 +197,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         table.innerHTML = tasks.map((task) => `
-          <tr data-id="${task.id}">
+          <tr data-id="${task.id}" class="${task.status === 'Completed' ? 'task-completed' : ''}">
             <td>${task.title || "(Untitled)"}</td>
             <td>${task.description || "-"}</td>
             <td>${task.priority || "-"}</td>
             <td>${task.assignee || "-"}</td>
-            <td>${task.status || "Pending"}</td>
             <td>
-              <button class="btn-secondary btn-complete">✔ Complete</button>
+              <span class="status-badge ${task.status === "Completed" ? "status-completed" : "status-pending"}">
+                ${task.status || "Pending"}
+              </span>
+            </td>
+            <td>
+              <button class="btn-secondary btn-complete" ${task.status === "Completed" ? "disabled" : ""}>
+                ${task.status === "Completed" ? "✔ Done" : "✔ Complete"}
+              </button>
               <button class="btn-danger btn-delete">🗑 Delete</button>
             </td>
           </tr>
         `).join("");
 
-        // Attach action listeners
         table.querySelectorAll(".btn-complete").forEach((btn) => {
           btn.addEventListener("click", async (e) => {
             const row = e.target.closest("tr");
@@ -190,13 +223,10 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
               await updateDoc(doc(db, "employeeTasks", taskId), { status: "Completed" });
               showToast("✅ Task marked completed");
-        
-              // Update UI instantly
+
+              row.classList.add("task-completed");
               const statusCell = row.querySelector("td:nth-child(5)");
               statusCell.innerHTML = `<span class="status-badge status-completed">Completed</span>`;
-              row.classList.add("task-completed");
-        
-              // Disable the complete button
               e.target.disabled = true;
               e.target.textContent = "✔ Done";
             } catch (err) {
@@ -210,30 +240,43 @@ document.addEventListener("DOMContentLoaded", () => {
           btn.addEventListener("click", async (e) => {
             const row = e.target.closest("tr");
             const taskId = row.dataset.id;
-            if (!confirm("Delete this task?")) return;
-            try {
-              await deleteDoc(doc(db, "employeeTasks", taskId));
-              showToast("🗑 Task deleted");
-              loadTasks();
-            } catch (err) {
-              console.error("Error deleting task:", err);
-              showToast("⚠️ Failed to delete task");
-            }
-          });
+            table.querySelectorAll(".btn-delete").forEach((btn) => {
+              btn.addEventListener("click", async (e) => {
+                const row = e.target.closest("tr");
+                const taskId = row.dataset.id;
+                if (!confirm("Delete this task?")) return;
+                try {
+                  await deleteDoc(doc(db, "employeeTasks", taskId));
+                  showToast("🗑 Task deleted");
+    
+                  // Smooth fade-out effect before removing row
+                  row.style.transition = "opacity 0.5s ease";
+                  row.style.opacity = "0";
+                  setTimeout(() => {
+                    row.remove();
+                    if (!table.querySelector("tr")) {
+                      table.innerHTML = `<tr><td colspan="6">No tasks found</td></tr>`;
+                    }
+                  }, 500);
+                } catch (err) {
+                  console.error("Error deleting task:", err);
+                  showToast("⚠️ Failed to delete task");
+                }
+              });
+            });
+          } catch (err) {
+            console.error("Error loading tasks:", err);
+            showToast("⚠️ Failed to load tasks");
+          }
+        }
+    
+        filterSelect?.addEventListener("change", (e) => {
+          currentFilter = e.target.value;
+          loadTasks();
         });
-      } catch (err) {
-        console.error("Error loading tasks:", err);
-        showToast("⚠️ Failed to load tasks");
-      }
-    }
-
-    filterSelect?.addEventListener("change", (e) => {
-      currentFilter = e.target.value;
-      loadTasks();
+    
+        refreshBtn?.addEventListener("click", loadTasks);
+    
+        loadTasks();
+      });
     });
-
-    refreshBtn?.addEventListener("click", loadTasks);
-
-    loadTasks();
-  });
-});
