@@ -318,12 +318,24 @@
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.5rem;">
-            <a href="../index.html" class="back-pill">← Back to Workspace</a>
-            <a href="employee.html" class="back-pill">👩‍💻 Employee Dashboard</a>
-            <button id="logoutBtn" type="button" class="back-pill">Logout</button>
+        <!-- Navigation + User -->
+        <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+          <a href="../index.html" class="back-pill">← Back to Workspace</a>
+          <a href="employee.html" class="back-pill">👩‍💻 Employee Dashboard</a>
+          <a href="../forms/task-form.html" class="back-pill">📝 Task Form</a>
+          
+          <!-- User Badge + Logout -->
+          <span id="userBadge" class="user-pill">👤 User</span>
+          <button id="logoutBtn" type="button" class="back-pill">Logout</button>
+        </div>
+        
+        <!-- Profile Modal -->
+        <div id="profileModal" class="modal">
+          <div class="modal-content">
+            <span id="closeProfile" class="close">&times;</span>
+            <div id="profileContent"></div>
           </div>
-        </div> 
+        </div>
 
         <div class="divider"></div>
 
