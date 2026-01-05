@@ -12,53 +12,61 @@ import {
 // ============================
 // AUTH + LOGOUT PILL
 // ============================
-(function authBlock() {
+document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
-  if (!logoutBtn) return;
+  if (logoutBtn) {
+    // Watch auth state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("Task-manager auth state: logged in", user.uid);
+      } else {
+        console.log("Task-manager auth state: signed out");
+        // Grace period before redirect
+        setTimeout(() => {
+          if (!auth.currentUser) {
+            window.location.href = "/login.html"; // ✅ unified QMS login
+          }
+        }, 1000);
+      }
+    });
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log("Task-manager auth state: logged in", user.uid);
-    } else {
-      console.log("Task-manager auth state: signed out");
-      // Grace period before redirect
-      setTimeout(() => {
-        if (!auth.currentUser) {
-          window.location.href = "/login.html"; // ✅ unified QMS login
-        }
-      }, 1000);
-    }
-  });
+    logoutBtn.addEventListener("click", async () => {
+      const originalText = logoutBtn.textContent;
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Signing out...";
 
-  logoutBtn.addEventListener("click", async () => {
-    const originalText = logoutBtn.textContent;
-    logoutBtn.disabled = true;
-    logoutBtn.textContent = "Signing out...";
-
-    try {
-      await signOut(auth);
-      localStorage.removeItem("qmsCurrentUser");
-      window.location.href = "/login.html";
-    } catch (err) {
-      console.error("Failed to sign out", err);
-      alert("Could not log out. Please try again.");
-      logoutBtn.textContent = originalText;
-      logoutBtn.disabled = false;
-    }
-  });
-})();
+      try {
+        await signOut(auth);
+        localStorage.removeItem("qmsCurrentUser");
+        window.location.href = "/login.html";
+      } catch (err) {
+        console.error("Failed to sign out", err);
+        alert("Could not log out. Please try again.");
+        logoutBtn.textContent = originalText;
+        logoutBtn.disabled = false;
+      }
+    });
+  }
+});
 
 // ============================
 // TASK FORM (task-form.html)
 // ============================
-(function taskFormBlock() {
+document.addEventListener("DOMContentLoaded", () => {
   const taskForm = document.getElementById("taskForm");
   if (!taskForm) return;
 
   const spinner = document.getElementById("spinner");
   const roleSelect = document.getElementById("roleSelect");
   const creatorSelect = document.getElementById("creatorSelect");
-  const showToast = makeToast("toast");
+  const toastEl = document.getElementById("toast");
+
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.style.display = "block";
+    setTimeout(() => (toastEl.style.display = "none"), 3000);
+  }
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -71,6 +79,7 @@ import {
       return;
     }
 
+    // Attach submit handler once
     taskForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (spinner) spinner.style.display = "block";
@@ -85,7 +94,7 @@ import {
         assignee: document.getElementById("assignee")?.value || "",
         status: "Pending",
         createdBy: creatorUsername || user.email || "Unknown",
-        createdByUid: user.uid, // 🔑 reliable UID
+        createdByUid: user.uid,
         createdAt: serverTimestamp()
       };
 
@@ -101,6 +110,6 @@ import {
       } finally {
         if (spinner) spinner.style.display = "none";
       }
-    });
+    }, { once: true }); // ensure only one listener
   });
-})();
+});
