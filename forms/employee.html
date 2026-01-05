@@ -208,6 +208,22 @@ body.employee-view {
   z-index: 999;
 }
 
+.user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px; /* space between icon and text */
+  padding: 4px 8px;
+  border-radius: 16px;
+  background: #f0f0f0; /* adjust to match your theme */
+  font-size: 0.9rem;
+}
+
+.user-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
 </style>
 </head>
 <body class="employee-view">
@@ -228,7 +244,7 @@ body.employee-view {
           <!-- Navigation + User -->
           <div class="header-actions">
             <a href="../forms/task-form.html" class="back-pill">← Back to Task Form</a>
-            <span id="userBadge" class="user-pill">👤 User</span>
+            <span id="userBadge" class="user-pill"><img src="user-icon.png" alt="User Icon" class="user-icon"> User</span>
             <button id="logoutBtn" type="button" class="back-pill">Logout</button>
           </div>
         </div>       
