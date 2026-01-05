@@ -13,17 +13,19 @@ import {
   serverTimestamp,
   onAuthStateChanged,
   signOut
-} from './firebase.js';
+} from "./firebase.js";
 
-// ============================
-// Shared: Toast + Profile Badge
-// ============================
+/* ============================
+   Shared: Toast + Profile Badge
+   ============================ */
 function showToast(msg) {
   const toastEl = document.getElementById("toast");
   if (!toastEl) return;
   toastEl.textContent = msg;
   toastEl.style.display = "block";
-  setTimeout(() => (toastEl.style.display = "none"), 3000);
+  setTimeout(() => {
+    toastEl.style.display = "none";
+  }, 3000);
 }
 
 function populateUserBadge() {
@@ -56,9 +58,9 @@ function populateUserBadge() {
   }
 }
 
-// ============================
-// AUTH + LOGOUT + Profile
-// ============================
+/* ============================
+   AUTH + LOGOUT + Profile
+   ============================ */
 document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.getElementById("logoutBtn");
   populateUserBadge();
@@ -93,9 +95,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ============================
-// TASK FORM (task-form.html)
-// ============================
+/* ============================
+   TASK FORM (task-form.html)
+   ============================ */
 document.addEventListener("DOMContentLoaded", () => {
   const taskForm = document.getElementById("taskForm");
   if (!taskForm) return;
@@ -112,51 +114,58 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    taskForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (spinner) spinner.style.display = "block";
+    taskForm.addEventListener(
+      "submit",
+      async (e) => {
+        e.preventDefault();
+        if (spinner) spinner.style.display = "block";
 
-      const role = roleSelect?.value || "employee";
-      const creatorUsername = creatorSelect?.value || "";
-      const assigneeName = document.getElementById("assignee")?.value || "";
-      let assigneeId = null;
+        const role = roleSelect?.value || "employee";
+        const creatorUsername = creatorSelect?.value || "";
+        const assigneeName = document.getElementById("assignee")?.value || "";
+        let assigneeId = null;
 
-      try {
-        const snap = await getDocs(query(collection(db, "users"), where("username", "==", assigneeName)));
-        if (!snap.empty) assigneeId = snap.docs[0].id;
-      } catch (err) {
-        console.warn("Assignee lookup failed:", err);
-      }
+        try {
+          const snap = await getDocs(
+            query(collection(db, "users"), where("username", "==", assigneeName))
+          );
+          if (!snap.empty) assigneeId = snap.docs[0].id;
+        } catch (err) {
+          console.warn("Assignee lookup failed:", err);
+        }
 
-      const task = {
-        title: document.getElementById("title")?.value.trim() || "",
-        description: document.getElementById("description")?.value.trim() || "",
-        priority: document.getElementById("priority")?.value || "Low",
-        assignee: assigneeName,
-        assigneeId: assigneeId || "",
-        status: "Pending",
-        createdBy: creatorUsername || user.email || "Unknown",
-        createdByUid: user.uid,
-        createdAt: serverTimestamp()
-      };
+        const task = {
+          title: document.getElementById("title")?.value.trim() || "",
+          description: document.getElementById("description")?.value.trim() || "",
+          priority: document.getElementById("priority")?.value || "Low",
+          assignee: assigneeName,
+          assigneeId: assigneeId || "",
+          status: "Pending",
+          createdBy: creatorUsername || user.email || "Unknown",
+          createdByUid: user.uid,
+          role,
+          createdAt: serverTimestamp()
+        };
 
-      try {
-        await addDoc(collection(db, "employeeTasks"), task);
-        showToast("✅ Task saved");
-        taskForm.reset();
-      } catch (err) {
-        console.error("Error saving task:", err);
-        showToast("⚠️ Error saving task: " + err.message);
-      } finally {
-        if (spinner) spinner.style.display = "none";
-      }
-    }, { once: true });
+        try {
+          await addDoc(collection(db, "employeeTasks"), task);
+          showToast("✅ Task saved");
+          taskForm.reset();
+        } catch (err) {
+          console.error("Error saving task:", err);
+          showToast("⚠️ Error saving task: " + (err.message || "Unknown error"));
+        } finally {
+          if (spinner) spinner.style.display = "none";
+        }
+      },
+      { once: true }
+    );
   });
 });
 
-// ============================
-// EMPLOYEE DASHBOARD (employee.html)
-// ============================
+/* ============================
+   EMPLOYEE DASHBOARD (employee.html)
+   ============================ */
 document.addEventListener("DOMContentLoaded", () => {
   const table = document.querySelector("#taskTable tbody");
   const filterSelect = document.getElementById("taskFilter");
@@ -166,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentFilter = "all";
 
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, (user) => {
     if (!user) {
       setTimeout(() => {
         if (!auth.currentUser) window.location.href = "/login.html";
@@ -176,11 +185,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadTasks() {
       table.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
+
       try {
         const snapshot = await getDocs(collection(db, "employeeTasks"));
         const allTasks = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-        let tasks = [];
+        let tasks;
         if (currentFilter === "assigned") {
           tasks = allTasks.filter((t) => t.assigneeId === user.uid);
         } else if (currentFilter === "created") {
@@ -191,44 +201,60 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        if (tasks.length === 0) {
+        if (!tasks.length) {
           table.innerHTML = `<tr><td colspan="6">No tasks found</td></tr>`;
           return;
         }
 
-        table.innerHTML = tasks.map((task) => `
-          <tr data-id="${task.id}" class="${task.status === 'Completed' ? 'task-completed' : ''}">
+        table.innerHTML = tasks
+          .map(
+            (task) => `
+          <tr data-id="${task.id}" class="${
+              task.status === "Completed" ? "task-completed" : ""
+            }">
             <td>${task.title || "(Untitled)"}</td>
             <td>${task.description || "-"}</td>
             <td>${task.priority || "-"}</td>
             <td>${task.assignee || "-"}</td>
             <td>
-              <span class="status-badge ${task.status === "Completed" ? "status-completed" : "status-pending"}">
+              <span class="status-badge ${
+                task.status === "Completed"
+                  ? "status-completed"
+                  : "status-pending"
+              }">
                 ${task.status || "Pending"}
               </span>
             </td>
             <td>
-              <button class="btn-secondary btn-complete" ${task.status === "Completed" ? "disabled" : ""}>
+              <button class="btn-secondary btn-complete" ${
+                task.status === "Completed" ? "disabled" : ""
+              }>
                 ${task.status === "Completed" ? "✔ Done" : "✔ Complete"}
               </button>
               <button class="btn-danger btn-delete">🗑 Delete</button>
             </td>
           </tr>
-        `).join("");
+        `
+          )
+          .join("");
 
+        // Complete buttons
         table.querySelectorAll(".btn-complete").forEach((btn) => {
           btn.addEventListener("click", async (e) => {
-            const row = e.target.closest("tr");
+            const row = e.currentTarget.closest("tr");
             const taskId = row.dataset.id;
             try {
-              await updateDoc(doc(db, "employeeTasks", taskId), { status: "Completed" });
+              await updateDoc(doc(db, "employeeTasks", taskId), {
+                status: "Completed"
+              });
               showToast("✅ Task marked completed");
 
               row.classList.add("task-completed");
               const statusCell = row.querySelector("td:nth-child(5)");
-              statusCell.innerHTML = `<span class="status-badge status-completed">Completed</span>`;
-              e.target.disabled = true;
-              e.target.textContent = "✔ Done";
+              statusCell.innerHTML =
+                '<span class="status-badge status-completed">Completed</span>';
+              btn.disabled = true;
+              btn.textContent = "✔ Done";
             } catch (err) {
               console.error("Error marking complete:", err);
               showToast("⚠️ Failed to update task");
@@ -236,47 +262,49 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         });
 
+        // Delete buttons
         table.querySelectorAll(".btn-delete").forEach((btn) => {
           btn.addEventListener("click", async (e) => {
-            const row = e.target.closest("tr");
+            const row = e.currentTarget.closest("tr");
             const taskId = row.dataset.id;
-            table.querySelectorAll(".btn-delete").forEach((btn) => {
-              btn.addEventListener("click", async (e) => {
-                const row = e.target.closest("tr");
-                const taskId = row.dataset.id;
-                if (!confirm("Delete this task?")) return;
-                try {
-                  await deleteDoc(doc(db, "employeeTasks", taskId));
-                  showToast("🗑 Task deleted");
-    
-                  // Smooth fade-out effect before removing row
-                  row.style.transition = "opacity 0.5s ease";
-                  row.style.opacity = "0";
-                  setTimeout(() => {
-                    row.remove();
-                    if (!table.querySelector("tr")) {
-                      table.innerHTML = `<tr><td colspan="6">No tasks found</td></tr>`;
-                    }
-                  }, 500);
-                } catch (err) {
-                  console.error("Error deleting task:", err);
-                  showToast("⚠️ Failed to delete task");
+            if (!confirm("Delete this task?")) return;
+
+            try {
+              await deleteDoc(doc(db, "employeeTasks", taskId));
+              showToast("🗑 Task deleted");
+
+              row.style.transition = "opacity 0.5s ease";
+              row.style.opacity = "0";
+              setTimeout(() => {
+                row.remove();
+                if (!table.querySelector("tr")) {
+                  table.innerHTML = `<tr><td colspan="6">No tasks found</td></tr>`;
                 }
-              });
-            });
-          } catch (err) {
-            console.error("Error loading tasks:", err);
-            showToast("⚠️ Failed to load tasks");
-          }
-        }
-    
-        filterSelect?.addEventListener("change", (e) => {
-          currentFilter = e.target.value;
-          loadTasks();
+              }, 500);
+            } catch (err) {
+              console.error("Error deleting task:", err);
+              showToast("⚠️ Failed to delete task");
+            }
+          });
         });
-    
-        refreshBtn?.addEventListener("click", loadTasks);
-    
-        loadTasks();
-      });
+      } catch (err) {
+        console.error("Error loading tasks:", err);
+        showToast("⚠️ Failed to load tasks");
+        table.innerHTML = `<tr><td colspan="6">Failed to load tasks</td></tr>`;
+      }
+    }
+
+    filterSelect?.addEventListener("change", (e) => {
+      currentFilter = e.target.value;
+      loadTasks();
     });
+
+    refreshBtn?.addEventListener("click", (e) => {
+      e.preventDefault();
+      loadTasks();
+    });
+
+    // Initial load
+    loadTasks();
+  });
+});
