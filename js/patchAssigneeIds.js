@@ -1,10 +1,12 @@
 // scripts/patchAssigneeIds.js
 const admin = require("firebase-admin");
 
-// If running in Firebase Functions, this may be just admin.initializeApp();
-// If running locally, pass service account credentials:
+// Load service account credentials
+const serviceAccount = require("/var/www/qms/istos-qms-admin.json");
+
 admin.initializeApp({
-  // credential: admin.credential.cert(require("./serviceAccountKey.json")),
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://istos-qms.firebaseio.com"
 });
 
 const db = admin.firestore();
