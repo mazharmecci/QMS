@@ -30,14 +30,12 @@ function setError(msg) {
   authErrorEl.hidden = false;
   authInfoEl.hidden = true;
 }
-
 function setInfo(msg) {
   if (!authErrorEl || !authInfoEl) return;
   authInfoEl.textContent = msg;
   authInfoEl.hidden = false;
   authErrorEl.hidden = true;
 }
-
 function clearMessages() {
   if (!authErrorEl || !authInfoEl) return;
   authErrorEl.hidden = true;
@@ -161,32 +159,14 @@ if (form && identifierEl && passwordEl && rememberMeEl) {
 
       setInfo("Login successful. Redirecting...");
 
-      // Redirect only after auth state confirms user
+      // ✅ Redirect all employees/managers to QMS root after login
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
           console.log("Firebase user logged in:", user.uid);
-
-          if (userMeta.role === "manager") {
-            window.location.href = "index.html";
-          } else if (
-            userMeta.permissions.includes("task-manager") &&
-            userMeta.permissions.includes("service-form")
-          ) {
-            window.location.href = "workflow-selector.html";
-          } else if (userMeta.permissions.includes("task-manager")) {
-            window.location.href = "http://task.istosmedical.com/index.html";
-          } else if (userMeta.permissions.includes("service-form")) {
-            window.location.href =
-              "https://qms.istosmedical.com/forms/service-form.html";
-          } else {
-            window.location.href = "unauthorized.html";
-          }
-
+          window.location.href = "/"; // unified landing at qms.istosmedical.com
           unsubscribe();
         } else {
-          console.error(
-            "Auth state listener fired with no user after login"
-          );
+          console.error("Auth state listener fired with no user after login");
           setError("Login failed to persist. Please try again.");
         }
       });
@@ -221,7 +201,7 @@ if (form && identifierEl && passwordEl && rememberMeEl) {
   });
 }
 
-/* ========== Global Auth state listener (for dashboards) ========== */
+/* ========== Global Auth state listener ========== */
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("Firebase user logged in (global listener):", user.uid);
