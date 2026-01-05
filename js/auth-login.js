@@ -70,7 +70,7 @@ form.addEventListener('submit', async (e) => {
     await setPersistence(auth, persistence);
 
     // Firebase Auth login
-    const cred = await signInWithEmailAndPassword(auth, userMeta.email, password);
+    await signInWithEmailAndPassword(auth, userMeta.email, password);
 
     // Persist profile locally
     if (rememberMeEl.checked) {
@@ -80,7 +80,6 @@ form.addEventListener('submit', async (e) => {
     }
 
     localStorage.setItem('qmsCurrentUser', JSON.stringify({
-      uid: cred.user.uid,
       username: userMeta.username,
       role: userMeta.role,
       permissions: userMeta.permissions,
@@ -89,22 +88,38 @@ form.addEventListener('submit', async (e) => {
 
     setInfo('Login successful. Redirecting...');
 
-    // Redirect logic
-    if (userMeta.role === 'manager') {
-      window.location.href = 'index.html';
-    } else if (userMeta.permissions.includes('task-manager') && userMeta.permissions.includes('service-form')) {
-      window.location.href = 'workflow-selector.html';
-    } else if (userMeta.permissions.includes('task-manager')) {
-      window.location.href = 'http://task.istosmedical.com/index.html';
-    } else if (userMeta.permissions.includes('service-form')) {
-      window.location.href = 'https://qms.istosmedical.com/forms/service-form.html';
-    } else {
-      window.location.href = 'unauthorized.html';
-    }
+    // ✅ Redirect only after auth state confirms user
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('Firebase user logged in:', user.uid);
+
+        if (userMeta.role === 'manager') {
+          window.location.href = 'index.html';
+        } else if (userMeta.permissions.includes('task-manager') && userMeta.permissions.includes('service-form')) {
+          window.location.href = 'workflow-selector.html';
+        } else if (userMeta.permissions.includes('task-manager')) {
+          window.location.href = 'http://task.istosmedical.com/index.html';
+        } else if (userMeta.permissions.includes('service-form')) {
+          window.location.href = 'https://qms.istosmedical.com/forms/service-form.html';
+        } else {
+          window.location.href = 'unauthorized.html';
+        }
+      } else {
+        console.error('Auth state listener fired with no user after login');
+        setError('Login failed to persist. Please try again.');
+      }
+    });
 
   } catch (error) {
     console.error('Login error:', error.code || error.message, error);
-    // ... same error handling as before ...
+    const code = error.code || error.message;
+    if (code === 'auth/user-not-found') setError('Username not found. Contact admin.');
+    else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') setError('Incorrect password. Please try again.');
+    else if (code === 'auth/user-disabled') setError('Account disabled. Contact admin.');
+    else if (code === 'auth/too-many-requests') setError('Too many attempts. Please wait a minute and try again.');
+    else if (code === 'auth/network-request-failed') setError('Network error. Check your internet connection.');
+    else if (code === 'auth/invalid-user') setError('User record is misconfigured. Contact admin.');
+    else setError('Login failed. Please try again.');
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -114,8 +129,8 @@ form.addEventListener('submit', async (e) => {
 /* ========== Auth state listener (for dashboards) ========== */
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    console.log('Firebase user logged in:', user.uid);
+    console.log('Firebase user logged in (global listener):', user.uid);
   } else {
-    console.log('No Firebase user logged in');
+    console.log('No Firebase user logged in (global listener)');
   }
 });
