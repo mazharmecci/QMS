@@ -240,32 +240,58 @@ body.auth-body {
         <p class="auth-subtitle">Sign in to manage quotes, history, and approvals.</p>
       </header>
 
-      <form id="loginForm" class="auth-form">
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form" novalidate>
+        <!-- Username -->
         <div class="field">
-            <label for="identifier">Username</label>
-            <input id="identifier" type="text" autocomplete="username" required />
+          <label for="identifier">Username</label>
+          <input 
+            id="identifier" 
+            name="identifier" 
+            type="text" 
+            autocomplete="username" 
+            required 
+            aria-required="true"
+            placeholder="Enter your username" />
         </div>
         
+        <!-- Password -->
         <div class="field">
           <label for="password">Password</label>
           <div class="field-password">
-            <input id="password" type="password" autocomplete="current-password" required />
-            <button type="button" id="togglePwd" class="icon-btn" aria-label="Show password">👁</button>
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              autocomplete="current-password" 
+              required 
+              aria-required="true"
+              placeholder="Enter your password" />
+            <button 
+              type="button" 
+              id="togglePwd" 
+              class="icon-btn" 
+              aria-label="Toggle password visibility">
+              👁
+            </button>
           </div>
         </div>
 
+        <!-- Remember + Forgot -->
         <div class="field-row">
           <label class="remember">
-            <input type="checkbox" id="rememberMe" />
+            <input type="checkbox" id="rememberMe" name="rememberMe" />
             <span>Keep me signed in</span>
           </label>
           <button type="button" id="forgotPasswordBtn" class="link-btn">Forgot password?</button>
         </div>
 
+        <!-- Submit -->
         <button type="submit" class="primary-btn">Sign in</button>
 
-        <p id="authError" class="auth-error" hidden></p>
-        <p id="authInfo" class="auth-info" hidden></p>
+        <!-- Feedback messages -->
+        <p id="authError" class="auth-error" role="alert" hidden></p>
+        <p id="authInfo" class="auth-info" role="status" hidden></p>
       </form>
 
       <footer class="auth-footer">
@@ -274,6 +300,7 @@ body.auth-body {
     </section>
   </main>
 
+  <!-- Attach login script -->
   <script type="module" src="js/auth-login.js"></script>
 </body>
 </html>
