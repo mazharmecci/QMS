@@ -42,7 +42,10 @@ function populateUserBadge() {
   }
 
   if (userBadge && localUser.username) {
-    userBadge.textContent = `👤 ${localUser.username}`;
+    userBadge.innerHTML = `
+      <img src="/user-icon.png" alt="User Icon" class="user-icon">
+      ${localUser.username}
+    `;
     userBadge.style.cursor = "pointer";
 
     userBadge.onclick = () => {
