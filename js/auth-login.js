@@ -29,13 +29,11 @@ function setError(msg) {
   authErrorEl.hidden = false;
   authInfoEl.hidden = true;
 }
-
 function setInfo(msg) {
   authInfoEl.textContent = msg;
   authInfoEl.hidden = false;
   authErrorEl.hidden = true;
 }
-
 function clearMessages() {
   authErrorEl.hidden = true;
   authInfoEl.hidden = true;
@@ -62,7 +60,7 @@ async function findUserByUsername(username) {
   if (!data.email) throw Object.assign(new Error('auth/invalid-user'), { code: 'auth/invalid-user' });
 
   return {
-    uid: docSnap.id, // Firestore doc ID
+    uid: docSnap.id,
     email: data.email,
     username: data.username || username,
     role: data.role || 'employee',
@@ -113,7 +111,11 @@ if (form) {
 
       // Persist profile locally
       if (rememberMeEl.checked) {
-        localStorage.setItem('qmsRememberUser', JSON.stringify({ username: userMeta.username, remember: true, ts: Date.now() }));
+        localStorage.setItem('qmsRememberUser', JSON.stringify({
+          username: userMeta.username,
+          remember: true,
+          ts: Date.now()
+        }));
       } else {
         localStorage.removeItem('qmsRememberUser');
       }
@@ -128,7 +130,7 @@ if (form) {
       setInfo('Login successful. Redirecting...');
 
       // ✅ Redirect only after auth state confirms user
-      onAuthStateChanged(auth, (user) => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
           console.log('Firebase user logged in:', user.uid);
 
@@ -143,6 +145,8 @@ if (form) {
           } else {
             window.location.href = 'unauthorized.html';
           }
+
+          unsubscribe(); // stop listening once redirected
         } else {
           console.error('Auth state listener fired with no user after login');
           setError('Login failed to persist. Please try again.');
@@ -166,7 +170,7 @@ if (form) {
   });
 }
 
-/* ========== Auth state listener (for dashboards) ========== */
+/* ========== Global Auth state listener (for dashboards) ========== */
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log('Firebase user logged in (global listener):', user.uid);
