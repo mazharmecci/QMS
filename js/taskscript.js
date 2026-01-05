@@ -4,10 +4,14 @@ import {
   db,
   collection,
   addDoc,
+  getDocs,       // ✅ for listing tasks
+  updateDoc,     // ✅ for marking completed
+  deleteDoc,     // ✅ for deleting
+  doc,
   serverTimestamp,
   onAuthStateChanged,
   signOut
-} from './firebase.js';   // ✅ firebase.js is in QMS/js/
+} from './firebase.js';
 
 // ============================
 // AUTH + LOGOUT PILL
@@ -165,17 +169,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         table.innerHTML = tasks.map((task) => `
-          <tr>
+          <tr data-id="${task.id}">
             <td>${task.title || "(Untitled)"}</td>
             <td>${task.description || "-"}</td>
             <td>${task.priority || "-"}</td>
             <td>${task.assignee || "-"}</td>
             <td>${task.status || "Pending"}</td>
             <td>
-              <button class="btn-secondary">View</button>
+              <button class="btn-secondary btn-complete">✔ Complete</button>
+              <button class="btn-danger btn-delete">🗑 Delete</button>
             </td>
           </tr>
         `).join("");
+
+        // Attach action listeners
+        table.querySelectorAll(".btn-complete").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            const row = e.target.closest("tr");
+            const taskId = row.dataset.id;
+            try {
+              await updateDoc(doc(db, "employeeTasks", taskId), { status: "Completed" });
+              showToast("✅ Task marked completed");
+              loadTasks();
+            } catch (err) {
+              console.error("Error marking complete:", err);
+              showToast("⚠️ Failed to update task");
+            }
+          });
+        });
+
+        table.querySelectorAll(".btn-delete").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            const row = e.target.closest("tr");
+            const taskId = row.dataset.id;
+            if (!confirm("Delete this task?")) return;
+            try {
+              await deleteDoc(doc(db, "employeeTasks", taskId));
+              showToast("🗑 Task deleted");
+              loadTasks();
+            } catch (err) {
+              console.error("Error deleting task:", err);
+              showToast("⚠️ Failed to delete task");
+            }
+          });
+        });
       } catch (err) {
         console.error("Error loading tasks:", err);
         showToast("⚠️ Failed to load tasks");
