@@ -113,3 +113,82 @@ document.addEventListener("DOMContentLoaded", () => {
     }, { once: true }); // ensure only one listener
   });
 });
+
+// ============================
+// EMPLOYEE DASHBOARD (employee.html)
+// ============================
+document.addEventListener("DOMContentLoaded", () => {
+  const table = document.querySelector("#taskTable tbody");
+  const filterSelect = document.getElementById("taskFilter");
+  const refreshBtn = document.getElementById("btnRefresh");
+  const toastEl = document.getElementById("toast");
+
+  if (!table || !document.body.classList.contains("employee-view")) return;
+
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.style.display = "block";
+    setTimeout(() => (toastEl.style.display = "none"), 3000);
+  }
+
+  let currentFilter = "all";
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      setTimeout(() => {
+        if (!auth.currentUser) window.location.href = "/login.html";
+      }, 1000);
+      return;
+    }
+
+    async function loadTasks() {
+      table.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
+      try {
+        const snapshot = await getDocs(collection(db, "employeeTasks"));
+        const allTasks = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+        let tasks = [];
+        if (currentFilter === "assigned") {
+          tasks = allTasks.filter((t) => t.assigneeId === user.uid);
+        } else if (currentFilter === "created") {
+          tasks = allTasks.filter((t) => t.createdByUid === user.uid);
+        } else {
+          tasks = allTasks.filter(
+            (t) => t.assigneeId === user.uid || t.createdByUid === user.uid
+          );
+        }
+
+        if (tasks.length === 0) {
+          table.innerHTML = `<tr><td colspan="6">No tasks found</td></tr>`;
+          return;
+        }
+
+        table.innerHTML = tasks.map((task) => `
+          <tr>
+            <td>${task.title || "(Untitled)"}</td>
+            <td>${task.description || "-"}</td>
+            <td>${task.priority || "-"}</td>
+            <td>${task.assignee || "-"}</td>
+            <td>${task.status || "Pending"}</td>
+            <td>
+              <button class="btn-secondary">View</button>
+            </td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        console.error("Error loading tasks:", err);
+        showToast("⚠️ Failed to load tasks");
+      }
+    }
+
+    filterSelect?.addEventListener("change", (e) => {
+      currentFilter = e.target.value;
+      loadTasks();
+    });
+
+    refreshBtn?.addEventListener("click", loadTasks);
+
+    loadTasks();
+  });
+});
