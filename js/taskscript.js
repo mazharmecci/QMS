@@ -123,7 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const spinner = document.getElementById("spinner");
   const roleSelect = document.getElementById("roleSelect");
+  const roleOption = document.getElementById("roleOption"); // single option inside roleSelect
   const creatorSelect = document.getElementById("creatorSelect");
+  const creatorOption = document.getElementById("creatorOption"); // single option inside creatorSelect
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
@@ -133,14 +135,37 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // 🔑 Get local user metadata
+    let localUser = {};
+    try {
+      localUser = JSON.parse(localStorage.getItem("qmsCurrentUser") || "{}");
+    } catch {
+      console.warn("⚠️ Failed to parse qmsCurrentUser");
+    }
+
+    // 🧩 Auto-fill Role
+    if (roleSelect && roleOption && localUser?.role) {
+      roleOption.textContent = capitalize(localUser.role);
+      roleOption.value = localUser.role;
+      roleSelect.disabled = true;
+    }
+
+    // 🧩 Auto-fill Creator
+    if (creatorSelect && creatorOption && localUser?.username) {
+      creatorOption.textContent = localUser.username;
+      creatorOption.value = localUser.username;
+      creatorSelect.disabled = true;
+    }
+
+    // 📝 Handle form submission
     taskForm.addEventListener(
       "submit",
       async (e) => {
         e.preventDefault();
         if (spinner) spinner.style.display = "block";
 
-        const role = roleSelect?.value || "employee";
-        const creatorUsername = creatorSelect?.value || "";
+        const role = roleOption?.value || "employee";
+        const creatorUsername = creatorOption?.value || user.email || "Unknown";
         const assigneeName = document.getElementById("assignee")?.value || "";
         let assigneeId = "";
 
@@ -148,21 +173,22 @@ document.addEventListener("DOMContentLoaded", () => {
           const snap = await getDocs(
             query(collection(db, "users"), where("username", "==", assigneeName))
           );
-          if (!snap.empty) assigneeId = snap.docs[0].id;
+          if (!snap.empty) {
+            const data = snap.docs[0].data();
+            assigneeId = data.uid || snap.docs[0].id; // ✅ use UID if available
+          }
         } catch (err) {
           console.warn("Assignee lookup failed:", err);
         }
 
         const task = {
           title: document.getElementById("title")?.value.trim() || "",
-          description: document
-            .getElementById("description")
-            ?.value.trim() || "",
+          description: document.getElementById("description")?.value.trim() || "",
           priority: document.getElementById("priority")?.value || "Low",
           assignee: assigneeName,
           assigneeId,
           status: "Pending",
-          createdBy: creatorUsername || user.email || "Unknown",
+          createdBy: creatorUsername,
           createdByUid: user.uid,
           role,
           createdAt: serverTimestamp()
@@ -182,6 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
       { once: true }
     );
   });
+
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 });
 
 /* ============================
