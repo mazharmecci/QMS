@@ -32,28 +32,48 @@ function populateUserBadge() {
   const userBadge = document.getElementById("userBadge");
   const profileModal = document.getElementById("profileModal");
   const profileContent = document.getElementById("profileContent");
-  const localUser = JSON.parse(localStorage.getItem("qmsCurrentUser") || "{}");
+  const closeBtn = document.getElementById("closeProfile");
 
-  if (userBadge && localUser?.username) {
+  // Parse local user safely
+  let localUser = {};
+  try {
+    localUser = JSON.parse(localStorage.getItem("qmsCurrentUser") || "{}");
+  } catch {
+    console.warn("⚠️ Failed to parse qmsCurrentUser from localStorage");
+  }
+
+  // Populate badge if user exists
+  if (userBadge && localUser.username) {
     userBadge.textContent = `👤 ${localUser.username}`;
     userBadge.style.cursor = "pointer";
-    userBadge.addEventListener("click", () => {
+
+    // Ensure we don't attach multiple listeners
+    userBadge.onclick = () => {
       if (profileModal && profileContent) {
         profileContent.innerHTML = `
           <p><strong>Username:</strong> ${localUser.username}</p>
-          <p><strong>Role:</strong> ${localUser.role}</p>
-          <p><strong>Permissions:</strong> ${localUser.permissions?.join(", ") || "None"}</p>
-          <p><strong>Logged in:</strong> ${new Date(localUser.ts).toLocaleString()}</p>
+          <p><strong>Role:</strong> ${localUser.role || "N/A"}</p>
+          <p><strong>Permissions:</strong> ${Array.isArray(localUser.permissions) ? localUser.permissions.join(", ") : "None"}</p>
+          <p><strong>Logged in:</strong> ${localUser.ts ? new Date(localUser.ts).toLocaleString() : "Unknown"}</p>
         `;
         profileModal.style.display = "block";
       }
-    });
+    };
   }
 
-  const closeBtn = document.getElementById("closeProfile");
+  // Close modal handler
   if (closeBtn && profileModal) {
-    closeBtn.addEventListener("click", () => {
+    closeBtn.onclick = () => {
       profileModal.style.display = "none";
+    };
+  }
+
+  // Optional: close modal when clicking outside
+  if (profileModal) {
+    window.addEventListener("click", (e) => {
+      if (e.target === profileModal) {
+        profileModal.style.display = "none";
+      }
     });
   }
 }
