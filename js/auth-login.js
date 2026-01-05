@@ -4,7 +4,6 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail,
   onAuthStateChanged,
   db,
   collection,
@@ -14,14 +13,13 @@ import {
 } from "./firebase.js";
 
 /* ========== DOM References ========== */
-const form = document.getElementById("loginForm");
-const identifierEl = document.getElementById("identifier");
-const passwordEl = document.getElementById("password");
-const togglePwdBtn = document.getElementById("togglePwd");
-const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
-const rememberMeEl = document.getElementById("rememberMe");
-const authErrorEl = document.getElementById("authError");
-const authInfoEl = document.getElementById("authInfo");
+const form             = document.getElementById("loginForm");
+const identifierEl     = document.getElementById("identifier");
+const passwordEl       = document.getElementById("password");
+const togglePwdBtn     = document.getElementById("togglePwd");
+const rememberMeEl     = document.getElementById("rememberMe");
+const authErrorEl      = document.getElementById("authError");
+const authInfoEl       = document.getElementById("authInfo");
 
 /* ========== Helpers ========== */
 function setError(msg) {
@@ -45,9 +43,8 @@ function clearMessages() {
 /* ========== Password visibility toggle ========== */
 if (togglePwdBtn && passwordEl) {
   togglePwdBtn.addEventListener("click", () => {
-    const currentType = passwordEl.getAttribute("type") || "password";
-    const nextType = currentType === "password" ? "text" : "password";
-    passwordEl.setAttribute("type", nextType);
+    const nextType = passwordEl.type === "password" ? "text" : "password";
+    passwordEl.type = nextType;
     togglePwdBtn.textContent = nextType === "password" ? "👁" : "🙈";
   });
 }
@@ -57,20 +54,12 @@ async function findUserByUsername(username) {
   const q = query(collection(db, "users"), where("username", "==", username));
   const snap = await getDocs(q);
 
-  if (snap.empty) {
-    const err = new Error("auth/user-not-found");
-    err.code = "auth/user-not-found";
-    throw err;
-  }
+  if (snap.empty) throw Object.assign(new Error("Username not found"), { code: "auth/user-not-found" });
 
   const docSnap = snap.docs[0];
   const data = docSnap.data() || {};
 
-  if (!data.email) {
-    const err = new Error("auth/invalid-user");
-    err.code = "auth/invalid-user";
-    throw err;
-  }
+  if (!data.email) throw Object.assign(new Error("Invalid user record"), { code: "auth/invalid-user" });
 
   return {
     uid: docSnap.id,
@@ -84,15 +73,11 @@ async function findUserByUsername(username) {
 /* ========== Auto-fill remembered username ========== */
 document.addEventListener("DOMContentLoaded", () => {
   if (!identifierEl || !rememberMeEl) return;
-
-  const remembered = localStorage.getItem("qmsRememberUser");
-  if (!remembered) return;
-
   try {
-    const data = JSON.parse(remembered);
-    if (data && data.username) {
-      identifierEl.value = data.username;
-      rememberMeEl.checked = !!data.remember;
+    const remembered = JSON.parse(localStorage.getItem("qmsRememberUser"));
+    if (remembered?.username) {
+      identifierEl.value = remembered.username;
+      rememberMeEl.checked = !!remembered.remember;
     }
   } catch {
     localStorage.removeItem("qmsRememberUser");
@@ -100,21 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ========== Submit: username + password login ========== */
-if (form && identifierEl && passwordEl && rememberMeEl) {
+if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearMessages();
 
-    const username = identifierEl.value.trim();
-    const password = passwordEl.value;
+    const username = identifierEl?.value.trim();
+    const password = passwordEl?.value;
 
-    if (!username || !password) {
-      setError("Enter your username and password.");
-      return;
-    }
+    if (!username || !password) return setError("Enter your username and password.");
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn ? submitBtn.textContent : "";
+    const originalText = submitBtn?.textContent || "";
 
     if (submitBtn) {
       submitBtn.textContent = "Signing in...";
@@ -125,37 +107,25 @@ if (form && identifierEl && passwordEl && rememberMeEl) {
       const userMeta = await findUserByUsername(username);
 
       // Persistence based on "Remember Me"
-      const persistence = rememberMeEl.checked
-        ? browserLocalPersistence
-        : browserSessionPersistence;
+      const persistence = rememberMeEl?.checked ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
 
       // Firebase Auth login
       await signInWithEmailAndPassword(auth, userMeta.email, password);
 
       // Persist profile locally
-      if (rememberMeEl.checked) {
-        localStorage.setItem(
-          "qmsRememberUser",
-          JSON.stringify({
-            username: userMeta.username,
-            remember: true,
-            ts: Date.now()
-          })
-        );
+      if (rememberMeEl?.checked) {
+        localStorage.setItem("qmsRememberUser", JSON.stringify({ username: userMeta.username, remember: true, ts: Date.now() }));
       } else {
         localStorage.removeItem("qmsRememberUser");
       }
 
-      localStorage.setItem(
-        "qmsCurrentUser",
-        JSON.stringify({
-          username: userMeta.username,
-          role: userMeta.role,
-          permissions: userMeta.permissions,
-          ts: Date.now()
-        })
-      );
+      localStorage.setItem("qmsCurrentUser", JSON.stringify({
+        username: userMeta.username,
+        role: userMeta.role,
+        permissions: userMeta.permissions,
+        ts: Date.now()
+      }));
 
       setInfo("Login successful. Redirecting...");
 
@@ -163,34 +133,24 @@ if (form && identifierEl && passwordEl && rememberMeEl) {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
           console.log("Firebase user logged in:", user.uid);
-          window.location.href = "/"; // unified landing at qms.istosmedical.com
+          window.location.replace("/"); // unified landing at qms.istosmedical.com
           unsubscribe();
         } else {
-          console.error("Auth state listener fired with no user after login");
           setError("Login failed to persist. Please try again.");
         }
       });
     } catch (error) {
       console.error("Login error:", error.code || error.message, error);
       const code = error.code || error.message;
-
-      if (code === "auth/user-not-found") {
-        setError("Username not found. Contact admin.");
-      } else if (
-        code === "auth/wrong-password" ||
-        code === "auth/invalid-credential"
-      ) {
-        setError("Incorrect password. Please try again.");
-      } else if (code === "auth/user-disabled") {
-        setError("Account disabled. Contact admin.");
-      } else if (code === "auth/too-many-requests") {
-        setError("Too many attempts. Please wait a minute and try again.");
-      } else if (code === "auth/network-request-failed") {
-        setError("Network error. Check your internet connection.");
-      } else if (code === "auth/invalid-user") {
-        setError("User record is misconfigured. Contact admin.");
-      } else {
-        setError("Login failed. Please try again.");
+      switch (code) {
+        case "auth/user-not-found":       setError("Username not found. Contact admin."); break;
+        case "auth/wrong-password":
+        case "auth/invalid-credential":   setError("Incorrect password. Please try again."); break;
+        case "auth/user-disabled":        setError("Account disabled. Contact admin."); break;
+        case "auth/too-many-requests":    setError("Too many attempts. Please wait a minute and try again."); break;
+        case "auth/network-request-failed": setError("Network error. Check your internet connection."); break;
+        case "auth/invalid-user":         setError("User record is misconfigured. Contact admin."); break;
+        default:                          setError("Login failed. Please try again.");
       }
     } finally {
       if (submitBtn) {
@@ -203,9 +163,5 @@ if (form && identifierEl && passwordEl && rememberMeEl) {
 
 /* ========== Global Auth state listener ========== */
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("Firebase user logged in (global listener):", user.uid);
-  } else {
-    console.log("No Firebase user logged in (global listener)");
-  }
+  console.log(user ? `Firebase user logged in (global listener): ${user.uid}` : "No Firebase user logged in (global listener)");
 });
