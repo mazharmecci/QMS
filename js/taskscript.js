@@ -190,7 +190,15 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
               await updateDoc(doc(db, "employeeTasks", taskId), { status: "Completed" });
               showToast("✅ Task marked completed");
-              loadTasks();
+        
+              // Update UI instantly
+              const statusCell = row.querySelector("td:nth-child(5)");
+              statusCell.innerHTML = `<span class="status-badge status-completed">Completed</span>`;
+              row.classList.add("task-completed");
+        
+              // Disable the complete button
+              e.target.disabled = true;
+              e.target.textContent = "✔ Done";
             } catch (err) {
               console.error("Error marking complete:", err);
               showToast("⚠️ Failed to update task");
