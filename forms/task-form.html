@@ -291,6 +291,25 @@
       box-shadow: 0 14px 28px rgba(29, 78, 216, 0.35);
     }
 
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 1rem;
+      width: 300px;
+      border-radius: 8px;
+    }
+    .close {
+      float: right;
+      cursor: pointer;
+    }
 
     @media (max-width: 720px) {
       .card { padding: 1.7rem 1.5rem 2rem; }
