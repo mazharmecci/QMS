@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ISTOS Task Manager – Create Task</title>
+  <style>
+    :root {
+      --tm-bg: linear-gradient(135deg, #e0f2fe, #f9fafb);
+      --tm-surface: #ffffff;
+      --tm-border: 1px solid #dbeafe;
+      --tm-primary: #1d4ed8;
+      --tm-radius-lg: 22px;
+      --tm-radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--tm-bg);
+      color: #1e293b;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 960px;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .card {
+      position: relative;
+      border-radius: var(--tm-radius-lg);
+      background: var(--tm-surface);
+      border: var(--tm-border);
+      box-shadow:
+        0 14px 32px rgba(29, 78, 216, 0.15),
+        0 0 0 1px rgba(29, 78, 216, 0.05);
+      padding: 2rem 2.3rem;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at top left, rgba(29, 78, 216, 0.08), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.08), transparent 55%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .logo-wrap img {
+      max-width: 60px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(29, 78, 216, 0.35);
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 650;
+      color: var(--tm-primary);
+    }
+
+    .subtitle {
+      margin: 0.2rem 0 0;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .divider {
+      height: 1px;
+      margin: 1rem 0 1.3rem;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(59, 130, 246, 0.6),
+        transparent
+      );
+    }
+
+    .role-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.86rem;
+    }
+
+    .role-row select {
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      font-size: 0.85rem;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 1.25rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .form-row.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      padding: 0.5rem 0.7rem;
+      border-radius: 0.7rem;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #1e293b;
+      font-size: 0.85rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--tm-primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+      background: #ffffff;
+    }
+
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+    }
+
+    .btn-primary {
+      padding: 0.55rem 1.3rem;
+      border-radius: var(--tm-radius-pill);
+      border: none;
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(29, 78, 216, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(29, 78, 216, 0.45);
+    }
+
+    .btn-secondary {
+      padding: 0.5rem 1.1rem;
+      border-radius: var(--tm-radius-pill);
+      border: 1px solid #cbd5e1;
+      background: #f1f5f9;
+      color: #1e293b;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+    }
+
+    .spinner {
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 3px solid #cbd5e1;
+      border-top-color: var(--tm-primary);
+      animation: spin 0.7s linear infinite;
+      z-index: 40;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+      background: var(--tm-primary);
+      color: #fff;
+      font-size: 0.85rem;
+      box-shadow: 0 14px 36px rgba(29, 78, 216, 0.35);
+      z-index: 40;
+    }
+
+    .compact-select {
+      max-width: 240px;
+      width: 100%;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 0.4rem;
+    }
+    
+    .action-btn.js-delete-mgr {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fca5a5;
+    }
+    
+    .action-btn.js-delete-mgr:hover {
+      background: #fecaca;
+      border-color: #f87171;
+    }
+
+     .back-corner {
+      margin-bottom: 1rem;
+    }
+    
+    .back-pill {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      border-radius: var(--tm-radius-pill);
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      color: #f9fafb;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 10px 22px rgba(29, 78, 216, 0.25);
+      border: 1px solid rgba(29, 78, 216, 0.25);
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    
+    .back-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(29, 78, 216, 0.35);
+    }
+
+
+    @media (max-width: 720px) {
+      .card { padding: 1.7rem 1.5rem 2rem; }
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="card">
+      <div class="card-inner">
+        <!-- 🔄 Spinner + Toast -->
+        <div id="spinner" class="spinner" style="display:none;"></div>
+        <div id="toast" class="toast" style="display:none;"></div>
+
+        <!-- 🧠 Header with right-aligned back + logout -->
+        <div class="header-row">
+          <div class="logo-wrap">
+            <img src="istos-logo.png" alt="ISTOS Logo" />
+            <div class="title-block">
+              <h1>Create Task</h1>
+              <p class="subtitle">
+                Use one form for both manager and employee workflows.
+              </p>
+            </div>
+          </div>
+        
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="index.html" class="back-pill">← Back to Workspace</a>
+            <button id="logoutBtn" type="button" class="back-pill">Logout</button>
+          </div>
+        </div>
+        
+        <div class="divider"></div>
+
+        <!-- 🧩 Role + Creator -->
+        <div class="role-row">
+          <label for="roleSelect"><strong>Role</strong></label>
+          <select id="roleSelect">
+            <option value="employee" selected>Employee</option>
+            <option value="manager">Manager</option>
+          </select>
+
+          <label for="creatorSelect"><strong>Who is submitting?</strong></label>
+          <select id="creatorSelect" required>
+            <option value="" disabled selected>-- Select person --</option>
+            <option value="Pooja">Pooja</option>
+            <option value="Chaitra">Chaitra</option>
+            <option value="Mazhar">Mazhar</option>
+            <option value="Praveen">Praveen</option>
+            <option value="Sarfaraz">Sarfaraz</option>
+            <option value="Sridhar">Sridhar</option>
+            <option value="Manager">Naushad Sir</option>
+          </select>
+        </div>
+
+        <!-- 📝 Task Form -->
+        <form id="taskForm">
+          <div class="form-row full">
+            <label for="title">Task Title</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              placeholder="Short clear title for this task"
+              required
+            />
+          </div>
+
+          <div class="form-row full">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Add context, outcomes, and key details..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority" class="compact-select" required>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="assignee">Assign To</label>
+            <select id="assignee" name="assignee" class="compact-select" required>
+              <option value="">-- Select person --</option>
+              <option value="Pooja">Pooja</option>
+              <option value="Chaitra">Chaitra</option>
+              <option value="Mazhar">Mazhar</option>
+              <option value="Praveen">Praveen</option>
+              <option value="Sarfaraz">Sarfaraz</option>
+              <option value="Sridhar">Sridhar</option>
+              <option value="Manager">Naushad Sir</option>
+            </select>
+          </div>
+
+          <!-- 🎯 Actions -->
+          <div class="actions">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="document.getElementById('taskForm').reset();"
+            >
+              Clear
+            </button>
+            <button type="submit" class="btn-primary">
+              Save Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <!-- 🔔 Toast -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <!-- 📦 Script -->
+  <script type="module" src="script.js"></script>
+</body>
+
+</body>
+</html>
