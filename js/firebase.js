@@ -1,6 +1,8 @@
+// ===== Firebase Core =====
 import { initializeApp, getApps, getApp } 
   from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
+// ===== Firestore =====
 import { 
   getFirestore,
   collection,
@@ -17,14 +19,19 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// ===== Auth =====
 import { 
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+// ===== Storage =====
 import {
   getStorage,
   ref,
@@ -76,6 +83,9 @@ export {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
 
   // Storage helpers
   ref,
