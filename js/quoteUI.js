@@ -66,9 +66,9 @@ export function populateHeader() {
   getTextEl("toHospitalNameLine").textContent =
     header.hospitalName || "Hospital / Client Name";
 
-  const [line1, line2] = (header.hospitalAddress || "").split(",");
-  getTextEl("toHospitalAddressLine1").textContent = line1 || "";
-  getTextEl("toHospitalAddressLine2").textContent = line2 || "";
+  const addressLines = (header.hospitalAddress || "").split(",").map(l => l.trim());
+  getTextEl("toHospitalAddressLine1").textContent = addressLines[0] || "";
+  getTextEl("toHospitalAddressLine2").textContent = addressLines.slice(1).join(", ") || "";
 
   getTextEl("toAttn").textContent = header.kindAttn || "Attention";
 
