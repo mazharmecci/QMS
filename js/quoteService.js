@@ -14,6 +14,76 @@ import {
 } from "./firebase.js";
 
 /* ========================
+ * Pricing / summary helper
+ * =======================*/
+
+function computeQuoteSummary({ header, instruments, lines }) {
+  const safeLines = Array.isArray(lines) ? lines : [];
+  const safeInstruments = Array.isArray(instruments) ? instruments : [];
+
+  // 1) Items total
+  let itemsTotal = 0;
+
+  safeLines.forEach(line => {
+    const inst = safeInstruments[line.instrumentIndex] || null;
+    const qty = Number(line.quantity || 1);
+
+    // Instrument line
+    if (inst) {
+      const unitPrice = Number(inst.unitPrice || 0);
+      itemsTotal += qty * unitPrice;
+    }
+
+    // Additional items
+    (line.additionalItems || []).forEach(item => {
+      const addQty = Number(item.qty || 1);
+      const addUnit =
+        item.price != null
+          ? Number(item.price)
+          : Number(item.unitPrice || item.upInr || item.tpInr || 0);
+      itemsTotal += addQty * addUnit;
+    });
+
+    // Config items (if billable)
+    (line.configItems || []).forEach(item => {
+      const cfgQty = Number(item.qty || 1);
+      const cfgUnit =
+        item.tpInr != null ? Number(item.tpInr) : Number(item.upInr || 0);
+      itemsTotal += cfgQty * cfgUnit;
+    });
+  });
+
+  // 2) Discount clamp
+  const rawDiscount = Number(header?.discount || 0);
+  const discount = Math.max(0, Math.min(rawDiscount, itemsTotal));
+
+  // 3) After discount
+  const afterDiscount = itemsTotal - discount;
+
+  // 4) GST
+  const gstPercent =
+    header?.gstPercent != null ? Number(header.gstPercent) : 18;
+  const gstAmount = (afterDiscount * gstPercent) / 100;
+
+  // 5) Total & rounding (normal rounding to nearest rupee)
+  const totalValue = afterDiscount + gstAmount;
+  const roundedTotal = Math.round(totalValue);
+  const roundOff = roundedTotal - totalValue;
+
+  return {
+    itemsTotal,
+    discount,
+    afterDiscount,
+    freight: "Included",
+    gstPercent,
+    gstAmount,
+    totalValue,
+    roundOff,
+    grandTotal: roundedTotal
+  };
+}
+
+/* ========================
  * Local header & context
  * =======================*/
 
@@ -64,7 +134,7 @@ export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
 
-  lines.forEach(line => {
+  (Array.isArray(lines) ? lines : []).forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
       items.push({
@@ -121,34 +191,30 @@ export function buildLineItemsFromCurrentQuote() {
 export function buildQuoteObject(existingDoc = null) {
   const { header, instruments, lines } = getQuoteContext();
 
-  let totalValueINR = 0;
-  let gstValueINR = 0;
+  const summary = computeQuoteSummary({ header, instruments, lines });
 
-  const items = Array.isArray(lines)
-    ? lines.map(line => {
-        const inst = instruments[line.instrumentIndex] || {};
-        const qty = Number(line.quantity || 1);
-        const unitPrice = Number(inst.unitPrice || 0);
-        const totalPrice = qty * unitPrice;
-        totalValueINR += totalPrice;
+  const safeLines = Array.isArray(lines) ? lines : [];
+  const safeInstruments = Array.isArray(instruments) ? instruments : [];
 
-        const gstPercent = Number(inst.gstPercent || 0);
-        const gstAmount = totalPrice * (gstPercent / 100);
-        gstValueINR += gstAmount;
+  const items = safeLines.map(line => {
+    const inst = safeInstruments[line.instrumentIndex] || {};
+    const qty = Number(line.quantity || 1);
+    const unitPrice = Number(inst.unitPrice || 0);
+    const totalPrice = qty * unitPrice;
+    const gstPercent = Number(inst.gstPercent || summary.gstPercent || 0);
 
-        return {
-          instrumentCode: inst.instrumentCode || "",
-          instrumentName: inst.instrumentName || "",
-          description: inst.longDescription || inst.description || "",
-          quantity: qty,
-          unitPrice,
-          totalPrice,
-          gstPercent,
-          configItems: Array.isArray(line.configItems) ? line.configItems : [],
-          additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
-        };
-      })
-    : [];
+    return {
+      instrumentCode: inst.instrumentCode || "",
+      instrumentName: inst.instrumentName || "",
+      description: inst.longDescription || inst.description || "",
+      quantity: qty,
+      unitPrice,
+      totalPrice,
+      gstPercent,
+      configItems: Array.isArray(line.configItems) ? line.configItems : [],
+      additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+    };
+  });
 
   const user = auth.currentUser;
   const createdByUid = user ? user.uid : null;
@@ -167,9 +233,15 @@ export function buildQuoteObject(existingDoc = null) {
       officePhone: header.officePhone || ""
     },
     status: header.status || "Submitted",
-    discount: Number(header.discount || 0),
-    totalValueINR,
-    gstValueINR,
+    // aligned totals
+    discount: summary.discount,
+    itemsTotal: summary.itemsTotal,
+    afterDiscount: summary.afterDiscount,
+    gstPercent: summary.gstPercent,
+    gstAmount: summary.gstAmount,
+    totalValue: summary.totalValue,
+    roundOff: summary.roundOff,
+    grandTotal: summary.grandTotal,
     items,
     salesNote: header.salesNote || "",
     termsHtml: header.termsHtml || "",
@@ -292,43 +364,16 @@ export async function finalizeQuote(rawArg = null) {
 
     header.status = "SUBMITTED";
 
-    let itemsTotal = 0;
-    lines.forEach(line => {
-      const inst = instruments[line.instrumentIndex] || null;
-      if (inst) {
-        const qty = Number(line.quantity || 1);
-        itemsTotal += Number(inst.unitPrice || 0) * qty;
-      }
-      (line.additionalItems || []).forEach(item => {
-        const qtyNum = Number(item.qty || 1);
-        const unitNum = Number(item.price || item.unitPrice || 0);
-        itemsTotal += qtyNum * unitNum;
-      });
-    });
-
-    const gstPercent = 18;
-    const discount = Number(header.discount || 0);
-    const afterDisc = itemsTotal - discount;
-    const gstAmount = (afterDisc * gstPercent) / 100;
-    const totalValue = afterDisc + gstAmount;
-    const roundedTotal = Math.round(totalValue);
-
-    const summary = {
-      itemsTotal,
-      discount,
-      afterDiscount: afterDisc,
-      freight: "Included",
-      gstPercent,
-      gstAmount,
-      totalValue,
-      roundOff: roundedTotal - totalValue
-    };
+    // unified summary calculation
+    const summary = computeQuoteSummary({ header, instruments, lines });
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
-    const lastRev = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
     const nextRev = lastRev + 1;
 
     const now = new Date();
