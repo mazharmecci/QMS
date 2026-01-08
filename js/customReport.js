@@ -1,38 +1,37 @@
-import { getInstrumentsMaster, getQuoteContext } from "../js/quoteService.js";
+import { getInstrumentsMaster } from "../js/quoteService.js";
 
-// 🔹 Populate dropdown with instruments from master
-function populateInstrumentDropdown() {
+// 🔹 Populate dropdown with catalog numbers
+function populateCatalogDropdown() {
   const instruments = getInstrumentsMaster();
   const selector = document.createElement("select");
-  selector.id = "instrumentSelector";
+  selector.id = "catalogSelector";
 
-  // Default option
   const defaultOpt = document.createElement("option");
   defaultOpt.value = "";
-  defaultOpt.textContent = "-- Select Instrument --";
+  defaultOpt.textContent = "-- Select Catalog --";
   selector.appendChild(defaultOpt);
 
   instruments.forEach((inst, idx) => {
+    const catalog = inst.catalog || inst.instrumentCode || `CAT-${idx + 1}`;
     const opt = document.createElement("option");
-    opt.value = idx;
-    opt.textContent = inst.instrumentName || inst.name || `Instrument ${idx + 1}`;
+    opt.value = catalog;
+    opt.textContent = catalog;
     selector.appendChild(opt);
   });
 
   return selector;
 }
 
-// 🔹 Render report table for selected instrument
-function showInstrumentReport() {
-  const selector = document.getElementById("instrumentSelector");
-  const selectedIndex = selector.value;
+// 🔹 Render report table for selected catalog
+function showCatalogReport() {
+  const selector = document.getElementById("catalogSelector");
+  const selectedCatalog = selector.value;
   const tbody = document.querySelector("#instrumentReportTable tbody");
   tbody.innerHTML = "";
 
-  if (selectedIndex === "") return;
+  if (!selectedCatalog) return;
 
   const instruments = getInstrumentsMaster();
-  const selectedInst = instruments[selectedIndex];
   const allQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
 
   let rowNum = 1;
@@ -40,15 +39,18 @@ function showInstrumentReport() {
   allQuotes.forEach(q => {
     const lines = q.lineItems || [];
     lines.forEach(line => {
-      // Match instrument by code/catalog
       if (
-        line.code === selectedInst.catalog ||
-        line.code === selectedInst.instrumentCode
+        line.code === selectedCatalog
       ) {
+        const inst = instruments.find(
+          i => i.catalog === selectedCatalog || i.instrumentCode === selectedCatalog
+        );
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${rowNum++}</td>
           <td>${q.header?.hospitalName || "Unknown"}</td>
+          <td>${inst?.instrumentName || inst?.name || "—"}</td>
           <td>${q.header?.quoteDate || "—"}</td>
           <td>${line.quantity || 1}</td>
           <td>₹ ${line.price ? line.price.toLocaleString("en-IN") : "—"}</td>
@@ -67,15 +69,14 @@ document.addEventListener("DOMContentLoaded", () => {
   block.className = "instrument-report-block";
   block.innerHTML = `
     <h3>Instrument Supply History</h3>
-    <div class="controls">
-      <!-- Dropdown injected here -->
-    </div>
+    <div class="controls"></div>
     <button id="showReportBtn">Show</button>
     <table id="instrumentReportTable">
       <thead>
         <tr>
           <th>#</th>
           <th>Hospital</th>
+          <th>Instrument Name</th>
           <th>Date</th>
           <th>Quantity</th>
           <th>Unit Price (INR)</th>
@@ -87,10 +88,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   mount.appendChild(block);
 
-  // Inject dropdown
-  const selector = populateInstrumentDropdown();
+  // Inject catalog dropdown
+  const selector = populateCatalogDropdown();
   block.querySelector(".controls").appendChild(selector);
 
   // Wire button
-  document.getElementById("showReportBtn").addEventListener("click", showInstrumentReport);
+  document.getElementById("showReportBtn").addEventListener("click", showCatalogReport);
 });
