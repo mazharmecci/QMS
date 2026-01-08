@@ -71,8 +71,25 @@ function clearTbody(tableId) {
   return tbody;
 }
 
+function formatDate(dateStr) {
+  if (!dateStr || dateStr === "—") return "—";
+  
+  // Handle different date formats
+  const date = new Date(dateStr);
+  
+  // Check if valid date
+  if (isNaN(date.getTime())) return dateStr;
+  
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  
+  return `${day}-${month}-${year}`;
+}
+
 function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
   const tr = document.createElement("tr");
+  const formattedDate = formatDate(date);
 
   // If unitPrice is null (config table), skip the price column
   if (unitPrice === null) {
@@ -80,7 +97,7 @@ function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
       <td>${rowNum}</td>
       <td>${hospitalName}</td>
       <td>${label}</td>
-      <td>${date}</td>
+      <td>${formattedDate}</td>
       <td>${qty}</td>
     `;
   } else {
@@ -89,7 +106,7 @@ function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
       <td>${rowNum}</td>
       <td>${hospitalName}</td>
       <td>${label}</td>
-      <td>${date}</td>
+      <td>${formattedDate}</td>
       <td>${qty}</td>
       <td>₹ ${formatINR(unitPrice)}</td>
     `;
