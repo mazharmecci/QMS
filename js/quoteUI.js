@@ -77,60 +77,60 @@ export function populateHeader() {
     noteEl.textContent = header.salesNote;
   }
 
-// Single editable/read-only terms block
-const termsEl = getTextEl("termsTextBlock");
-if (termsEl) {
-  const htmlStored =
-    header.termsHtml && header.termsHtml.trim().length
-      ? header.termsHtml.trim()
-      : null;
+  // Single editable/read-only terms block
+  const termsEl = getTextEl("termsTextBlock");
+  if (termsEl) {
+    const htmlStored =
+      header.termsHtml && header.termsHtml.trim().length
+        ? header.termsHtml.trim()
+        : null;
 
-  const textStored =
-    header.termsText && header.termsText.trim().length
-      ? header.termsText.trim()
-      : null;
+    const textStored =
+      header.termsText && header.termsText.trim().length
+        ? header.termsText.trim()
+        : null;
 
-  // 1) Preferred: stored HTML (from Firestore)
-  if (htmlStored) {
-    console.log("[populateHeader] Rendering stored termsHtml");
-    termsEl.innerHTML = htmlStored;   // keep full formatting
-    return;
-  }
+    // 1) Preferred: stored HTML (from Firestore)
+    if (htmlStored) {
+      console.log("[populateHeader] Rendering stored termsHtml");
+      termsEl.innerHTML = htmlStored;
+      return;
+    }
 
-  // 2) Fallback: stored plain text (very rare once you move back to HTML)
-  if (textStored) {
-    console.log("[populateHeader] Rendering stored termsText as paragraphs");
+    // 2) Fallback: stored plain text
+    if (textStored) {
+      console.log("[populateHeader] Rendering stored termsText as paragraphs");
 
-    const text = textStored.replace(/\r\n/g, "\n");
-    const blocks = text
-      .split(/\n\s*\n/)
-      .map(b => b.trim())
-      .filter(Boolean);
+      const text = textStored.replace(/\r\n/g, "\n");
+      const blocks = text
+        .split(/\n\s*\n/)
+        .map(b => b.trim())
+        .filter(Boolean);
 
-    const html = blocks
-      .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
-      .join("");
+      const html = blocks
+        .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
+        .join("");
 
+      termsEl.innerHTML = html;
+      return;
+    }
+
+    // 3) Fallback template when nothing stored yet
+    const warrantyText =
+      header.termsWarrantyText ||
+      "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+
+    const signerName = header.termsSignerName || "Naushad";
+
+    const html = `
+      <div class="terms-section">
+        <p><strong>Warranty:</strong> ${warrantyText}</p>
+        <div class="quote-sender-highlight">${signerName}</div>
+      </div>
+    `;
+    console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
     termsEl.innerHTML = html;
-    return;
   }
-
-  // 3) Fallback template when nothing stored yet
-  const warrantyText =
-    header.termsWarrantyText ||
-    "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
-
-  const signerName = header.termsSignerName || "Naushad";
-
-  const html = `
-    <div class="terms-section">
-      <p><strong>Warranty:</strong> ${warrantyText}</p>
-      <div class="quote-sender-highlight">${signerName}</div>
-    </div>
-  `;
-  console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
-  termsEl.innerHTML = html;
-}
 }
 
 /* ========= Quote builder (with config/additional) ========= */
@@ -150,7 +150,7 @@ export function renderQuoteBuilder() {
   let runningItemCode = 1;
   let itemsTotal = 0;
 
-  lines.forEach((line, lineIdx) => {
+  (Array.isArray(lines) ? lines : []).forEach((line, lineIdx) => {
     const inst = instruments[line.instrumentIndex] || null;
     if (!inst) return;
 
@@ -158,17 +158,31 @@ export function renderQuoteBuilder() {
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
-    const instUnit = Number(inst.unitPrice || 0);
+    // Prefer override unit price if present
+    const instUnit = Number(
+      line.unitPriceOverride ?? inst.unitPrice ?? 0
+    );
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    // main instrument row
+    // main instrument row: quantity + editable unit price
     rows.push(`
       <tr>
         <td>${codeText}</td>
         ${formatInstrumentCell(inst, lineIdx)}
         <td>${qty}</td>
-        <td>₹ ${moneyINR(instUnit)}</td>
+        <td>
+          ₹
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value="${instUnit}"
+            style="width:100px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+            oninput="unitPriceChanged(${lineIdx}, this.value)"
+            onblur="unitPriceCommitted(${lineIdx}, this.value)"
+          />
+        </td>
         <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
     `);
@@ -256,63 +270,65 @@ export function renderSummaryRows(itemsTotal) {
   const roundOff = roundedTotal - totalValue;
 
   sb.innerHTML = `
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
-  </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
+    </tr>
 
-  <tr class="discount-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
-    <td style="text-align:right; font-weight:600;">
-      ₹ <input
-        id="discountInput"
-        type="text"
-        value="${moneyINR(discount)}"
-        style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-        oninput="discountInputChanged(this.value)"
-        onblur="discountInputCommitted()"
-      />
-    </td>
-  </tr>
+    <tr class="discount-row">
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
+      <td style="text-align:right; font-weight:600;">
+        ₹ <input
+          id="discountInput"
+          type="text"
+          value="${moneyINR(discount)}"
+          style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+          oninput="discountInputChanged(this.value)"
+          onblur="discountInputCommitted()"
+        />
+      </td>
+    </tr>
 
-  <tr class="after-discount-row">
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
-  </tr>
+    <tr class="after-discount-row">
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
+    </tr>
 
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Freight</td>
-    <td style="text-align:right; font-weight:600;">Included</td>
-  </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Freight</td>
+      <td style="text-align:right; font-weight:600;">Included</td>
+    </tr>
 
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent.toFixed(2)}%</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
-  </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent.toFixed(
+        2
+      )}%</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
+    </tr>
 
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
-  </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
+    </tr>
 
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
-    <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
-  </tr>
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
+      <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
+    </tr>
 
-  <tr>
-    <td colspan="3"></td>
-    <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
-    <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
-  </tr>
-`;
+    <tr>
+      <td colspan="3"></td>
+      <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
+      <td style="text-align:right; font-weight:700;">₹ ${moneyINR(roundedTotal)}</td>
+    </tr>
+  `;
 
   updateDiscountVisibility(discount);
 }
@@ -349,11 +365,14 @@ export function discountInputCommitted() {
   const { instruments, lines } = getQuoteContext();
   let itemsTotal = 0;
 
-  lines.forEach(line => {
+  (Array.isArray(lines) ? lines : []).forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
       const qty = Number(line.quantity || 1);
-      itemsTotal += Number(inst.unitPrice || 0) * qty;
+      const unitPrice = Number(
+        line.unitPriceOverride ?? inst.unitPrice ?? 0
+      );
+      itemsTotal += unitPrice * qty;
     }
     (line.additionalItems || []).forEach(item => {
       const qtyNum = Number(item.qty || 1);
@@ -363,6 +382,33 @@ export function discountInputCommitted() {
   });
 
   renderSummaryRows(itemsTotal);
+}
+
+/* ========= Unit price override handling ========= */
+
+export function unitPriceChanged(lineIdx, value) {
+  // just keep draft in input; final handling on blur
+}
+
+export function unitPriceCommitted(lineIdx, value) {
+  const header = getQuoteHeaderRaw();
+  if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
+
+  const cleaned = String(value).replace(/[^\d.]/g, "");
+  const num = cleaned === "" ? null : Number(cleaned);
+
+  if (num != null && !isNaN(num)) {
+    header.quoteLines[lineIdx].unitPriceOverride = num;
+  } else {
+    // if cleared, remove override so master price is used
+    delete header.quoteLines[lineIdx].unitPriceOverride;
+  }
+
+  saveQuoteHeader(header);
+
+  // re-render with new prices and totals
+  renderQuoteBuilder();
+  renderInstrumentModalList();
 }
 
 /* ========= Instrument Modal ========= */
@@ -394,7 +440,7 @@ export function renderInstrumentModalList() {
   }
 
   let rows = "";
-  lines.forEach((line, idx) => {
+  (Array.isArray(lines) ? lines : []).forEach((line, idx) => {
     const inst = instruments[line.instrumentIndex] || {};
     const itemNo = String(idx + 1).padStart(2, "0");
     const code   = inst.catalog || inst.instrumentCode || "";
@@ -403,7 +449,9 @@ export function renderInstrumentModalList() {
     const shortDesc = desc.replace(/\s+/g, " ").slice(0, 80) + (desc.length > 80 ? "…" : "");
 
     const qty  = Number(line.quantity || 1);
-    const unit = Number(inst.unitPrice || 0);
+    const unit = Number(
+      line.unitPriceOverride ?? inst.unitPrice ?? 0
+    );
     const total = qty * unit;
 
     rows += `
@@ -474,17 +522,17 @@ export function openInstrumentPicker() {
           desc.replace(/\s+/g, " ").slice(0, 160) +
           (desc.length > 160 ? "…" : "");
         return `
-        <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
-          <div style="font-size:12px; flex:1;">
-            <div style="font-weight:600;">${code} ${name}</div>
-            <div style="color:#64748b; margin-top:2px; font-size:11px;">${shortDesc}</div>
+          <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
+            <div style="font-size:12px; flex:1;">
+              <div style="font-weight:600;">${code} ${name}</div>
+              <div style="color:#64748b; margin-top:2px; font-size:11px;">${shortDesc}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.25rem;">
+              <input type="number" min="1" value="1" id="instQty_${idx}" style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
+              <button type="button" class="btn-quote" onclick="addInstrumentToQuote(${idx})">Add</button>
+            </div>
           </div>
-          <div style="display:flex; align-items:center; gap:0.25rem;">
-            <input type="number" min="1" value="1" id="instQty_${idx}" style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
-            <button type="button" class="btn-quote" onclick="addInstrumentToQuote(${idx})">Add</button>
-          </div>
-        </div>
-      `;
+        `;
       })
       .join("");
   }
@@ -508,6 +556,7 @@ export function addInstrumentToQuote(instIndex) {
     lineType: "instrument",
     instrumentIndex: instIndex,
     quantity: qty,
+    // no override initially – uses master price
     configItems: [],
     additionalItems: []
   });
@@ -926,3 +975,5 @@ window.removeItemFromModal = removeItemFromModal;
 window.discountInputChanged = discountInputChanged;
 window.discountInputCommitted = discountInputCommitted;
 window.addMasterItemToLine = addMasterItemToLine;
+window.unitPriceChanged = unitPriceChanged;
+window.unitPriceCommitted = unitPriceCommitted;
