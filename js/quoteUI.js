@@ -376,17 +376,19 @@ export function unitPriceChanged(lineIdx, value) {
   // draft lives only in the input; commit on blur
 }
 
-export function unitPriceCommitted(lineIdx, value) {
+export function unitPriceCommitted(lineIdx, inputEl) {
   const header = getQuoteHeaderRaw();
   if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
 
-  const cleaned = String(value).replace(/[^\d.]/g, "");
+  const cleaned = String(inputEl.value).replace(/[^\d.]/g, "");
   const num = cleaned === "" ? null : Number(cleaned);
 
   if (num != null && !isNaN(num)) {
     header.quoteLines[lineIdx].unitPriceOverride = num;
+    inputEl.value = moneyINR(num); // show 23,78,423.00
   } else {
     delete header.quoteLines[lineIdx].unitPriceOverride;
+    inputEl.value = moneyINR(0);
   }
 
   saveQuoteHeader(header);
