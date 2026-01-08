@@ -360,14 +360,6 @@ async function showHospitalReport() {
     }
 
     docs.forEach((data, docIdx) => {
-      console.log(`[showHospitalReport] Processing doc ${docIdx}:`, {
-        quoteNo: data.quoteNo,
-        hasHospital: !!data.hospital,
-        hasHeader: !!data.header,
-        hasQuoteLines: Array.isArray(data.quoteLines),
-        quoteLineCount: (data.quoteLines || []).length
-      });
-
       const headerHospital =
         data.header && data.header.hospitalName
           ? data.header.hospitalName
@@ -378,14 +370,9 @@ async function showHospitalReport() {
           ? data.hospital
           : (data.hospital && data.hospital.name) || headerHospital) || "";
 
-      console.log(`[showHospitalReport] Doc ${docIdx} hospitalName:`, hospitalName, "selectedHospital:", selectedHospital, "match:", hospitalName === selectedHospital);
+      if (hospitalName !== selectedHospital) return;
 
-      if (hospitalName !== selectedHospital) {
-        console.log(`[showHospitalReport] Doc ${docIdx} hospital doesn't match, skipping`);
-        return;
-      }
-
-      console.log(`[showHospitalReport] Doc ${docIdx} matches! Processing lines...`);
+      console.log(`[showHospitalReport] Doc ${docIdx} matches!`);
 
       const quoteNo = data.quoteNo || (data.header && data.header.quoteNo) || "—";
       const quoteDate =
@@ -394,22 +381,14 @@ async function showHospitalReport() {
       const items = data.items || [];
       const quoteLines = data.quoteLines || [];
 
-      console.log(`[showHospitalReport] Doc ${docIdx}:`, { quoteNo, quoteDate, itemCount: items.length, quoteLineCount: quoteLines.length });
-
       if (quoteLines.length) {
-        console.log(`[showHospitalReport] Doc ${docIdx} has quoteLines, processing...`);
-
+        // Modern quoteLines structure
         quoteLines.forEach((line, lineIdx) => {
           const instIdx = line.instrumentIndex;
-          console.log(`[showHospitalReport] Line ${lineIdx}:`, { instIdx, qty: line.quantity, price: line.unitPriceOverride });
-
           let inst = {};
 
           if (instIdx != null && instIdx >= 0) {
             inst = instruments[instIdx] || {};
-            console.log(`[showHospitalReport] Found inst at index ${instIdx}:`, { name: inst.instrumentName, catalog: inst.catalog });
-          } else {
-            console.log(`[showHospitalReport] instIdx invalid (${instIdx}), searching by code...`);
           }
 
           if (!inst || !inst.instrumentName) {
@@ -418,7 +397,6 @@ async function showHospitalReport() {
                 i =>
                   i.catalog === line.code || i.instrumentCode === line.code
               ) || {};
-            console.log(`[showHospitalReport] Fallback search result:`, { name: inst.instrumentName, code: line.code });
           }
 
           const label = inst.instrumentName || inst.name || "—";
@@ -427,8 +405,6 @@ async function showHospitalReport() {
             line.unitPriceOverride != null
               ? line.unitPriceOverride
               : inst.unitPrice || 0;
-
-          console.log(`[showHospitalReport] Appending row: label="${label}", qty=${qty}, price=${price}`);
 
           appendRow(
             tbody,
@@ -442,18 +418,22 @@ async function showHospitalReport() {
           );
         });
       } else if (items.length) {
-        console.log(`[showHospitalReport] Doc ${docIdx} has legacy items, processing...`);
-
+        // Legacy items structure (no code field; use item.name or first line of description)
         items.forEach((item, itemIdx) => {
-          const inst =
-            instruments.find(
-              i => i.catalog === item.code || i.instrumentCode === item.code
-            ) || {};
-          const label = inst.instrumentName || inst.name || "—";
-          const qty = item.quantity || 1;
-          const price = item.price || 0;
+          // For legacy items, the name is stored as 'name' or in 'description'
+          let label = item.name || item.instrumentName || "—";
+          
+          // If no name, try parsing first line of description
+          if (label === "—" && item.description) {
+            const lines = item.description.split("
+");
+            label = lines.trim() || "—";
+          }
 
-          console.log(`[showHospitalReport] Item ${itemIdx}: label="${label}", code="${item.code}"`);
+          const qty = item.quantity || 1;
+          const price = item.price || item.unitPrice || 0;
+
+          console.log(`[showHospitalReport] Item ${itemIdx}: label="${label}"`);
 
           appendRow(
             tbody,
@@ -466,8 +446,6 @@ async function showHospitalReport() {
             price
           );
         });
-      } else {
-        console.warn(`[showHospitalReport] Doc ${docIdx} has no quoteLines or items`);
       }
     });
 
