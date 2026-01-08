@@ -250,12 +250,21 @@ async function generateReport(selectorId, tableId, filterFn, hasPriceColumn = tr
 
 async function showInstrumentReport(tableId = "catalogReportTable") {
   await generateReport("catalogSelector", tableId, (item, instruments, catalogCode) => {
-    const code = item.code || item.catalogCode || item.catalog;
+    const code =
+      item.code ||
+      item.catalogCode ||
+      item.catalog ||
+      item.instrumentCode ||      // add these guesses
+      item.catalogNo ||
+      item.catalogNoCode;
+
+    console.log("[showInstrumentReport] item raw:", item, "resolvedCode:", code, "selected:", catalogCode);
+
     if (code !== catalogCode) return null;
-    
+
     const inst = findInstrument(instruments, code);
     return {
-      label: inst.instrumentName || inst.name || 
+      label: inst.instrumentName || inst.name ||
              item.name || (item.description?.split("\n")[0] || "").trim() || "—",
       qty: item.quantity || 1,
       price: item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0
