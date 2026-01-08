@@ -329,10 +329,10 @@ async function showHospitalReport() {
     console.error("[customReport] #hospitalSelector not found");
     return;
   }
-  
+
   const selectedHospital = selector.value;
   console.log("[showHospitalReport] selectedHospital:", selectedHospital);
-  
+
   if (!selectedHospital) {
     console.warn("[showHospitalReport] No hospital selected");
     return;
@@ -346,7 +346,7 @@ async function showHospitalReport() {
 
   const instruments = getInstrumentsMaster();
   console.log("[showHospitalReport] instruments master count:", instruments.length);
-  
+
   let rowNum = 1;
 
   try {
@@ -422,12 +422,11 @@ async function showHospitalReport() {
         items.forEach((item, itemIdx) => {
           // For legacy items, the name is stored as 'name' or in 'description'
           let label = item.name || item.instrumentName || "—";
-          
+
           // If no name, try parsing first line of description
           if (label === "—" && item.description) {
-            const lines = item.description.split("
-");
-            label = lines.trim() || "—";
+            const lines = item.description.split("\n");
+            label = (lines[0] || "").trim() || "—";
           }
 
           const qty = item.quantity || 1;
