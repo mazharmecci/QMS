@@ -231,7 +231,7 @@ if (additionalItems.length) {
   });
 }
 
-// ✅ Final render
+// Final render (your existing code)
 body.innerHTML = rows.join("");
 renderSummaryRows(itemsTotal);
 
