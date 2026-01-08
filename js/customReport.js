@@ -2,6 +2,8 @@ import { getInstrumentsMaster } from "../js/quoteService.js";
 
 /* ========= Populate existing catalog dropdown ========= */
 
+/* ========= Populate existing catalog dropdown ========= */
+
 function populateCatalogDropdown() {
   const instruments = getInstrumentsMaster();
   const selector = document.getElementById("catalogSelector");
@@ -10,16 +12,32 @@ function populateCatalogDropdown() {
     return;
   }
 
-  // Clear any existing options (keep default)
+  // Clear any existing options
   selector.innerHTML = "";
 
+  // Collect catalog / instrumentCode, dedupe, sort
+  const catalogsMap = {};
+  instruments.forEach(function (inst, idx) {
+    const catalog = inst.catalog || inst.instrumentCode || ("CAT-" + (idx + 1));
+    if (!catalog) return;
+    catalogsMap[catalog] = true;
+  });
+
+  const uniqueCatalogs = Object.keys(catalogsMap).sort(function (a, b) {
+    // numeric-safe sort if codes are numeric strings, fallback to string
+    const na = Number(a), nb = Number(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  });
+
+  // Default placeholder option
   const defaultOpt = document.createElement("option");
   defaultOpt.value = "";
   defaultOpt.textContent = "-- Select Catalog --";
   selector.appendChild(defaultOpt);
 
-  instruments.forEach(function (inst, idx) {
-    const catalog = inst.catalog || inst.instrumentCode || ("CAT-" + (idx + 1));
+  // Append unique, sorted catalogs
+  uniqueCatalogs.forEach(function (catalog) {
     const opt = document.createElement("option");
     opt.value = catalog;
     opt.textContent = catalog;
