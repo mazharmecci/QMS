@@ -1,38 +1,111 @@
+// customReport.js
+
 import { getInstrumentsMaster } from "../js/quoteService.js";
 import {
   db,
   collection,
-  getDocs
+  getDocs,
+  query,
+  orderBy
 } from "../js/firebase.js";
 
-/* ========= Data helpers ========= */
+/* ========= Local quotes (legacy, Tabs 1 & hospital dropdown) ========= */
 
 function getAllQuotes() {
   return JSON.parse(localStorage.getItem("quotes") || "[]");
 }
 
+/* ========= Formatting helpers ========= */
+
 function formatINR(value) {
   const num = value != null ? Number(value) : null;
-  if (num == null || isNaN(num)) return "—";
+  if (num == null || Number.isNaN(num)) return "—";
   return num.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 }
 
+function formatDate(dateStr) {
+  if (!dateStr || dateStr === "—") return "—";
+
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr;
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
+/* ========= Generic DOM helpers ========= */
+
+function clearTbody(tableId) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  if (!tbody) {
+    console.error("[customReport] tbody not found for", tableId);
+    return null;
+  }
+  tbody.innerHTML = "";
+  return tbody;
+}
+
+/**
+ * Append a row to a report table.
+ * Columns (with price): Row, Quote No, Hospital, Item, Date, Qty, Price.
+ * Columns (no price):  Row, Quote No, Hospital, Item, Date, Qty.
+ */
+function appendRow(
+  tbody,
+  rowNum,
+  quoteNo,
+  hospitalName,
+  label,
+  date,
+  qty,
+  unitPrice
+) {
+  const tr = document.createElement("tr");
+  const formattedDate = formatDate(date);
+
+  if (unitPrice === null) {
+    tr.innerHTML = `
+      <td>${rowNum}</td>
+      <td>${quoteNo}</td>
+      <td>${hospitalName}</td>
+      <td>${label}</td>
+      <td>${formattedDate}</td>
+      <td>${qty}</td>
+    `;
+  } else {
+    tr.innerHTML = `
+      <td>${rowNum}</td>
+      <td>${quoteNo}</td>
+      <td>${hospitalName}</td>
+      <td>${label}</td>
+      <td>${formattedDate}</td>
+      <td>${qty}</td>
+      <td>₹ ${formatINR(unitPrice)}</td>
+    `;
+  }
+
+  tbody.appendChild(tr);
+}
+
 /* ========= Dropdown helpers ========= */
 
 function buildUniqueSorted(list, extractor) {
   const map = {};
-  list.forEach(function (item, idx) {
+  list.forEach((item, idx) => {
     const val = extractor(item, idx);
     if (val) map[val] = true;
   });
   const keys = Object.keys(map);
-  keys.sort(function (a, b) {
+  keys.sort((a, b) => {
     const na = Number(a);
     const nb = Number(b);
-    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
     return a.localeCompare(b);
   });
   return keys;
@@ -51,7 +124,7 @@ function populateSelect(selectorId, placeholder, options) {
   def.textContent = placeholder;
   el.appendChild(def);
 
-  options.forEach(function (val) {
+  options.forEach(val => {
     const opt = document.createElement("option");
     opt.value = val;
     opt.textContent = val;
@@ -59,75 +132,45 @@ function populateSelect(selectorId, placeholder, options) {
   });
 }
 
-/* ========= Render helpers ========= */
+/* ========= Firestore helpers: latest revision per quote ========= */
 
-function clearTbody(tableId) {
-  const tbody = document.querySelector("#" + tableId + " tbody");
-  if (!tbody) {
-    console.error("[customReport] tbody not found for", tableId);
-    return null;
-  }
-  tbody.innerHTML = "";
-  return tbody;
-}
+/**
+ * Load all quoteHistory docs ordered by quoteNo asc, revision desc,
+ * then keep only the first doc per quoteNo (i.e. the highest revision).
+ * Requires fields: quoteNo (string), revision (number or sortable string).
+ */
+async function getLatestHistoryDocs() {
+  const col = collection(db, "quoteHistory");
+  const snap = await getDocs(
+    query(col, orderBy("quoteNo"), orderBy("revision", "desc"))
+  ); // latest revision per quote when folded [web:60][web:64]
 
-function formatDate(dateStr) {
-  if (!dateStr || dateStr === "—") return "—";
-  
-  // Handle different date formats
-  const date = new Date(dateStr);
-  
-  // Check if valid date
-  if (isNaN(date.getTime())) return dateStr;
-  
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  
-  return `${day}-${month}-${year}`;
-}
+  const latestByQuoteNo = new Map();
 
-function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
-  const tr = document.createElement("tr");
-  const formattedDate = formatDate(date);
+  snap.forEach(doc => {
+    const data = doc.data();
+    const qn = data.quoteNo || "UNKNOWN";
+    if (!latestByQuoteNo.has(qn)) {
+      latestByQuoteNo.set(qn, { id: doc.id, ...data });
+    }
+  });
 
-  // If unitPrice is null (config table), skip the price column
-  if (unitPrice === null) {
-    tr.innerHTML = `
-      <td>${rowNum}</td>
-      <td>${hospitalName}</td>
-      <td>${label}</td>
-      <td>${formattedDate}</td>
-      <td>${qty}</td>
-    `;
-  } else {
-    // Additional table with price
-    tr.innerHTML = `
-      <td>${rowNum}</td>
-      <td>${hospitalName}</td>
-      <td>${label}</td>
-      <td>${formattedDate}</td>
-      <td>${qty}</td>
-      <td>₹ ${formatINR(unitPrice)}</td>
-    `;
-  }
-
-  tbody.appendChild(tr);
+  return Array.from(latestByQuoteNo.values());
 }
 
 /* ========= Populate dropdowns ========= */
 
 function populateCatalogDropdown() {
   const instruments = getInstrumentsMaster();
-  const catalogs = buildUniqueSorted(instruments, function (inst, idx) {
-    return inst.catalog || inst.instrumentCode || ("CAT-" + (idx + 1));
+  const catalogs = buildUniqueSorted(instruments, (inst, idx) => {
+    return inst.catalog || inst.instrumentCode || `CAT-${idx + 1}`;
   });
   populateSelect("catalogSelector", "-- Select Catalog --", catalogs);
 }
 
 function populateHospitalDropdown() {
   const allQuotes = getAllQuotes();
-  const hospitals = buildUniqueSorted(allQuotes, function (q) {
+  const hospitals = buildUniqueSorted(allQuotes, q => {
     return (q.header && q.header.hospitalName) || null;
   });
   populateSelect("hospitalSelector", "-- Select Hospital --", hospitals);
@@ -135,41 +178,41 @@ function populateHospitalDropdown() {
 
 async function populateConfigDropdown() {
   try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
+    const docs = await getLatestHistoryDocs();
     const configNames = {};
 
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
-
+    docs.forEach(data => {
       const items = data.items || [];
-      items.forEach(function (item) {
-        const configItems = item.configItems || [];
-        configItems.forEach(function (config) {
+      items.forEach(item => {
+        (item.configItems || []).forEach(config => {
           const name = config.name || config.code || null;
-          if (name) {
-            configNames[name] = true;
-          }
+          if (name) configNames[name] = true;
         });
       });
 
       const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const configItems = line.configItems || [];
-        configItems.forEach(function (config) {
+      quoteLines.forEach(line => {
+        (line.configItems || []).forEach(config => {
           const name = config.name || config.code || null;
-          if (name) {
-            configNames[name] = true;
-          }
+          if (name) configNames[name] = true;
         });
       });
     });
 
-    const configList = Object.keys(configNames).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
+    const configList = Object.keys(configNames).sort((a, b) =>
+      a.localeCompare(b)
+    );
 
-    populateSelect("configSelector", "-- Select Configuration item --", configList);
-    console.log("[customReport] Config dropdown populated with", configList.length, "items");
+    populateSelect(
+      "configSelector",
+      "-- Select Configuration item --",
+      configList
+    );
+    console.log(
+      "[customReport] Config dropdown populated with",
+      configList.length,
+      "items"
+    );
   } catch (err) {
     console.error("[customReport] Error fetching configs:", err);
   }
@@ -177,47 +220,47 @@ async function populateConfigDropdown() {
 
 async function populateAdditionalDropdown() {
   try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
+    const docs = await getLatestHistoryDocs();
     const additionalNames = {};
 
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
-
+    docs.forEach(data => {
       const items = data.items || [];
-      items.forEach(function (item) {
-        const additionalItems = item.additionalItems || [];
-        additionalItems.forEach(function (additional) {
+      items.forEach(item => {
+        (item.additionalItems || []).forEach(additional => {
           const name = additional.name || additional.code || null;
-          if (name) {
-            additionalNames[name] = true;
-          }
+          if (name) additionalNames[name] = true;
         });
       });
 
       const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const additionalItems = line.additionalItems || [];
-        additionalItems.forEach(function (additional) {
+      quoteLines.forEach(line => {
+        (line.additionalItems || []).forEach(additional => {
           const name = additional.name || additional.code || null;
-          if (name) {
-            additionalNames[name] = true;
-          }
+          if (name) additionalNames[name] = true;
         });
       });
     });
 
-    const additionalList = Object.keys(additionalNames).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
+    const additionalList = Object.keys(additionalNames).sort((a, b) =>
+      a.localeCompare(b)
+    );
 
-    populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
-    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items");
+    populateSelect(
+      "additionalSelector",
+      "-- Select Additional item --",
+      additionalList
+    );
+    console.log(
+      "[customReport] Additional dropdown populated with",
+      additionalList.length,
+      "items"
+    );
   } catch (err) {
     console.error("[customReport] Error fetching additionals:", err);
   }
 }
 
-/* ========= By Catalog report ========= */
+/* ========= Tab 1 – By Catalog (local quotes) ========= */
 
 function showCatalogReport() {
   const selector = document.getElementById("catalogSelector");
@@ -235,33 +278,42 @@ function showCatalogReport() {
   const allQuotes = getAllQuotes();
   let rowNum = 1;
 
-  allQuotes.forEach(function (q) {
+  allQuotes.forEach(q => {
     const lines = q.lineItems || [];
-    lines.forEach(function (line) {
+    lines.forEach(line => {
       if (line.code === selectedCatalog) {
         const inst =
-          instruments.find(function (i) {
-            return (
+          instruments.find(
+            i =>
               i.catalog === selectedCatalog ||
               i.instrumentCode === selectedCatalog
-            );
-          }) || {};
+          ) || {};
 
+        const quoteNo = (q.header && q.header.quoteNo) || "—";
         const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
         const label = inst.instrumentName || inst.name || "—";
         const date = (q.header && q.header.quoteDate) || "—";
         const qty = line.quantity || 1;
         const price = line.price;
 
-        appendRow(tbody, rowNum++, hospitalName, label, date, qty, price);
+        appendRow(
+          tbody,
+          rowNum++,
+          quoteNo,
+          hospitalName,
+          label,
+          date,
+          qty,
+          price
+        );
       }
     });
   });
 }
 
-/* ========= By Hospital report ========= */
+/* ========= Tab 2 – By Hospital (latest revision from Firestore) ========= */
 
-function showHospitalReport() {
+async function showHospitalReport() {
   const selector = document.getElementById("hospitalSelector");
   if (!selector) {
     console.error("[customReport] #hospitalSelector not found");
@@ -274,31 +326,95 @@ function showHospitalReport() {
   if (!tbody) return;
 
   const instruments = getInstrumentsMaster();
-  const allQuotes = getAllQuotes();
   let rowNum = 1;
 
-  allQuotes.forEach(function (q) {
-    const hospitalName = (q.header && q.header.hospitalName) || "";
-    if (hospitalName === selectedHospital) {
-      const lines = q.lineItems || [];
-      lines.forEach(function (line) {
-        const inst =
-          instruments.find(function (i) {
-            return i.catalog === line.code || i.instrumentCode === line.code;
-          }) || {};
+  try {
+    const docs = await getLatestHistoryDocs(); // each quoteNo only newest revision [web:60][web:64]
 
-        const label = inst.instrumentName || inst.name || "—";
-        const date = (q.header && q.header.quoteDate) || "—";
-        const qty = line.quantity || 1;
-        const price = line.price;
+    docs.forEach(data => {
+      const headerHospital =
+        data.header && data.header.hospitalName
+          ? data.header.hospitalName
+          : "";
 
-        appendRow(tbody, rowNum++, selectedHospital, label, date, qty, price);
-      });
-    }
-  });
+      const hospitalName =
+        (typeof data.hospital === "string"
+          ? data.hospital
+          : (data.hospital && data.hospital.name) || headerHospital) || "";
+
+      if (hospitalName !== selectedHospital) return;
+
+      const quoteNo = data.quoteNo || (data.header && data.header.quoteNo) || "—";
+      const quoteDate =
+        data.quoteDate || (data.header && data.header.quoteDate) || "—";
+
+      const items = data.items || [];
+      const quoteLines = data.quoteLines || [];
+
+      if (quoteLines.length) {
+        // Preferred modern structure
+        quoteLines.forEach(line => {
+          const instIdx = line.instrumentIndex;
+          let inst = {};
+
+          if (Array.isArray(data.instruments) && instIdx != null) {
+            inst = data.instruments[instIdx] || {};
+          } else {
+            inst =
+              instruments.find(
+                i =>
+                  i.catalog === line.code || i.instrumentCode === line.code
+              ) || {};
+          }
+
+          const label = inst.instrumentName || inst.name || "—";
+          const qty = line.quantity || 1;
+          const price =
+            line.unitPriceOverride != null
+              ? line.unitPriceOverride
+              : inst.unitPrice || 0;
+
+          appendRow(
+            tbody,
+            rowNum++,
+            quoteNo,
+            hospitalName,
+            label,
+            quoteDate,
+            qty,
+            price
+          );
+        });
+      } else if (items.length) {
+        // Legacy structure fallback
+        items.forEach(item => {
+          const inst =
+            instruments.find(
+              i => i.catalog === item.code || i.instrumentCode === item.code
+            ) || {};
+          const label = inst.instrumentName || inst.name || "—";
+          const qty = item.quantity || 1;
+          const price = item.price || 0;
+
+          appendRow(
+            tbody,
+            rowNum++,
+            quoteNo,
+            hospitalName,
+            label,
+            quoteDate,
+            qty,
+            price
+          );
+        });
+      }
+    });
+  } catch (err) {
+    console.error("[customReport] Error rendering hospital report:", err);
+  }
 }
 
-/* ========= By Configuration Item report ========= */
+/* ========= Tab 3 – By Configuration Item (latest revision) ========= */
 
 async function showConfigReport() {
   const selector = document.getElementById("configSelector");
@@ -313,38 +429,52 @@ async function showConfigReport() {
   if (!tbody) return;
 
   try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
+    const docs = await getLatestHistoryDocs();
     let rowNum = 1;
 
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
+    docs.forEach(data => {
+      const quoteNo = data.quoteNo || "—";
       const hospitalName = typeof data.hospital === "string"
         ? data.hospital
         : (data.hospital && data.hospital.name) || "Unknown";
       const quoteDate = data.quoteDate || "—";
 
       const items = data.items || [];
-      items.forEach(function (item) {
-        const configItems = item.configItems || [];
-        configItems.forEach(function (config) {
+      items.forEach(item => {
+        (item.configItems || []).forEach(config => {
           const itemName = config.name || config.code || "—";
-
           if (itemName === selectedConfig) {
             const qty = config.qty || "Included";
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
+            appendRow(
+              tbody,
+              rowNum++,
+              quoteNo,
+              hospitalName,
+              itemName,
+              quoteDate,
+              qty,
+              null
+            );
           }
         });
       });
 
       const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const configItems = line.configItems || [];
-        configItems.forEach(function (config) {
+      quoteLines.forEach(line => {
+        (line.configItems || []).forEach(config => {
           const itemName = config.name || config.code || "—";
-
           if (itemName === selectedConfig) {
             const qty = config.qty || "Included";
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
+            appendRow(
+              tbody,
+              rowNum++,
+              quoteNo,
+              hospitalName,
+              itemName,
+              quoteDate,
+              qty,
+              null
+            );
           }
         });
       });
@@ -354,7 +484,7 @@ async function showConfigReport() {
   }
 }
 
-/* ========= By Additional Item report ========= */
+/* ========= Tab 4 – By Additional Item (latest revision) ========= */
 
 async function showAdditionalReport() {
   const selector = document.getElementById("additionalSelector");
@@ -369,40 +499,54 @@ async function showAdditionalReport() {
   if (!tbody) return;
 
   try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
+    const docs = await getLatestHistoryDocs();
     let rowNum = 1;
 
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
+    docs.forEach(data => {
+      const quoteNo = data.quoteNo || "—";
       const hospitalName = typeof data.hospital === "string"
         ? data.hospital
         : (data.hospital && data.hospital.name) || "Unknown";
       const quoteDate = data.quoteDate || "—";
 
       const items = data.items || [];
-      items.forEach(function (item) {
-        const additionalItems = item.additionalItems || [];
-        additionalItems.forEach(function (additional) {
+      items.forEach(item => {
+        (item.additionalItems || []).forEach(additional => {
           const itemName = additional.name || additional.code || "—";
-
           if (itemName === selectedAdditional) {
             const qty = additional.qty || 1;
             const price = additional.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            appendRow(
+              tbody,
+              rowNum++,
+              quoteNo,
+              hospitalName,
+              itemName,
+              quoteDate,
+              qty,
+              price
+            );
           }
         });
       });
 
       const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const additionalItems = line.additionalItems || [];
-        additionalItems.forEach(function (additional) {
+      quoteLines.forEach(line => {
+        (line.additionalItems || []).forEach(additional => {
           const itemName = additional.name || additional.code || "—";
-
           if (itemName === selectedAdditional) {
             const qty = additional.qty || 1;
             const price = additional.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            appendRow(
+              tbody,
+              rowNum++,
+              quoteNo,
+              hospitalName,
+              itemName,
+              quoteDate,
+              qty,
+              price
+            );
           }
         });
       });
@@ -414,14 +558,14 @@ async function showAdditionalReport() {
 
 /* ========= Init wiring ========= */
 
-document.addEventListener("DOMContentLoaded", function () {
-  // Populate all dropdowns
+document.addEventListener("DOMContentLoaded", () => {
+  // Populate dropdowns
   populateCatalogDropdown();
   populateHospitalDropdown();
   populateConfigDropdown();
   populateAdditionalDropdown();
 
-  // Wire Tab 1 – By Catalog
+  // Tab 1 – By Catalog
   const catalogBtn = document.getElementById("showCatalogReportBtn");
   if (catalogBtn) {
     catalogBtn.addEventListener("click", showCatalogReport);
@@ -429,7 +573,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.error("[customReport] #showCatalogReportBtn not found");
   }
 
-  // Wire Tab 2 – By Hospital
+  // Tab 2 – By Hospital (latest revision)
   const hospitalBtn = document.getElementById("showHospitalReportBtn");
   if (hospitalBtn) {
     hospitalBtn.addEventListener("click", showHospitalReport);
@@ -437,7 +581,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.error("[customReport] #showHospitalReportBtn not found");
   }
 
-  // Wire Tab 3 – By Configuration Item
+  // Tab 3 – By Configuration Item
   const configBtn = document.getElementById("showConfigReportBtn");
   if (configBtn) {
     configBtn.addEventListener("click", showConfigReport);
@@ -445,7 +589,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.error("[customReport] #showConfigReportBtn not found");
   }
 
-  // Wire Tab 4 – By Additional Item
+  // Tab 4 – By Additional Item
   const additionalBtn = document.getElementById("showAdditionalReportBtn");
   if (additionalBtn) {
     additionalBtn.addEventListener("click", showAdditionalReport);
