@@ -133,15 +133,19 @@ if (termsEl) {
 }
 }
 
-/* ========= Quote builder (working config/additional) ========= */
+/* ========= Quote builder (inline qty + price + config/additional) ========= */
 export function renderQuoteBuilder() {
-  const { instruments, lines } = getQuoteContext();
+  const context = getQuoteContext();
+  const instruments = context.instruments;
+  const lines = context.lines;
+
   const body = document.getElementById("quoteBuilderBody");
   if (!body) return;
 
   if (!lines || !lines.length) {
     body.innerHTML = "";
-    document.getElementById("quoteSummaryBody") && (document.getElementById("quoteSummaryBody").innerHTML = "");
+    const sb = document.getElementById("quoteSummaryBody");
+    if (sb) sb.innerHTML = "";
     return;
   }
 
@@ -149,15 +153,20 @@ export function renderQuoteBuilder() {
   let runningItemCode = 1;
   let itemsTotal = 0;
 
-  lines.forEach((line, lineIdx) => {
+  lines.forEach(function (line, lineIdx) {
     const inst = instruments[line.instrumentIndex] || null;
     if (!inst) return;
 
-    // Main instrument
+    // ----- MAIN INSTRUMENT ROW (editable qty + unit price) -----
     const qty = Number(line.quantity || 1);
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
-    const instUnit = Number(inst.unitPrice || 0);
+
+    // Use override if present, else master price
+    const unitBase = (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
+      ? line.unitPriceOverride
+      : (inst.unitPrice || 0);
+    const instUnit = Number(unitBase || 0);
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
@@ -165,13 +174,32 @@ export function renderQuoteBuilder() {
       <tr>
         <td>${codeText}</td>
         ${formatInstrumentCell(inst, lineIdx)}
-        <td>${qty}</td>
-        <td>₹ ${moneyINR(instUnit)}</td>
+        <td>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value="${qty}"
+            style="width:60px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+            onblur="quantityCommitted(${lineIdx}, this.value)"
+          />
+        </td>
+        <td>
+          ₹
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value="${instUnit}"
+            style="width:100px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+            onblur="unitPriceCommitted(${lineIdx}, this.value)"
+          />
+        </td>
         <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
     `);
 
-    // Config items (display only)
+    // ----- CONFIG ITEMS (display only, not in itemsTotal) -----
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -179,14 +207,18 @@ export function renderQuoteBuilder() {
           <td colspan="5" style="font-weight:700;">Configuration Items</td>
         </tr>
       `);
-      configItems.forEach(item => {
+
+      configItems.forEach(function (item) {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
-        const q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
-        const upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
-        const tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
-        const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
-        const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
+
+        var q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
+        var upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
+        var tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
+
+        var upCell = (typeof upRaw === "number") ? ("₹ " + moneyINR(upRaw)) : upRaw;
+        var tpCell = (typeof tpRaw === "number") ? ("₹ " + moneyINR(tpRaw)) : tpRaw;
+
         rows.push(`
           <tr>
             <td>${itemCode}</td>
@@ -199,7 +231,7 @@ export function renderQuoteBuilder() {
       });
     }
 
-    // Additional items (add to total)
+    // ----- ADDITIONAL ITEMS (included in itemsTotal) -----
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -207,13 +239,16 @@ export function renderQuoteBuilder() {
           <td colspan="5" style="font-weight:700;">Additional Items</td>
         </tr>
       `);
-      additionalItems.forEach(item => {
+
+      additionalItems.forEach(function (item) {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
+
         const qtyNum = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
         const totalNum = unitNum * qtyNum;
         itemsTotal += totalNum;
+
         rows.push(`
           <tr>
             <td>${itemCode}</td>
@@ -229,6 +264,42 @@ export function renderQuoteBuilder() {
 
   body.innerHTML = rows.join("");
   renderSummaryRows(itemsTotal);
+}
+
+/* ========= Inline edit handlers ========= */
+
+// Quantity: update line.quantity and re-render
+export function quantityCommitted(lineIdx, rawValue) {
+  const header = getQuoteHeaderRaw();
+  if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
+
+  const num = Number(rawValue || 1);
+  const safeQty = (num && num > 0) ? num : 1;
+
+  header.quoteLines[lineIdx].quantity = safeQty;
+  saveQuoteHeader(header);
+
+  renderQuoteBuilder();
+  renderInstrumentModalList();
+}
+
+// Unit price: update line.unitPriceOverride and re-render
+export function unitPriceCommitted(lineIdx, rawValue) {
+  const header = getQuoteHeaderRaw();
+  if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
+
+  const cleaned = String(rawValue).replace(/[^\d.]/g, "");
+  const num = cleaned === "" ? null : Number(cleaned);
+
+  if (num !== null && !isNaN(num)) {
+    header.quoteLines[lineIdx].unitPriceOverride = num;
+  } else {
+    delete header.quoteLines[lineIdx].unitPriceOverride;
+  }
+
+  saveQuoteHeader(header);
+  renderQuoteBuilder();
+  renderInstrumentModalList();
 }
 
 /* ========= Summary rows / discount ========= */
@@ -917,3 +988,6 @@ window.removeItemFromModal = removeItemFromModal;
 window.discountInputChanged = discountInputChanged;
 window.discountInputCommitted = discountInputCommitted;
 window.addMasterItemToLine = addMasterItemToLine;
+window.quantityCommitted = quantityCommitted;
+window.unitPriceCommitted = unitPriceCommitted;
+
