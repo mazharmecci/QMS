@@ -148,22 +148,44 @@ function populateSelect(selectorId, placeholder, options) {
  * Requires fields: quoteNo (string), revision (number or sortable string).
  */
 async function getLatestHistoryDocs() {
-  const col = collection(db, "quoteHistory");
-  const snap = await getDocs(
-    query(col, orderBy("quoteNo"), orderBy("revision", "desc"))
-  ); // latest revision per quote when folded [web:60][web:64]
+  console.log("[getLatestHistoryDocs] ===== STARTING FETCH FROM FIRESTORE =====");
+  
+  try {
+    const col = collection(db, "quoteHistory");
+    const snap = await getDocs(
+      query(col, orderBy("quoteNo"), orderBy("revision", "desc"))
+    );
 
-  const latestByQuoteNo = new Map();
+    console.log("[getLatestHistoryDocs] Raw docs from Firestore:", snap.size);
 
-  snap.forEach(doc => {
-    const data = doc.data();
-    const qn = data.quoteNo || "UNKNOWN";
-    if (!latestByQuoteNo.has(qn)) {
-      latestByQuoteNo.set(qn, { id: doc.id, ...data });
-    }
-  });
+    const latestByQuoteNo = new Map();
 
-  return Array.from(latestByQuoteNo.values());
+    snap.forEach((doc) => {
+      const data = doc.data();
+      const qn = data.quoteNo || "UNKNOWN";
+      
+      console.log(`[getLatestHistoryDocs] Processing doc: docId=${doc.id}, quoteNo=${qn}, revision=${data.revision}`);
+
+      if (!latestByQuoteNo.has(qn)) {
+        console.log(`[getLatestHistoryDocs] ✓ KEEPING ${qn} (first occurrence = latest)`);
+        latestByQuoteNo.set(qn, { id: doc.id, ...data });
+      } else {
+        console.log(`[getLatestHistoryDocs] ✗ SKIPPING ${qn} (duplicate quoteNo, keeping only latest revision)`);
+      }
+    });
+
+    const result = Array.from(latestByQuoteNo.values());
+    console.log("[getLatestHistoryDocs] ===== FINAL DEDUPED DOCS =====");
+    console.log("[getLatestHistoryDocs] Total unique docs to return:", result.length);
+    result.forEach((doc, idx) => {
+      console.log(`[getLatestHistoryDocs] Doc ${idx}: quoteNo=${doc.quoteNo}, itemsCount=${(doc.items || []).length}, quoteLinesCount=${(doc.quoteLines || []).length}`);
+    });
+    
+    return result;
+  } catch (err) {
+    console.error("[getLatestHistoryDocs] ERROR:", err);
+    throw err;
+  }
 }
 
 /* ========= Populate dropdowns ========= */
@@ -792,41 +814,84 @@ async function showAdditionalReport() {
 /* ========= Init wiring ========= */
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Populate dropdowns
-  populateCatalogDropdown();
-  populateHospitalDropdown();
-  populateConfigDropdown();
-  populateAdditionalDropdown();
+  console.log("[customReport] ===== DOMContentLoaded FIRED =====");
 
-  // Tab 1 – By Catalog
-  const catalogBtn = document.getElementById("showCatalogReportBtn");
-  if (catalogBtn) {
-    catalogBtn.addEventListener("click", showCatalogReport);
+  // Populate dropdowns
+  console.log("[customReport] Populating catalog dropdown...");
+  populateCatalogDropdown();
+  
+  console.log("[customReport] Populating hospital dropdown...");
+  populateHospitalDropdown();
+  
+  console.log("[customReport] Populating config dropdown...");
+  populateConfigDropdown().catch(err => console.error("[customReport] Error in populateConfigDropdown:", err));
+  
+  console.log("[customReport] Populating additional dropdown...");
+  populateAdditionalDropdown().catch(err => console.error("[customReport] Error in populateAdditionalDropdown:", err));
+
+  // Tab 1 – By Instrument (Firestore latest revision)
+  const instrumentBtn = document.getElementById("showInstrumentReportBtn");
+  if (instrumentBtn) {
+    console.log("[customReport] ✓ Found #showInstrumentReportBtn, wiring click handler...");
+    instrumentBtn.addEventListener("click", async () => {
+      console.log("[customReport] ========== INSTRUMENT REPORT BUTTON CLICKED ==========");
+      try {
+        await showInstrumentReport();
+      } catch (err) {
+        console.error("[customReport] ERROR in showInstrumentReport:", err);
+      }
+    });
   } else {
-    console.error("[customReport] #showCatalogReportBtn not found");
+    console.error("[customReport] ✗ #showInstrumentReportBtn NOT FOUND");
   }
 
   // Tab 2 – By Hospital (latest revision)
   const hospitalBtn = document.getElementById("showHospitalReportBtn");
   if (hospitalBtn) {
-    hospitalBtn.addEventListener("click", showHospitalReport);
+    console.log("[customReport] ✓ Found #showHospitalReportBtn, wiring click handler...");
+    hospitalBtn.addEventListener("click", async () => {
+      console.log("[customReport] ========== HOSPITAL REPORT BUTTON CLICKED ==========");
+      try {
+        await showHospitalReport();
+      } catch (err) {
+        console.error("[customReport] ERROR in showHospitalReport:", err);
+      }
+    });
   } else {
-    console.error("[customReport] #showHospitalReportBtn not found");
+    console.error("[customReport] ✗ #showHospitalReportBtn NOT FOUND");
   }
 
   // Tab 3 – By Configuration Item
   const configBtn = document.getElementById("showConfigReportBtn");
   if (configBtn) {
-    configBtn.addEventListener("click", showConfigReport);
+    console.log("[customReport] ✓ Found #showConfigReportBtn, wiring click handler...");
+    configBtn.addEventListener("click", async () => {
+      console.log("[customReport] ========== CONFIG REPORT BUTTON CLICKED ==========");
+      try {
+        await showConfigReport();
+      } catch (err) {
+        console.error("[customReport] ERROR in showConfigReport:", err);
+      }
+    });
   } else {
-    console.error("[customReport] #showConfigReportBtn not found");
+    console.error("[customReport] ✗ #showConfigReportBtn NOT FOUND");
   }
 
   // Tab 4 – By Additional Item
   const additionalBtn = document.getElementById("showAdditionalReportBtn");
   if (additionalBtn) {
-    additionalBtn.addEventListener("click", showAdditionalReport);
+    console.log("[customReport] ✓ Found #showAdditionalReportBtn, wiring click handler...");
+    additionalBtn.addEventListener("click", async () => {
+      console.log("[customReport] ========== ADDITIONAL REPORT BUTTON CLICKED ==========");
+      try {
+        await showAdditionalReport();
+      } catch (err) {
+        console.error("[customReport] ERROR in showAdditionalReport:", err);
+      }
+    });
   } else {
-    console.error("[customReport] #showAdditionalReportBtn not found");
+    console.error("[customReport] ✗ #showAdditionalReportBtn NOT FOUND");
   }
+
+  console.log("[customReport] ===== DOMContentLoaded COMPLETE =====");
 });
