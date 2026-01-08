@@ -406,13 +406,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Wire report buttons
+  // Wire report buttons (prioritized by your HTML)
   const handlers = {
-    showInstrumentReportBtn: showInstrumentReport,
-    showHospitalReportBtn: showHospitalReport,
-    showConfigReportBtn: showConfigReport,
-    showAdditionalReportBtn: showAdditionalReport,
-    showCatalogReportBtn: showInstrumentReport  // Legacy button maps to new function
+    showCatalogReportBtn: showInstrumentReport,      // Tab 1 - Catalog/Instrument (LOCAL + FIRESTORE)
+    showHospitalReportBtn: showHospitalReport,       // Tab 2 - Hospital  
+    showConfigReportBtn: showConfigReport,           // Tab 3 - Config
+    showAdditionalReportBtn: showAdditionalReport    // Tab 4 - Additional
   };
 
   Object.entries(handlers).forEach(([btnId, handler]) => {
@@ -428,7 +427,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
     } else {
-      console.error(`[customReport] ✗ #${btnId} NOT FOUND`);
+      console.warn(`[customReport] ⚠️ #${btnId} NOT FOUND - skipping`);  // WARN instead of ERROR
     }
   });
 
