@@ -301,7 +301,14 @@ export function unitPriceCommitted(lineIdx, inputEl) {
 
   saveQuoteHeader(header);
 
-/* Helper: recompute itemsTotal for summary when not re-rendering full table */
+  // 🔁 Recompute totals and re-render using the new override
+  const itemsTotal = recomputeItemsTotal();
+  renderQuoteBuilder();
+  renderSummaryRows(itemsTotal);
+  renderInstrumentModalList();
+} // <<< this brace was missing
+
+/* Helper: recompute itemsTotal for summary */
 function recomputeItemsTotal() {
   const context = getQuoteContext();
   const instruments = context.instruments;
@@ -326,9 +333,7 @@ function recomputeItemsTotal() {
     });
   });
 
-  renderQuoteBuilder();          // rows rebuilt using override
-  renderSummaryRows(itemsTotal); // summary uses new total
-  renderInstrumentModalList();   // modal sees new unit + total
+  return itemsTotal;
 }
 
 /* ========= Summary rows / discount ========= */
