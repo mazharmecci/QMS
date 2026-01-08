@@ -82,14 +82,22 @@ async function populateConfigDropdown() {
     const snap = await getDocs(collection(db, "quoteHistory"));
     const configCodes = {};
 
-    snap.docs.forEach(function (doc) {
+    console.log("[customReport] Found", snap.docs.length, "documents in quoteHistory");
+
+    snap.docs.forEach(function (doc, idx) {
       const data = doc.data();
-      
+      console.log("[customReport] Document", idx, "structure:", Object.keys(data));
+
       // Check top-level configItems field
       const topLevelConfigItems = data.configItems || [];
+      console.log("[customReport] Document", idx, "topLevelConfigItems:", topLevelConfigItems.length);
+      
       topLevelConfigItems.forEach(function (item) {
         const code = item.code || item.name || null;
-        if (code) configCodes[code] = true;
+        if (code) {
+          configCodes[code] = true;
+          console.log("[customReport] Added config code:", code);
+        }
       });
 
       // Also check nested configItems in quoteLines
@@ -98,19 +106,44 @@ async function populateConfigDropdown() {
         const nestedConfigItems = line.configItems || [];
         nestedConfigItems.forEach(function (item) {
           const code = item.code || item.name || null;
-          if (code) configCodes[code] = true;
+          if (code) {
+            configCodes[code] = true;
+            console.log("[customReport] Added nested config code:", code);
+          }
         });
       });
     });
+
+    // If Firestore is empty, fall back to localStorage
+    if (Object.keys(configCodes).length === 0) {
+      console.log("[customReport] No configs in Firestore, checking localStorage...");
+      const allQuotes = getAllQuotes();
+      allQuotes.forEach(function (q) {
+        const topLevelConfigItems = q.configItems || [];
+        topLevelConfigItems.forEach(function (item) {
+          const code = item.code || item.name || null;
+          if (code) configCodes[code] = true;
+        });
+
+        const quoteLines = q.quoteLines || [];
+        quoteLines.forEach(function (line) {
+          const nestedConfigItems = line.configItems || [];
+          nestedConfigItems.forEach(function (item) {
+            const code = item.code || item.name || null;
+            if (code) configCodes[code] = true;
+          });
+        });
+      });
+    }
 
     const configList = Object.keys(configCodes).sort(function (a, b) {
       return a.localeCompare(b);
     });
     
     populateSelect("configSelector", "-- Select Configuration item --", configList);
-    console.log("[customReport] Config dropdown populated with", configList.length, "items");
+    console.log("[customReport] Config dropdown populated with", configList.length, "items:", configList);
   } catch (err) {
-    console.error("[customReport] Error fetching quoteHistory for configs:", err);
+    console.error("[customReport] Error fetching configs:", err);
   }
 }
 
@@ -119,14 +152,22 @@ async function populateAdditionalDropdown() {
     const snap = await getDocs(collection(db, "quoteHistory"));
     const additionalCodes = {};
 
-    snap.docs.forEach(function (doc) {
+    console.log("[customReport] Found", snap.docs.length, "documents in quoteHistory");
+
+    snap.docs.forEach(function (doc, idx) {
       const data = doc.data();
-      
+      console.log("[customReport] Document", idx, "structure:", Object.keys(data));
+
       // Check top-level additionalItems field
       const topLevelAdditionalItems = data.additionalItems || [];
+      console.log("[customReport] Document", idx, "topLevelAdditionalItems:", topLevelAdditionalItems.length);
+      
       topLevelAdditionalItems.forEach(function (item) {
         const code = item.code || item.name || null;
-        if (code) additionalCodes[code] = true;
+        if (code) {
+          additionalCodes[code] = true;
+          console.log("[customReport] Added additional code:", code);
+        }
       });
 
       // Also check nested additionalItems in quoteLines
@@ -135,19 +176,44 @@ async function populateAdditionalDropdown() {
         const nestedAdditionalItems = line.additionalItems || [];
         nestedAdditionalItems.forEach(function (item) {
           const code = item.code || item.name || null;
-          if (code) additionalCodes[code] = true;
+          if (code) {
+            additionalCodes[code] = true;
+            console.log("[customReport] Added nested additional code:", code);
+          }
         });
       });
     });
+
+    // If Firestore is empty, fall back to localStorage
+    if (Object.keys(additionalCodes).length === 0) {
+      console.log("[customReport] No additionals in Firestore, checking localStorage...");
+      const allQuotes = getAllQuotes();
+      allQuotes.forEach(function (q) {
+        const topLevelAdditionalItems = q.additionalItems || [];
+        topLevelAdditionalItems.forEach(function (item) {
+          const code = item.code || item.name || null;
+          if (code) additionalCodes[code] = true;
+        });
+
+        const quoteLines = q.quoteLines || [];
+        quoteLines.forEach(function (line) {
+          const nestedAdditionalItems = line.additionalItems || [];
+          nestedAdditionalItems.forEach(function (item) {
+            const code = item.code || item.name || null;
+            if (code) additionalCodes[code] = true;
+          });
+        });
+      });
+    }
 
     const additionalList = Object.keys(additionalCodes).sort(function (a, b) {
       return a.localeCompare(b);
     });
     
     populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
-    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items");
+    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items:", additionalList);
   } catch (err) {
-    console.error("[customReport] Error fetching quoteHistory for additionals:", err);
+    console.error("[customReport] Error fetching additionals:", err);
   }
 }
 
@@ -274,6 +340,7 @@ async function showConfigReport() {
   try {
     const snap = await getDocs(collection(db, "quoteHistory"));
     let rowNum = 1;
+    let found = false;
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
@@ -290,6 +357,7 @@ async function showConfigReport() {
           const qty = item.qty || "Included";
           const price = item.upInr || item.tpInr || item.price || 0;
           appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          found = true;
         }
       });
 
@@ -305,16 +373,54 @@ async function showConfigReport() {
             const qty = item.qty || "Included";
             const price = item.upInr || item.tpInr || item.price || 0;
             appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            found = true;
           }
         });
       });
     });
+
+    // If Firestore is empty, try localStorage
+    if (!found) {
+      console.log("[customReport] No config items in Firestore, checking localStorage...");
+      const allQuotes = getAllQuotes();
+      allQuotes.forEach(function (q) {
+        const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
+        const quoteDate = (q.header && q.header.quoteDate) || "—";
+
+        const topLevelConfigItems = q.configItems || [];
+        topLevelConfigItems.forEach(function (item) {
+          const itemCode = item.code || "";
+          const itemName = item.name || item.code || "—";
+
+          if (itemCode === selectedConfig || itemName === selectedConfig) {
+            const qty = item.qty || "Included";
+            const price = item.upInr || item.tpInr || item.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            found = true;
+          }
+        });
+
+        const quoteLines = q.quoteLines || [];
+        quoteLines.forEach(function (line) {
+          const configItems = line.configItems || [];
+          configItems.forEach(function (item) {
+            const itemCode = item.code || "";
+            const itemName = item.name || item.code || "—";
+
+            if (itemCode === selectedConfig || itemName === selectedConfig) {
+              const qty = item.qty || "Included";
+              const price = item.upInr || item.tpInr || item.price || 0;
+              appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+              found = true;
+            }
+          });
+        });
+      });
+    }
   } catch (err) {
     console.error("[customReport] Error rendering config report:", err);
   }
 }
-
-/* ========= By Additional Item report ========= */
 
 async function showAdditionalReport() {
   const selector = document.getElementById("additionalSelector");
@@ -331,6 +437,7 @@ async function showAdditionalReport() {
   try {
     const snap = await getDocs(collection(db, "quoteHistory"));
     let rowNum = 1;
+    let found = false;
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
@@ -347,6 +454,7 @@ async function showAdditionalReport() {
           const qty = item.qty || 1;
           const price = item.price || 0;
           appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          found = true;
         }
       });
 
@@ -362,10 +470,50 @@ async function showAdditionalReport() {
             const qty = item.qty || 1;
             const price = item.price || 0;
             appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            found = true;
           }
         });
       });
     });
+
+    // If Firestore is empty, try localStorage
+    if (!found) {
+      console.log("[customReport] No additional items in Firestore, checking localStorage...");
+      const allQuotes = getAllQuotes();
+      allQuotes.forEach(function (q) {
+        const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
+        const quoteDate = (q.header && q.header.quoteDate) || "—";
+
+        const topLevelAdditionalItems = q.additionalItems || [];
+        topLevelAdditionalItems.forEach(function (item) {
+          const itemCode = item.code || "";
+          const itemName = item.name || item.code || "—";
+
+          if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+            const qty = item.qty || 1;
+            const price = item.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            found = true;
+          }
+        });
+
+        const quoteLines = q.quoteLines || [];
+        quoteLines.forEach(function (line) {
+          const additionalItems = line.additionalItems || [];
+          additionalItems.forEach(function (item) {
+            const itemCode = item.code || "";
+            const itemName = item.name || item.code || "—";
+
+            if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+              const qty = item.qty || 1;
+              const price = item.price || 0;
+              appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+              found = true;
+            }
+          });
+        });
+      });
+    }
   } catch (err) {
     console.error("[customReport] Error rendering additional report:", err);
   }
