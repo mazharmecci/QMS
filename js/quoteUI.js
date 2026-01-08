@@ -133,16 +133,15 @@ if (termsEl) {
 }
 }
 
-/* ========= Quote builder (with config/additional) ========= */
+/* ========= Quote builder (working config/additional) ========= */
 export function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
   if (!body) return;
 
-  if (!lines.length) {
+  if (!lines?.length) {
     body.innerHTML = "";
-    const sb = document.getElementById("quoteSummaryBody");
-    if (sb) sb.innerHTML = "";
+    document.getElementById("quoteSummaryBody")?.innerHTML = "";
     return;
   }
 
@@ -154,15 +153,14 @@ export function renderQuoteBuilder() {
     const inst = instruments[line.instrumentIndex] || null;
     if (!inst) return;
 
+    // Main instrument
     const qty = Number(line.quantity || 1);
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
-
     const instUnit = Number(inst.unitPrice || 0);
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    // main instrument row
     rows.push(`
       <tr>
         <td>${codeText}</td>
@@ -173,7 +171,7 @@ export function renderQuoteBuilder() {
       </tr>
     `);
 
-    // configuration items
+    // Config items (display only, no total addition)
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -181,18 +179,14 @@ export function renderQuoteBuilder() {
           <td colspan="5" style="font-weight:700;">Configuration Items</td>
         </tr>
       `);
-
       configItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
-
-        const q = item.qty != null ? item.qty : "Included";
-        const upRaw = item.upInr != null ? item.upInr : "Included";
-        const tpRaw = item.tpInr != null ? item.tpInr : "Included";
-
+        const q = item.qty ?? "Included";
+        const upRaw = item.upInr ?? "Included";
+        const tpRaw = item.tpInr ?? "Included";
         const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
         const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
-
         rows.push(`
           <tr>
             <td>${itemCode}</td>
@@ -205,7 +199,7 @@ export function renderQuoteBuilder() {
       });
     }
 
-    // additional items
+    // Additional items (add to total)
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -213,16 +207,13 @@ export function renderQuoteBuilder() {
           <td colspan="5" style="font-weight:700;">Additional Items</td>
         </tr>
       `);
-
       additionalItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
-
         const qtyNum = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
         const totalNum = unitNum * qtyNum;
         itemsTotal += totalNum;
-
         rows.push(`
           <tr>
             <td>${itemCode}</td>
