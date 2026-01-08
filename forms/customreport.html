@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Report – Instrument History</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    .instrument-report-block {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f9fafb;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .instrument-report-block h3 {
+      margin-bottom: 16px;
+      font-size: 20px;
+      color: #1e293b;
+    }
+    .instrument-report-block select,
+    .instrument-report-block button {
+      margin-right: 12px;
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+    #instrumentReportTable {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    #instrumentReportTable th,
+    #instrumentReportTable td {
+      border: 1px solid #cbd5e1;
+      padding: 8px;
+      text-align: left;
+    }
+    #instrumentReportTable th {
+      background-color: #e2e8f0;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
+      <div class="header-title">ISTOS Medical Private Limited – Instrument History Report</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Report viewer block will be injected here -->
+    <div id="reportMount"></div>
+  </div>
+
+  <script>
+    function goBack() {
+      location.href = "/index.html";
+    }
+  </script>
+
+  <!-- Modules -->
+  <script type="module" src="../js/firebase.js"></script>
+  <script type="module" src="../js/hospitalService.js"></script>
+  <script type="module" src="../js/quoteService.js"></script>
+  <script type="module" src="../js/customReport.js"></script>
+</body>
+</html>
