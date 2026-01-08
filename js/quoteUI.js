@@ -162,10 +162,11 @@ export function renderQuoteBuilder() {
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
-    // Use override if present, else master price
-    const unitBase = (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
-      ? line.unitPriceOverride
-      : (inst.unitPrice || 0);
+    // Prefer override, else master price
+    var unitBase =
+      (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
+        ? line.unitPriceOverride
+        : (inst.unitPrice || 0);
     const instUnit = Number(unitBase || 0);
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
@@ -187,12 +188,10 @@ export function renderQuoteBuilder() {
         <td>
           ₹
           <input
-            type="number"
-            min="0"
-            step="0.01"
-            value="${instUnit}"
-            style="width:100px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-            onblur="unitPriceCommitted(${lineIdx}, this.value)"
+            type="text"
+            value="${moneyINR(instUnit)}"
+            style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+            onblur="unitPriceCommitted(${lineIdx}, this)"
           />
         </td>
         <td>₹ ${moneyINR(instTotal)}</td>
@@ -283,23 +282,54 @@ export function quantityCommitted(lineIdx, rawValue) {
   renderInstrumentModalList();
 }
 
-// Unit price: update line.unitPriceOverride and re-render
-export function unitPriceCommitted(lineIdx, rawValue) {
+// Unit price: update override + show comma-formatted INR in the input
+export function unitPriceCommitted(lineIdx, inputEl) {
   const header = getQuoteHeaderRaw();
   if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
 
+  const rawValue = inputEl.value;
   const cleaned = String(rawValue).replace(/[^\d.]/g, "");
   const num = cleaned === "" ? null : Number(cleaned);
 
   if (num !== null && !isNaN(num)) {
     header.quoteLines[lineIdx].unitPriceOverride = num;
+    inputEl.value = moneyINR(num);     // show 23,78,423.00 in the box
   } else {
     delete header.quoteLines[lineIdx].unitPriceOverride;
+    inputEl.value = moneyINR(0);
   }
 
   saveQuoteHeader(header);
-  renderQuoteBuilder();
+  renderSummaryRows(recomputeItemsTotal()); // optional: or just call renderQuoteBuilder()
   renderInstrumentModalList();
+}
+
+/* Helper: recompute itemsTotal for summary when not re-rendering full table */
+function recomputeItemsTotal() {
+  const context = getQuoteContext();
+  const instruments = context.instruments;
+  const lines = context.lines || [];
+  let total = 0;
+
+  lines.forEach(function (line) {
+    const inst = instruments[line.instrumentIndex] || null;
+    if (inst) {
+      const qty = Number(line.quantity || 1);
+      const unitBase =
+        (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
+          ? line.unitPriceOverride
+          : (inst.unitPrice || 0);
+      const instUnit = Number(unitBase || 0);
+      total += instUnit * qty;
+    }
+    (line.additionalItems || []).forEach(function (item) {
+      const qtyNum = Number(item.qty || 1);
+      const unitNum = Number(item.price || item.unitPrice || 0);
+      total += qtyNum * unitNum;
+    });
+  });
+
+  return total;
 }
 
 /* ========= Summary rows / discount ========= */
