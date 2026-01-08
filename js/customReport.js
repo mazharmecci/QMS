@@ -248,33 +248,31 @@ async function generateReport(selectorId, tableId, filterFn, hasPriceColumn = tr
 
 /* ========= Specific Report Functions ========= */
 
-async function showInstrumentReport() {
-  await generateReport(
-    "catalogSelector", 
-    "instrumentReportTable",
-    (item, instruments, catalogCode) => {
-      const code = item.code || item.catalogCode || item.catalog;
-      if (code !== catalogCode) return null;
-      
-      const inst = findInstrument(instruments, code);
-      return {
-        label: inst.instrumentName || inst.name || 
-               item.name || item.description?.split("\n")[0]?.trim() || "—",
-        qty: item.quantity || 1,
-        price: item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0
-      };
-    }
-  );
+/* ========= Table-Aware Report Functions ========= */
+
+async function showInstrumentReport(tableId = "instrumentReportTable") {
+  await generateReport("catalogSelector", tableId, (item, instruments, catalogCode) => {
+    const code = item.code || item.catalogCode || item.catalog;
+    if (code !== catalogCode) return null;
+    
+    const inst = findInstrument(instruments, code);
+    return {
+      label: inst.instrumentName || inst.name || 
+             item.name || item.description?.split("\n")[0]?.trim() || "—",
+      qty: item.quantity || 1,
+      price: item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0
+    };
+  });
 }
 
-async function showHospitalReport() {
+async function showHospitalReport(tableId = "hospitalReportTable") {
   const selector = document.getElementById("hospitalSelector");
   if (!selector?.value) {
     console.warn("[showHospitalReport] No hospital selected");
     return;
   }
 
-  const tbody = clearTbody("hospitalReportTable");
+  const tbody = clearTbody(tableId);
   if (!tbody) return;
 
   const instruments = getInstrumentsMaster();
@@ -304,49 +302,34 @@ async function showHospitalReport() {
       });
     });
     
-    console.log(`[showHospitalReport] ✓ ${matchCount} items for hospital "${selectedHospital}"`);
+    console.log(`[showHospitalReport ${tableId}] ✓ ${matchCount} items`);
   } catch (err) {
-    console.error("[showHospitalReport] Error:", err);
+    console.error(`[showHospitalReport ${tableId}] Error:`, err);
   }
 }
 
-async function showConfigReport() {
-  await generateReport(
-    "configSelector",
-    "configReportTable",
-    (item, instruments, configName) => {
-      const config = (item.configItems || []).find(c => 
-        (c.name || c.code) === configName
-      );
-      if (!config) return null;
-      
-      return {
-        label: config.name || config.code || "—",
-        qty: config.qty || "Included",
-        price: null  // Config table has no price column
-      };
-    },
-    false  // No price column
-  );
+async function showConfigReport(tableId = "configReportTable") {
+  await generateReport("configSelector", tableId, (item, instruments, configName) => {
+    const config = (item.configItems || []).find(c => (c.name || c.code) === configName);
+    if (!config) return null;
+    return {
+      label: config.name || config.code || "—",
+      qty: config.qty || "Included",
+      price: null
+    };
+  }, false);
 }
 
-async function showAdditionalReport() {
-  await generateReport(
-    "additionalSelector",
-    "additionalReportTable",
-    (item, instruments, additionalName) => {
-      const additional = (item.additionalItems || []).find(a => 
-        (a.name || a.code) === additionalName
-      );
-      if (!additional) return null;
-      
-      return {
-        label: additional.name || additional.code || "—",
-        qty: additional.qty || 1,
-        price: additional.price || 0
-      };
-    }
-  );
+async function showAdditionalReport(tableId = "additionalReportTable") {
+  await generateReport("additionalSelector", tableId, (item, instruments, additionalName) => {
+    const additional = (item.additionalItems || []).find(a => (a.name || a.code) === additionalName);
+    if (!additional) return null;
+    return {
+      label: additional.name || additional.code || "—",
+      qty: additional.qty || 1,
+      price: additional.price || 0
+    };
+  });
 }
 
 /* ========= Tab Switching ========= */
@@ -380,20 +363,16 @@ function switchTab(tabName) {
 }
 
 /* ========= Initialization ========= */
-
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[customReport] ===== INITIALIZING CUSTOM REPORTS =====");
 
-  // Populate all dropdowns
+  // Populate dropdowns
   console.log("[customReport] Populating dropdowns...");
   populateCatalogDropdown();
   populateHospitalDropdown();
   
   try {
-    await Promise.all([
-      populateConfigDropdown(),
-      populateAdditionalDropdown()
-    ]);
+    await Promise.all([populateConfigDropdown(), populateAdditionalDropdown()]);
     console.log("[customReport] ✓ All dropdowns populated");
   } catch (err) {
     console.error("[customReport] Dropdown population failed:", err);
@@ -401,35 +380,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Wire tab switching
   document.querySelectorAll(".report-tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      switchTab(btn.dataset.tab);
-    });
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
-  // Wire report buttons (prioritized by your HTML)
-  const handlers = {
-    showCatalogReportBtn: showInstrumentReport,      // Tab 1 - Catalog/Instrument (LOCAL + FIRESTORE)
-    showHospitalReportBtn: showHospitalReport,       // Tab 2 - Hospital  
-    showConfigReportBtn: showConfigReport,           // Tab 3 - Config
-    showAdditionalReportBtn: showAdditionalReport    // Tab 4 - Additional
-  };
-
-  Object.entries(handlers).forEach(([btnId, handler]) => {
+  // FIXED - Button ID → Table ID → Report Function mapping
+  const buttonConfigs = [
+    { btnId: "showCatalogReportBtn", tableId: "catalogReportTable", handler: showInstrumentReport },
+    { btnId: "showHospitalReportBtn", tableId: "hospitalReportTable", handler: showHospitalReport },
+    { btnId: "showConfigReportBtn", tableId: "configReportTable", handler: showConfigReport },
+    { btnId: "showAdditionalReportBtn", tableId: "additionalReportTable", handler: showAdditionalReport }
+  ];
+  
+  buttonConfigs.forEach(({ btnId, tableId, handler }) => {
     const btn = document.getElementById(btnId);
     if (btn) {
-      console.log(`[customReport] ✓ Wired #${btnId}`);
+      console.log(`[customReport] ✓ Wired #${btnId} → ${tableId}`);
       btn.addEventListener("click", async () => {
-        console.log(`[${btnId}] ========== BUTTON CLICKED ==========`);  
+        console.log(`[${btnId}] → ${tableId} ========== CLICKED ==========`);  
         try {
-          await handler();
+          await handler(tableId);  // Pass tableId to handler
         } catch (err) {
           console.error(`[${btnId}] ERROR:`, err);
         }
       });
     } else {
-      console.warn(`[customReport] ⚠️ #${btnId} NOT FOUND - skipping`);  // WARN instead of ERROR
+      console.warn(`[customReport] ⚠️ #${btnId} NOT FOUND`);
     }
   });
-
-  console.log("[customReport] ===== INITIALIZATION COMPLETE =====");
-});
