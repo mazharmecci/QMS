@@ -293,43 +293,42 @@ export function unitPriceCommitted(lineIdx, inputEl) {
 
   if (num !== null && !isNaN(num)) {
     header.quoteLines[lineIdx].unitPriceOverride = num;
-    inputEl.value = moneyINR(num);     // show 23,78,423.00 in the box
+    inputEl.value = moneyINR(num);  // show commas
   } else {
     delete header.quoteLines[lineIdx].unitPriceOverride;
     inputEl.value = moneyINR(0);
   }
 
   saveQuoteHeader(header);
-  renderSummaryRows(recomputeItemsTotal()); // optional: or just call renderQuoteBuilder()
-  renderInstrumentModalList();
-}
 
 /* Helper: recompute itemsTotal for summary when not re-rendering full table */
 function recomputeItemsTotal() {
   const context = getQuoteContext();
   const instruments = context.instruments;
   const lines = context.lines || [];
-  let total = 0;
+  let itemsTotal = 0;
 
   lines.forEach(function (line) {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
       const qty = Number(line.quantity || 1);
-      const unitBase =
+      var unitBase =
         (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
           ? line.unitPriceOverride
           : (inst.unitPrice || 0);
       const instUnit = Number(unitBase || 0);
-      total += instUnit * qty;
+      itemsTotal += instUnit * qty;
     }
     (line.additionalItems || []).forEach(function (item) {
       const qtyNum = Number(item.qty || 1);
       const unitNum = Number(item.price || item.unitPrice || 0);
-      total += qtyNum * unitNum;
+      itemsTotal += qtyNum * unitNum;
     });
   });
 
-  return total;
+  renderQuoteBuilder();          // rows rebuilt using override
+  renderSummaryRows(itemsTotal); // summary uses new total
+  renderInstrumentModalList();   // modal sees new unit + total
 }
 
 /* ========= Summary rows / discount ========= */
