@@ -319,6 +319,199 @@ function showCatalogReport() {
   });
 }
 
+/* ========= Tab 1 – By Instrument (latest revision from Firestore) ========= */
+
+async function showInstrumentReport() {
+  console.log("[showInstrumentReport] ========== STARTING TAB 1 REPORT ==========");
+
+  const selector = document.getElementById("catalogSelector");
+  if (!selector) {
+    console.error("[showInstrumentReport] #catalogSelector not found");
+    return;
+  }
+
+  const selectedCatalog = selector.value;
+  console.log("[showInstrumentReport] selectedCatalog:", selectedCatalog);
+
+  if (!selectedCatalog) {
+    console.warn("[showInstrumentReport] No catalog selected");
+    return;
+  }
+
+  const tbody = clearTbody("instrumentReportTable");
+  if (!tbody) {
+    console.error("[showInstrumentReport] tbody not found");
+    return;
+  }
+
+  const instruments = getInstrumentsMaster();
+  console.log("[showInstrumentReport] instruments master count:", instruments.length);
+
+  let rowNum = 1;
+  const processedRows = []; // Track all rows for debugging
+
+  try {
+    console.log("[showInstrumentReport] Fetching latest history docs...");
+    const docs = await getLatestHistoryDocs();
+    console.log("[showInstrumentReport] ===== FIRESTORE FETCH RESULTS =====");
+    console.log("[showInstrumentReport] Total docs returned:", docs.length);
+    
+    // Log each document ID and structure
+    docs.forEach((doc, idx) => {
+      console.log(`[showInstrumentReport] Doc ${idx}:`, {
+        docId: doc.docId || doc.id || "NO_ID",
+        quoteNo: doc.quoteNo || "NO_QUOTE_NO",
+        hospital: doc.hospital || "NO_HOSPITAL",
+        itemsCount: (doc.items || []).length,
+        quoteLinesCount: (doc.quoteLines || []).length,
+        fullDoc: doc
+      });
+    });
+
+    if (!docs.length) {
+      console.warn("[showInstrumentReport] No docs returned from getLatestHistoryDocs");
+      return;
+    }
+
+    let docMatchCount = 0;
+
+    docs.forEach((data, docIdx) => {
+      const quoteNo = data.quoteNo || (data.header && data.header.quoteNo) || "—";
+      const quoteDate = data.quoteDate || (data.header && data.header.quoteDate) || "—";
+      const hospitalName =
+        data.hospital && typeof data.hospital === "string"
+          ? data.hospital
+          : (data.hospital && data.hospital.name) ||
+            (data.header && data.header.hospitalName) ||
+            "";
+
+      const items = data.items || [];
+      const quoteLines = data.quoteLines || [];
+
+      console.log(`[showInstrumentReport] Processing Doc ${docIdx} (${quoteNo}):`, {
+        hospital: hospitalName,
+        hasItems: items.length > 0,
+        itemsCount: items.length,
+        hasQuoteLines: quoteLines.length > 0,
+        quoteLinesCount: quoteLines.length
+      });
+
+      if (quoteLines.length) {
+        // Modern quoteLines structure
+        console.log(`[showInstrumentReport] Doc ${docIdx} using quoteLines (${quoteLines.length} items)`);
+
+        quoteLines.forEach((line, lineIdx) => {
+          const lineCode = line.code || line.catalogCode || "NO_CODE";
+          console.log(`[showInstrumentReport] Doc ${docIdx} Line ${lineIdx}: code="${lineCode}"`);
+
+          if (lineCode !== selectedCatalog) {
+            console.log(`[showInstrumentReport] Doc ${docIdx} Line ${lineIdx}: SKIP (not matching catalog)`);
+            return; // skip
+          }
+
+          docMatchCount++;
+          console.log(`[showInstrumentReport] ✓ Doc ${docIdx} Line ${lineIdx}: MATCH! Processing row...`);
+
+          const instIdx = line.instrumentIndex;
+          let inst = {};
+
+          if (instIdx != null && instIdx >= 0) {
+            inst = instruments[instIdx] || {};
+          }
+
+          if (!inst || !inst.instrumentName) {
+            inst =
+              instruments.find(
+                i =>
+                  i.catalog === lineCode || i.instrumentCode === lineCode
+              ) || {};
+          }
+
+          const label = inst.instrumentName || inst.name || "—";
+          const qty = line.quantity || 1;
+          const price =
+            line.unitPriceOverride != null
+              ? line.unitPriceOverride
+              : inst.unitPrice || 0;
+
+          const rowData = {
+            rowNum: rowNum,
+            quoteNo,
+            hospitalName,
+            label,
+            quoteDate,
+            qty,
+            price,
+            sourceDoc: docIdx,
+            sourceLine: lineIdx
+          };
+
+          processedRows.push(rowData);
+
+          console.log(`[showInstrumentReport] Appending Row ${rowNum}:`, rowData);
+
+          appendRow(tbody, rowNum++, quoteNo, hospitalName, label, quoteDate, qty, price);
+        });
+      } else if (items.length) {
+        // Legacy items structure
+        console.log(`[showInstrumentReport] Doc ${docIdx} using items (${items.length} items)`);
+
+        items.forEach((item, itemIdx) => {
+          const itemCode = item.code || item.catalog || item.catalogCode || "NO_CODE";
+          console.log(`[showInstrumentReport] Doc ${docIdx} Item ${itemIdx}: code="${itemCode}"`);
+
+          if (itemCode !== selectedCatalog) {
+            console.log(`[showInstrumentReport] Doc ${docIdx} Item ${itemIdx}: SKIP (not matching catalog)`);
+            return; // skip
+          }
+
+          docMatchCount++;
+          console.log(`[showInstrumentReport] ✓ Doc ${docIdx} Item ${itemIdx}: MATCH! Processing row...`);
+
+          let label = item.name || item.instrumentName || "—";
+
+          if (label === "—" && item.description) {
+            const lines = item.description.split("\n");
+            label = (lines[0] || "").trim() || "—";
+          }
+
+          const qty = item.quantity || 1;
+          const price = item.price || item.unitPrice || 0;
+
+          const rowData = {
+            rowNum: rowNum,
+            quoteNo,
+            hospitalName,
+            label,
+            quoteDate,
+            qty,
+            price,
+            sourceDoc: docIdx,
+            sourceItem: itemIdx
+          };
+
+          processedRows.push(rowData);
+
+          console.log(`[showInstrumentReport] Appending Row ${rowNum}:`, rowData);
+
+          appendRow(tbody, rowNum++, quoteNo, hospitalName, label, quoteDate, qty, price);
+        });
+      } else {
+        console.log(`[showInstrumentReport] Doc ${docIdx}: SKIP (no items or quoteLines)`);
+      }
+    });
+
+    console.log("[showInstrumentReport] ===== FINAL RESULTS =====");
+    console.log("[showInstrumentReport] Total docs processed:", docs.length);
+    console.log("[showInstrumentReport] Total matching rows appended:", rowNum - 1);
+    console.log("[showInstrumentReport] Processed rows array:", processedRows);
+    console.log("[showInstrumentReport] ========== REPORT COMPLETE ==========");
+
+  } catch (err) {
+    console.error("[showInstrumentReport] Error rendering instrument report:", err);
+  }
+}
+
 /* ========= Tab 2 – By Hospital (latest revision from Firestore) ========= */
 
 async function showHospitalReport() {
