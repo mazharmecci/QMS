@@ -153,83 +153,83 @@ export function renderQuoteBuilder() {
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    rows.push(`
-      <tr>
-        <td>${codeText}</td>
-        ${formatInstrumentCell(inst, lineIdx)}
-        <td>${qty}</td>
-        <td>
-          ₹
-          <input
-            type="text"
-            value="${moneyINR(instUnit)}"
-            style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-            onblur="unitPriceCommitted(${lineIdx}, this)"
-          />
-        </td>
-        <td>₹ ${moneyINR(instTotal)}</td>
-      </tr>
-    `);
-
-const configItems = line.configItems || [];
-if (configItems.length) {
   rows.push(`
-    <tr style="background:#00B0F0; color:#000;">
-      <td colspan="5" style="font-weight:700;">Configuration Items</td>
+    <tr>
+      <td>${codeText}</td>
+      ${formatInstrumentCell(inst, lineIdx)}
+      <td>${qty}</td>
+      <td>
+        ₹
+        <input
+          type="text"
+          value="${moneyINR(instUnit)}"
+          style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+          onblur="unitPriceCommitted(${lineIdx}, this)"
+        />
+      </td>
+      <td>₹ ${moneyINR(instTotal)}</td>
     </tr>
-  `);
-
-  configItems.forEach(item => {
-    const itemCode = String(runningItemCode).padStart(3, "0");
-    runningItemCode += 1;
-
-    const q = item.qty != null ? item.qty : "Included";
-    const upRaw = item.upInr != null ? item.upInr : "Included";
-    const tpRaw = item.tpInr != null ? item.tpInr : "Included";
-
-    const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
-    const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
-
+  `);  // ← ADD THIS MISSING CLOSING ); HERE
+  
+  const configItems = line.configItems || [];
+  if (configItems.length) {
     rows.push(`
-      <tr>
-        <td>${itemCode}</td>
-        ${formatItemCell(item)}
-        <td>${q}</td>
-        <td>${upCell}</td>
-        <td>${tpCell}</td>
+      <tr style="background:#00B0F0; color:#000;">
+        <td colspan="5" style="font-weight:700;">Configuration Items</td>
       </tr>
     `);
-  });
-}
-
-const additionalItems = line.additionalItems || [];
-if (additionalItems.length) {
-  rows.push(`
-    <tr style="background:#00B0F0; color:#000;">
-      <td colspan="5" style="font-weight:700;">Additional Items</td>
-    </tr>
-  `);
-
-  additionalItems.forEach(item => {
-    const itemCode = String(runningItemCode).padStart(3, "0");
-    runningItemCode += 1;
-
-    const qtyNum = Number(item.qty || 1);
-    const unitNum = Number(item.price || item.unitPrice || 0);
-    const totalNum = unitNum * qtyNum;
-    itemsTotal += totalNum;
-
+  
+    configItems.forEach(item => {
+      const itemCode = String(runningItemCode).padStart(3, "0");
+      runningItemCode += 1;
+  
+      const q = item.qty != null ? item.qty : "Included";
+      const upRaw = item.upInr != null ? item.upInr : "Included";
+      const tpRaw = item.tpInr != null ? item.tpInr : "Included";
+  
+      const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
+      const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
+  
+      rows.push(`
+        <tr>
+          <td>${itemCode}</td>
+          ${formatItemCell(item)}
+          <td>${q}</td>
+          <td>${upCell}</td>
+          <td>${tpCell}</td>
+        </tr>
+      `);  // ← Each push properly closed
+    });
+  }
+  
+  const additionalItems = line.additionalItems || [];
+  if (additionalItems.length) {
     rows.push(`
-      <tr>
-        <td>${itemCode}</td>
-        ${formatItemCell(item)}
-        <td>${qtyNum.toString().padStart(2, "0")}</td>
-        <td>₹ ${moneyINR(unitNum)}</td>
-        <td>₹ ${moneyINR(totalNum)}</td>
+      <tr style="background:#00B0F0; color:#000;">
+        <td colspan="5" style="font-weight:700;">Additional Items</td>
       </tr>
     `);
-  });
-}
+  
+    additionalItems.forEach(item => {
+      const itemCode = String(runningItemCode).padStart(3, "0");
+      runningItemCode += 1;
+  
+      const qtyNum = Number(item.qty || 1);
+      const unitNum = Number(item.price || item.unitPrice || 0);
+      const totalNum = unitNum * qtyNum;
+      itemsTotal += totalNum;
+  
+      rows.push(`
+        <tr>
+          <td>${itemCode}</td>
+          ${formatItemCell(item)}
+          <td>${qtyNum.toString().padStart(2, "0")}</td>
+          <td>₹ ${moneyINR(unitNum)}</td>
+          <td>₹ ${moneyINR(totalNum)}</td>
+        </tr>
+      `);  // ← Each push properly closed
+    });
+  }
 
 // Final render (your existing code)
 body.innerHTML = rows.join("");
