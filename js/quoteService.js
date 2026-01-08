@@ -64,14 +64,19 @@ export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
 
-  lines.forEach(line => {
+  (Array.isArray(lines) ? lines : []).forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
+      // Prefer per‑line override, then master price
+      const price = Number(
+        line.unitPriceOverride ?? inst.unitPrice ?? 0
+      );
+
       items.push({
         name: inst.instrumentName || inst.name || "",
         code: inst.catalog || inst.instrumentCode || "",
         type: "Instrument",
-        price: Number(inst.unitPrice || 0),
+        price,
         supplied: inst.suppliedCompleteWith || ""
       });
     }
@@ -128,7 +133,12 @@ export function buildQuoteObject(existingDoc = null) {
     ? lines.map(line => {
         const inst = instruments[line.instrumentIndex] || {};
         const qty = Number(line.quantity || 1);
-        const unitPrice = Number(inst.unitPrice || 0);
+
+        // Prefer per‑line override, then master price
+        const unitPrice = Number(
+          line.unitPriceOverride ?? inst.unitPrice ?? 0
+        );
+
         const totalPrice = qty * unitPrice;
         totalValueINR += totalPrice;
 
@@ -144,6 +154,11 @@ export function buildQuoteObject(existingDoc = null) {
           unitPrice,
           totalPrice,
           gstPercent,
+          // keep overrides in the line document as well (for clarity/history)
+          unitPriceOverride:
+            line.unitPriceOverride != null
+              ? Number(line.unitPriceOverride)
+              : null,
           configItems: Array.isArray(line.configItems) ? line.configItems : [],
           additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
         };
@@ -292,12 +307,16 @@ export async function finalizeQuote(rawArg = null) {
 
     header.status = "SUBMITTED";
 
+    // Use override price where present for summary
     let itemsTotal = 0;
     lines.forEach(line => {
       const inst = instruments[line.instrumentIndex] || null;
       if (inst) {
         const qty = Number(line.quantity || 1);
-        itemsTotal += Number(inst.unitPrice || 0) * qty;
+        const unitPrice = Number(
+          line.unitPriceOverride ?? inst.unitPrice ?? 0
+        );
+        itemsTotal += unitPrice * qty;
       }
       (line.additionalItems || []).forEach(item => {
         const qtyNum = Number(item.qty || 1);
@@ -328,7 +347,9 @@ export async function finalizeQuote(rawArg = null) {
 
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
-    const lastRev = sameQuote.length ? Math.max(...sameQuote.map(q => Number(q.revision || 1))) : 0;
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
     const nextRev = lastRev + 1;
 
     const now = new Date();
