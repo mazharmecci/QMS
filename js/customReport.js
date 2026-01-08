@@ -84,11 +84,22 @@ async function populateConfigDropdown() {
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      const configItems = data.configItems || [];
       
-      configItems.forEach(function (item) {
+      // Check top-level configItems field
+      const topLevelConfigItems = data.configItems || [];
+      topLevelConfigItems.forEach(function (item) {
         const code = item.code || item.name || null;
         if (code) configCodes[code] = true;
+      });
+
+      // Also check nested configItems in quoteLines
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const nestedConfigItems = line.configItems || [];
+        nestedConfigItems.forEach(function (item) {
+          const code = item.code || item.name || null;
+          if (code) configCodes[code] = true;
+        });
       });
     });
 
@@ -97,6 +108,7 @@ async function populateConfigDropdown() {
     });
     
     populateSelect("configSelector", "-- Select Configuration item --", configList);
+    console.log("[customReport] Config dropdown populated with", configList.length, "items");
   } catch (err) {
     console.error("[customReport] Error fetching quoteHistory for configs:", err);
   }
@@ -109,11 +121,22 @@ async function populateAdditionalDropdown() {
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      const additionalItems = data.additionalItems || [];
       
-      additionalItems.forEach(function (item) {
+      // Check top-level additionalItems field
+      const topLevelAdditionalItems = data.additionalItems || [];
+      topLevelAdditionalItems.forEach(function (item) {
         const code = item.code || item.name || null;
         if (code) additionalCodes[code] = true;
+      });
+
+      // Also check nested additionalItems in quoteLines
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const nestedAdditionalItems = line.additionalItems || [];
+        nestedAdditionalItems.forEach(function (item) {
+          const code = item.code || item.name || null;
+          if (code) additionalCodes[code] = true;
+        });
       });
     });
 
@@ -122,6 +145,7 @@ async function populateAdditionalDropdown() {
     });
     
     populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
+    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items");
   } catch (err) {
     console.error("[customReport] Error fetching quoteHistory for additionals:", err);
   }
@@ -235,7 +259,7 @@ function showHospitalReport() {
 
 /* ========= By Configuration Item report ========= */
 
-function showConfigReport() {
+async function showConfigReport() {
   const selector = document.getElementById("configSelector");
   if (!selector) {
     console.error("[customReport] #configSelector not found");
@@ -247,42 +271,52 @@ function showConfigReport() {
   const tbody = clearTbody("configReportTable");
   if (!tbody) return;
 
-  const allQuotes = getAllQuotes();
-  let rowNum = 1;
+  try {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    let rowNum = 1;
 
-  allQuotes.forEach(function (q) {
-    const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
-    const quoteDate = (q.header && q.header.quoteDate) || "—";
-    
-    // Check both nested structure and top-level configItems
-    const nestedConfigItems = [];
-    const quoteLines = q.quoteLines || q.lineItems || [];
-    quoteLines.forEach(function (line) {
-      const items = line.configItems || [];
-      nestedConfigItems.push.apply(nestedConfigItems, items);
+    snap.docs.forEach(function (doc) {
+      const data = doc.data();
+      const hospitalName = (data.header && data.header.hospitalName) || "Unknown";
+      const quoteDate = (data.header && data.header.quoteDate) || "—";
+
+      // Check top-level configItems
+      const topLevelConfigItems = data.configItems || [];
+      topLevelConfigItems.forEach(function (item) {
+        const itemCode = item.code || "";
+        const itemName = item.name || item.code || "—";
+
+        if (itemCode === selectedConfig || itemName === selectedConfig) {
+          const qty = item.qty || "Included";
+          const price = item.upInr || item.tpInr || item.price || 0;
+          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+        }
+      });
+
+      // Check nested configItems in quoteLines
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const configItems = line.configItems || [];
+        configItems.forEach(function (item) {
+          const itemCode = item.code || "";
+          const itemName = item.name || item.code || "—";
+
+          if (itemCode === selectedConfig || itemName === selectedConfig) {
+            const qty = item.qty || "Included";
+            const price = item.upInr || item.tpInr || item.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          }
+        });
+      });
     });
-
-    // Also check top-level configItems field
-    const topLevelConfigItems = q.configItems || [];
-    const allConfigItems = nestedConfigItems.concat(topLevelConfigItems);
-
-    allConfigItems.forEach(function (item) {
-      const itemCode = item.code || "";
-      const itemName = item.name || item.code || "—";
-
-      if (itemCode === selectedConfig || itemName === selectedConfig) {
-        const qty = item.qty || "Included";
-        const price = item.upInr || item.tpInr || item.price || 0;
-
-        appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-      }
-    });
-  });
+  } catch (err) {
+    console.error("[customReport] Error rendering config report:", err);
+  }
 }
 
 /* ========= By Additional Item report ========= */
 
-function showAdditionalReport() {
+async function showAdditionalReport() {
   const selector = document.getElementById("additionalSelector");
   if (!selector) {
     console.error("[customReport] #additionalSelector not found");
@@ -294,37 +328,47 @@ function showAdditionalReport() {
   const tbody = clearTbody("additionalReportTable");
   if (!tbody) return;
 
-  const allQuotes = getAllQuotes();
-  let rowNum = 1;
+  try {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    let rowNum = 1;
 
-  allQuotes.forEach(function (q) {
-    const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
-    const quoteDate = (q.header && q.header.quoteDate) || "—";
-    
-    // Check both nested structure and top-level additionalItems
-    const nestedAdditionalItems = [];
-    const quoteLines = q.quoteLines || q.lineItems || [];
-    quoteLines.forEach(function (line) {
-      const items = line.additionalItems || [];
-      nestedAdditionalItems.push.apply(nestedAdditionalItems, items);
+    snap.docs.forEach(function (doc) {
+      const data = doc.data();
+      const hospitalName = (data.header && data.header.hospitalName) || "Unknown";
+      const quoteDate = (data.header && data.header.quoteDate) || "—";
+
+      // Check top-level additionalItems
+      const topLevelAdditionalItems = data.additionalItems || [];
+      topLevelAdditionalItems.forEach(function (item) {
+        const itemCode = item.code || "";
+        const itemName = item.name || item.code || "—";
+
+        if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+          const qty = item.qty || 1;
+          const price = item.price || 0;
+          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+        }
+      });
+
+      // Check nested additionalItems in quoteLines
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const additionalItems = line.additionalItems || [];
+        additionalItems.forEach(function (item) {
+          const itemCode = item.code || "";
+          const itemName = item.name || item.code || "—";
+
+          if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+            const qty = item.qty || 1;
+            const price = item.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          }
+        });
+      });
     });
-
-    // Also check top-level additionalItems field
-    const topLevelAdditionalItems = q.additionalItems || [];
-    const allAdditionalItems = nestedAdditionalItems.concat(topLevelAdditionalItems);
-
-    allAdditionalItems.forEach(function (item) {
-      const itemCode = item.code || "";
-      const itemName = item.name || item.code || "—";
-
-      if (itemCode === selectedAdditional || itemName === selectedAdditional) {
-        const qty = item.qty || 1;
-        const price = item.price || 0;
-
-        appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-      }
-    });
-  });
+  } catch (err) {
+    console.error("[customReport] Error rendering additional report:", err);
+  }
 }
 
 /* ========= Init wiring ========= */
@@ -355,7 +399,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Wire Tab 3 – By Configuration Item
   const configBtn = document.getElementById("showConfigReportBtn");
   if (configBtn) {
-    configBtn.addEventListener("click", showConfigReport);
+    configBtn.addEventListener("click", function () {
+      showConfigReport();
+    });
   } else {
     console.error("[customReport] #showConfigReportBtn not found");
   }
@@ -363,7 +409,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Wire Tab 4 – By Additional Item
   const additionalBtn = document.getElementById("showAdditionalReportBtn");
   if (additionalBtn) {
-    additionalBtn.addEventListener("click", showAdditionalReport);
+    additionalBtn.addEventListener("click", function () {
+      showAdditionalReport();
+    });
   } else {
     console.error("[customReport] #showAdditionalReportBtn not found");
   }
