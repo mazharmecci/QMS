@@ -79,27 +79,51 @@ function populateHospitalDropdown() {
 
 async function populateConfigDropdown() {
   try {
-    const snap = await getDocs(collection(db, "configItems"));
-    const configs = buildUniqueSorted(snap.docs, function (doc) {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    const configCodes = {};
+
+    snap.docs.forEach(function (doc) {
       const data = doc.data();
-      return data.code || data.name || null;
+      const configItems = data.configItems || [];
+      
+      configItems.forEach(function (item) {
+        const code = item.code || item.name || null;
+        if (code) configCodes[code] = true;
+      });
     });
-    populateSelect("configSelector", "-- Select Configuration item --", configs);
+
+    const configList = Object.keys(configCodes).sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+    
+    populateSelect("configSelector", "-- Select Configuration item --", configList);
   } catch (err) {
-    console.error("[customReport] Error fetching configItems:", err);
+    console.error("[customReport] Error fetching quoteHistory for configs:", err);
   }
 }
 
 async function populateAdditionalDropdown() {
   try {
-    const snap = await getDocs(collection(db, "additionalItems"));
-    const additionals = buildUniqueSorted(snap.docs, function (doc) {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    const additionalCodes = {};
+
+    snap.docs.forEach(function (doc) {
       const data = doc.data();
-      return data.code || data.name || null;
+      const additionalItems = data.additionalItems || [];
+      
+      additionalItems.forEach(function (item) {
+        const code = item.code || item.name || null;
+        if (code) additionalCodes[code] = true;
+      });
     });
-    populateSelect("additionalSelector", "-- Select Additional item --", additionals);
+
+    const additionalList = Object.keys(additionalCodes).sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+    
+    populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
   } catch (err) {
-    console.error("[customReport] Error fetching additionalItems:", err);
+    console.error("[customReport] Error fetching quoteHistory for additionals:", err);
   }
 }
 
@@ -229,23 +253,29 @@ function showConfigReport() {
   allQuotes.forEach(function (q) {
     const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
     const quoteDate = (q.header && q.header.quoteDate) || "—";
+    
+    // Check both nested structure and top-level configItems
+    const nestedConfigItems = [];
     const quoteLines = q.quoteLines || q.lineItems || [];
-
     quoteLines.forEach(function (line) {
-      const configItems = line.configItems || [];
-      configItems.forEach(function (item) {
-        // Match by code field
-        const itemCode = item.code || "";
-        const itemName = item.name || item.code || "—";
-        
-        if (itemCode === selectedConfig || itemName === selectedConfig) {
-          const qty = item.qty || "Included";
-          // Config items store prices in upInr/tpInr
-          const price = item.upInr || item.tpInr || item.price || 0;
+      const items = line.configItems || [];
+      nestedConfigItems.push.apply(nestedConfigItems, items);
+    });
 
-          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-        }
-      });
+    // Also check top-level configItems field
+    const topLevelConfigItems = q.configItems || [];
+    const allConfigItems = nestedConfigItems.concat(topLevelConfigItems);
+
+    allConfigItems.forEach(function (item) {
+      const itemCode = item.code || "";
+      const itemName = item.name || item.code || "—";
+
+      if (itemCode === selectedConfig || itemName === selectedConfig) {
+        const qty = item.qty || "Included";
+        const price = item.upInr || item.tpInr || item.price || 0;
+
+        appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+      }
     });
   });
 }
@@ -270,22 +300,29 @@ function showAdditionalReport() {
   allQuotes.forEach(function (q) {
     const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
     const quoteDate = (q.header && q.header.quoteDate) || "—";
+    
+    // Check both nested structure and top-level additionalItems
+    const nestedAdditionalItems = [];
     const quoteLines = q.quoteLines || q.lineItems || [];
-
     quoteLines.forEach(function (line) {
-      const additionalItems = line.additionalItems || [];
-      additionalItems.forEach(function (item) {
-        // Match by code field
-        const itemCode = item.code || "";
-        const itemName = item.name || item.code || "—";
-        
-        if (itemCode === selectedAdditional || itemName === selectedAdditional) {
-          const qty = item.qty || 1;
-          const price = item.price || 0;
+      const items = line.additionalItems || [];
+      nestedAdditionalItems.push.apply(nestedAdditionalItems, items);
+    });
 
-          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-        }
-      });
+    // Also check top-level additionalItems field
+    const topLevelAdditionalItems = q.additionalItems || [];
+    const allAdditionalItems = nestedAdditionalItems.concat(topLevelAdditionalItems);
+
+    allAdditionalItems.forEach(function (item) {
+      const itemCode = item.code || "";
+      const itemName = item.name || item.code || "—";
+
+      if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+        const qty = item.qty || 1;
+        const price = item.price || 0;
+
+        appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+      }
     });
   });
 }
@@ -296,8 +333,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Populate all dropdowns
   populateCatalogDropdown();
   populateHospitalDropdown();
-  populateConfigDropdown();  // async – fetches from Firestore
-  populateAdditionalDropdown();  // async – fetches from Firestore
+  populateConfigDropdown();  // async – fetches from quoteHistory.configItems
+  populateAdditionalDropdown();  // async – fetches from quoteHistory.additionalItems
 
   // Wire Tab 1 – By Catalog
   const catalogBtn = document.getElementById("showCatalogReportBtn");
