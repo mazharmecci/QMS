@@ -1,4 +1,9 @@
 import { getInstrumentsMaster } from "../js/quoteService.js";
+import {
+  db,
+  collection,
+  getDocs
+} from "../js/firebase.js";
 
 /* ========= Data helpers ========= */
 
@@ -17,7 +22,6 @@ function formatINR(value) {
 
 /* ========= Dropdown helpers ========= */
 
-// Build a unique, sorted list from an array and extractor fn
 function buildUniqueSorted(list, extractor) {
   const map = {};
   list.forEach(function (item, idx) {
@@ -34,7 +38,6 @@ function buildUniqueSorted(list, extractor) {
   return keys;
 }
 
-// Populate a <select> with simple string options
 function populateSelect(selectorId, placeholder, options) {
   const el = document.getElementById(selectorId);
   if (!el) {
@@ -74,46 +77,30 @@ function populateHospitalDropdown() {
   populateSelect("hospitalSelector", "-- Select Hospital --", hospitals);
 }
 
-function populateConfigDropdown() {
-  const allQuotes = getAllQuotes();
-  const configs = {};
-
-  allQuotes.forEach(function (q) {
-    const lines = q.lineItems || [];
-    lines.forEach(function (line) {
-      const configItems = line.configItems || [];
-      configItems.forEach(function (item) {
-        const configName = item.name || item.code || "Unknown";
-        if (configName) configs[configName] = true;
-      });
+async function populateConfigDropdown() {
+  try {
+    const snap = await getDocs(collection(db, "configItems"));
+    const configs = buildUniqueSorted(snap.docs, function (doc) {
+      const data = doc.data();
+      return data.code || data.name || null;
     });
-  });
-
-  const configList = Object.keys(configs).sort(function (a, b) {
-    return a.localeCompare(b);
-  });
-  populateSelect("configSelector", "-- Select Configuration item --", configList);
+    populateSelect("configSelector", "-- Select Configuration item --", configs);
+  } catch (err) {
+    console.error("[customReport] Error fetching configItems:", err);
+  }
 }
 
-function populateAdditionalDropdown() {
-  const allQuotes = getAllQuotes();
-  const additionals = {};
-
-  allQuotes.forEach(function (q) {
-    const lines = q.lineItems || [];
-    lines.forEach(function (line) {
-      const additionalItems = line.additionalItems || [];
-      additionalItems.forEach(function (item) {
-        const addName = item.name || item.code || "Unknown";
-        if (addName) additionals[addName] = true;
-      });
+async function populateAdditionalDropdown() {
+  try {
+    const snap = await getDocs(collection(db, "additionalItems"));
+    const additionals = buildUniqueSorted(snap.docs, function (doc) {
+      const data = doc.data();
+      return data.code || data.name || null;
     });
-  });
-
-  const additionalList = Object.keys(additionals).sort(function (a, b) {
-    return a.localeCompare(b);
-  });
-  populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
+    populateSelect("additionalSelector", "-- Select Additional item --", additionals);
+  } catch (err) {
+    console.error("[customReport] Error fetching additionalItems:", err);
+  }
 }
 
 /* ========= Render helpers ========= */
@@ -247,13 +234,14 @@ function showConfigReport() {
     lines.forEach(function (line) {
       const configItems = line.configItems || [];
       configItems.forEach(function (item) {
-        const configName = item.name || item.code || "";
-        if (configName === selectedConfig) {
+        const itemCode = item.code || "";
+        if (itemCode === selectedConfig) {
+          const label = item.name || item.code || "—";
           const qty = item.qty || "Included";
           const price =
             typeof item.upInr === "number" ? item.upInr : item.price || 0;
 
-          appendRow(tbody, rowNum++, hospitalName, selectedConfig, date, qty, price);
+          appendRow(tbody, rowNum++, hospitalName, label, date, qty, price);
         }
       });
     });
@@ -285,12 +273,13 @@ function showAdditionalReport() {
     lines.forEach(function (line) {
       const additionalItems = line.additionalItems || [];
       additionalItems.forEach(function (item) {
-        const addName = item.name || item.code || "";
-        if (addName === selectedAdditional) {
+        const itemCode = item.code || "";
+        if (itemCode === selectedAdditional) {
+          const label = item.name || item.code || "—";
           const qty = item.qty || 1;
           const price = item.price || 0;
 
-          appendRow(tbody, rowNum++, hospitalName, selectedAdditional, date, qty, price);
+          appendRow(tbody, rowNum++, hospitalName, label, date, qty, price);
         }
       });
     });
@@ -303,8 +292,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Populate all dropdowns
   populateCatalogDropdown();
   populateHospitalDropdown();
-  populateConfigDropdown();
-  populateAdditionalDropdown();
+  populateConfigDropdown();  // async – fetches from Firestore
+  populateAdditionalDropdown();  // async – fetches from Firestore
 
   // Wire Tab 1 – By Catalog
   const catalogBtn = document.getElementById("showCatalogReportBtn");
