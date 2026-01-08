@@ -322,24 +322,52 @@ function showCatalogReport() {
 /* ========= Tab 2 – By Hospital (latest revision from Firestore) ========= */
 
 async function showHospitalReport() {
+  console.log("[showHospitalReport] Function called");
+
   const selector = document.getElementById("hospitalSelector");
   if (!selector) {
     console.error("[customReport] #hospitalSelector not found");
     return;
   }
+  
   const selectedHospital = selector.value;
-  if (!selectedHospital) return;
+  console.log("[showHospitalReport] selectedHospital:", selectedHospital);
+  
+  if (!selectedHospital) {
+    console.warn("[showHospitalReport] No hospital selected");
+    return;
+  }
 
   const tbody = clearTbody("hospitalReportTable");
-  if (!tbody) return;
+  if (!tbody) {
+    console.error("[showHospitalReport] tbody not found");
+    return;
+  }
 
   const instruments = getInstrumentsMaster();
+  console.log("[showHospitalReport] instruments master count:", instruments.length);
+  
   let rowNum = 1;
 
   try {
-    const docs = await getLatestHistoryDocs(); // each quoteNo only newest revision [web:60][web:64]
+    console.log("[showHospitalReport] Fetching latest history docs...");
+    const docs = await getLatestHistoryDocs();
+    console.log("[showHospitalReport] Total latest docs:", docs.length);
 
-    docs.forEach(data => {
+    if (!docs.length) {
+      console.warn("[showHospitalReport] No docs returned from getLatestHistoryDocs");
+      return;
+    }
+
+    docs.forEach((data, docIdx) => {
+      console.log(`[showHospitalReport] Processing doc ${docIdx}:`, {
+        quoteNo: data.quoteNo,
+        hasHospital: !!data.hospital,
+        hasHeader: !!data.header,
+        hasQuoteLines: Array.isArray(data.quoteLines),
+        quoteLineCount: (data.quoteLines || []).length
+      });
+
       const headerHospital =
         data.header && data.header.hospitalName
           ? data.header.hospitalName
@@ -350,7 +378,14 @@ async function showHospitalReport() {
           ? data.hospital
           : (data.hospital && data.hospital.name) || headerHospital) || "";
 
-      if (hospitalName !== selectedHospital) return;
+      console.log(`[showHospitalReport] Doc ${docIdx} hospitalName:`, hospitalName, "selectedHospital:", selectedHospital, "match:", hospitalName === selectedHospital);
+
+      if (hospitalName !== selectedHospital) {
+        console.log(`[showHospitalReport] Doc ${docIdx} hospital doesn't match, skipping`);
+        return;
+      }
+
+      console.log(`[showHospitalReport] Doc ${docIdx} matches! Processing lines...`);
 
       const quoteNo = data.quoteNo || (data.header && data.header.quoteNo) || "—";
       const quoteDate =
@@ -359,20 +394,31 @@ async function showHospitalReport() {
       const items = data.items || [];
       const quoteLines = data.quoteLines || [];
 
+      console.log(`[showHospitalReport] Doc ${docIdx}:`, { quoteNo, quoteDate, itemCount: items.length, quoteLineCount: quoteLines.length });
+
       if (quoteLines.length) {
-        // Preferred modern structure
-        quoteLines.forEach(line => {
+        console.log(`[showHospitalReport] Doc ${docIdx} has quoteLines, processing...`);
+
+        quoteLines.forEach((line, lineIdx) => {
           const instIdx = line.instrumentIndex;
+          console.log(`[showHospitalReport] Line ${lineIdx}:`, { instIdx, qty: line.quantity, price: line.unitPriceOverride });
+
           let inst = {};
 
-          if (Array.isArray(data.instruments) && instIdx != null) {
-            inst = data.instruments[instIdx] || {};
+          if (instIdx != null && instIdx >= 0) {
+            inst = instruments[instIdx] || {};
+            console.log(`[showHospitalReport] Found inst at index ${instIdx}:`, { name: inst.instrumentName, catalog: inst.catalog });
           } else {
+            console.log(`[showHospitalReport] instIdx invalid (${instIdx}), searching by code...`);
+          }
+
+          if (!inst || !inst.instrumentName) {
             inst =
               instruments.find(
                 i =>
                   i.catalog === line.code || i.instrumentCode === line.code
               ) || {};
+            console.log(`[showHospitalReport] Fallback search result:`, { name: inst.instrumentName, code: line.code });
           }
 
           const label = inst.instrumentName || inst.name || "—";
@@ -381,6 +427,8 @@ async function showHospitalReport() {
             line.unitPriceOverride != null
               ? line.unitPriceOverride
               : inst.unitPrice || 0;
+
+          console.log(`[showHospitalReport] Appending row: label="${label}", qty=${qty}, price=${price}`);
 
           appendRow(
             tbody,
@@ -394,8 +442,9 @@ async function showHospitalReport() {
           );
         });
       } else if (items.length) {
-        // Legacy structure fallback
-        items.forEach(item => {
+        console.log(`[showHospitalReport] Doc ${docIdx} has legacy items, processing...`);
+
+        items.forEach((item, itemIdx) => {
           const inst =
             instruments.find(
               i => i.catalog === item.code || i.instrumentCode === item.code
@@ -403,6 +452,8 @@ async function showHospitalReport() {
           const label = inst.instrumentName || inst.name || "—";
           const qty = item.quantity || 1;
           const price = item.price || 0;
+
+          console.log(`[showHospitalReport] Item ${itemIdx}: label="${label}", code="${item.code}"`);
 
           appendRow(
             tbody,
@@ -415,8 +466,12 @@ async function showHospitalReport() {
             price
           );
         });
+      } else {
+        console.warn(`[showHospitalReport] Doc ${docIdx} has no quoteLines or items`);
       }
     });
+
+    console.log("[showHospitalReport] Completed. Total rows appended:", rowNum - 1);
   } catch (err) {
     console.error("[customReport] Error rendering hospital report:", err);
   }
