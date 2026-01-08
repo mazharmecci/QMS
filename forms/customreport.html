@@ -167,7 +167,7 @@
       border-collapse: collapse;
       border-spacing: 0;
       margin-top: 0.5rem;
-      table-layout: fixed; /* required for nth-child widths to work consistently */
+      table-layout: fixed; /* keep predictable column widths */
     }
     
     .instrument-report-table th,
@@ -175,6 +175,22 @@
       padding: 0.5rem 0.6rem;
       font-size: 0.85rem;
       text-align: left;
+    
+      /* allow wrapping */
+      white-space: normal;
+      overflow-wrap: break-word;  /* modern */
+      word-wrap: break-word;      /* legacy alias */
+      /* remove clipping */
+      overflow: visible;
+      text-overflow: clip;
+    }
+    
+    /* If you still want truncation (ellipsis) for some *narrow* columns
+       like Quote No. or Date, you can override just those: */
+    .instrument-report-table th:nth-child(2),
+    .instrument-report-table td:nth-child(2),
+    .instrument-report-table th:nth-child(5),
+    .instrument-report-table td:nth-child(5) {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -193,13 +209,13 @@
       width: 14%;
     }
     
-    /* Hospital */
+    /* Hospital (allow wrapping) */
     .instrument-report-table th:nth-child(3),
     .instrument-report-table td:nth-child(3) {
       width: 18%;
     }
     
-    /* Instrument / Item Name (flex column) */
+    /* Instrument / Item Name (allow wrapping) */
     .instrument-report-table th:nth-child(4),
     .instrument-report-table td:nth-child(4) {
       width: 32%;
@@ -225,7 +241,7 @@
       width: 14%;
       text-align: right;
     }
-
+    
     .instrument-report-table th {
       background: rgba(241, 245, 249, 0.98);
       color: #4b5563;
