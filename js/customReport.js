@@ -228,20 +228,22 @@ function showConfigReport() {
 
   allQuotes.forEach(function (q) {
     const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
-    const date = (q.header && q.header.quoteDate) || "—";
-    const lines = q.lineItems || [];
+    const quoteDate = (q.header && q.header.quoteDate) || "—";
+    const quoteLines = q.quoteLines || q.lineItems || [];
 
-    lines.forEach(function (line) {
+    quoteLines.forEach(function (line) {
       const configItems = line.configItems || [];
       configItems.forEach(function (item) {
+        // Match by code field
         const itemCode = item.code || "";
-        if (itemCode === selectedConfig) {
-          const label = item.name || item.code || "—";
+        const itemName = item.name || item.code || "—";
+        
+        if (itemCode === selectedConfig || itemName === selectedConfig) {
           const qty = item.qty || "Included";
-          const price =
-            typeof item.upInr === "number" ? item.upInr : item.price || 0;
+          // Config items store prices in upInr/tpInr
+          const price = item.upInr || item.tpInr || item.price || 0;
 
-          appendRow(tbody, rowNum++, hospitalName, label, date, qty, price);
+          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
         }
       });
     });
@@ -267,19 +269,21 @@ function showAdditionalReport() {
 
   allQuotes.forEach(function (q) {
     const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
-    const date = (q.header && q.header.quoteDate) || "—";
-    const lines = q.lineItems || [];
+    const quoteDate = (q.header && q.header.quoteDate) || "—";
+    const quoteLines = q.quoteLines || q.lineItems || [];
 
-    lines.forEach(function (line) {
+    quoteLines.forEach(function (line) {
       const additionalItems = line.additionalItems || [];
       additionalItems.forEach(function (item) {
+        // Match by code field
         const itemCode = item.code || "";
-        if (itemCode === selectedAdditional) {
-          const label = item.name || item.code || "—";
+        const itemName = item.name || item.code || "—";
+        
+        if (itemCode === selectedAdditional || itemName === selectedAdditional) {
           const qty = item.qty || 1;
           const price = item.price || 0;
 
-          appendRow(tbody, rowNum++, hospitalName, label, date, qty, price);
+          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
         }
       });
     });
