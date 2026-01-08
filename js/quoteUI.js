@@ -162,25 +162,18 @@ export function renderQuoteBuilder() {
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    // main instrument row   
+    // main instrument row
     rows.push(`
       <tr>
         <td>${codeText}</td>
         ${formatInstrumentCell(inst, lineIdx)}
         <td>${qty}</td>
-        <td>
-          ₹
-          <input
-            type="text"
-            value="${moneyINR(instUnit)}"
-            style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-            onblur="unitPriceCommitted(${lineIdx}, this)"
-          />
-        </td>
+        <td>₹ ${moneyINR(instUnit)}</td>
         <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
     `);
-    
+
+    // configuration items
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -188,18 +181,18 @@ export function renderQuoteBuilder() {
           <td colspan="5" style="font-weight:700;">Configuration Items</td>
         </tr>
       `);
-    
+
       configItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
-    
+
         const q = item.qty != null ? item.qty : "Included";
         const upRaw = item.upInr != null ? item.upInr : "Included";
         const tpRaw = item.tpInr != null ? item.tpInr : "Included";
-    
+
         const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
         const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
-    
+
         rows.push(`
           <tr>
             <td>${itemCode}</td>
@@ -211,7 +204,8 @@ export function renderQuoteBuilder() {
         `);
       });
     }
-    
+
+    // additional items
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -219,16 +213,16 @@ export function renderQuoteBuilder() {
           <td colspan="5" style="font-weight:700;">Additional Items</td>
         </tr>
       `);
-    
+
       additionalItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
-    
+
         const qtyNum = Number(item.qty || 1);
         const unitNum = Number(item.price || item.unitPrice || 0);
         const totalNum = unitNum * qtyNum;
         itemsTotal += totalNum;
-    
+
         rows.push(`
           <tr>
             <td>${itemCode}</td>
@@ -240,9 +234,11 @@ export function renderQuoteBuilder() {
         `);
       });
     }
-    
-    body.innerHTML = rows.join("");
-    renderSummaryRows(itemsTotal);
+  });
+
+  body.innerHTML = rows.join("");
+  renderSummaryRows(itemsTotal);
+}
 
 /* ========= Summary rows / discount ========= */
 
