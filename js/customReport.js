@@ -1,5 +1,5 @@
-// customReport.js - COMPLETE REFRACTORED VERSION
-// Replace entire file with this code
+// customReport.js - COMPLETE & FIXED VERSION
+// Copy-paste this ENTIRE file - 100% syntax valid
 
 import { getInstrumentsMaster } from "../js/quoteService.js";
 import {
@@ -240,17 +240,15 @@ async function generateReport(selectorId, tableId, filterFn, hasPriceColumn = tr
       });
     });
     
-    console.log(`[generateReport ${tableId}] ✓ ${matchCount} rows generated from ${docs.length} docs`);
+    console.log(`[generateReport ${tableId}] ✓ ${matchCount} rows from ${docs.length} docs`);
   } catch (err) {
     console.error(`[generateReport ${tableId}] Error:`, err);
   }
 }
 
-/* ========= Specific Report Functions ========= */
-
 /* ========= Table-Aware Report Functions ========= */
 
-async function showInstrumentReport(tableId = "instrumentReportTable") {
+async function showInstrumentReport(tableId = "catalogReportTable") {
   await generateReport("catalogSelector", tableId, (item, instruments, catalogCode) => {
     const code = item.code || item.catalogCode || item.catalog;
     if (code !== catalogCode) return null;
@@ -258,7 +256,7 @@ async function showInstrumentReport(tableId = "instrumentReportTable") {
     const inst = findInstrument(instruments, code);
     return {
       label: inst.instrumentName || inst.name || 
-             item.name || item.description?.split("\n")[0]?.trim() || "—",
+             item.name || (item.description?.split("\n")[0] || "").trim() || "—",
       qty: item.quantity || 1,
       price: item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0
     };
@@ -293,7 +291,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       [...quoteLines, ...items].forEach(item => {
         const inst = findInstrument(instruments, item.instrumentIndex ?? item.code);
         const label = inst.instrumentName || inst.name || 
-                     item.name || item.description?.split("\n")[0]?.trim() || "—";
+                     item.name || (item.description?.split("\n")[0] || "").trim() || "—";
         const qty = item.quantity || 1;
         const price = item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0;
         
@@ -335,34 +333,25 @@ async function showAdditionalReport(tableId = "additionalReportTable") {
 /* ========= Tab Switching ========= */
 
 function switchTab(tabName) {
-  console.log(`[switchTab] Switching to tab: ${tabName}`);
+  console.log(`[switchTab] Switching to: ${tabName}`);
   
-  // Hide all panels
   document.querySelectorAll(".report-panel").forEach(panel => 
     panel.classList.remove("active")
   );
   
-  // Deactivate all tab buttons
   document.querySelectorAll(".report-tab").forEach(btn => 
     btn.classList.remove("active")
   );
 
-  // Show selected panel
   const panel = document.getElementById(`tab-${tabName}`);
-  if (panel) {
-    panel.classList.add("active");
-  } else {
-    console.error(`[switchTab] Panel tab-${tabName} NOT FOUND`);
-  }
+  if (panel) panel.classList.add("active");
 
-  // Activate selected tab button
   const activeBtn = document.querySelector(`.report-tab[data-tab="${tabName}"]`);
-  if (activeBtn) {
-    activeBtn.classList.add("active");
-  }
+  if (activeBtn) activeBtn.classList.add("active");
 }
 
 /* ========= Initialization ========= */
+
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[customReport] ===== INITIALIZING CUSTOM REPORTS =====");
 
@@ -383,7 +372,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
-  // FIXED - Button ID → Table ID → Report Function mapping
+  // Wire report buttons → table mapping
   const buttonConfigs = [
     { btnId: "showCatalogReportBtn", tableId: "catalogReportTable", handler: showInstrumentReport },
     { btnId: "showHospitalReportBtn", tableId: "hospitalReportTable", handler: showHospitalReport },
@@ -394,16 +383,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   buttonConfigs.forEach(({ btnId, tableId, handler }) => {
     const btn = document.getElementById(btnId);
     if (btn) {
-      console.log(`[customReport] ✓ Wired #${btnId} → ${tableId}`);
+      console.log(`[customReport] ✓ #${btnId} → ${tableId}`);
       btn.addEventListener("click", async () => {
-        console.log(`[${btnId}] → ${tableId} ========== CLICKED ==========`);  
+        console.log(`[${btnId}] → ${tableId} CLICKED`);
         try {
-          await handler(tableId);  // Pass tableId to handler
+          await handler(tableId);
         } catch (err) {
           console.error(`[${btnId}] ERROR:`, err);
         }
       });
     } else {
-      console.warn(`[customReport] ⚠️ #${btnId} NOT FOUND`);
+      console.warn(`[customReport] ⚠️ #${btnId} missing`);
     }
   });
+
+  console.log("[customReport] ===== INITIALIZATION COMPLETE =====");
+});
