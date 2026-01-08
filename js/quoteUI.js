@@ -161,13 +161,10 @@ export function renderQuoteBuilder() {
         <td>
           ₹
           <input
-            type="number"
-            min="0"
-            step="0.01"
-            value="${instUnit}"
-            style="width:100px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-            oninput="unitPriceChanged(${lineIdx}, this.value)"
-            onblur="unitPriceCommitted(${lineIdx}, this.value)"
+            type="text"
+            value="${moneyINR(instUnit)}"
+            style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+            onblur="unitPriceCommitted(${lineIdx}, this)"
           />
         </td>
         <td>₹ ${moneyINR(instTotal)}</td>
@@ -230,7 +227,7 @@ export function renderQuoteBuilder() {
             <td>₹ ${moneyINR(unitNum)}</td>
             <td>₹ ${moneyINR(totalNum)}</td>
           </tr>
-        `);
+        `;
       });
     }
   });
@@ -372,10 +369,6 @@ export function discountInputCommitted() {
 
 /* ========= Unit price override handling ========= */
 
-export function unitPriceChanged(lineIdx, value) {
-  // draft lives only in the input; commit on blur
-}
-
 export function unitPriceCommitted(lineIdx, inputEl) {
   const header = getQuoteHeaderRaw();
   if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
@@ -383,9 +376,9 @@ export function unitPriceCommitted(lineIdx, inputEl) {
   const cleaned = String(inputEl.value).replace(/[^\d.]/g, "");
   const num = cleaned === "" ? null : Number(cleaned);
 
-  if (num != null && !isNaN(num)) {
+  if (num != null && !Number.isNaN(num)) {
     header.quoteLines[lineIdx].unitPriceOverride = num;
-    inputEl.value = moneyINR(num); // show 23,78,423.00
+    inputEl.value = moneyINR(num);
   } else {
     delete header.quoteLines[lineIdx].unitPriceOverride;
     inputEl.value = moneyINR(0);
@@ -1024,5 +1017,4 @@ window.removeItemFromModal = removeItemFromModal;
 window.discountInputChanged = discountInputChanged;
 window.discountInputCommitted = discountInputCommitted;
 window.addMasterItemToLine = addMasterItemToLine;
-window.unitPriceChanged = unitPriceChanged;
 window.unitPriceCommitted = unitPriceCommitted;
