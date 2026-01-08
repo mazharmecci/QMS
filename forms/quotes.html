@@ -850,513 +850,625 @@ table.quote-table .cat-sub strong {
     </div>
   </header>
 
-<!-- ========= Instruments modals ========= -->
-<div id="instrumentModalOverlay" class="overlay" style="display:none;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Instruments for this Quote</h3>
-      <button type="button" class="overlay-close" id="closeInstrumentModalBtn">✕</button>
-    </div>
-    <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-size:12px; color:#64748b;">Manage all instruments included in this quotation.</div>
-      <button type="button" class="btn-quote" id="openInstrumentPickerBtn">+ Add Instrument</button>
-    </div>
-    <div class="overlay-body">
-      <table style="width:100%; border-collapse:collapse; font-size:12px;">
-        <thead>
-          <tr style="background:#e5f0ff;">
-            <th>Item#</th><th>Cat / Material No.</th><th>Description</th>
-            <th>Qty</th><th>Unit Price (INR)</th><th>Total Price (INR)</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="instrumentModalList"></tbody>
-      </table>
-    </div>
-    <div style="margin-top:0.75rem; text-align:right;">
-      <button type="button" class="btn-quote btn-quote-secondary" id="closeInstrumentModalFooterBtn">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Instrument picker -->
-<div id="instrumentPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Select Instrument from Master</h3>
-      <button type="button" class="overlay-close" id="closeInstrumentPickerBtn">✕</button>
-    </div>
-    <div id="instrumentPickerList" class="overlay-body"></div>
-  </div>
-</div>
-
-<!-- Shared item modal -->
-<div id="itemModalOverlay">
-  <div id="itemModal">
-    <div class="item-modal-header">
-      <div>
-        <h3 id="itemModalTitle" class="item-modal-title">Additional Items for this Instrument</h3>
-        <span id="itemModalTag" class="item-modal-tag">Additional</span>
+  <!-- ========= Instruments modals ========= -->
+  <!-- Instruments for this quote (list) -->
+  <div id="instrumentModalOverlay" class="overlay" style="display:none;">
+    <div class="overlay-panel">
+      <div class="overlay-header">
+        <h3 class="overlay-title">Instruments for this Quote</h3>
+        <button type="button" class="overlay-close" id="closeInstrumentModalBtn">✕</button>
       </div>
-      <button type="button" id="closeItemModalBtn" class="item-modal-close">×</button>
+      <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:12px; color:#64748b;">Manage all instruments included in this quotation.</div>
+        <button type="button" class="btn-quote" id="openInstrumentPickerBtn">+ Add Instrument</button>
+      </div>
+      <div class="overlay-body">
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#e5f0ff;">
+              <th>Item#</th>
+              <th>Cat / Material No.</th>
+              <th>Description</th>
+              <th>Qty</th>
+              <th>Unit Price (INR)</th>
+              <th>Total Price (INR)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="instrumentModalList"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:0.75rem; text-align:right;">
+        <button type="button" class="btn-quote btn-quote-secondary" id="closeInstrumentModalFooterBtn">Close</button>
+      </div>
     </div>
+  </div>
 
-    <form id="itemModalForm">
-      <input type="hidden" id="itemModalType" value="config" />
-      <input type="hidden" id="itemLineIndex" value="" />
+  <!-- Edit instrument (qty + price) -->
+  <div id="editInstrumentOverlay" class="overlay" style="display:none; z-index:2200;">
+    <div class="overlay-panel" style="max-width:400px;">
+      <div class="overlay-header">
+        <h3 class="overlay-title">Edit Instrument</h3>
+        <button type="button" class="overlay-close" id="closeEditInstrumentBtn">✕</button>
+      </div>
+      <div class="overlay-body" style="padding:1.5rem;">
+        <input type="hidden" id="editInstrumentIndex" value="-1" />
 
-      <div class="item-modal-grid">
+        <div class="item-modal-field" style="margin-bottom:0.75rem;">
+          <label for="editQuantity">Quantity</label>
+          <input
+            id="editQuantity"
+            type="number"
+            min="1"
+            value="1"
+            style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.375rem;"
+          />
+        </div>
+
         <div class="item-modal-field">
-          <label for="itemCodeInput">Item code</label>
-          <input id="itemCodeInput" type="text" placeholder="Auto if left blank" />
-        </div>
-
-        <div class="item-modal-field" id="itemQtyGroup">
-          <label for="itemQty">Quantity</label>
-          <input id="itemQty" type="text" placeholder="1 or Included" />
-        </div>
-
-        <div class="item-modal-field" id="itemPriceGroup">
-          <label for="itemPrice">Unit price (INR)</label>
-          <input id="itemPrice" type="text" placeholder="0.00" />
-        </div>
-
-        <div class="item-modal-field item-modal-details">
-          <label for="itemDetails">Details</label>
-          <textarea id="itemDetails" rows="4" placeholder="First line: main item name
-Next lines: brief description"></textarea>
+          <label for="editUnitPrice">Unit Price (INR)</label>
+          <input
+            id="editUnitPrice"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.375rem;"
+          />
         </div>
       </div>
-
-      <div class="item-modal-footer">
-        <div id="itemModalHint" style="font-size:11px;color:#64748b;">
-          No items yet for this instrument.
-        </div>
-        <div class="item-modal-actions">
-          <button type="button" id="cancelItemModalBtn" class="btn-item-secondary">Cancel</button>
-          <button type="submit" class="btn-item-primary">Save item</button>
-        </div>
+      <div style="padding:0 1.5rem 1.5rem; text-align:right; border-top:1px solid #e5e7eb;">
+        <button type="button" class="btn-quote btn-quote-secondary" id="cancelEditInstrumentBtn">Cancel</button>
+        <button type="button" class="btn-quote" id="saveEditInstrumentBtn">Save Changes</button>
       </div>
-    </form>
-
-    <div id="itemModalList" class="item-modal-list"></div>
-  </div>
-</div>
-
-<!-- Config/Additional pickers -->
-<div id="configPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Select Configuration Item</h3>
-      <button type="button" class="overlay-close" id="closeConfigPickerBtn">✕</button>
-    </div>
-    <div id="configPickerList" class="overlay-body">
-      <div style="font-size:12px; color:#64748b;">Configuration item master is not implemented yet.</div>
     </div>
   </div>
-</div>
 
-<div id="additionalPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Select Additional Item</h3>
-      <button type="button" class="overlay-close" id="closeAdditionalPickerBtn">✕</button>
-    </div>
-    <div id="additionalPickerList" class="overlay-body">
-      <div style="font-size:12px; color:#64748b;">Additional item master is not implemented yet.</div>
+  <!-- Instrument picker -->
+  <div id="instrumentPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+    <div class="overlay-panel">
+      <div class="overlay-header">
+        <h3 class="overlay-title">Select Instrument from Master</h3>
+        <button type="button" class="overlay-close" id="closeInstrumentPickerBtn">✕</button>
+      </div>
+      <div id="instrumentPickerList" class="overlay-body"></div>
     </div>
   </div>
-</div>
 
-<!-- Main container -->
-<div class="container">
-  <table class="print-frame">
-    <thead class="print-header">
-      <tr>
-        <td>
-          <div class="quote-header">
-            <div class="quote-header-body">
-              <!-- Left side: company + hospital -->
-              <div class="quote-left">
-                <div class="company-box">
-                  <p>
-                    <strong>ISTOS Medical Pvt Ltd.</strong>
-                    BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
-                    Yelachenahalli, Bangalore-560062
-                  </p>
+  <!-- Shared item modal -->
+  <div id="itemModalOverlay">
+    <div id="itemModal">
+      <div class="item-modal-header">
+        <div>
+          <h3 id="itemModalTitle" class="item-modal-title">Additional Items for this Instrument</h3>
+          <span id="itemModalTag" class="item-modal-tag">Additional</span>
+        </div>
+        <button type="button" id="closeItemModalBtn" class="item-modal-close">×</button>
+      </div>
+
+      <form id="itemModalForm">
+        <input type="hidden" id="itemModalType" value="config" />
+        <input type="hidden" id="itemLineIndex" value="" />
+
+        <div class="item-modal-grid">
+          <div class="item-modal-field">
+            <label for="itemCodeInput">Item code</label>
+            <input id="itemCodeInput" type="text" placeholder="Auto if left blank" />
+          </div>
+
+          <div class="item-modal-field" id="itemQtyGroup">
+            <label for="itemQty">Quantity</label>
+            <input id="itemQty" type="text" placeholder="1 or Included" />
+          </div>
+
+          <div class="item-modal-field" id="itemPriceGroup">
+            <label for="itemPrice">Unit price (INR)</label>
+            <input id="itemPrice" type="text" placeholder="0.00" />
+          </div>
+
+          <div class="item-modal-field item-modal-details">
+            <label for="itemDetails">Details</label>
+            <textarea
+              id="itemDetails"
+              rows="4"
+              placeholder="First line: main item name
+Next lines: brief description"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="item-modal-footer">
+          <div id="itemModalHint" style="font-size:11px;color:#64748b;">
+            No items yet for this instrument.
+          </div>
+          <div class="item-modal-actions">
+            <button type="button" id="cancelItemModalBtn" class="btn-item-secondary">Cancel</button>
+            <button type="submit" class="btn-item-primary">Save item</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="itemModalList" class="item-modal-list"></div>
+    </div>
+  </div>
+
+  <!-- Config/Additional pickers -->
+  <div id="configPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+    <div class="overlay-panel">
+      <div class="overlay-header">
+        <h3 class="overlay-title">Select Configuration Item</h3>
+        <button type="button" class="overlay-close" id="closeConfigPickerBtn">✕</button>
+      </div>
+      <div id="configPickerList" class="overlay-body">
+        <div style="font-size:12px; color:#64748b;">Configuration item master is not implemented yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="additionalPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+    <div class="overlay-panel">
+      <div class="overlay-header">
+        <h3 class="overlay-title">Select Additional Item</h3>
+        <button type="button" class="overlay-close" id="closeAdditionalPickerBtn">✕</button>
+      </div>
+      <div id="additionalPickerList" class="overlay-body">
+        <div style="font-size:12px; color:#64748b;">Additional item master is not implemented yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main container -->
+  <div class="container">
+    <table class="print-frame">
+      <thead class="print-header">
+        <tr>
+          <td>
+            <div class="quote-header">
+              <div class="quote-header-body">
+                <!-- Left side: company + hospital -->
+                <div class="quote-left">
+                  <div class="company-box">
+                    <p>
+                      <strong>ISTOS Medical Pvt Ltd.</strong>
+                      BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
+                      Yelachenahalli, Bangalore-560062
+                    </p>
+                  </div>
+
+                  <div class="hospital-box">
+                    <p>
+                      <strong>To:</strong><br>
+                      <span id="toHospitalNameLine"></span><br>
+                      <span id="toHospitalAddressLine1"></span><br>
+                      <span id="toHospitalAddressLine2"></span>
+                    </p>
+                  </div>
+
+                  <div class="attn-box">
+                    <span><strong>Kind Attn:</strong></span>
+                    <span id="toAttn"></span>
+                  </div>
                 </div>
 
-                <div class="hospital-box">
-                  <p>
-                    <strong>To:</strong><br>
-                    <span id="toHospitalNameLine"></span><br>
-                    <span id="toHospitalAddressLine1"></span><br>
-                    <span id="toHospitalAddressLine2"></span>
-                  </p>
-                </div>
+                <!-- Right side: logo + meta -->
+                <div class="quote-right">
+                  <div class="quote-logo-wrap">
+                    <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+                  </div>
 
-                <div class="attn-box">
-                  <span><strong>Kind Attn:</strong></span>
-                  <span id="toAttn"></span>
-                </div>
-              </div>
+                  <div class="sales-box">
+                    <div class="sales-title">SALES QUOTATION</div>
+                  </div>
 
-              <!-- Right side: logo + meta -->
-              <div class="quote-right">
-                <div class="quote-logo-wrap">
-                  <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
-                </div>
+                  <div class="quote-meta-grid">
+                    <div class="label">Quote No.</div>
+                    <div class="value" id="metaQuoteNo"></div>
 
-                <div class="sales-box">
-                  <div class="sales-title">SALES QUOTATION</div>
-                </div>
+                    <div class="label right">Quotation Date</div>
+                    <div class="value value-small right" id="metaQuoteDate"></div>
 
-                <div class="quote-meta-grid">
-                  <div class="label">Quote No.</div>
-                  <div class="value" id="metaQuoteNo"></div>
+                    <div class="label">Your Reference</div>
+                    <div class="value value-small" id="metaYourRef"></div>
 
-                  <div class="label right">Quotation Date</div>
-                  <div class="value value-small right" id="metaQuoteDate"></div>
+                    <div class="label right">Ref Date</div>
+                    <div class="value value-small right" id="metaRefDate"></div>
 
-                  <div class="label">Your Reference</div>
-                  <div class="value value-small" id="metaYourRef"></div>
+                    <div class="label">Your Contact Person</div>
+                    <div class="value value-small" id="metaContactPerson"></div>
 
-                  <div class="label right">Ref Date</div>
-                  <div class="value value-small right" id="metaRefDate"></div>
+                    <div class="label right">Handphone</div>
+                    <div class="value value-small right" id="metaPhone"></div>
 
-                  <div class="label">Your Contact Person</div>
-                  <div class="value value-small" id="metaContactPerson"></div>
+                    <div class="label">Email</div>
+                    <div class="value value-small" id="metaEmail"></div>
 
-                  <div class="label right">Handphone</div>
-                  <div class="value value-small right" id="metaPhone"></div>
-
-                  <div class="label">Email</div>
-                  <div class="value value-small" id="metaEmail"></div>
-
-                  <div class="label right">Office</div>
-                  <div class="value value-small right" id="metaOffice"></div>
+                    <div class="label right">Office</div>
+                    <div class="value value-small right" id="metaOffice"></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </td>
-      </tr>
-    </thead>
+          </td>
+        </tr>
+      </thead>
 
-    <tbody class="print-body">
-      <tr>
-        <td>
-          <!-- Sales note (free text) -->
-          <div id="salesNoteBlock"></div>
+      <tbody class="print-body">
+        <tr>
+          <td>
+            <!-- Sales note (free text) -->
+            <div id="salesNoteBlock"></div>
 
-          <!-- Quote builder controls (edit-only) -->
-          <div id="quoteBuilder" class="no-print">
-            <h3>Quote Builder</h3>
-            <div class="quote-actions">
-              <button type="button" class="btn-quote" id="openInstrumentModalBtn">
-                Manage Instruments
-              </button>
+            <!-- Quote builder controls (edit-only) -->
+            <div id="quoteBuilder" class="no-print">
+              <h3>Quote Builder</h3>
+              <div class="quote-actions">
+                <button type="button" class="btn-quote" id="openInstrumentModalBtn">
+                  Manage Instruments
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- Line items + summary -->
-          <table id="quoteSummaryTable" class="quote-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Cat / Material No.<br>Description</th>
-                <th>Quantity</th>
-                <th>Unit Price (INR)</th>
-                <th>Total Price (INR)</th>
-              </tr>
-            </thead>
-            <tbody id="quoteBuilderBody"></tbody>
-            <tbody id="quoteSummaryBody"></tbody>
-          </table>
+            <!-- Line items + summary -->
+            <table id="quoteSummaryTable" class="quote-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Cat / Material No.<br>Description</th>
+                  <th>Quantity</th>
+                  <th>Unit Price (INR)</th>
+                  <th>Total Price (INR)</th>
+                </tr>
+              </thead>
+              <tbody id="quoteBuilderBody"></tbody>
+              <tbody id="quoteSummaryBody"></tbody>
+            </table>
 
-          <!-- Terms & Conditions -->
-          <div id="termsBlock">
-            <h2>Terms and Conditions of Sale</h2>
-            <div id="termsTextBlock" contenteditable="true"></div>
-          </div>
-        </td>
-      </tr>
-    </tbody>
+            <!-- Terms & Conditions -->
+            <div id="termsBlock">
+              <h2>Terms and Conditions of Sale</h2>
+              <div id="termsTextBlock" contenteditable="true"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
 
-    <tfoot class="print-footer">
-      <tr>
-        <td>
-          <div class="footer">
-            ISTOS Medical Private Limited<br>
-            # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
-            Bikasipura Main Road, Yelachenahalli,<br>
-            BANGALORE, Karnataka, INDIA 560 062<br>
-            P: +91 80 2686 0607 | F: +91 80 2686 0668 |
-            E: talktous@istos.in | www.istosmedical.com<br>
-            CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
-          </div>
-        </td>
-      </tr>
-    </tfoot>
-  </table>
+      <tfoot class="print-footer">
+        <tr>
+          <td>
+            <div class="footer">
+              ISTOS Medical Private Limited<br>
+              # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
+              Bikasipura Main Road, Yelachenahalli,<br>
+              BANGALORE, Karnataka, INDIA 560 062<br>
+              P: +91 80 2686 0607 | F: +91 80 2686 0668 |
+              E: talktous@istos.in | www.istosmedical.com<br>
+              CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
 
-<!-- Finalize actions (edit-only) -->
-<div class="no-print" style="margin-top:1.5rem; text-align:right;">
-  <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
-    ✅ Finalize &amp; Save to History
-  </button>
-</div>
+    <!-- Finalize actions (edit-only) -->
+    <div class="no-print" style="margin-top:1.5rem; text-align:right;">
+      <button type="button" class="btn-finalize" id="finalizeQuoteBtn">
+        ✅ Finalize &amp; Save to History
+      </button>
+    </div>
+  </div>
 
-<script type="module">
-  import {
-    moneyINR,
-    parseDetailsText,
-    formatInstrumentCell,
-    formatItemCell
-  } from "../js/quoteUtils.js";
+  <script type="module">
+    import {
+      moneyINR,
+      parseDetailsText,
+      formatInstrumentCell,
+      formatItemCell
+    } from "../js/quoteUtils.js";
 
-  import {
-    getQuoteHeaderRaw,
-    saveQuoteHeader,
-    getInstrumentsMaster,
-    getQuoteContext,
-    validateHeader,
-    finalizeQuote,
-    buildQuoteObject
-  } from "../js/quoteService.js";
+    import {
+      getQuoteHeaderRaw,
+      saveQuoteHeader,
+      getInstrumentsMaster,
+      getQuoteContext,
+      validateHeader,
+      finalizeQuote,
+      buildQuoteObject
+    } from "../js/quoteService.js";
 
-  import {
-    populateHeader,
-    renderQuoteBuilder,
-    openInstrumentModal,
-    closeInstrumentModal,
-    openInstrumentPicker,
-    closeInstrumentPicker,
-    addInstrumentToQuote,
-    openConfigModal,
-    openAdditionalModal,
-    openItemModal,
-    closeItemModal,
-    renderItemModalList,
-    editItemFromModal,
-    removeItemFromModal,
-    saveItemFromModal,
-    addMasterItemToLine
-  } from "../js/quoteUI.js";
+    import {
+      populateHeader,
+      renderQuoteBuilder,
+      openInstrumentModal,
+      closeInstrumentModal,
+      openInstrumentPicker,
+      closeInstrumentPicker,
+      addInstrumentToQuote,
+      openConfigModal,
+      openAdditionalModal,
+      openItemModal,
+      closeItemModal,
+      renderItemModalList,
+      editItemFromModal,
+      removeItemFromModal,
+      saveItemFromModal,
+      addMasterItemToLine,
+      renderInstrumentModalList
+    } from "../js/quoteUI.js";
 
-  import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
+    import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
 
-  let currentQuoteDocId = null;
+    let currentQuoteDocId = null;
 
-  function getQueryParam(name) {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(name);
-  }
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
 
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-    if (!docData || typeof docData !== "object") return;
-    if (docId) currentQuoteDocId = docId;
+    function toDateInputValue(d) {
+      if (!d) return "";
+      const date = d instanceof Date ? d : new Date(d.seconds ? d.seconds * 1000 : d);
+      if (Number.isNaN(date.getTime())) return "";
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
 
-    const hosp = docData.hospital || {};
+    function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+      if (!docData || typeof docData !== "object") return;
+      if (docId) currentQuoteDocId = docId;
 
-    const header = {
-      quoteNo: docData.quoteNo || "",
-      quoteDate: toDateInputValue(docData.quoteDate),
-      hospitalName: hosp.name || "",
-      hospitalAddress: hosp.address || "",
-      contactPerson: hosp.contactPerson || "",
-      contactEmail: hosp.email || "",
-      contactPhone: hosp.phone || "",
-      officePhone: hosp.officePhone || "",
-      yourReference: docData.yourReference || "",
-      refDate: toDateInputValue(docData.refDate),
-      kindAttn: hosp.kindAttn || "",
-      salesNote: docData.salesNote || "",
-      termsHtml: docData.termsHtml || "",
-      termsText: docData.termsText || "",
-      discount: Number(docData.discount || 0),
-      status: docData.status || "Submitted",
-      quoteLines: []
-    };
+      const hosp = docData.hospital || {};
 
-    const instruments = getInstrumentsMaster();
-    const items = Array.isArray(docData.items) ? docData.items : [];
-
-    console.log("[hydrateLocalFromFirestoreDoc] items length:", items.length);
-
-    const quoteLines = items.map(item => {
-      const code = item.instrumentCode || item.code || "";
-      const name = item.instrumentName || item.name || "";
-
-      let idx = instruments.findIndex(inst =>
-        inst.instrumentCode === code ||
-        inst.catalog === code ||
-        inst.instrumentName === name ||
-        inst.name === name
-      );
-
-      if (idx < 0) {
-        console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
-        idx = 0;
-      }
-
-      return {
-        lineType: "instrument",
-        instrumentIndex: idx,
-        quantity: item.quantity || 1,
-        configItems: item.configItems || [],
-        additionalItems: item.additionalItems || []
+      const header = {
+        quoteNo: docData.quoteNo || "",
+        quoteDate: toDateInputValue(docData.quoteDate),
+        hospitalName: hosp.name || "",
+        hospitalAddress: hosp.address || "",
+        contactPerson: hosp.contactPerson || "",
+        contactEmail: hosp.email || "",
+        contactPhone: hosp.phone || "",
+        officePhone: hosp.officePhone || "",
+        yourReference: docData.yourReference || "",
+        refDate: toDateInputValue(docData.refDate),
+        kindAttn: hosp.kindAttn || "",
+        salesNote: docData.salesNote || "",
+        termsHtml: docData.termsHtml || "",
+        termsText: docData.termsText || "",
+        discount: Number(docData.discount || 0),
+        status: docData.status || "Submitted",
+        quoteLines: []
       };
-    });
 
-    header.quoteLines = quoteLines;
-    saveQuoteHeader(header);
-  }
+      const instruments = getInstrumentsMaster();
+      const items = Array.isArray(docData.items) ? docData.items : [];
 
-  async function loadQuoteFromFirestoreIfNeeded() {
-    const quoteId = getQueryParam("id");
-    if (quoteId) {
-      try {
-        console.log("[quotes.html] Loading quote from Firestore for id:", quoteId);
-        const ref = doc(db, "quoteHistory", quoteId);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
-        } else {
-          console.warn("No quoteHistory document for id", quoteId);
+      console.log("[hydrateLocalFromFirestoreDoc] items length:", items.length);
+
+      const quoteLines = items.map(item => {
+        const code = item.instrumentCode || item.code || "";
+        const name = item.instrumentName || item.name || "";
+
+        let idx = instruments.findIndex(inst =>
+          inst.instrumentCode === code ||
+          inst.catalog === code ||
+          inst.instrumentName === name ||
+          inst.name === name
+        );
+
+        if (idx < 0) {
+          console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
+          idx = 0;
         }
-      } catch (err) {
-        console.error("Error loading quote from Firestore:", err);
-      }
-      return;
-    }
 
-    if (currentQuoteDocId) {
-      console.log("[quotes.html] Editing Firestore quote:", currentQuoteDocId);
-    } else {
-      console.log("[quotes.html] Using existing local header (no Firestore id).");
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    console.log("[quotes.html] DOMContentLoaded");
-
-    await loadQuoteFromFirestoreIfNeeded();
-    populateHeader();
-    renderQuoteBuilder();
-
-    // ✅ Sync terms block to header
-    const termsEl = document.getElementById("termsTextBlock");
-    if (termsEl) {
-      const syncTermsToHeader = () => {
-        const header = getQuoteHeaderRaw();
-        header.termsHtml = termsEl.innerHTML;
-        header.termsText = termsEl.innerText || "";
-        saveQuoteHeader(header);
-        console.log("[terms] Synced termsHtml length:", header.termsHtml.length);
-      };
-      ["input", "blur"].forEach(evt => termsEl.addEventListener(evt, syncTermsToHeader));
-    }
-
-    // ===== Go back handler =====
-    function goBack() {
-      location.href = "/index.html";
-    }
-
-    // ✅ Wire back button
-    document.getElementById("backBtn")?.addEventListener("click", goBack);
-
-    // ✅ Logout button → sign out
-    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.href = "https://qms.istosmedical.com/login.html";
-      } catch (err) {
-        console.error("Failed to sign out", err);
-        alert("Could not log out. Please try again.");
-      }
-    });
-
-    // ✅ Modal bindings
-    const modalBindings = [
-      ["openInstrumentModalBtn", openInstrumentModal],
-      ["closeInstrumentModalBtn", closeInstrumentModal],
-      ["closeInstrumentModalFooterBtn", closeInstrumentModal],
-      ["openInstrumentPickerBtn", openInstrumentPicker],
-      ["closeInstrumentPickerBtn", closeInstrumentPicker],
-      ["closeItemModalBtn", closeItemModal],
-      ["cancelItemModalBtn", closeItemModal]
-    ];
-    modalBindings.forEach(([id, handler]) => {
-      document.getElementById(id)?.addEventListener("click", handler);
-    });
-
-    // ✅ Item modal form
-    document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
-
-    // ✅ Overlay closers
-    const overlayClosers = {
-      closeConfigPickerBtn: "configPickerOverlay",
-      closeAdditionalPickerBtn: "additionalPickerOverlay"
-    };
-    Object.entries(overlayClosers).forEach(([btnId, overlayId]) => {
-      document.getElementById(btnId)?.addEventListener("click", () => {
-        const el = document.getElementById(overlayId);
-        if (el) el.style.display = "none";
+        return {
+          lineType: "instrument",
+          instrumentIndex: idx,
+          quantity: item.quantity || 1,
+          unitPriceOverride: item.unitPriceOverride || null,
+          configItems: item.configItems || [],
+          additionalItems: item.additionalItems || []
+        };
       });
-    });
 
-    // ✅ Finalize button → SUBMITTED (debounced)
-    const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-    if (finalizeBtn) {
-      let lastClickTime = 0;
-      finalizeBtn.addEventListener("click", async () => {
-        const now = Date.now();
-        if (now - lastClickTime < 3000) {
-          console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
-          return;
-        }
-        lastClickTime = now;
-
-        finalizeBtn.disabled = true;
-        console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
-        try {
-          await finalizeQuote(currentQuoteDocId);
-        } finally {
-          finalizeBtn.disabled = false;
-        }
-      });
+      header.quoteLines = quoteLines;
+      saveQuoteHeader(header);
     }
 
-    // ✅ Next buttons → APPROVED + MINOR
-    const nextButtons = document.querySelectorAll(".btn-next");
-    nextButtons.forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const docId = btn.getAttribute("data-doc-id");
-        if (!docId) {
-          console.warn("[Next button] Missing data-doc-id");
-          return;
-        }
-        console.log("[quotes.html] Next button clicked for docId:", docId);
+    async function loadQuoteFromFirestoreIfNeeded() {
+      const quoteId = getQueryParam("id");
+      if (quoteId) {
         try {
-          await approveQuoteRevision(docId);
+          console.log("[quotes.html] Loading quote from Firestore for id:", quoteId);
+          const ref = doc(db, "quoteHistory", quoteId);
+          const snap = await getDoc(ref);
+          if (snap.exists()) {
+            hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
+          } else {
+            console.warn("No quoteHistory document for id", quoteId);
+          }
         } catch (err) {
-          console.error("[quotes.html] Error approving quote:", err);
-          alert("Failed to approve quote. Please try again.");
+          console.error("Error loading quote from Firestore:", err);
+        }
+        return;
+      }
+
+      if (currentQuoteDocId) {
+        console.log("[quotes.html] Editing Firestore quote:", currentQuoteDocId);
+      } else {
+        console.log("[quotes.html] Using existing local header (no Firestore id).");
+      }
+    }
+
+    // Edit instrument helpers (qty + price)
+    function openEditInstrument(index) {
+      const header = getQuoteHeaderRaw();
+      const line = header.quoteLines[index];
+      if (!line) return;
+
+      document.getElementById("editInstrumentIndex").value = index;
+      document.getElementById("editQuantity").value = line.quantity || 1;
+
+      const instruments = getInstrumentsMaster();
+      const instPrice = instruments[line.instrumentIndex]?.unitPrice || 0;
+      document.getElementById("editUnitPrice").value =
+        line.unitPriceOverride ?? instPrice ?? 0;
+
+      document.getElementById("editInstrumentOverlay").style.display = "flex";
+    }
+
+    function closeEditInstrument() {
+      const el = document.getElementById("editInstrumentOverlay");
+      if (el) el.style.display = "none";
+    }
+
+    function saveEditInstrument() {
+      const index = parseInt(document.getElementById("editInstrumentIndex").value, 10);
+      const header = getQuoteHeaderRaw();
+      const line = header.quoteLines[index];
+      if (!line) return;
+
+      const newQty = Number(document.getElementById("editQuantity").value) || 1;
+      const newPrice = Number(document.getElementById("editUnitPrice").value) || 0;
+
+      line.quantity = newQty;
+      line.unitPriceOverride = newPrice > 0 ? newPrice : null;
+
+      saveQuoteHeader(header);
+      renderQuoteBuilder();
+      renderInstrumentModalList();
+      closeEditInstrument();
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      console.log("[quotes.html] DOMContentLoaded");
+
+      await loadQuoteFromFirestoreIfNeeded();
+      populateHeader();
+      renderQuoteBuilder();
+
+      // Sync terms block to header
+      const termsEl = document.getElementById("termsTextBlock");
+      if (termsEl) {
+        const syncTermsToHeader = () => {
+          const header = getQuoteHeaderRaw();
+          header.termsHtml = termsEl.innerHTML;
+          header.termsText = termsEl.innerText || "";
+          saveQuoteHeader(header);
+          console.log("[terms] Synced termsHtml length:", header.termsHtml.length);
+        };
+        ["input", "blur"].forEach(evt => termsEl.addEventListener(evt, syncTermsToHeader));
+      }
+
+      // Go back handler
+      function goBack() {
+        location.href = "/index.html";
+      }
+
+      document.getElementById("backBtn")?.addEventListener("click", goBack);
+
+      // Logout
+      document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+        try {
+          await signOut(auth);
+          window.location.href = "https://qms.istosmedical.com/login.html";
+        } catch (err) {
+          console.error("Failed to sign out", err);
+          alert("Could not log out. Please try again.");
         }
       });
+
+      // Modal bindings
+      const modalBindings = [
+        ["openInstrumentModalBtn", openInstrumentModal],
+        ["closeInstrumentModalBtn", closeInstrumentModal],
+        ["closeInstrumentModalFooterBtn", closeInstrumentModal],
+        ["openInstrumentPickerBtn", openInstrumentPicker],
+        ["closeInstrumentPickerBtn", closeInstrumentPicker],
+        ["closeItemModalBtn", closeItemModal],
+        ["cancelItemModalBtn", closeItemModal]
+      ];
+      modalBindings.forEach(([id, handler]) => {
+        document.getElementById(id)?.addEventListener("click", handler);
+      });
+
+      // Edit-instrument modal bindings
+      [
+        ["closeEditInstrumentBtn", closeEditInstrument],
+        ["cancelEditInstrumentBtn", closeEditInstrument],
+        ["saveEditInstrumentBtn", saveEditInstrument]
+      ].forEach(([id, handler]) => {
+        document.getElementById(id)?.addEventListener("click", handler);
+      });
+
+      // Item modal form
+      document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+
+      // Overlay closers
+      const overlayClosers = {
+        closeConfigPickerBtn: "configPickerOverlay",
+        closeAdditionalPickerBtn: "additionalPickerOverlay"
+      };
+      Object.entries(overlayClosers).forEach(([btnId, overlayId]) => {
+        document.getElementById(btnId)?.addEventListener("click", () => {
+          const el = document.getElementById(overlayId);
+          if (el) el.style.display = "none";
+        });
+      });
+
+      // Finalize button
+      const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+      if (finalizeBtn) {
+        let lastClickTime = 0;
+        finalizeBtn.addEventListener("click", async () => {
+          const now = Date.now();
+          if (now - lastClickTime < 3000) {
+            console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
+            return;
+          }
+          lastClickTime = now;
+
+          finalizeBtn.disabled = true;
+          console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
+          try {
+            await finalizeQuote(currentQuoteDocId);
+          } finally {
+            finalizeBtn.disabled = false;
+          }
+        });
+      }
+
+      // Next buttons (if any)
+      const nextButtons = document.querySelectorAll(".btn-next");
+      nextButtons.forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const docId = btn.getAttribute("data-doc-id");
+          if (!docId) {
+            console.warn("[Next button] Missing data-doc-id");
+            return;
+          }
+          console.log("[quotes.html] Next button clicked for docId:", docId);
+          try {
+            await approveQuoteRevision(docId);
+          } catch (err) {
+            console.error("[quotes.html] Error approving quote:", err);
+            alert("Failed to approve quote. Please try again.");
+          }
+        });
+      });
     });
-  });
 
-  // Expose only if inline HTML still uses onclick
-  window.openConfigModal = openConfigModal;
-  window.openAdditionalModal = openAdditionalModal;
-  window.openItemModal = openItemModal;
-  window.editItemFromModal = editItemFromModal;
-  window.removeItemFromModal = removeItemFromModal;
-  window.addInstrumentToQuote = addInstrumentToQuote;
-  window.addMasterItemToLine = addMasterItemToLine;
-</script>
-
-
+    // Global hooks for inline handlers
+    window.openConfigModal = openConfigModal;
+    window.openAdditionalModal = openAdditionalModal;
+    window.openItemModal = openItemModal;
+    window.editItemFromModal = editItemFromModal;
+    window.removeItemFromModal = removeItemFromModal;
+    window.addInstrumentToQuote = addInstrumentToQuote;
+    window.addMasterItemToLine = addMasterItemToLine;
+    window.openEditInstrument = openEditInstrument;
+    window.closeEditInstrument = closeEditInstrument;
+    window.saveEditInstrument = saveEditInstrument;
+  </script>
 </body>
 </html>
