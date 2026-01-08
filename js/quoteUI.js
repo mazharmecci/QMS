@@ -13,9 +13,7 @@ import {
   saveQuoteHeader,
   getInstrumentsMaster,
   getQuoteContext,
-  validateHeader,
-  finalizeQuote,
-  buildQuoteObject
+  validateHeader
 } from "./quoteService.js";
 
 import {
@@ -33,13 +31,11 @@ let masterItemsLoaded = false;
 async function loadMasterItemsOnce() {
   if (masterItemsLoaded) return;
 
-  // Load configItems
   const cfgSnap = await getDocs(collection(db, "configItems"));
   masterConfigItems = cfgSnap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(it => it.isActive !== false);
 
-  // Load additionalItems
   const addSnap = await getDocs(collection(db, "additionalItems"));
   masterAdditionalItems = addSnap.docs
     .map(d => ({ id: d.id, ...d.data() }))
@@ -53,84 +49,77 @@ export function populateHeader() {
   const header = getQuoteHeaderRaw();
   if (!validateHeader(header)) return;
 
-  const getTextEl = id => document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
-  getTextEl("metaQuoteNo").textContent = header.quoteNo || "";
-  getTextEl("metaQuoteDate").textContent = header.quoteDate || "";
-  getTextEl("metaYourRef").textContent = header.yourReference || "";
-  getTextEl("metaRefDate").textContent = header.refDate || "";
-  getTextEl("metaContactPerson").textContent = header.contactPerson || "";
-  getTextEl("metaPhone").textContent = header.contactPhone || "";
-  getTextEl("metaEmail").textContent = header.contactEmail || "";
-  getTextEl("metaOffice").textContent = header.officePhone || "";
-  getTextEl("toHospitalNameLine").textContent =
+  $("metaQuoteNo").textContent = header.quoteNo || "";
+  $("metaQuoteDate").textContent = header.quoteDate || "";
+  $("metaYourRef").textContent = header.yourReference || "";
+  $("metaRefDate").textContent = header.refDate || "";
+  $("metaContactPerson").textContent = header.contactPerson || "";
+  $("metaPhone").textContent = header.contactPhone || "";
+  $("metaEmail").textContent = header.contactEmail || "";
+  $("metaOffice").textContent = header.officePhone || "";
+  $("toHospitalNameLine").textContent =
     header.hospitalName || "Hospital / Client Name";
 
   const addressLines = (header.hospitalAddress || "").split(",").map(l => l.trim());
-  getTextEl("toHospitalAddressLine1").textContent = addressLines[0] || "";
-  getTextEl("toHospitalAddressLine2").textContent = addressLines.slice(1).join(", ") || "";
+  $("toHospitalAddressLine1").textContent = addressLines[0] || "";
+  $("toHospitalAddressLine2").textContent = addressLines.slice(1).join(", ") || "";
 
-  getTextEl("toAttn").textContent = header.kindAttn || "Attention";
+  $("toAttn").textContent = header.kindAttn || "Attention";
 
-  const noteEl = getTextEl("salesNoteBlock");
-  if (noteEl && header.salesNote) {
-    noteEl.textContent = header.salesNote;
+  const noteEl = $("salesNoteBlock");
+  if (noteEl && header.salesNote) noteEl.textContent = header.salesNote;
+
+  const termsEl = $("termsTextBlock");
+  if (!termsEl) return;
+
+  const htmlStored =
+    header.termsHtml && header.termsHtml.trim().length
+      ? header.termsHtml.trim()
+      : null;
+
+  const textStored =
+    header.termsText && header.termsText.trim().length
+      ? header.termsText.trim()
+      : null;
+
+  if (htmlStored) {
+    console.log("[populateHeader] Rendering stored termsHtml");
+    termsEl.innerHTML = htmlStored;
+    return;
   }
 
-  // Single editable/read-only terms block
-  const termsEl = getTextEl("termsTextBlock");
-  if (termsEl) {
-    const htmlStored =
-      header.termsHtml && header.termsHtml.trim().length
-        ? header.termsHtml.trim()
-        : null;
+  if (textStored) {
+    console.log("[populateHeader] Rendering stored termsText as paragraphs");
+    const text = textStored.replace(/\r\n/g, "\n");
+    const blocks = text
+      .split(/\n\s*\n/)
+      .map(b => b.trim())
+      .filter(Boolean);
 
-    const textStored =
-      header.termsText && header.termsText.trim().length
-        ? header.termsText.trim()
-        : null;
+    const html = blocks
+      .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
+      .join("");
 
-    // 1) Preferred: stored HTML (from Firestore)
-    if (htmlStored) {
-      console.log("[populateHeader] Rendering stored termsHtml");
-      termsEl.innerHTML = htmlStored;
-      return;
-    }
-
-    // 2) Fallback: stored plain text
-    if (textStored) {
-      console.log("[populateHeader] Rendering stored termsText as paragraphs");
-
-      const text = textStored.replace(/\r\n/g, "\n");
-      const blocks = text
-        .split(/\n\s*\n/)
-        .map(b => b.trim())
-        .filter(Boolean);
-
-      const html = blocks
-        .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
-        .join("");
-
-      termsEl.innerHTML = html;
-      return;
-    }
-
-    // 3) Fallback template when nothing stored yet
-    const warrantyText =
-      header.termsWarrantyText ||
-      "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
-
-    const signerName = header.termsSignerName || "Naushad";
-
-    const html = `
-      <div class="terms-section">
-        <p><strong>Warranty:</strong> ${warrantyText}</p>
-        <div class="quote-sender-highlight">${signerName}</div>
-      </div>
-    `;
-    console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
     termsEl.innerHTML = html;
+    return;
   }
+
+  const warrantyText =
+    header.termsWarrantyText ||
+    "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+
+  const signerName = header.termsSignerName || "Naushad";
+
+  const html = `
+    <div class="terms-section">
+      <p><strong>Warranty:</strong> ${warrantyText}</p>
+      <div class="quote-sender-highlight">${signerName}</div>
+    </div>
+  `;
+  console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
+  termsEl.innerHTML = html;
 }
 
 /* ========= Quote builder (with config/additional) ========= */
@@ -158,14 +147,12 @@ export function renderQuoteBuilder() {
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
-    // Prefer override unit price if present
     const instUnit = Number(
       line.unitPriceOverride ?? inst.unitPrice ?? 0
     );
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-    // main instrument row: quantity + editable unit price
     rows.push(`
       <tr>
         <td>${codeText}</td>
@@ -187,7 +174,6 @@ export function renderQuoteBuilder() {
       </tr>
     `);
 
-    // configuration items
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -219,7 +205,6 @@ export function renderQuoteBuilder() {
       });
     }
 
-    // additional items
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -349,6 +334,7 @@ export function updateDiscountVisibility(discountValue) {
 }
 
 /* ========= Discount Handling ========= */
+
 let discountDraft = null;
 
 export function discountInputChanged(val) {
@@ -387,7 +373,7 @@ export function discountInputCommitted() {
 /* ========= Unit price override handling ========= */
 
 export function unitPriceChanged(lineIdx, value) {
-  // just keep draft in input; final handling on blur
+  // draft lives only in the input; commit on blur
 }
 
 export function unitPriceCommitted(lineIdx, value) {
@@ -400,13 +386,10 @@ export function unitPriceCommitted(lineIdx, value) {
   if (num != null && !isNaN(num)) {
     header.quoteLines[lineIdx].unitPriceOverride = num;
   } else {
-    // if cleared, remove override so master price is used
     delete header.quoteLines[lineIdx].unitPriceOverride;
   }
 
   saveQuoteHeader(header);
-
-  // re-render with new prices and totals
   renderQuoteBuilder();
   renderInstrumentModalList();
 }
@@ -427,6 +410,8 @@ export function closeInstrumentModal() {
 
 export function renderInstrumentModalList() {
   const listEl = document.getElementById("instrumentModalList");
+  if (!listEl) return;
+
   const { instruments, lines } = getQuoteContext();
 
   if (!lines.length) {
@@ -443,12 +428,13 @@ export function renderInstrumentModalList() {
   (Array.isArray(lines) ? lines : []).forEach((line, idx) => {
     const inst = instruments[line.instrumentIndex] || {};
     const itemNo = String(idx + 1).padStart(2, "0");
-    const code   = inst.catalog || inst.instrumentCode || "";
-    const name   = inst.instrumentName || inst.name || "Unnamed Instrument";
-    const desc   = inst.description || inst.longDescription || "";
-    const shortDesc = desc.replace(/\s+/g, " ").slice(0, 80) + (desc.length > 80 ? "…" : "");
+    const code = inst.catalog || inst.instrumentCode || "";
+    const name = inst.instrumentName || inst.name || "Unnamed Instrument";
+    const desc = inst.description || inst.longDescription || "";
+    const shortDesc =
+      desc.length > 80 ? desc.replace(/\s+/g, " ").slice(0, 80) + "…" : desc;
 
-    const qty  = Number(line.quantity || 1);
+    const qty = Number(line.quantity || 1);
     const unit = Number(
       line.unitPriceOverride ?? inst.unitPrice ?? 0
     );
@@ -466,8 +452,18 @@ export function renderInstrumentModalList() {
         <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(unit)}</td>
         <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0; text-align:right;">${moneyINR(total)}</td>
         <td style="padding:0.3rem 0.4rem; border:1px solid #e2e8f0;">
-          <button type="button" class="btn-quote" style="font-size:11px; padding:0.2rem 0.6rem; margin-right:0.25rem;" onclick="editInstrumentLine(${idx})">Edit</button>
-          <button type="button" class="btn-quote btn-quote-secondary" style="font-size:11px; padding:0.2rem 0.6rem;" onclick="removeInstrumentLine(${idx})">Remove</button>
+          <button type="button"
+                  class="btn-quote"
+                  style="font-size:11px; padding:0.2rem 0.6rem; margin-right:0.25rem;"
+                  onclick="openEditInstrument(${idx})">
+            Edit
+          </button>
+          <button type="button"
+                  class="btn-quote btn-quote-secondary"
+                  style="font-size:11px; padding:0.2rem 0.6rem;"
+                  onclick="removeInstrumentLine(${idx})">
+            Remove
+          </button>
         </td>
       </tr>
     `;
@@ -485,19 +481,58 @@ export function removeInstrumentLine(idx) {
   renderInstrumentModalList();
 }
 
-export function editInstrumentLine(idx) {
-  const { header } = getQuoteContext();
+/* ========= Edit Instrument Modal (qty + price) ========= */
+
+export function openEditInstrument(idx) {
+  const header = getQuoteHeaderRaw();
+  const line = Array.isArray(header.quoteLines) ? header.quoteLines[idx] : null;
+  if (!line) return;
+
+  const instruments = getInstrumentsMaster();
+  const inst = instruments[line.instrumentIndex] || {};
+  const instPrice = Number(inst.unitPrice || 0);
+
+  const editIdxEl = document.getElementById("editInstrumentIndex");
+  const qtyEl = document.getElementById("editQuantity");
+  const priceEl = document.getElementById("editUnitPrice");
+  const overlay = document.getElementById("editInstrumentOverlay");
+
+  if (!editIdxEl || !qtyEl || !priceEl || !overlay) return;
+
+  editIdxEl.value = String(idx);
+  qtyEl.value = line.quantity || 1;
+  priceEl.value = line.unitPriceOverride ?? instPrice ?? 0;
+
+  overlay.style.display = "flex";
+}
+
+export function closeEditInstrument() {
+  const overlay = document.getElementById("editInstrumentOverlay");
+  if (overlay) overlay.style.display = "none";
+}
+
+export function saveEditInstrument() {
+  const editIdxEl = document.getElementById("editInstrumentIndex");
+  const qtyEl = document.getElementById("editQuantity");
+  const priceEl = document.getElementById("editUnitPrice");
+  if (!editIdxEl || !qtyEl || !priceEl) return;
+
+  const idx = Number(editIdxEl.value || 0);
+  const header = getQuoteHeaderRaw();
   if (!Array.isArray(header.quoteLines) || !header.quoteLines[idx]) return;
 
-  const currentQty = Number(header.quoteLines[idx].quantity || 1);
-  const newQtyStr = prompt("Update quantity for this instrument:", String(currentQty));
-  if (newQtyStr == null) return;
-  const newQty = Math.max(1, Number(newQtyStr) || 1);
+  const line = header.quoteLines[idx];
+  const newQty = Math.max(1, Number(qtyEl.value || 1));
+  const newPriceRaw = String(priceEl.value || "").replace(/[^\d.]/g, "");
+  const newPrice = Number(newPriceRaw || 0);
 
-  header.quoteLines[idx].quantity = newQty;
+  line.quantity = newQty;
+  line.unitPriceOverride = newPrice > 0 ? newPrice : null;
+
   saveQuoteHeader(header);
   renderQuoteBuilder();
   renderInstrumentModalList();
+  closeEditInstrument();
 }
 
 /* ========= Instrument Picker ========= */
@@ -519,8 +554,7 @@ export function openInstrumentPicker() {
         const code = inst.catalog || inst.instrumentCode || "";
         const desc = inst.description || inst.longDescription || "";
         const shortDesc =
-          desc.replace(/\s+/g, " ").slice(0, 160) +
-          (desc.length > 160 ? "…" : "");
+          desc.length > 160 ? desc.replace(/\s+/g, " ").slice(0, 160) + "…" : desc;
         return `
           <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
             <div style="font-size:12px; flex:1;">
@@ -528,7 +562,11 @@ export function openInstrumentPicker() {
               <div style="color:#64748b; margin-top:2px; font-size:11px;">${shortDesc}</div>
             </div>
             <div style="display:flex; align-items:center; gap:0.25rem;">
-              <input type="number" min="1" value="1" id="instQty_${idx}" style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
+              <input type="number"
+                     min="1"
+                     value="1"
+                     id="instQty_${idx}"
+                     style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
               <button type="button" class="btn-quote" onclick="addInstrumentToQuote(${idx})">Add</button>
             </div>
           </div>
@@ -556,7 +594,7 @@ export function addInstrumentToQuote(instIndex) {
     lineType: "instrument",
     instrumentIndex: instIndex,
     quantity: qty,
-    // no override initially – uses master price
+    unitPriceOverride: null,
     configItems: [],
     additionalItems: []
   });
@@ -567,6 +605,7 @@ export function addInstrumentToQuote(instIndex) {
 }
 
 /* ========= Config / Additional Modal ========= */
+
 let currentEditIndex = null;
 
 export function openConfigModal(lineIndex) {
@@ -610,10 +649,8 @@ export async function openItemModal(type, lineIndex) {
   if (priceGroup) priceGroup.style.display = type === "config" ? "none" : "block";
   if (priceEl) priceEl.value = "";
 
-  // render existing selections
   renderItemModalList(line, type);
 
-  // render master list for this instrument
   const inst = instruments[line.instrumentIndex] || {};
   const modelKey = inst.catalog || inst.instrumentCode || "";
   renderMasterItemPicker(type, modelKey, lineIndex);
@@ -923,6 +960,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderQuoteBuilder();
 
   document.getElementById("backBtn")?.addEventListener("click", goBack);
+
   document
     .getElementById("openInstrumentModalBtn")
     ?.addEventListener("click", openInstrumentModal);
@@ -961,14 +999,23 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("additionalPickerOverlay").style.display = "none";
     });
 
+  // Edit instrument modal buttons
   document
-    .getElementById("finalizeQuoteBtn")
-    ?.addEventListener("click", finalizeQuote);
+    .getElementById("closeEditInstrumentBtn")
+    ?.addEventListener("click", closeEditInstrument);
+  document
+    .getElementById("cancelEditInstrumentBtn")
+    ?.addEventListener("click", closeEditInstrument);
+  document
+    .getElementById("saveEditInstrumentBtn")
+    ?.addEventListener("click", saveEditInstrument);
 });
 
 /* ========= Expose functions for inline onclick ========= */
 window.addInstrumentToQuote = addInstrumentToQuote;
-window.editInstrumentLine = editInstrumentLine;
+window.openEditInstrument = openEditInstrument;
+window.closeEditInstrument = closeEditInstrument;
+window.saveEditInstrument = saveEditInstrument;
 window.removeInstrumentLine = removeInstrumentLine;
 window.editItemFromModal = editItemFromModal;
 window.removeItemFromModal = removeItemFromModal;
