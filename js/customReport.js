@@ -59,6 +59,45 @@ function populateSelect(selectorId, placeholder, options) {
   });
 }
 
+/* ========= Render helpers ========= */
+
+function clearTbody(tableId) {
+  const tbody = document.querySelector("#" + tableId + " tbody");
+  if (!tbody) {
+    console.error("[customReport] tbody not found for", tableId);
+    return null;
+  }
+  tbody.innerHTML = "";
+  return tbody;
+}
+
+function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
+  const tr = document.createElement("tr");
+
+  // If unitPrice is null (config table), skip the price column
+  if (unitPrice === null) {
+    tr.innerHTML = `
+      <td>${rowNum}</td>
+      <td>${hospitalName}</td>
+      <td>${label}</td>
+      <td>${date}</td>
+      <td>${qty}</td>
+    `;
+  } else {
+    // Additional table with price
+    tr.innerHTML = `
+      <td>${rowNum}</td>
+      <td>${hospitalName}</td>
+      <td>${label}</td>
+      <td>${date}</td>
+      <td>${qty}</td>
+      <td>₹ ${formatINR(unitPrice)}</td>
+    `;
+  }
+
+  tbody.appendChild(tr);
+}
+
 /* ========= Populate dropdowns ========= */
 
 function populateCatalogDropdown() {
@@ -159,241 +198,6 @@ async function populateAdditionalDropdown() {
   } catch (err) {
     console.error("[customReport] Error fetching additionals:", err);
   }
-}
-
-/* ========= Render helpers ========= */
-
-function clearTbody(tableId) {
-  const tbody = document.querySelector("#" + tableId + " tbody");
-  if (!tbody) {
-    console.error("[customReport] tbody not found for", tableId);
-    return null;
-  }
-  tbody.innerHTML = "";
-  return tbody;
-}
-
-async function populateConfigDropdown() {
-  try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
-    const configNames = {};
-
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
-
-      const items = data.items || [];
-      items.forEach(function (item) {
-        const configItems = item.configItems || [];
-        configItems.forEach(function (config) {
-          const name = config.name || config.code || null;
-          if (name) {
-            configNames[name] = true;
-          }
-        });
-      });
-
-      const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const configItems = line.configItems || [];
-        configItems.forEach(function (config) {
-          const name = config.name || config.code || null;
-          if (name) {
-            configNames[name] = true;
-          }
-        });
-      });
-    });
-
-    const configList = Object.keys(configNames).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
-
-    populateSelect("configSelector", "-- Select Configuration item --", configList);
-    console.log("[customReport] Config dropdown populated with", configList.length, "items");
-  } catch (err) {
-    console.error("[customReport] Error fetching configs:", err);
-  }
-}
-
-async function populateAdditionalDropdown() {
-  try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
-    const additionalNames = {};
-
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
-
-      const items = data.items || [];
-      items.forEach(function (item) {
-        const additionalItems = item.additionalItems || [];
-        additionalItems.forEach(function (additional) {
-          const name = additional.name || additional.code || null;
-          if (name) {
-            additionalNames[name] = true;
-          }
-        });
-      });
-
-      const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const additionalItems = line.additionalItems || [];
-        additionalItems.forEach(function (additional) {
-          const name = additional.name || additional.code || null;
-          if (name) {
-            additionalNames[name] = true;
-          }
-        });
-      });
-    });
-
-    const additionalList = Object.keys(additionalNames).sort(function (a, b) {
-      return a.localeCompare(b);
-    });
-
-    populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
-    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items");
-  } catch (err) {
-    console.error("[customReport] Error fetching additionals:", err);
-  }
-}
-
-async function showConfigReport() {
-  const selector = document.getElementById("configSelector");
-  if (!selector) {
-    console.error("[customReport] #configSelector not found");
-    return;
-  }
-  const selectedConfig = selector.value;
-  if (!selectedConfig) return;
-
-  const tbody = clearTbody("configReportTable");
-  if (!tbody) return;
-
-  try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
-    let rowNum = 1;
-
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
-      // Handle hospital as string or object
-      const hospitalName = typeof data.hospital === "string" 
-        ? data.hospital 
-        : (data.hospital && data.hospital.name) || "Unknown";
-      const quoteDate = data.quoteDate || "—";
-
-      const items = data.items || [];
-      items.forEach(function (item) {
-        const configItems = item.configItems || [];
-        configItems.forEach(function (config) {
-          const itemName = config.name || config.code || "—";
-
-          if (itemName === selectedConfig) {
-            const qty = config.qty || "Included";
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
-          }
-        });
-      });
-
-      const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const configItems = line.configItems || [];
-        configItems.forEach(function (config) {
-          const itemName = config.name || config.code || "—";
-
-          if (itemName === selectedConfig) {
-            const qty = config.qty || "Included";
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
-          }
-        });
-      });
-    });
-  } catch (err) {
-    console.error("[customReport] Error rendering config report:", err);
-  }
-}
-
-async function showAdditionalReport() {
-  const selector = document.getElementById("additionalSelector");
-  if (!selector) {
-    console.error("[customReport] #additionalSelector not found");
-    return;
-  }
-  const selectedAdditional = selector.value;
-  if (!selectedAdditional) return;
-
-  const tbody = clearTbody("additionalReportTable");
-  if (!tbody) return;
-
-  try {
-    const snap = await getDocs(collection(db, "quoteHistory"));
-    let rowNum = 1;
-
-    snap.docs.forEach(function (doc) {
-      const data = doc.data();
-      // Handle hospital as string or object
-      const hospitalName = typeof data.hospital === "string" 
-        ? data.hospital 
-        : (data.hospital && data.hospital.name) || "Unknown";
-      const quoteDate = data.quoteDate || "—";
-
-      const items = data.items || [];
-      items.forEach(function (item) {
-        const additionalItems = item.additionalItems || [];
-        additionalItems.forEach(function (additional) {
-          const itemName = additional.name || additional.code || "—";
-
-          if (itemName === selectedAdditional) {
-            const qty = additional.qty || 1;
-            const price = additional.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-          }
-        });
-      });
-
-      const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const additionalItems = line.additionalItems || [];
-        additionalItems.forEach(function (additional) {
-          const itemName = additional.name || additional.code || "—";
-
-          if (itemName === selectedAdditional) {
-            const qty = additional.qty || 1;
-            const price = additional.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-          }
-        });
-      });
-    });
-  } catch (err) {
-    console.error("[customReport] Error rendering additional report:", err);
-  }
-}
-
-function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
-  const tr = document.createElement("tr");
-  
-  // If unitPrice is null (config table), skip the price column
-  if (unitPrice === null) {
-    tr.innerHTML = `
-      <td>${rowNum}</td>
-      <td>${hospitalName}</td>
-      <td>${label}</td>
-      <td>${date}</td>
-      <td>${qty}</td>
-    `;
-  } else {
-    // Additional table with price
-    tr.innerHTML = `
-      <td>${rowNum}</td>
-      <td>${hospitalName}</td>
-      <td>${label}</td>
-      <td>${date}</td>
-      <td>${qty}</td>
-      <td>₹ ${formatINR(unitPrice)}</td>
-    `;
-  }
-  
-  tbody.appendChild(tr);
 }
 
 /* ========= By Catalog report ========= */
@@ -497,9 +301,8 @@ async function showConfigReport() {
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      // Handle hospital as string or object
-      const hospitalName = typeof data.hospital === "string" 
-        ? data.hospital 
+      const hospitalName = typeof data.hospital === "string"
+        ? data.hospital
         : (data.hospital && data.hospital.name) || "Unknown";
       const quoteDate = data.quoteDate || "—";
 
@@ -534,6 +337,8 @@ async function showConfigReport() {
   }
 }
 
+/* ========= By Additional Item report ========= */
+
 async function showAdditionalReport() {
   const selector = document.getElementById("additionalSelector");
   if (!selector) {
@@ -552,9 +357,8 @@ async function showAdditionalReport() {
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      // Handle hospital as string or object
-      const hospitalName = typeof data.hospital === "string" 
-        ? data.hospital 
+      const hospitalName = typeof data.hospital === "string"
+        ? data.hospital
         : (data.hospital && data.hospital.name) || "Unknown";
       const quoteDate = data.quoteDate || "—";
 
@@ -597,8 +401,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Populate all dropdowns
   populateCatalogDropdown();
   populateHospitalDropdown();
-  populateConfigDropdown();  // async – fetches from quoteHistory.configItems
-  populateAdditionalDropdown();  // async – fetches from quoteHistory.additionalItems
+  populateConfigDropdown();
+  populateAdditionalDropdown();
 
   // Wire Tab 1 – By Catalog
   const catalogBtn = document.getElementById("showCatalogReportBtn");
@@ -619,9 +423,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Wire Tab 3 – By Configuration Item
   const configBtn = document.getElementById("showConfigReportBtn");
   if (configBtn) {
-    configBtn.addEventListener("click", function () {
-      showConfigReport();
-    });
+    configBtn.addEventListener("click", showConfigReport);
   } else {
     console.error("[customReport] #showConfigReportBtn not found");
   }
@@ -629,9 +431,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Wire Tab 4 – By Additional Item
   const additionalBtn = document.getElementById("showAdditionalReportBtn");
   if (additionalBtn) {
-    additionalBtn.addEventListener("click", function () {
-      showAdditionalReport();
-    });
+    additionalBtn.addEventListener("click", showAdditionalReport);
   } else {
     console.error("[customReport] #showAdditionalReportBtn not found");
   }
