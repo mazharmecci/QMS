@@ -179,7 +179,7 @@ export function renderQuoteBuilder() {
         </td>
         <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
-    `);  // ← ADD THIS MISSING CLOSING ); HERE
+    `);
     
     const configItems = line.configItems || [];
     if (configItems.length) {
@@ -208,7 +208,7 @@ export function renderQuoteBuilder() {
             <td>${upCell}</td>
             <td>${tpCell}</td>
           </tr>
-        `);  // ← Each push properly closed
+        `);
       });
     }
     
@@ -237,13 +237,12 @@ export function renderQuoteBuilder() {
             <td>₹ ${moneyINR(unitNum)}</td>
             <td>₹ ${moneyINR(totalNum)}</td>
           </tr>
-        `);  // ← Each push properly closed
+        `);
       });
     }
-
-  body.innerHTML = rows.join("");
-  renderSummaryRows(itemsTotal);
-}
+    
+    body.innerHTML = rows.join("");
+    renderSummaryRows(itemsTotal);
 
 /* ========= Summary rows / discount ========= */
 
