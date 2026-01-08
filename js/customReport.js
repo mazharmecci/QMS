@@ -69,7 +69,12 @@ function appendRow(
   const tr = document.createElement("tr");
   const formattedDate = formatDate(date);
 
-  if (unitPrice === null) {
+  const tableId = tbody.closest("table")?.id || "";
+
+  // Tab 3 (configReportTable) has NO Unit Price column.
+  const hasPriceColumn = tableId !== "configReportTable";
+
+  if (hasPriceColumn) {
     tr.innerHTML = `
       <td>${rowNum}</td>
       <td>${quoteNo}</td>
@@ -77,8 +82,12 @@ function appendRow(
       <td>${label}</td>
       <td>${formattedDate}</td>
       <td>${qty}</td>
+      <td>${
+        unitPrice != null ? "₹ " + formatINR(unitPrice) : "₹ " + formatINR(0)
+      }</td>
     `;
   } else {
+    // Config tab: 6 columns only
     tr.innerHTML = `
       <td>${rowNum}</td>
       <td>${quoteNo}</td>
@@ -86,7 +95,6 @@ function appendRow(
       <td>${label}</td>
       <td>${formattedDate}</td>
       <td>${qty}</td>
-      <td>₹ ${formatINR(unitPrice)}</td>
     `;
   }
 
