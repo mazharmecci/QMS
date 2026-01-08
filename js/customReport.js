@@ -82,64 +82,40 @@ async function populateConfigDropdown() {
     const snap = await getDocs(collection(db, "quoteHistory"));
     const configCodes = {};
 
-    console.log("[customReport] Found", snap.docs.length, "documents in quoteHistory");
-
-    snap.docs.forEach(function (doc, idx) {
+    snap.docs.forEach(function (doc) {
       const data = doc.data();
-      console.log("[customReport] Document", idx, "structure:", Object.keys(data));
 
-      // Check top-level configItems field
-      const topLevelConfigItems = data.configItems || [];
-      console.log("[customReport] Document", idx, "topLevelConfigItems:", topLevelConfigItems.length);
-      
-      topLevelConfigItems.forEach(function (item) {
-        const code = item.code || item.name || null;
-        if (code) {
-          configCodes[code] = true;
-          console.log("[customReport] Added config code:", code);
-        }
-      });
-
-      // Also check nested configItems in quoteLines
-      const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const nestedConfigItems = line.configItems || [];
-        nestedConfigItems.forEach(function (item) {
-          const code = item.code || item.name || null;
+      // Check items array for configItems
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const configItems = item.configItems || [];
+        configItems.forEach(function (config) {
+          const code = config.code || config.name || null;
           if (code) {
             configCodes[code] = true;
-            console.log("[customReport] Added nested config code:", code);
+            console.log("[customReport] Found config code:", code);
+          }
+        });
+      });
+
+      // Also check quoteLines (for mixed data)
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const configItems = line.configItems || [];
+        configItems.forEach(function (config) {
+          const code = config.code || config.name || null;
+          if (code) {
+            configCodes[code] = true;
+            console.log("[customReport] Found config code from quoteLines:", code);
           }
         });
       });
     });
 
-    // If Firestore is empty, fall back to localStorage
-    if (Object.keys(configCodes).length === 0) {
-      console.log("[customReport] No configs in Firestore, checking localStorage...");
-      const allQuotes = getAllQuotes();
-      allQuotes.forEach(function (q) {
-        const topLevelConfigItems = q.configItems || [];
-        topLevelConfigItems.forEach(function (item) {
-          const code = item.code || item.name || null;
-          if (code) configCodes[code] = true;
-        });
-
-        const quoteLines = q.quoteLines || [];
-        quoteLines.forEach(function (line) {
-          const nestedConfigItems = line.configItems || [];
-          nestedConfigItems.forEach(function (item) {
-            const code = item.code || item.name || null;
-            if (code) configCodes[code] = true;
-          });
-        });
-      });
-    }
-
     const configList = Object.keys(configCodes).sort(function (a, b) {
       return a.localeCompare(b);
     });
-    
+
     populateSelect("configSelector", "-- Select Configuration item --", configList);
     console.log("[customReport] Config dropdown populated with", configList.length, "items:", configList);
   } catch (err) {
@@ -152,64 +128,40 @@ async function populateAdditionalDropdown() {
     const snap = await getDocs(collection(db, "quoteHistory"));
     const additionalCodes = {};
 
-    console.log("[customReport] Found", snap.docs.length, "documents in quoteHistory");
-
-    snap.docs.forEach(function (doc, idx) {
+    snap.docs.forEach(function (doc) {
       const data = doc.data();
-      console.log("[customReport] Document", idx, "structure:", Object.keys(data));
 
-      // Check top-level additionalItems field
-      const topLevelAdditionalItems = data.additionalItems || [];
-      console.log("[customReport] Document", idx, "topLevelAdditionalItems:", topLevelAdditionalItems.length);
-      
-      topLevelAdditionalItems.forEach(function (item) {
-        const code = item.code || item.name || null;
-        if (code) {
-          additionalCodes[code] = true;
-          console.log("[customReport] Added additional code:", code);
-        }
-      });
-
-      // Also check nested additionalItems in quoteLines
-      const quoteLines = data.quoteLines || [];
-      quoteLines.forEach(function (line) {
-        const nestedAdditionalItems = line.additionalItems || [];
-        nestedAdditionalItems.forEach(function (item) {
-          const code = item.code || item.name || null;
+      // Check items array for additionalItems
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const additionalItems = item.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const code = additional.code || additional.name || null;
           if (code) {
             additionalCodes[code] = true;
-            console.log("[customReport] Added nested additional code:", code);
+            console.log("[customReport] Found additional code:", code);
+          }
+        });
+      });
+
+      // Also check quoteLines (for mixed data)
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const additionalItems = line.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const code = additional.code || additional.name || null;
+          if (code) {
+            additionalCodes[code] = true;
+            console.log("[customReport] Found additional code from quoteLines:", code);
           }
         });
       });
     });
 
-    // If Firestore is empty, fall back to localStorage
-    if (Object.keys(additionalCodes).length === 0) {
-      console.log("[customReport] No additionals in Firestore, checking localStorage...");
-      const allQuotes = getAllQuotes();
-      allQuotes.forEach(function (q) {
-        const topLevelAdditionalItems = q.additionalItems || [];
-        topLevelAdditionalItems.forEach(function (item) {
-          const code = item.code || item.name || null;
-          if (code) additionalCodes[code] = true;
-        });
-
-        const quoteLines = q.quoteLines || [];
-        quoteLines.forEach(function (line) {
-          const nestedAdditionalItems = line.additionalItems || [];
-          nestedAdditionalItems.forEach(function (item) {
-            const code = item.code || item.name || null;
-            if (code) additionalCodes[code] = true;
-          });
-        });
-      });
-    }
-
     const additionalList = Object.keys(additionalCodes).sort(function (a, b) {
       return a.localeCompare(b);
     });
-    
+
     populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
     console.log("[customReport] Additional dropdown populated with", additionalList.length, "items:", additionalList);
   } catch (err) {
@@ -340,83 +292,44 @@ async function showConfigReport() {
   try {
     const snap = await getDocs(collection(db, "quoteHistory"));
     let rowNum = 1;
-    let found = false;
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      const hospitalName = (data.header && data.header.hospitalName) || "Unknown";
-      const quoteDate = (data.header && data.header.quoteDate) || "—";
+      const hospitalName = data.hospital || "Unknown";
+      const quoteDate = data.quoteDate || "—";
 
-      // Check top-level configItems
-      const topLevelConfigItems = data.configItems || [];
-      topLevelConfigItems.forEach(function (item) {
-        const itemCode = item.code || "";
-        const itemName = item.name || item.code || "—";
+      // Check items array
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const configItems = item.configItems || [];
+        configItems.forEach(function (config) {
+          const itemCode = config.code || "";
+          const itemName = config.name || config.code || "—";
 
-        if (itemCode === selectedConfig || itemName === selectedConfig) {
-          const qty = item.qty || "Included";
-          const price = item.upInr || item.tpInr || item.price || 0;
-          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-          found = true;
-        }
+          if (itemCode === selectedConfig || itemName === selectedConfig) {
+            const qty = config.qty || "Included";
+            const price = config.upInr || config.tpInr || config.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          }
+        });
       });
 
-      // Check nested configItems in quoteLines
+      // Check quoteLines (for mixed data)
       const quoteLines = data.quoteLines || [];
       quoteLines.forEach(function (line) {
         const configItems = line.configItems || [];
-        configItems.forEach(function (item) {
-          const itemCode = item.code || "";
-          const itemName = item.name || item.code || "—";
+        configItems.forEach(function (config) {
+          const itemCode = config.code || "";
+          const itemName = config.name || config.code || "—";
 
           if (itemCode === selectedConfig || itemName === selectedConfig) {
-            const qty = item.qty || "Included";
-            const price = item.upInr || item.tpInr || item.price || 0;
+            const qty = config.qty || "Included";
+            const price = config.upInr || config.tpInr || config.price || 0;
             appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-            found = true;
           }
         });
       });
     });
-
-    // If Firestore is empty, try localStorage
-    if (!found) {
-      console.log("[customReport] No config items in Firestore, checking localStorage...");
-      const allQuotes = getAllQuotes();
-      allQuotes.forEach(function (q) {
-        const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
-        const quoteDate = (q.header && q.header.quoteDate) || "—";
-
-        const topLevelConfigItems = q.configItems || [];
-        topLevelConfigItems.forEach(function (item) {
-          const itemCode = item.code || "";
-          const itemName = item.name || item.code || "—";
-
-          if (itemCode === selectedConfig || itemName === selectedConfig) {
-            const qty = item.qty || "Included";
-            const price = item.upInr || item.tpInr || item.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-            found = true;
-          }
-        });
-
-        const quoteLines = q.quoteLines || [];
-        quoteLines.forEach(function (line) {
-          const configItems = line.configItems || [];
-          configItems.forEach(function (item) {
-            const itemCode = item.code || "";
-            const itemName = item.name || item.code || "—";
-
-            if (itemCode === selectedConfig || itemName === selectedConfig) {
-              const qty = item.qty || "Included";
-              const price = item.upInr || item.tpInr || item.price || 0;
-              appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-              found = true;
-            }
-          });
-        });
-      });
-    }
   } catch (err) {
     console.error("[customReport] Error rendering config report:", err);
   }
@@ -437,83 +350,44 @@ async function showAdditionalReport() {
   try {
     const snap = await getDocs(collection(db, "quoteHistory"));
     let rowNum = 1;
-    let found = false;
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      const hospitalName = (data.header && data.header.hospitalName) || "Unknown";
-      const quoteDate = (data.header && data.header.quoteDate) || "—";
+      const hospitalName = data.hospital || "Unknown";
+      const quoteDate = data.quoteDate || "—";
 
-      // Check top-level additionalItems
-      const topLevelAdditionalItems = data.additionalItems || [];
-      topLevelAdditionalItems.forEach(function (item) {
-        const itemCode = item.code || "";
-        const itemName = item.name || item.code || "—";
+      // Check items array
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const additionalItems = item.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const itemCode = additional.code || "";
+          const itemName = additional.name || additional.code || "—";
 
-        if (itemCode === selectedAdditional || itemName === selectedAdditional) {
-          const qty = item.qty || 1;
-          const price = item.price || 0;
-          appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-          found = true;
-        }
+          if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+            const qty = additional.qty || 1;
+            const price = additional.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          }
+        });
       });
 
-      // Check nested additionalItems in quoteLines
+      // Check quoteLines (for mixed data)
       const quoteLines = data.quoteLines || [];
       quoteLines.forEach(function (line) {
         const additionalItems = line.additionalItems || [];
-        additionalItems.forEach(function (item) {
-          const itemCode = item.code || "";
-          const itemName = item.name || item.code || "—";
+        additionalItems.forEach(function (additional) {
+          const itemCode = additional.code || "";
+          const itemName = additional.name || additional.code || "—";
 
           if (itemCode === selectedAdditional || itemName === selectedAdditional) {
-            const qty = item.qty || 1;
-            const price = item.price || 0;
+            const qty = additional.qty || 1;
+            const price = additional.price || 0;
             appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-            found = true;
           }
         });
       });
     });
-
-    // If Firestore is empty, try localStorage
-    if (!found) {
-      console.log("[customReport] No additional items in Firestore, checking localStorage...");
-      const allQuotes = getAllQuotes();
-      allQuotes.forEach(function (q) {
-        const hospitalName = (q.header && q.header.hospitalName) || "Unknown";
-        const quoteDate = (q.header && q.header.quoteDate) || "—";
-
-        const topLevelAdditionalItems = q.additionalItems || [];
-        topLevelAdditionalItems.forEach(function (item) {
-          const itemCode = item.code || "";
-          const itemName = item.name || item.code || "—";
-
-          if (itemCode === selectedAdditional || itemName === selectedAdditional) {
-            const qty = item.qty || 1;
-            const price = item.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-            found = true;
-          }
-        });
-
-        const quoteLines = q.quoteLines || [];
-        quoteLines.forEach(function (line) {
-          const additionalItems = line.additionalItems || [];
-          additionalItems.forEach(function (item) {
-            const itemCode = item.code || "";
-            const itemName = item.name || item.code || "—";
-
-            if (itemCode === selectedAdditional || itemName === selectedAdditional) {
-              const qty = item.qty || 1;
-              const price = item.price || 0;
-              appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
-              found = true;
-            }
-          });
-        });
-      });
-    }
   } catch (err) {
     console.error("[customReport] Error rendering additional report:", err);
   }
