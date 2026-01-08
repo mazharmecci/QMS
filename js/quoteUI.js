@@ -139,9 +139,9 @@ export function renderQuoteBuilder() {
   const body = document.getElementById("quoteBuilderBody");
   if (!body) return;
 
-  if (!lines?.length) {
+  if (!lines || !lines.length) {
     body.innerHTML = "";
-    document.getElementById("quoteSummaryBody")?.innerHTML = "";
+    document.getElementById("quoteSummaryBody") && (document.getElementById("quoteSummaryBody").innerHTML = "");
     return;
   }
 
@@ -171,7 +171,7 @@ export function renderQuoteBuilder() {
       </tr>
     `);
 
-    // Config items (display only, no total addition)
+    // Config items (display only)
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -182,9 +182,9 @@ export function renderQuoteBuilder() {
       configItems.forEach(item => {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
-        const q = item.qty ?? "Included";
-        const upRaw = item.upInr ?? "Included";
-        const tpRaw = item.tpInr ?? "Included";
+        const q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
+        const upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
+        const tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
         const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
         const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
         rows.push(`
