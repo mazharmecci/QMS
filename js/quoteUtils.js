@@ -3,12 +3,15 @@
  * @param {number} value
  * @returns {string}
  */
+// quoteUtils.js
 export function moneyINR(value) {
   const num = Number(value || 0);
-  return num.toLocaleString("en-IN", {
+  if (Number.isNaN(num)) return "0.00";
+
+  return new Intl.NumberFormat("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  });
+  }).format(num);
 }
 
 /**
