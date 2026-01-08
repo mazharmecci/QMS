@@ -45,6 +45,7 @@ async function loadMasterItemsOnce() {
 }
 
 /* ========= Header population ========= */
+
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
   if (!validateHeader(header)) return;
@@ -123,7 +124,8 @@ export function populateHeader() {
 }
 
 /* ========= Quote builder (with config/additional) ========= */
-export function renderQuoteBuilder() {
+
+function renderQuoteBuilder() {
   const { instruments, lines } = getQuoteContext();
   const body = document.getElementById("quoteBuilderBody");
   if (!body) return;
@@ -147,97 +149,95 @@ export function renderQuoteBuilder() {
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
-    const instUnit = Number(
-      line.unitPriceOverride ?? inst.unitPrice ?? 0
-    );
+    const instUnit = Number(line.unitPriceOverride ?? inst.unitPrice ?? 0);
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
-  rows.push(`
-    <tr>
-      <td>${codeText}</td>
-      ${formatInstrumentCell(inst, lineIdx)}
-      <td>${qty}</td>
-      <td>
-        ₹
-        <input
-          type="text"
-          value="${moneyINR(instUnit)}"
-          style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
-          onblur="unitPriceCommitted(${lineIdx}, this)"
-        />
-      </td>
-      <td>₹ ${moneyINR(instTotal)}</td>
-    </tr>
-  `);  // ← ADD THIS MISSING CLOSING ); HERE
-  
-  const configItems = line.configItems || [];
-  if (configItems.length) {
     rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">Configuration Items</td>
+      <tr>
+        <td>${codeText}</td>
+        ${formatInstrumentCell(inst, lineIdx)}
+        <td>${qty}</td>
+        <td>
+          ₹
+          <input
+            type="text"
+            value="${moneyINR(instUnit)}"
+            style="width:120px; text-align:right; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px;"
+            onblur="unitPriceCommitted(${lineIdx}, this)"
+          />
+        </td>
+        <td>₹ ${moneyINR(instTotal)}</td>
       </tr>
     `);
-  
-    configItems.forEach(item => {
-      const itemCode = String(runningItemCode).padStart(3, "0");
-      runningItemCode += 1;
-  
-      const q = item.qty != null ? item.qty : "Included";
-      const upRaw = item.upInr != null ? item.upInr : "Included";
-      const tpRaw = item.tpInr != null ? item.tpInr : "Included";
-  
-      const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
-      const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
-  
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${q}</td>
-          <td>${upCell}</td>
-          <td>${tpCell}</td>
-        </tr>
-      `);  // ← Each push properly closed
-    });
-  }
-  
-  const additionalItems = line.additionalItems || [];
-  if (additionalItems.length) {
-    rows.push(`
-      <tr style="background:#00B0F0; color:#000;">
-        <td colspan="5" style="font-weight:700;">Additional Items</td>
-      </tr>
-    `);
-  
-    additionalItems.forEach(item => {
-      const itemCode = String(runningItemCode).padStart(3, "0");
-      runningItemCode += 1;
-  
-      const qtyNum = Number(item.qty || 1);
-      const unitNum = Number(item.price || item.unitPrice || 0);
-      const totalNum = unitNum * qtyNum;
-      itemsTotal += totalNum;
-  
-      rows.push(`
-        <tr>
-          <td>${itemCode}</td>
-          ${formatItemCell(item)}
-          <td>${qtyNum.toString().padStart(2, "0")}</td>
-          <td>₹ ${moneyINR(unitNum)}</td>
-          <td>₹ ${moneyINR(totalNum)}</td>
-        </tr>
-      `);  // ← Each push properly closed
-    });
-  }
 
-// Final render (your existing code)
-body.innerHTML = rows.join("");
-renderSummaryRows(itemsTotal);
+    const configItems = line.configItems || [];
+    if (configItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">Configuration Items</td>
+        </tr>
+      `);
+
+      configItems.forEach(item => {
+        const itemCode = String(runningItemCode).padStart(3, "0");
+        runningItemCode += 1;
+
+        const q = item.qty != null ? item.qty : "Included";
+        const upRaw = item.upInr != null ? item.upInr : "Included";
+        const tpRaw = item.tpInr != null ? item.tpInr : "Included";
+
+        const upCell = typeof upRaw === "number" ? `₹ ${moneyINR(upRaw)}` : upRaw;
+        const tpCell = typeof tpRaw === "number" ? `₹ ${moneyINR(tpRaw)}` : tpRaw;
+
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${q}</td>
+            <td>${upCell}</td>
+            <td>${tpCell}</td>
+          </tr>
+        `);
+      });
+    }
+
+    const additionalItems = line.additionalItems || [];
+    if (additionalItems.length) {
+      rows.push(`
+        <tr style="background:#00B0F0; color:#000;">
+          <td colspan="5" style="font-weight:700;">Additional Items</td>
+        </tr>
+      `);
+
+      additionalItems.forEach(item => {
+        const itemCode = String(runningItemCode).padStart(3, "0");
+        runningItemCode += 1;
+
+        const qtyNum = Number(item.qty || 1);
+        const unitNum = Number(item.price || item.unitPrice || 0);
+        const totalNum = unitNum * qtyNum;
+        itemsTotal += totalNum;
+
+        rows.push(`
+          <tr>
+            <td>${itemCode}</td>
+            ${formatItemCell(item)}
+            <td>${qtyNum.toString().padStart(2, "0")}</td>
+            <td>₹ ${moneyINR(unitNum)}</td>
+            <td>₹ ${moneyINR(totalNum)}</td>
+          </tr>
+        `);
+      });
+    }
+  });
+
+  body.innerHTML = rows.join("");
+  renderSummaryRows(itemsTotal);
+}
 
 /* ========= Summary rows / discount ========= */
-
-export function renderSummaryRows(itemsTotal) {
+function renderSummaryRows(itemsTotal) {
   const sb = document.getElementById("quoteSummaryBody");
   if (!sb) return;
 
@@ -256,7 +256,6 @@ export function renderSummaryRows(itemsTotal) {
       <td style="text-align:right; font-size:12px; color:#475569;">Items Total</td>
       <td style="text-align:right; font-weight:600;">₹ ${moneyINR(itemsTotal)}</td>
     </tr>
-
     <tr class="discount-row">
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Discount</td>
@@ -271,39 +270,31 @@ export function renderSummaryRows(itemsTotal) {
         />
       </td>
     </tr>
-
     <tr class="after-discount-row">
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">After Discount</td>
       <td style="text-align:right; font-weight:600;">₹ ${moneyINR(afterDisc)}</td>
     </tr>
-
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Freight</td>
       <td style="text-align:right; font-weight:600;">Included</td>
     </tr>
-
     <tr>
       <td colspan="3"></td>
-      <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent.toFixed(
-        2
-      )}%</td>
+      <td style="text-align:right; font-size:12px; color:#475569;">GST @ ${gstPercent.toFixed(2)}%</td>
       <td style="text-align:right; font-weight:600;">₹ ${moneyINR(gstAmount)}</td>
     </tr>
-
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Total Value</td>
       <td style="text-align:right; font-weight:600;">₹ ${moneyINR(totalValue)}</td>
     </tr>
-
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px; color:#475569;">Round Off</td>
       <td style="text-align:right; font-weight:600;">₹ ${moneyINR(roundOff)}</td>
     </tr>
-
     <tr>
       <td colspan="3"></td>
       <td style="text-align:right; font-size:12px;"><strong>Grand Total</strong></td>
@@ -314,7 +305,7 @@ export function renderSummaryRows(itemsTotal) {
   updateDiscountVisibility(discount);
 }
 
-export function updateDiscountVisibility(discountValue) {
+function updateDiscountVisibility(discountValue) {
   const table = document.getElementById("quoteSummaryTable");
   if (!table) return;
 
