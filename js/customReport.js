@@ -80,44 +80,40 @@ function populateHospitalDropdown() {
 async function populateConfigDropdown() {
   try {
     const snap = await getDocs(collection(db, "quoteHistory"));
-    const configCodes = {};
+    const configNames = {};
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
 
-      // Check items array for configItems
       const items = data.items || [];
       items.forEach(function (item) {
         const configItems = item.configItems || [];
         configItems.forEach(function (config) {
-          const code = config.code || config.name || null;
-          if (code) {
-            configCodes[code] = true;
-            console.log("[customReport] Found config code:", code);
+          const name = config.name || config.code || null;
+          if (name) {
+            configNames[name] = true;
           }
         });
       });
 
-      // Also check quoteLines (for mixed data)
       const quoteLines = data.quoteLines || [];
       quoteLines.forEach(function (line) {
         const configItems = line.configItems || [];
         configItems.forEach(function (config) {
-          const code = config.code || config.name || null;
-          if (code) {
-            configCodes[code] = true;
-            console.log("[customReport] Found config code from quoteLines:", code);
+          const name = config.name || config.code || null;
+          if (name) {
+            configNames[name] = true;
           }
         });
       });
     });
 
-    const configList = Object.keys(configCodes).sort(function (a, b) {
+    const configList = Object.keys(configNames).sort(function (a, b) {
       return a.localeCompare(b);
     });
 
     populateSelect("configSelector", "-- Select Configuration item --", configList);
-    console.log("[customReport] Config dropdown populated with", configList.length, "items:", configList);
+    console.log("[customReport] Config dropdown populated with", configList.length, "items");
   } catch (err) {
     console.error("[customReport] Error fetching configs:", err);
   }
@@ -126,44 +122,40 @@ async function populateConfigDropdown() {
 async function populateAdditionalDropdown() {
   try {
     const snap = await getDocs(collection(db, "quoteHistory"));
-    const additionalCodes = {};
+    const additionalNames = {};
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
 
-      // Check items array for additionalItems
       const items = data.items || [];
       items.forEach(function (item) {
         const additionalItems = item.additionalItems || [];
         additionalItems.forEach(function (additional) {
-          const code = additional.code || additional.name || null;
-          if (code) {
-            additionalCodes[code] = true;
-            console.log("[customReport] Found additional code:", code);
+          const name = additional.name || additional.code || null;
+          if (name) {
+            additionalNames[name] = true;
           }
         });
       });
 
-      // Also check quoteLines (for mixed data)
       const quoteLines = data.quoteLines || [];
       quoteLines.forEach(function (line) {
         const additionalItems = line.additionalItems || [];
         additionalItems.forEach(function (additional) {
-          const code = additional.code || additional.name || null;
-          if (code) {
-            additionalCodes[code] = true;
-            console.log("[customReport] Found additional code from quoteLines:", code);
+          const name = additional.name || additional.code || null;
+          if (name) {
+            additionalNames[name] = true;
           }
         });
       });
     });
 
-    const additionalList = Object.keys(additionalCodes).sort(function (a, b) {
+    const additionalList = Object.keys(additionalNames).sort(function (a, b) {
       return a.localeCompare(b);
     });
 
     populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
-    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items:", additionalList);
+    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items");
   } catch (err) {
     console.error("[customReport] Error fetching additionals:", err);
   }
@@ -181,16 +173,226 @@ function clearTbody(tableId) {
   return tbody;
 }
 
+async function populateConfigDropdown() {
+  try {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    const configNames = {};
+
+    snap.docs.forEach(function (doc) {
+      const data = doc.data();
+
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const configItems = item.configItems || [];
+        configItems.forEach(function (config) {
+          const name = config.name || config.code || null;
+          if (name) {
+            configNames[name] = true;
+          }
+        });
+      });
+
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const configItems = line.configItems || [];
+        configItems.forEach(function (config) {
+          const name = config.name || config.code || null;
+          if (name) {
+            configNames[name] = true;
+          }
+        });
+      });
+    });
+
+    const configList = Object.keys(configNames).sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+
+    populateSelect("configSelector", "-- Select Configuration item --", configList);
+    console.log("[customReport] Config dropdown populated with", configList.length, "items");
+  } catch (err) {
+    console.error("[customReport] Error fetching configs:", err);
+  }
+}
+
+async function populateAdditionalDropdown() {
+  try {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    const additionalNames = {};
+
+    snap.docs.forEach(function (doc) {
+      const data = doc.data();
+
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const additionalItems = item.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const name = additional.name || additional.code || null;
+          if (name) {
+            additionalNames[name] = true;
+          }
+        });
+      });
+
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const additionalItems = line.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const name = additional.name || additional.code || null;
+          if (name) {
+            additionalNames[name] = true;
+          }
+        });
+      });
+    });
+
+    const additionalList = Object.keys(additionalNames).sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+
+    populateSelect("additionalSelector", "-- Select Additional item --", additionalList);
+    console.log("[customReport] Additional dropdown populated with", additionalList.length, "items");
+  } catch (err) {
+    console.error("[customReport] Error fetching additionals:", err);
+  }
+}
+
+async function showConfigReport() {
+  const selector = document.getElementById("configSelector");
+  if (!selector) {
+    console.error("[customReport] #configSelector not found");
+    return;
+  }
+  const selectedConfig = selector.value;
+  if (!selectedConfig) return;
+
+  const tbody = clearTbody("configReportTable");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    let rowNum = 1;
+
+    snap.docs.forEach(function (doc) {
+      const data = doc.data();
+      // Handle hospital as string or object
+      const hospitalName = typeof data.hospital === "string" 
+        ? data.hospital 
+        : (data.hospital && data.hospital.name) || "Unknown";
+      const quoteDate = data.quoteDate || "—";
+
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const configItems = item.configItems || [];
+        configItems.forEach(function (config) {
+          const itemName = config.name || config.code || "—";
+
+          if (itemName === selectedConfig) {
+            const qty = config.qty || "Included";
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
+          }
+        });
+      });
+
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const configItems = line.configItems || [];
+        configItems.forEach(function (config) {
+          const itemName = config.name || config.code || "—";
+
+          if (itemName === selectedConfig) {
+            const qty = config.qty || "Included";
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
+          }
+        });
+      });
+    });
+  } catch (err) {
+    console.error("[customReport] Error rendering config report:", err);
+  }
+}
+
+async function showAdditionalReport() {
+  const selector = document.getElementById("additionalSelector");
+  if (!selector) {
+    console.error("[customReport] #additionalSelector not found");
+    return;
+  }
+  const selectedAdditional = selector.value;
+  if (!selectedAdditional) return;
+
+  const tbody = clearTbody("additionalReportTable");
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(collection(db, "quoteHistory"));
+    let rowNum = 1;
+
+    snap.docs.forEach(function (doc) {
+      const data = doc.data();
+      // Handle hospital as string or object
+      const hospitalName = typeof data.hospital === "string" 
+        ? data.hospital 
+        : (data.hospital && data.hospital.name) || "Unknown";
+      const quoteDate = data.quoteDate || "—";
+
+      const items = data.items || [];
+      items.forEach(function (item) {
+        const additionalItems = item.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const itemName = additional.name || additional.code || "—";
+
+          if (itemName === selectedAdditional) {
+            const qty = additional.qty || 1;
+            const price = additional.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          }
+        });
+      });
+
+      const quoteLines = data.quoteLines || [];
+      quoteLines.forEach(function (line) {
+        const additionalItems = line.additionalItems || [];
+        additionalItems.forEach(function (additional) {
+          const itemName = additional.name || additional.code || "—";
+
+          if (itemName === selectedAdditional) {
+            const qty = additional.qty || 1;
+            const price = additional.price || 0;
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+          }
+        });
+      });
+    });
+  } catch (err) {
+    console.error("[customReport] Error rendering additional report:", err);
+  }
+}
+
 function appendRow(tbody, rowNum, hospitalName, label, date, qty, unitPrice) {
   const tr = document.createElement("tr");
-  tr.innerHTML = `
-    <td>${rowNum}</td>
-    <td>${hospitalName}</td>
-    <td>${label}</td>
-    <td>${date}</td>
-    <td>${qty}</td>
-    <td>₹ ${formatINR(unitPrice)}</td>
-  `;
+  
+  // If unitPrice is null (config table), skip the price column
+  if (unitPrice === null) {
+    tr.innerHTML = `
+      <td>${rowNum}</td>
+      <td>${hospitalName}</td>
+      <td>${label}</td>
+      <td>${date}</td>
+      <td>${qty}</td>
+    `;
+  } else {
+    // Additional table with price
+    tr.innerHTML = `
+      <td>${rowNum}</td>
+      <td>${hospitalName}</td>
+      <td>${label}</td>
+      <td>${date}</td>
+      <td>${qty}</td>
+      <td>₹ ${formatINR(unitPrice)}</td>
+    `;
+  }
+  
   tbody.appendChild(tr);
 }
 
@@ -295,37 +497,34 @@ async function showConfigReport() {
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      const hospitalName = data.hospital || "Unknown";
+      // Handle hospital as string or object
+      const hospitalName = typeof data.hospital === "string" 
+        ? data.hospital 
+        : (data.hospital && data.hospital.name) || "Unknown";
       const quoteDate = data.quoteDate || "—";
 
-      // Check items array
       const items = data.items || [];
       items.forEach(function (item) {
         const configItems = item.configItems || [];
         configItems.forEach(function (config) {
-          const itemCode = config.code || "";
           const itemName = config.name || config.code || "—";
 
-          if (itemCode === selectedConfig || itemName === selectedConfig) {
+          if (itemName === selectedConfig) {
             const qty = config.qty || "Included";
-            const price = config.upInr || config.tpInr || config.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
           }
         });
       });
 
-      // Check quoteLines (for mixed data)
       const quoteLines = data.quoteLines || [];
       quoteLines.forEach(function (line) {
         const configItems = line.configItems || [];
         configItems.forEach(function (config) {
-          const itemCode = config.code || "";
           const itemName = config.name || config.code || "—";
 
-          if (itemCode === selectedConfig || itemName === selectedConfig) {
+          if (itemName === selectedConfig) {
             const qty = config.qty || "Included";
-            const price = config.upInr || config.tpInr || config.price || 0;
-            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
+            appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, null);
           }
         });
       });
@@ -353,18 +552,19 @@ async function showAdditionalReport() {
 
     snap.docs.forEach(function (doc) {
       const data = doc.data();
-      const hospitalName = data.hospital || "Unknown";
+      // Handle hospital as string or object
+      const hospitalName = typeof data.hospital === "string" 
+        ? data.hospital 
+        : (data.hospital && data.hospital.name) || "Unknown";
       const quoteDate = data.quoteDate || "—";
 
-      // Check items array
       const items = data.items || [];
       items.forEach(function (item) {
         const additionalItems = item.additionalItems || [];
         additionalItems.forEach(function (additional) {
-          const itemCode = additional.code || "";
           const itemName = additional.name || additional.code || "—";
 
-          if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+          if (itemName === selectedAdditional) {
             const qty = additional.qty || 1;
             const price = additional.price || 0;
             appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
@@ -372,15 +572,13 @@ async function showAdditionalReport() {
         });
       });
 
-      // Check quoteLines (for mixed data)
       const quoteLines = data.quoteLines || [];
       quoteLines.forEach(function (line) {
         const additionalItems = line.additionalItems || [];
         additionalItems.forEach(function (additional) {
-          const itemCode = additional.code || "";
           const itemName = additional.name || additional.code || "—";
 
-          if (itemCode === selectedAdditional || itemName === selectedAdditional) {
+          if (itemName === selectedAdditional) {
             const qty = additional.qty || 1;
             const price = additional.price || 0;
             appendRow(tbody, rowNum++, hospitalName, itemName, quoteDate, qty, price);
