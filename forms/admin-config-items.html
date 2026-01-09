@@ -458,6 +458,18 @@
     footer a:hover {
       text-decoration: underline;
     }
+
+    /* Scrollable table body for config items */
+    .table-card-scroll {
+      max-height: 260px;        /* ~6–7 rows depending on row height */
+      overflow-y: auto;         /* scrollbar only when needed */
+    }
+    
+    /* Optional: keep header fixed-looking while body scrolls */
+    .table-card-scroll table {
+      border-collapse: collapse;
+    }
+
   </style>
 </head>
 <body>
@@ -571,21 +583,22 @@
         </div>
 
         <div class="table-card">
-          <table>
-            <thead>
-            <tr>
-              <th style="width:18%;">Code</th>
-              <th>Name &amp; status</th>
-              <th style="width:30%;">Models</th>
-              <th style="width:18%;">Actions</th>
-            </tr>
-            </thead>
-            <tbody id="configTableBody">
-            <tr><td colspan="4" class="empty-row">Loading configuration items…</td></tr>
-            </tbody>
-          </table>
+          <div class="table-card-scroll">
+            <table>
+              <thead>
+              <tr>
+                <th style="width:18%;">Code</th>
+                <th>Name &amp; status</th>
+                <th style="width:30%;">Models</th>
+                <th style="width:18%;">Actions</th>
+              </tr>
+              </thead>
+              <tbody id="configTableBody">
+              <tr><td colspan="4" class="empty-row">Loading configuration items…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
     </div>
   </section>
 </main>
