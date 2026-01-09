@@ -301,25 +301,24 @@ export function unitPriceCommitted(lineIdx, inputEl) {
   renderInstrumentModalList();
 }
 
-/* Helper: recompute itemsTotal */
+/* Helper: recompute itemsTotal (respects unitPriceOverride) */
 function recomputeItemsTotal() {
-  const context = getQuoteContext();
-  const instruments = context.instruments;
-  const lines = context.lines || [];
+  const { instruments, lines = [] } = getQuoteContext();
   let itemsTotal = 0;
 
-  lines.forEach(function (line) {
+  lines.forEach(line => {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
       const qty = Number(line.quantity || 1);
-      let unitBase =
-        (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
+      const unitBase =
+        line.unitPriceOverride !== undefined && line.unitPriceOverride !== null
           ? line.unitPriceOverride
-          : (inst.unitPrice || 0);
+          : inst.unitPrice || 0;
       const instUnit = Number(unitBase || 0);
       itemsTotal += instUnit * qty;
     }
-    (line.additionalItems || []).forEach(function (item) {
+
+    (line.additionalItems || []).forEach(item => {
       const qtyNum = Number(item.qty || 1);
       const unitNum = Number(item.price || item.unitPrice || 0);
       itemsTotal += qtyNum * unitNum;
@@ -435,22 +434,7 @@ export function discountInputCommitted() {
   header.discount = value;
   saveQuoteHeader(header);
 
-  const { instruments, lines } = getQuoteContext();
-  let itemsTotal = 0;
-
-  lines.forEach(line => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (inst) {
-      const qty = Number(line.quantity || 1);
-      itemsTotal += Number(inst.unitPrice || 0) * qty;
-    }
-    (line.additionalItems || []).forEach(item => {
-      const qtyNum = Number(item.qty || 1);
-      const unitNum = Number(item.price || item.unitPrice || 0);
-      itemsTotal += qtyNum * unitNum;
-    });
-  });
-
+  const itemsTotal = recomputeItemsTotal();
   renderSummaryRows(itemsTotal);
 }
 
