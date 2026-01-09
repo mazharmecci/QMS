@@ -957,15 +957,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("[quoteUI] DOMContentLoaded init");
 
-  // If this is the quotes page, quotes.html will call populateHeader() + renderQuoteBuilder()
-  // after Firestore hydration. Skip initial render here to avoid flicker/overwrite.
-  const isQuotesPage = window.location.pathname.endsWith("/quotes.html");
+  // Let quotes.html own the first render after Firestore hydration.
+  const path = window.location.pathname || "";
+  const isQuotesPage = path.endsWith("/quotes.html") || path.endsWith("quotes.html");
   if (!isQuotesPage) {
     populateHeader();
     renderQuoteBuilder();
   }
 
   document.getElementById("backBtn")?.addEventListener("click", goBack);
+
   document
     .getElementById("openInstrumentModalBtn")
     ?.addEventListener("click", openInstrumentModal);
@@ -996,12 +997,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("closeConfigPickerBtn")
     ?.addEventListener("click", () => {
-      document.getElementById("configPickerOverlay").style.display = "none";
+      const el = document.getElementById("configPickerOverlay");
+      if (el) el.style.display = "none";
     });
   document
     .getElementById("closeAdditionalPickerBtn")
     ?.addEventListener("click", () => {
-      document.getElementById("additionalPickerOverlay").style.display = "none";
+      const el = document.getElementById("additionalPickerOverlay");
+      if (el) el.style.display = "none";
     });
 
   document
