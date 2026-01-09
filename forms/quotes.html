@@ -1157,318 +1157,344 @@ Next lines: brief description"
     </div>
   </div>
 
-  <script type="module">
-    import {
-      moneyINR,
-      parseDetailsText,
-      formatInstrumentCell,
-      formatItemCell
-    } from "../js/quoteUtils.js";
+<script type="module">
+  import {
+    moneyINR,
+    parseDetailsText,
+    formatInstrumentCell,
+    formatItemCell
+  } from "../js/quoteUtils.js";
 
-    import {
-      getQuoteHeaderRaw,
-      saveQuoteHeader,
-      getInstrumentsMaster,
-      getQuoteContext,
-      validateHeader,
-      finalizeQuote,
-      buildQuoteObject
-    } from "../js/quoteService.js";
+  import {
+    getQuoteHeaderRaw,
+    saveQuoteHeader,
+    getInstrumentsMaster,
+    getQuoteContext,
+    validateHeader,
+    finalizeQuote,
+    buildQuoteObject
+  } from "../js/quoteService.js";
 
-    import {
-      populateHeader,
-      renderQuoteBuilder,
-      openInstrumentModal,
-      closeInstrumentModal,
-      openInstrumentPicker,
-      closeInstrumentPicker,
-      addInstrumentToQuote,
-      openConfigModal,
-      openAdditionalModal,
-      openItemModal,
-      closeItemModal,
-      renderItemModalList,
-      editItemFromModal,
-      removeItemFromModal,
-      saveItemFromModal,
-      addMasterItemToLine,
-      renderInstrumentModalList
-    } from "../js/quoteUI.js";
+  import {
+    populateHeader,
+    renderQuoteBuilder,
+    openInstrumentModal,
+    closeInstrumentModal,
+    openInstrumentPicker,
+    closeInstrumentPicker,
+    addInstrumentToQuote,
+    openConfigModal,
+    openAdditionalModal,
+    openItemModal,
+    closeItemModal,
+    renderItemModalList,
+    editItemFromModal,
+    removeItemFromModal,
+    saveItemFromModal,
+    addMasterItemToLine,
+    renderInstrumentModalList
+  } from "../js/quoteUI.js";
 
-    import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
+  import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
 
-    let currentQuoteDocId = null;
+  let currentQuoteDocId = null;
+  let quoteHydrated = false; // flag to control validation timing
 
-    function getQueryParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
-    }
+  function getQueryParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
 
-    function toDateInputValue(d) {
-      if (!d) return "";
-      const date = d instanceof Date ? d : new Date(d.seconds ? d.seconds * 1000 : d);
-      if (Number.isNaN(date.getTime())) return "";
-      const yyyy = date.getFullYear();
-      const mm = String(date.getMonth() + 1).padStart(2, "0");
-      const dd = String(date.getDate()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}`;
-    }
+  function toDateInputValue(d) {
+    if (!d) return "";
+    const date = d instanceof Date ? d : new Date(d.seconds ? d.seconds * 1000 : d);
+    if (Number.isNaN(date.getTime())) return "";
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
-    function hydrateLocalFromFirestoreDoc(docData, docId = null) {
-      if (!docData || typeof docData !== "object") return;
-      if (docId) currentQuoteDocId = docId;
+  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+    if (!docData || typeof docData !== "object") return null;
+    if (docId) currentQuoteDocId = docId;
 
-      const hosp = docData.hospital || {};
+    const hosp = docData.hospital || {};
 
-      const header = {
-        quoteNo: docData.quoteNo || "",
-        quoteDate: toDateInputValue(docData.quoteDate),
-        hospitalName: hosp.name || "",
-        hospitalAddress: hosp.address || "",
-        contactPerson: hosp.contactPerson || "",
-        contactEmail: hosp.email || "",
-        contactPhone: hosp.phone || "",
-        officePhone: hosp.officePhone || "",
-        yourReference: docData.yourReference || "",
-        refDate: toDateInputValue(docData.refDate),
-        kindAttn: hosp.kindAttn || "",
-        salesNote: docData.salesNote || "",
-        termsHtml: docData.termsHtml || "",
-        termsText: docData.termsText || "",
-        discount: Number(docData.discount || 0),
-        status: docData.status || "Submitted",
-        quoteLines: []
+    const header = {
+      quoteNo: docData.quoteNo || "",
+      quoteDate: toDateInputValue(docData.quoteDate),
+      hospitalName: hosp.name || "",
+      hospitalAddress: hosp.address || "",
+      contactPerson: hosp.contactPerson || "",
+      contactEmail: hosp.email || "",
+      contactPhone: hosp.phone || "",
+      officePhone: hosp.officePhone || "",
+      yourReference: docData.yourReference || "",
+      refDate: toDateInputValue(docData.refDate),
+      kindAttn: hosp.kindAttn || "",
+      salesNote: docData.salesNote || "",
+      termsHtml: docData.termsHtml || "",
+      termsText: docData.termsText || "",
+      discount: Number(docData.discount || 0),
+      status: docData.status || "Submitted",
+      quoteLines: []
+    };
+
+    const instruments = getInstrumentsMaster();
+    const items = Array.isArray(docData.items) ? docData.items : [];
+
+    console.log("[hydrateLocalFromFirestoreDoc] items length:", items.length);
+
+    const quoteLines = items.map(item => {
+      const code = item.instrumentCode || item.code || "";
+      const name = item.instrumentName || item.name || "";
+
+      let idx = instruments.findIndex(inst =>
+        inst.instrumentCode === code ||
+        inst.catalog === code ||
+        inst.instrumentName === name ||
+        inst.name === name
+      );
+
+      if (idx < 0) {
+        console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
+        idx = 0;
+      }
+
+      return {
+        lineType: "instrument",
+        instrumentIndex: idx,
+        quantity: item.quantity || 1,
+        unitPriceOverride: item.unitPriceOverride || null,
+        configItems: item.configItems || [],
+        additionalItems: item.additionalItems || []
       };
+    });
 
-      const instruments = getInstrumentsMaster();
-      const items = Array.isArray(docData.items) ? docData.items : [];
+    header.quoteLines = quoteLines;
+    saveQuoteHeader(header);
+    return header;
+  }
 
-      console.log("[hydrateLocalFromFirestoreDoc] items length:", items.length);
-
-      const quoteLines = items.map(item => {
-        const code = item.instrumentCode || item.code || "";
-        const name = item.instrumentName || item.name || "";
-
-        let idx = instruments.findIndex(inst =>
-          inst.instrumentCode === code ||
-          inst.catalog === code ||
-          inst.instrumentName === name ||
-          inst.name === name
-        );
-
-        if (idx < 0) {
-          console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
-          idx = 0;
+  async function loadQuoteFromFirestoreIfNeeded() {
+    const quoteId = getQueryParam("id");
+    if (quoteId) {
+      try {
+        console.log("[quotes.html] Loading quote from Firestore for id:", quoteId);
+        const ref = doc(db, "quoteHistory", quoteId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const header = hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
+          quoteHydrated = true;
+          console.log("[quotes.html] Hydrated header from Firestore for id:", quoteId);
+          return true;
+        } else {
+          console.warn("[quotes.html] No quoteHistory document for id", quoteId);
         }
-
-        return {
-          lineType: "instrument",
-          instrumentIndex: idx,
-          quantity: item.quantity || 1,
-          unitPriceOverride: item.unitPriceOverride || null,
-          configItems: item.configItems || [],
-          additionalItems: item.additionalItems || []
-        };
-      });
-
-      header.quoteLines = quoteLines;
-      saveQuoteHeader(header);
-    }
-
-    async function loadQuoteFromFirestoreIfNeeded() {
-      const quoteId = getQueryParam("id");
-      if (quoteId) {
-        try {
-          console.log("[quotes.html] Loading quote from Firestore for id:", quoteId);
-          const ref = doc(db, "quoteHistory", quoteId);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
-          } else {
-            console.warn("No quoteHistory document for id", quoteId);
-          }
-        } catch (err) {
-          console.error("Error loading quote from Firestore:", err);
-        }
-        return;
+      } catch (err) {
+        console.error("[quotes.html] Error loading quote from Firestore:", err);
       }
-
-      if (currentQuoteDocId) {
-        console.log("[quotes.html] Editing Firestore quote:", currentQuoteDocId);
-      } else {
-        console.log("[quotes.html] Using existing local header (no Firestore id).");
-      }
+      // Firestore path done (success or fail)
+      return false;
     }
 
-    // Edit instrument helpers (qty + price)
-    function openEditInstrument(index) {
-      const header = getQuoteHeaderRaw();
-      const line = header.quoteLines[index];
-      if (!line) return;
-
-      document.getElementById("editInstrumentIndex").value = index;
-      document.getElementById("editQuantity").value = line.quantity || 1;
-
-      const instruments = getInstrumentsMaster();
-      const instPrice = instruments[line.instrumentIndex]?.unitPrice || 0;
-      document.getElementById("editUnitPrice").value =
-        line.unitPriceOverride ?? instPrice ?? 0;
-
-      document.getElementById("editInstrumentOverlay").style.display = "flex";
+    if (currentQuoteDocId) {
+      console.log("[quotes.html] Editing Firestore quote:", currentQuoteDocId);
+    } else {
+      console.log("[quotes.html] Using existing local header (no Firestore id).");
     }
+    // Local-only quote; assume header already in localStorage
+    quoteHydrated = true;
+    return false;
+  }
 
-    function closeEditInstrument() {
-      const el = document.getElementById("editInstrumentOverlay");
-      if (el) el.style.display = "none";
+  function validateHeaderIfReady() {
+    if (!quoteHydrated) {
+      console.log("[quotes.html] Skipping header validation: quote not hydrated yet");
+      return;
     }
+    // Call your existing validation ONLY after hydration.
+    validateHeader();
+  }
 
-    function saveEditInstrument() {
-      const index = parseInt(document.getElementById("editInstrumentIndex").value, 10);
-      const header = getQuoteHeaderRaw();
-      const line = header.quoteLines[index];
-      if (!line) return;
+  // Edit instrument helpers (qty + price)
+  function openEditInstrument(index) {
+    const header = getQuoteHeaderRaw();
+    const line = header.quoteLines[index];
+    if (!line) return;
 
-      const newQty = Number(document.getElementById("editQuantity").value) || 1;
-      const newPrice = Number(document.getElementById("editUnitPrice").value) || 0;
+    document.getElementById("editInstrumentIndex").value = index;
+    document.getElementById("editQuantity").value = line.quantity || 1;
 
-      line.quantity = newQty;
-      line.unitPriceOverride = newPrice > 0 ? newPrice : null;
+    const instruments = getInstrumentsMaster();
+    const instPrice = instruments[line.instrumentIndex]?.unitPrice || 0;
+    document.getElementById("editUnitPrice").value =
+      line.unitPriceOverride ?? instPrice ?? 0;
 
-      saveQuoteHeader(header);
-      renderQuoteBuilder();
-      renderInstrumentModalList();
-      closeEditInstrument();
-    }
+    document.getElementById("editInstrumentOverlay").style.display = "flex";
+  }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      console.log("[quotes.html] DOMContentLoaded");
+  function closeEditInstrument() {
+    const el = document.getElementById("editInstrumentOverlay");
+    if (el) el.style.display = "none";
+  }
 
-      await loadQuoteFromFirestoreIfNeeded();
-      populateHeader();
-      renderQuoteBuilder();
+  function saveEditInstrument() {
+    const index = parseInt(document.getElementById("editInstrumentIndex").value, 10);
+    const header = getQuoteHeaderRaw();
+    const line = header.quoteLines[index];
+    if (!line) return;
 
-      // Sync terms block to header
-      const termsEl = document.getElementById("termsTextBlock");
-      if (termsEl) {
-        const syncTermsToHeader = () => {
-          const header = getQuoteHeaderRaw();
-          header.termsHtml = termsEl.innerHTML;
-          header.termsText = termsEl.innerText || "";
-          saveQuoteHeader(header);
-          console.log("[terms] Synced termsHtml length:", header.termsHtml.length);
-        };
-        ["input", "blur"].forEach(evt => termsEl.addEventListener(evt, syncTermsToHeader));
-      }
+    const newQty = Number(document.getElementById("editQuantity").value) || 1;
+    const newPrice = Number(document.getElementById("editUnitPrice").value) || 0;
 
-      // Go back handler
-      function goBack() {
-        location.href = "/index.html";
-      }
+    line.quantity = newQty;
+    line.unitPriceOverride = newPrice > 0 ? newPrice : null;
 
-      document.getElementById("backBtn")?.addEventListener("click", goBack);
+    saveQuoteHeader(header);
+    renderQuoteBuilder();
+    renderInstrumentModalList();
+    closeEditInstrument();
+  }
 
-      // Logout
-      document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-        try {
-          await signOut(auth);
-          window.location.href = "https://qms.istosmedical.com/login.html";
-        } catch (err) {
-          console.error("Failed to sign out", err);
-          alert("Could not log out. Please try again.");
-        }
-      });
+  document.addEventListener("DOMContentLoaded", async () => {
+    console.log("[quotes.html] DOMContentLoaded");
 
-      // Modal bindings
-      const modalBindings = [
-        ["openInstrumentModalBtn", openInstrumentModal],
-        ["closeInstrumentModalBtn", closeInstrumentModal],
-        ["closeInstrumentModalFooterBtn", closeInstrumentModal],
-        ["openInstrumentPickerBtn", openInstrumentPicker],
-        ["closeInstrumentPickerBtn", closeInstrumentPicker],
-        ["closeItemModalBtn", closeItemModal],
-        ["cancelItemModalBtn", closeItemModal]
-      ];
-      modalBindings.forEach(([id, handler]) => {
-        document.getElementById(id)?.addEventListener("click", handler);
-      });
+    // 1) Hydrate from Firestore or local first
+    await loadQuoteFromFirestoreIfNeeded();
 
-      // Edit-instrument modal bindings
-      [
-        ["closeEditInstrumentBtn", closeEditInstrument],
-        ["cancelEditInstrumentBtn", closeEditInstrument],
-        ["saveEditInstrumentBtn", saveEditInstrument]
-      ].forEach(([id, handler]) => {
-        document.getElementById(id)?.addEventListener("click", handler);
-      });
+    // 2) Only now render UI based on hydrated header
+    populateHeader();
+    renderQuoteBuilder();
 
-      // Item modal form
-      document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+    // 3) Optional: if you want validation on page load, do it AFTER hydration
+    // validateHeaderIfReady();
 
-      // Overlay closers
-      const overlayClosers = {
-        closeConfigPickerBtn: "configPickerOverlay",
-        closeAdditionalPickerBtn: "additionalPickerOverlay"
+    // Sync terms block to header
+    const termsEl = document.getElementById("termsTextBlock");
+    if (termsEl) {
+      const syncTermsToHeader = () => {
+        const header = getQuoteHeaderRaw();
+        header.termsHtml = termsEl.innerHTML;
+        header.termsText = termsEl.innerText || "";
+        saveQuoteHeader(header);
+        console.log("[terms] Synced termsHtml length:", header.termsHtml.length);
       };
-      Object.entries(overlayClosers).forEach(([btnId, overlayId]) => {
-        document.getElementById(btnId)?.addEventListener("click", () => {
-          const el = document.getElementById(overlayId);
-          if (el) el.style.display = "none";
-        });
-      });
+      ["input", "blur"].forEach(evt => termsEl.addEventListener(evt, syncTermsToHeader));
+    }
 
-      // Finalize button
-      const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-      if (finalizeBtn) {
-        let lastClickTime = 0;
-        finalizeBtn.addEventListener("click", async () => {
-          const now = Date.now();
-          if (now - lastClickTime < 3000) {
-            console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
-            return;
-          }
-          lastClickTime = now;
+    // Go back handler
+    function goBack() {
+      location.href = "/index.html";
+    }
+    document.getElementById("backBtn")?.addEventListener("click", goBack);
 
-          finalizeBtn.disabled = true;
-          console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
-          try {
-            await finalizeQuote(currentQuoteDocId);
-          } finally {
-            finalizeBtn.disabled = false;
-          }
-        });
+    // Logout
+    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "https://qms.istosmedical.com/login.html";
+      } catch (err) {
+        console.error("Failed to sign out", err);
+        alert("Could not log out. Please try again.");
       }
+    });
 
-      // Next buttons (if any)
-      const nextButtons = document.querySelectorAll(".btn-next");
-      nextButtons.forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const docId = btn.getAttribute("data-doc-id");
-          if (!docId) {
-            console.warn("[Next button] Missing data-doc-id");
-            return;
-          }
-          console.log("[quotes.html] Next button clicked for docId:", docId);
-          try {
-            await approveQuoteRevision(docId);
-          } catch (err) {
-            console.error("[quotes.html] Error approving quote:", err);
-            alert("Failed to approve quote. Please try again.");
-          }
-        });
+    // Modal bindings
+    const modalBindings = [
+      ["openInstrumentModalBtn", openInstrumentModal],
+      ["closeInstrumentModalBtn", closeInstrumentModal],
+      ["closeInstrumentModalFooterBtn", closeInstrumentModal],
+      ["openInstrumentPickerBtn", openInstrumentPicker],
+      ["closeInstrumentPickerBtn", closeInstrumentPicker],
+      ["closeItemModalBtn", closeItemModal],
+      ["cancelItemModalBtn", closeItemModal]
+    ];
+    modalBindings.forEach(([id, handler]) => {
+      document.getElementById(id)?.addEventListener("click", handler);
+    });
+
+    // Edit-instrument modal bindings
+    [
+      ["closeEditInstrumentBtn", closeEditInstrument],
+      ["cancelEditInstrumentBtn", closeEditInstrument],
+      ["saveEditInstrumentBtn", saveEditInstrument]
+    ].forEach(([id, handler]) => {
+      document.getElementById(id)?.addEventListener("click", handler);
+    });
+
+    // Item modal form
+    document.getElementById("itemModalForm")?.addEventListener("submit", saveItemFromModal);
+
+    // Overlay closers
+    const overlayClosers = {
+      closeConfigPickerBtn: "configPickerOverlay",
+      closeAdditionalPickerBtn: "additionalPickerOverlay"
+    };
+    Object.entries(overlayClosers).forEach(([btnId, overlayId]) => {
+      document.getElementById(btnId)?.addEventListener("click", () => {
+        const el = document.getElementById(overlayId);
+        if (el) el.style.display = "none";
       });
     });
 
-    // Global hooks for inline handlers
-    window.openConfigModal = openConfigModal;
-    window.openAdditionalModal = openAdditionalModal;
-    window.openItemModal = openItemModal;
-    window.editItemFromModal = editItemFromModal;
-    window.removeItemFromModal = removeItemFromModal;
-    window.addInstrumentToQuote = addInstrumentToQuote;
-    window.addMasterItemToLine = addMasterItemToLine;
-    window.openEditInstrument = openEditInstrument;
-    window.closeEditInstrument = closeEditInstrument;
-    window.saveEditInstrument = saveEditInstrument;
-  </script>
+    // Finalize button
+    const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+    if (finalizeBtn) {
+      let lastClickTime = 0;
+      finalizeBtn.addEventListener("click", async () => {
+        const now = Date.now();
+        if (now - lastClickTime < 3000) {
+          console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
+          return;
+        }
+        lastClickTime = now;
+
+        finalizeBtn.disabled = true;
+        console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
+        try {
+          // Here is a good place to enforce real validation:
+          validateHeaderIfReady();
+          await finalizeQuote(currentQuoteDocId);
+        } finally {
+          finalizeBtn.disabled = false;
+        }
+      });
+    }
+
+    // Next buttons (if any)
+    const nextButtons = document.querySelectorAll(".btn-next");
+    nextButtons.forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const docId = btn.getAttribute("data-doc-id");
+        if (!docId) {
+          console.warn("[Next button] Missing data-doc-id");
+          return;
+        }
+        console.log("[quotes.html] Next button clicked for docId:", docId);
+        try {
+          await approveQuoteRevision(docId);
+        } catch (err) {
+          console.error("[quotes.html] Error approving quote:", err);
+          alert("Failed to approve quote. Please try again.");
+        }
+      });
+    });
+  });
+
+  // Global hooks for inline handlers
+  window.openConfigModal = openConfigModal;
+  window.openAdditionalModal = openAdditionalModal;
+  window.openItemModal = openItemModal;
+  window.editItemFromModal = editItemFromModal;
+  window.removeItemFromModal = removeItemFromModal;
+  window.addInstrumentToQuote = addInstrumentToQuote;
+  window.addMasterItemToLine = addMasterItemToLine;
+  window.openEditInstrument = openEditInstrument;
+  window.closeEditInstrument = closeEditInstrument;
+  window.saveEditInstrument = saveEditInstrument;
+</script>
+
 </body>
 </html>
