@@ -527,53 +527,82 @@ export function editInstrumentLine(idx) {
 
 /* ========= Instrument Picker ========= */
 
+export function addInstrumentToQuoteById(instId) {
+  const master = getInstrumentsMaster();
+  const instIndex = master.findIndex(i => i.id === instId);
+  if (instIndex < 0) {
+    console.warn("[addInstrumentToQuoteById] Instrument id not found in master:", instId);
+    return;
+  }
+
+  // read qty using the id-based input
+  const qtyInput = document.getElementById(`instQty_${instId}`);
+  const qty = Math.max(1, Number(qtyInput?.value || 1));
+
+  const header = getQuoteHeaderRaw();
+  if (!Array.isArray(header.quoteLines)) header.quoteLines = [];
+
+  header.quoteLines.push({
+    lineType: "instrument",
+    instrumentIndex: instIndex,  // original index
+    quantity: qty,
+    configItems: [],
+    additionalItems: []
+  });
+
+  saveQuoteHeader(header);
+  renderQuoteBuilder();
+  renderInstrumentModalList();
+}
+
+// expose for inline onclick
+window.addInstrumentToQuoteById = addInstrumentToQuoteById;
+
 export function openInstrumentPicker() {
   const overlay = document.getElementById("instrumentPickerOverlay");
   if (!overlay) return;
 
   const listEl = document.getElementById("instrumentPickerList");
-  const instruments = getInstrumentsMaster().slice(); // copy so we don't mutate global
+  const instruments = getInstrumentsMaster().slice();
 
-  if (!instruments.length) {
-    listEl.innerHTML =
-      '<div style="font-size:12px; color:#64748b;">No instruments in master. Please create instruments first.</div>';
-  } else {
-    // 🔽 sort ascending by name (fallback to code)
-    instruments.sort((a, b) => {
-      const nameA = (a.instrumentName || a.name || "").toLowerCase();
-      const nameB = (b.instrumentName || b.name || "").toLowerCase();
-      if (nameA && nameB && nameA !== nameB) {
-        return nameA.localeCompare(nameB);
-      }
-      const codeA = (a.catalog || a.instrumentCode || "").toLowerCase();
-      const codeB = (b.catalog || b.instrumentCode || "").toLowerCase();
-      return codeA.localeCompare(codeB);
-    });
+  // sort as you already do
+  instruments.sort((a, b) => {
+    const nameA = (a.instrumentName || a.name || "").toLowerCase();
+    const nameB = (b.instrumentName || b.name || "").toLowerCase();
+    if (nameA && nameB && nameA !== nameB) return nameA.localeCompare(nameB);
+    const codeA = (a.catalog || a.instrumentCode || "").toLowerCase();
+    const codeB = (b.catalog || b.instrumentCode || "").toLowerCase();
+    return codeA.localeCompare(codeB);
+  });
 
-    listEl.innerHTML = instruments
-      .map((inst, idx) => {
-        const name = inst.instrumentName || inst.name || "Unnamed Instrument";
-        const code = inst.catalog || inst.instrumentCode || "";
-        const desc = inst.description || inst.longDescription || "";
-        const shortDesc =
-          desc.replace(/\s+/g, " ").slice(0, 160) +
-          (desc.length > 160 ? "…" : "");
-
-        return `
+  listEl.innerHTML = instruments
+    .map(inst => {
+      const id   = inst.id; // Firestore doc id, ensure it exists in master
+      const name = inst.instrumentName || inst.name || "Unnamed Instrument";
+      const code = inst.catalog || inst.instrumentCode || "";
+      const desc = inst.description || inst.longDescription || "";
+      const shortDesc =
+        desc.replace(/\s+/g, " ").slice(0, 160) +
+        (desc.length > 160 ? "…" : "");
+      return `
         <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
           <div style="font-size:12px; flex:1;">
             <div style="font-weight:600;">${code} ${name}</div>
             <div style="color:#64748b; margin-top:2px; font-size:11px;">${shortDesc}</div>
           </div>
           <div style="display:flex; align-items:center; gap:0.25rem;">
-            <input type="number" min="1" value="1" id="instQty_${idx}" style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
-            <button type="button" class="btn-quote" onclick="addInstrumentToQuote(${idx})">Add</button>
+            <input type="number" min="1" value="1"
+                   id="instQty_${id}"
+                   style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
+            <button type="button" class="btn-quote"
+                    onclick="addInstrumentToQuoteById('${id}')">
+              Add
+            </button>
           </div>
         </div>
       `;
-      })
-      .join("");
-  }
+    })
+    .join("");
 
   overlay.style.display = "flex";
 }
