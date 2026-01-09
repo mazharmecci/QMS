@@ -957,8 +957,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("[quoteUI] DOMContentLoaded init");
 
-  populateHeader();
-  renderQuoteBuilder();
+  // If this is the quotes page, quotes.html will call populateHeader() + renderQuoteBuilder()
+  // after Firestore hydration. Skip initial render here to avoid flicker/overwrite.
+  const isQuotesPage = window.location.pathname.endsWith("/quotes.html");
+  if (!isQuotesPage) {
+    populateHeader();
+    renderQuoteBuilder();
+  }
 
   document.getElementById("backBtn")?.addEventListener("click", goBack);
   document
@@ -999,8 +1004,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("additionalPickerOverlay").style.display = "none";
     });
 
-  // NOTE: finalizeQuote is now used elsewhere (quotes.html),
-  // so we do not force validation here.
   document
     .getElementById("finalizeQuoteBtn")
     ?.addEventListener("click", finalizeQuote);
