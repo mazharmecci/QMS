@@ -289,26 +289,51 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
   try {
     const docs = await getLatestHistoryDocs();
     let matchCount = 0;
-    
+
     docs.forEach(data => {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
       if (hospitalName !== selectedHospital) return;
 
       const items = data.items || [];
       const quoteLines = data.quoteLines || [];
-      
+
       [...quoteLines, ...items].forEach(item => {
-        const inst = findInstrument(instruments, item.instrumentIndex ?? item.code);
-        const label = inst.instrumentName || inst.name || 
-                     item.name || (item.description?.split("\n")[0] || "").trim() || "—";
+        // Prefer index, then instrumentCode, then generic code
+        const inst = findInstrument(
+          instruments,
+          item.instrumentIndex ?? item.instrumentCode ?? item.code
+        );
+
+        const label =
+          inst.instrumentName ||               // from instruments master
+          inst.name ||
+          item.instrumentName ||               // from Firestore line
+          item.name ||
+          (item.description?.split("\n")[0] || "").trim() ||
+          "—";
+
         const qty = item.quantity || 1;
-        const price = item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0;
-        
-        appendRow(tbody, rowNum++, quoteNo, hospitalName, label, quoteDate, qty, price);
+        const price =
+          item.unitPriceOverride ??
+          item.price ??
+          item.unitPrice ??
+          inst.unitPrice ??
+          0;
+
+        appendRow(
+          tbody,
+          rowNum++,
+          quoteNo,
+          hospitalName,
+          label,
+          quoteDate,
+          qty,
+          price
+        );
         matchCount++;
       });
     });
-    
+
     console.log(`[showHospitalReport ${tableId}] ✓ ${matchCount} items`);
   } catch (err) {
     console.error(`[showHospitalReport ${tableId}] Error:`, err);
