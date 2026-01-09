@@ -528,23 +528,37 @@ export function editInstrumentLine(idx) {
 /* ========= Instrument Picker ========= */
 
 export function addInstrumentToQuoteById(instId) {
+  if (!instId) {
+    console.warn("[addInstrumentToQuoteById] Missing instrument id");
+    return;
+  }
+
   const master = getInstrumentsMaster();
-  const instIndex = master.findIndex(i => i.id === instId);
+  if (!Array.isArray(master) || !master.length) {
+    console.warn("[addInstrumentToQuoteById] Master instrument list is empty");
+    return;
+  }
+
+  const instIndex = master.findIndex((inst) => inst && inst.id === instId);
   if (instIndex < 0) {
     console.warn("[addInstrumentToQuoteById] Instrument id not found in master:", instId);
     return;
   }
 
-  // read qty using the id-based input
   const qtyInput = document.getElementById(`instQty_${instId}`);
-  const qty = Math.max(1, Number(qtyInput?.value || 1));
+  const rawQty = Number(qtyInput?.value ?? 1);
+  const qty = Number.isFinite(rawQty) && rawQty > 0 ? rawQty : 1; // [web:127]
 
   const header = getQuoteHeaderRaw();
+  if (!header || typeof header !== "object") {
+    console.error("[addInstrumentToQuoteById] Invalid quote header");
+    return;
+  }
   if (!Array.isArray(header.quoteLines)) header.quoteLines = [];
 
   header.quoteLines.push({
     lineType: "instrument",
-    instrumentIndex: instIndex,  // original index
+    instrumentIndex: instIndex, // original index in master
     quantity: qty,
     configItems: [],
     additionalItems: []
@@ -560,30 +574,46 @@ window.addInstrumentToQuoteById = addInstrumentToQuoteById;
 
 export function openInstrumentPicker() {
   const overlay = document.getElementById("instrumentPickerOverlay");
-  if (!overlay) return;
-
   const listEl = document.getElementById("instrumentPickerList");
-  const instruments = getInstrumentsMaster().slice();
+  if (!overlay || !listEl) return; // [web:132]
 
-  // sort as you already do
+  const master = getInstrumentsMaster();
+  if (!Array.isArray(master) || !master.length) {
+    listEl.innerHTML = `<div style="padding:0.75rem; font-size:12px; color:#64748b;">
+      No instruments available in master.
+    </div>`;
+    overlay.style.display = "flex";
+    return;
+  }
+
+  const instruments = master.slice();
+
   instruments.sort((a, b) => {
-    const nameA = (a.instrumentName || a.name || "").toLowerCase();
-    const nameB = (b.instrumentName || b.name || "").toLowerCase();
+    const nameA = (a?.instrumentName || a?.name || "").toLowerCase();
+    const nameB = (b?.instrumentName || b?.name || "").toLowerCase();
     if (nameA && nameB && nameA !== nameB) return nameA.localeCompare(nameB);
-    const codeA = (a.catalog || a.instrumentCode || "").toLowerCase();
-    const codeB = (b.catalog || b.instrumentCode || "").toLowerCase();
+    const codeA = (a?.catalog || a?.instrumentCode || "").toLowerCase();
+    const codeB = (b?.catalog || b?.instrumentCode || "").toLowerCase();
     return codeA.localeCompare(codeB);
   });
 
   listEl.innerHTML = instruments
-    .map(inst => {
-      const id   = inst.id; // Firestore doc id, ensure it exists in master
+    .map((inst) => {
+      const id = inst?.id;
+      if (!id) {
+        console.warn("[openInstrumentPicker] Instrument missing id", inst);
+        return "";
+      }
+
       const name = inst.instrumentName || inst.name || "Unnamed Instrument";
       const code = inst.catalog || inst.instrumentCode || "";
       const desc = inst.description || inst.longDescription || "";
+      const normalizedDesc = desc.replace(/\s+/g, " ").trim();
       const shortDesc =
-        desc.replace(/\s+/g, " ").slice(0, 160) +
-        (desc.length > 160 ? "…" : "");
+        normalizedDesc.length > 160
+          ? `${normalizedDesc.slice(0, 160)}…`
+          : normalizedDesc;
+
       return `
         <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
           <div style="font-size:12px; flex:1;">
@@ -591,11 +621,18 @@ export function openInstrumentPicker() {
             <div style="color:#64748b; margin-top:2px; font-size:11px;">${shortDesc}</div>
           </div>
           <div style="display:flex; align-items:center; gap:0.25rem;">
-            <input type="number" min="1" value="1"
-                   id="instQty_${id}"
-                   style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;">
-            <button type="button" class="btn-quote"
-                    onclick="addInstrumentToQuoteById('${id}')">
+            <input
+              type="number"
+              min="1"
+              value="1"
+              id="instQty_${id}"
+              style="width:50px; font-size:11px; padding:0.15rem 0.3rem; border-radius:4px; border:1px solid #cbd5e1;"
+            >
+            <button
+              type="button"
+              class="btn-quote"
+              onclick="addInstrumentToQuoteById('${id}')"
+            >
               Add
             </button>
           </div>
