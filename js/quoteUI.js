@@ -532,12 +532,24 @@ export function openInstrumentPicker() {
   if (!overlay) return;
 
   const listEl = document.getElementById("instrumentPickerList");
-  const instruments = getInstrumentsMaster();
+  const instruments = getInstrumentsMaster().slice(); // copy so we don't mutate global
 
   if (!instruments.length) {
     listEl.innerHTML =
       '<div style="font-size:12px; color:#64748b;">No instruments in master. Please create instruments first.</div>';
   } else {
+    // 🔽 sort ascending by name (fallback to code)
+    instruments.sort((a, b) => {
+      const nameA = (a.instrumentName || a.name || "").toLowerCase();
+      const nameB = (b.instrumentName || b.name || "").toLowerCase();
+      if (nameA && nameB && nameA !== nameB) {
+        return nameA.localeCompare(nameB);
+      }
+      const codeA = (a.catalog || a.instrumentCode || "").toLowerCase();
+      const codeB = (b.catalog || b.instrumentCode || "").toLowerCase();
+      return codeA.localeCompare(codeB);
+    });
+
     listEl.innerHTML = instruments
       .map((inst, idx) => {
         const name = inst.instrumentName || inst.name || "Unnamed Instrument";
@@ -546,6 +558,7 @@ export function openInstrumentPicker() {
         const shortDesc =
           desc.replace(/\s+/g, " ").slice(0, 160) +
           (desc.length > 160 ? "…" : "");
+
         return `
         <div style="border-bottom:1px dashed #e2e8f0; padding:0.4rem 0; display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
           <div style="font-size:12px; flex:1;">
