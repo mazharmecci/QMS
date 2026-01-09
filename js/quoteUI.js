@@ -33,13 +33,11 @@ let masterItemsLoaded = false;
 async function loadMasterItemsOnce() {
   if (masterItemsLoaded) return;
 
-  // Load configItems
   const cfgSnap = await getDocs(collection(db, "configItems"));
   masterConfigItems = cfgSnap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .filter(it => it.isActive !== false);
 
-  // Load additionalItems
   const addSnap = await getDocs(collection(db, "additionalItems"));
   masterAdditionalItems = addSnap.docs
     .map(d => ({ id: d.id, ...d.data() }))
@@ -51,7 +49,7 @@ async function loadMasterItemsOnce() {
 /* ========= Header population ========= */
 export function populateHeader() {
   const header = getQuoteHeaderRaw();
-  if (!validateHeader(header)) return;
+  // No validation here; just render whatever header is present.
 
   const getTextEl = id => document.getElementById(id);
 
@@ -77,63 +75,63 @@ export function populateHeader() {
     noteEl.textContent = header.salesNote;
   }
 
-// Single editable/read-only terms block
-const termsEl = getTextEl("termsTextBlock");
-if (termsEl) {
-  const htmlStored =
-    header.termsHtml && header.termsHtml.trim().length
-      ? header.termsHtml.trim()
-      : null;
+  // Single editable/read-only terms block
+  const termsEl = getTextEl("termsTextBlock");
+  if (termsEl) {
+    const htmlStored =
+      header.termsHtml && header.termsHtml.trim().length
+        ? header.termsHtml.trim()
+        : null;
 
-  const textStored =
-    header.termsText && header.termsText.trim().length
-      ? header.termsText.trim()
-      : null;
+    const textStored =
+      header.termsText && header.termsText.trim().length
+        ? header.termsText.trim()
+        : null;
 
-  // 1) Preferred: stored HTML (from Firestore)
-  if (htmlStored) {
-    console.log("[populateHeader] Rendering stored termsHtml");
-    termsEl.innerHTML = htmlStored;   // keep full formatting
-    return;
-  }
+    // 1) Preferred: stored HTML (from Firestore)
+    if (htmlStored) {
+      console.log("[populateHeader] Rendering stored termsHtml");
+      termsEl.innerHTML = htmlStored;
+      return;
+    }
 
-  // 2) Fallback: stored plain text (very rare once you move back to HTML)
-  if (textStored) {
-    console.log("[populateHeader] Rendering stored termsText as paragraphs");
+    // 2) Fallback: stored plain text
+    if (textStored) {
+      console.log("[populateHeader] Rendering stored termsText as paragraphs");
 
-    const text = textStored.replace(/\r\n/g, "\n");
-    const blocks = text
-      .split(/\n\s*\n/)
-      .map(b => b.trim())
-      .filter(Boolean);
+      const text = textStored.replace(/\r\n/g, "\n");
+      const blocks = text
+        .split(/\n\s*\n/)
+        .map(b => b.trim())
+        .filter(Boolean);
 
-    const html = blocks
-      .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
-      .join("");
+      const html = blocks
+        .map(block => `<p>${block.replace(/\n+/g, "<br>")}</p>`)
+        .join("");
 
+      termsEl.innerHTML = html;
+      return;
+    }
+
+    // 3) Fallback template when nothing stored yet
+    const warrantyText =
+      header.termsWarrantyText ||
+      "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
+
+    const signerName = header.termsSignerName || "Naushad";
+
+    const html = `
+      <div class="terms-section">
+        <p><strong>Warranty:</strong> ${warrantyText}</p>
+        <div class="quote-sender-highlight">${signerName}</div>
+      </div>
+    `;
+    console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
     termsEl.innerHTML = html;
-    return;
   }
-
-  // 3) Fallback template when nothing stored yet
-  const warrantyText =
-    header.termsWarrantyText ||
-    "12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.";
-
-  const signerName = header.termsSignerName || "Naushad";
-
-  const html = `
-    <div class="terms-section">
-      <p><strong>Warranty:</strong> ${warrantyText}</p>
-      <div class="quote-sender-highlight">${signerName}</div>
-    </div>
-  `;
-  console.log("[populateHeader] Rendering template terms (no stored termsText/termsHtml)");
-  termsEl.innerHTML = html;
-}
 }
 
-/* ========= Quote builder (inline qty + price + config/additional) ========= */
+/* ========= Quote builder ========= */
 export function renderQuoteBuilder() {
   const context = getQuoteContext();
   const instruments = context.instruments;
@@ -157,13 +155,11 @@ export function renderQuoteBuilder() {
     const inst = instruments[line.instrumentIndex] || null;
     if (!inst) return;
 
-    // ----- MAIN INSTRUMENT ROW (editable qty + unit price) -----
     const qty = Number(line.quantity || 1);
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
-    // Prefer override, else master price
-    var unitBase =
+    let unitBase =
       (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
         ? line.unitPriceOverride
         : (inst.unitPrice || 0);
@@ -198,7 +194,7 @@ export function renderQuoteBuilder() {
       </tr>
     `);
 
-    // ----- CONFIG ITEMS (display only, not in itemsTotal) -----
+    // CONFIG ITEMS (display only)
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -211,12 +207,12 @@ export function renderQuoteBuilder() {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
 
-        var q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
-        var upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
-        var tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
+        const q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
+        const upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
+        const tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
 
-        var upCell = (typeof upRaw === "number") ? ("₹ " + moneyINR(upRaw)) : upRaw;
-        var tpCell = (typeof tpRaw === "number") ? ("₹ " + moneyINR(tpRaw)) : tpRaw;
+        const upCell = (typeof upRaw === "number") ? ("₹ " + moneyINR(upRaw)) : upRaw;
+        const tpCell = (typeof tpRaw === "number") ? ("₹ " + moneyINR(tpRaw)) : tpRaw;
 
         rows.push(`
           <tr>
@@ -230,7 +226,7 @@ export function renderQuoteBuilder() {
       });
     }
 
-    // ----- ADDITIONAL ITEMS (included in itemsTotal) -----
+    // ADDITIONAL ITEMS (included in itemsTotal)
     const additionalItems = line.additionalItems || [];
     if (additionalItems.length) {
       rows.push(`
@@ -267,7 +263,6 @@ export function renderQuoteBuilder() {
 
 /* ========= Inline edit handlers ========= */
 
-// Quantity: update line.quantity and re-render
 export function quantityCommitted(lineIdx, rawValue) {
   const header = getQuoteHeaderRaw();
   if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
@@ -282,7 +277,6 @@ export function quantityCommitted(lineIdx, rawValue) {
   renderInstrumentModalList();
 }
 
-// Unit price: update override + show comma-formatted INR in the input
 export function unitPriceCommitted(lineIdx, inputEl) {
   const header = getQuoteHeaderRaw();
   if (!Array.isArray(header.quoteLines) || !header.quoteLines[lineIdx]) return;
@@ -293,7 +287,7 @@ export function unitPriceCommitted(lineIdx, inputEl) {
 
   if (num !== null && !isNaN(num)) {
     header.quoteLines[lineIdx].unitPriceOverride = num;
-    inputEl.value = moneyINR(num);  // show commas
+    inputEl.value = moneyINR(num);
   } else {
     delete header.quoteLines[lineIdx].unitPriceOverride;
     inputEl.value = moneyINR(0);
@@ -301,14 +295,13 @@ export function unitPriceCommitted(lineIdx, inputEl) {
 
   saveQuoteHeader(header);
 
-  // 🔁 Recompute totals and re-render using the new override
   const itemsTotal = recomputeItemsTotal();
   renderQuoteBuilder();
   renderSummaryRows(itemsTotal);
   renderInstrumentModalList();
-} // <<< this brace was missing
+}
 
-/* Helper: recompute itemsTotal for summary */
+/* Helper: recompute itemsTotal */
 function recomputeItemsTotal() {
   const context = getQuoteContext();
   const instruments = context.instruments;
@@ -319,7 +312,7 @@ function recomputeItemsTotal() {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
       const qty = Number(line.quantity || 1);
-      var unitBase =
+      let unitBase =
         (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
           ? line.unitPriceOverride
           : (inst.unitPrice || 0);
@@ -657,10 +650,8 @@ export async function openItemModal(type, lineIndex) {
   if (priceGroup) priceGroup.style.display = type === "config" ? "none" : "block";
   if (priceEl) priceEl.value = "";
 
-  // render existing selections
   renderItemModalList(line, type);
 
-  // render master list for this instrument
   const inst = instruments[line.instrumentIndex] || {};
   const modelKey = inst.catalog || inst.instrumentCode || "";
   renderMasterItemPicker(type, modelKey, lineIndex);
@@ -1008,6 +999,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("additionalPickerOverlay").style.display = "none";
     });
 
+  // NOTE: finalizeQuote is now used elsewhere (quotes.html),
+  // so we do not force validation here.
   document
     .getElementById("finalizeQuoteBtn")
     ?.addEventListener("click", finalizeQuote);
@@ -1024,4 +1017,3 @@ window.discountInputCommitted = discountInputCommitted;
 window.addMasterItemToLine = addMasterItemToLine;
 window.quantityCommitted = quantityCommitted;
 window.unitPriceCommitted = unitPriceCommitted;
-
