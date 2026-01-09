@@ -591,18 +591,35 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
   function populateHospitalDropdown() {
     const hospitals = JSON.parse(localStorage.getItem("hospitals") || "[]");
     const select = document.getElementById("hospitalSelect");
+    if (!select) return;
+  
+    // sort by name, then code
+    hospitals.sort((a, b) => {
+      const nameA = (a.clientName || "").toLowerCase();
+      const nameB = (b.clientName || "").toLowerCase();
+      if (nameA && nameB && nameA !== nameB) return nameA.localeCompare(nameB);
+  
+      const codeA = (a.clientCode || "").toLowerCase();
+      const codeB = (b.clientCode || "").toLowerCase();
+      return codeA.localeCompare(codeB);
+    }); // [web:137][web:144]
+  
+    // clear and add placeholder
     select.innerHTML = "";
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = "Select Hospital";
     select.appendChild(placeholder);
-
+  
     hospitals.forEach((hosp, idx) => {
       const opt = document.createElement("option");
-      opt.value = idx;
+      opt.value = idx; // still index into *sorted* array
       opt.textContent = `${hosp.clientCode} - ${hosp.clientName}`;
       select.appendChild(opt);
     });
+  
+    // store back sorted order if you want it reused elsewhere
+    localStorage.setItem("hospitals", JSON.stringify(hospitals));
   }
 
   // ===== Fill hospital details =====
@@ -612,7 +629,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     if (idx === "") return;
     const hosp = hospitals[idx];
     if (!hosp) return;
-
+  
     document.getElementById("hospitalName").value = hosp.clientName || "";
     document.getElementById("hospitalAddress").value = hosp.address || "";
     document.getElementById("contactPhone").value = hosp.mobile || "";
