@@ -1198,7 +1198,7 @@ Next lines: brief description"
   import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
 
   let currentQuoteDocId = null;
-  let quoteHydrated = false; // flag to control validation timing
+  let quoteHydrated = false;
 
   function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
@@ -1224,15 +1224,16 @@ Next lines: brief description"
     const header = {
       quoteNo: docData.quoteNo || "",
       quoteDate: toDateInputValue(docData.quoteDate),
-      hospitalName: hosp.name || "",
-      hospitalAddress: hosp.address || "",
-      contactPerson: hosp.contactPerson || "",
-      contactEmail: hosp.email || "",
-      contactPhone: hosp.phone || "",
-      officePhone: hosp.officePhone || "",
+      // Map from nested hospital or top-level fields, to be safe
+      hospitalName: hosp.name || docData.hospitalName || "",
+      hospitalAddress: hosp.address || docData.hospitalAddress || "",
+      contactPerson: hosp.contactPerson || docData.contactPerson || "",
+      contactEmail: hosp.email || docData.contactEmail || "",
+      contactPhone: hosp.phone || docData.contactPhone || "",
+      officePhone: hosp.officePhone || docData.officePhone || "",
       yourReference: docData.yourReference || "",
       refDate: toDateInputValue(docData.refDate),
-      kindAttn: hosp.kindAttn || "",
+      kindAttn: hosp.kindAttn || docData.kindAttn || "",
       salesNote: docData.salesNote || "",
       termsHtml: docData.termsHtml || "",
       termsText: docData.termsText || "",
@@ -1285,7 +1286,7 @@ Next lines: brief description"
         const ref = doc(db, "quoteHistory", quoteId);
         const snap = await getDoc(ref);
         if (snap.exists()) {
-          const header = hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
+          hydrateLocalFromFirestoreDoc(snap.data(), snap.id);
           quoteHydrated = true;
           console.log("[quotes.html] Hydrated header from Firestore for id:", quoteId);
           return true;
@@ -1295,7 +1296,6 @@ Next lines: brief description"
       } catch (err) {
         console.error("[quotes.html] Error loading quote from Firestore:", err);
       }
-      // Firestore path done (success or fail)
       return false;
     }
 
@@ -1304,7 +1304,6 @@ Next lines: brief description"
     } else {
       console.log("[quotes.html] Using existing local header (no Firestore id).");
     }
-    // Local-only quote; assume header already in localStorage
     quoteHydrated = true;
     return false;
   }
@@ -1312,10 +1311,10 @@ Next lines: brief description"
   function validateHeaderIfReady() {
     if (!quoteHydrated) {
       console.log("[quotes.html] Skipping header validation: quote not hydrated yet");
-      return;
+      return true; // allow until header is ready
     }
-    // Call your existing validation ONLY after hydration.
-    validateHeader();
+    // Expect validateHeader to return true/false
+    return validateHeader();
   }
 
   // Edit instrument helpers (qty + price)
@@ -1361,15 +1360,11 @@ Next lines: brief description"
   document.addEventListener("DOMContentLoaded", async () => {
     console.log("[quotes.html] DOMContentLoaded");
 
-    // 1) Hydrate from Firestore or local first
     await loadQuoteFromFirestoreIfNeeded();
 
-    // 2) Only now render UI based on hydrated header
+    // Now render with hydrated header
     populateHeader();
     renderQuoteBuilder();
-
-    // 3) Optional: if you want validation on page load, do it AFTER hydration
-    // validateHeaderIfReady();
 
     // Sync terms block to header
     const termsEl = document.getElementById("termsTextBlock");
@@ -1451,11 +1446,16 @@ Next lines: brief description"
         }
         lastClickTime = now;
 
-        finalizeBtn.disabled = true;
         console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
+
+        const ok = validateHeaderIfReady();
+        if (!ok) {
+          console.warn("[quotes.html] Header validation failed, aborting finalize.");
+          return;
+        }
+
+        finalizeBtn.disabled = true;
         try {
-          // Here is a good place to enforce real validation:
-          validateHeaderIfReady();
           await finalizeQuote(currentQuoteDocId);
         } finally {
           finalizeBtn.disabled = false;
@@ -1495,6 +1495,3 @@ Next lines: brief description"
   window.closeEditInstrument = closeEditInstrument;
   window.saveEditInstrument = saveEditInstrument;
 </script>
-
-</body>
-</html>
