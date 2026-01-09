@@ -296,21 +296,29 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
 
       const items = data.items || [];
       const quoteLines = data.quoteLines || [];
+      const allLines = [...quoteLines, ...items];
 
-      [...quoteLines, ...items].forEach(item => {
-        // Prefer index, then instrumentCode, then generic code
+      allLines.forEach(item => {
+        // 1) Resolve instrument from master
         const inst = findInstrument(
           instruments,
           item.instrumentIndex ?? item.instrumentCode ?? item.code
         );
 
-        const label =
-          inst.instrumentName ||               // from instruments master
+        // 2) Build a clean label, preferring “name” fields
+        let label =
+          inst.instrumentName ||
           inst.name ||
-          item.instrumentName ||               // from Firestore line
+          item.instrumentName ||
           item.name ||
-          (item.description?.split("\n")[0] || "").trim() ||
-          "—";
+          "";
+
+        // 3) Only fall back to description if label is still empty
+        if (!label && item.description) {
+          label = (item.description.split("\n")[0] || "").trim();
+        }
+
+        if (!label) label = "—";
 
         const qty = item.quantity || 1;
         const price =
