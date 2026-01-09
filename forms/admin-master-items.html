@@ -459,6 +459,18 @@
     .footer a:hover {
       text-decoration: underline;
     }
+
+    /* Scrollable region for table bodies */
+    .table-shell-scroll {
+      max-height: 260px;        /* ~6–7 rows depending on row height */
+      overflow-y: auto;         /* show vertical scroll only when needed */
+    }
+    
+    /* Optional: keep header visually separate from scrolling body */
+    .table-shell-scroll table {
+      border-collapse: collapse;
+    }
+
   </style>
 </head>
 <body>
@@ -562,21 +574,22 @@
           </form>
 
           <div class="table-shell">
-            <table>
-              <thead>
-              <tr>
-                <th style="width:18%;">Code</th>
-                <th>Name</th>
-                <th style="width:28%;">Models</th>
-                <th style="width:18%;">Actions</th>
-              </tr>
-              </thead>
-              <tbody id="configTableBody">
-              <tr><td colspan="4" class="empty-row">Loading configuration items…</td></tr>
-              </tbody>
-            </table>
+            <div class="table-shell-scroll">
+              <table>
+                <thead>
+                <tr>
+                  <th style="width:18%;">Code</th>
+                  <th>Name</th>
+                  <th style="width:28%;">Models</th>
+                  <th style="width:18%;">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="configTableBody">
+                <tr><td colspan="4" class="empty-row">Loading configuration items…</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
       </div>
 
       <!-- ADDITIONAL PANEL -->
