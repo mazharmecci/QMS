@@ -1311,10 +1311,10 @@ Next lines: brief description"
   function validateHeaderIfReady() {
     if (!quoteHydrated) {
       console.log("[quotes.html] Skipping header validation: quote not hydrated yet");
-      return true; // allow until header is ready
+      return true; // allow if not hydrated yet to avoid false negatives
     }
-    // Expect validateHeader to return true/false
-    return validateHeader();
+    // validateHeader should itself log details and return true/false
+    return validateHeader(getQuoteHeaderRaw());
   }
 
   // Edit instrument helpers (qty + price)
@@ -1445,15 +1445,17 @@ Next lines: brief description"
           return;
         }
         lastClickTime = now;
-
+    
         console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
-
+    
+        // 1) Validate header; if invalid, show message and STOP
         const ok = validateHeaderIfReady();
         if (!ok) {
           console.warn("[quotes.html] Header validation failed, aborting finalize.");
           return;
         }
-
+    
+        // 2) Only now perform Firestore writes
         finalizeBtn.disabled = true;
         try {
           await finalizeQuote(currentQuoteDocId);
