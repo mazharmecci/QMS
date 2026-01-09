@@ -452,6 +452,13 @@
     footer a:hover {
       text-decoration: underline;
     }
+
+    /* Scrollable table body for additional items */
+    .table-card-scroll {
+      max-height: 260px;        /* ~6–7 rows depending on row height */
+      overflow-y: auto;         /* vertical scrollbar only when needed */
+    }
+
   </style>
 </head>
 <body>
@@ -564,21 +571,22 @@
         </div>
 
         <div class="table-card">
-          <table>
-            <thead>
-            <tr>
-              <th style="width:18%;">Code</th>
-              <th>Name &amp; price</th>
-              <th style="width:30%;">Models</th>
-              <th style="width:18%;">Actions</th>
-            </tr>
-            </thead>
-            <tbody id="additionalTableBody">
-            <tr><td colspan="4" class="empty-row">Loading additional items…</td></tr>
-            </tbody>
-          </table>
+          <div class="table-card-scroll">
+            <table>
+              <thead>
+              <tr>
+                <th style="width:18%;">Code</th>
+                <th>Name &amp; price</th>
+                <th style="width:30%;">Models</th>
+                <th style="width:18%;">Actions</th>
+              </tr>
+              </thead>
+              <tbody id="additionalTableBody">
+              <tr><td colspan="4" class="empty-row">Loading additional items…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
     </div>
   </section>
 </main>
