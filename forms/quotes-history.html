@@ -647,7 +647,7 @@ async function viewQuote(index) {
   const q = filteredQuotes[index];
   if (!q) return;
 
-  // Prefer quoteLines, fall back to legacy items
+  // Prefer enriched quoteLines, fall back to legacy items
   const lines = Array.isArray(q.quoteLines) && q.quoteLines.length
     ? q.quoteLines
     : (q.items || []);
@@ -693,58 +693,49 @@ async function viewQuote(index) {
     const qty = Number(li.quantity || 0);
     const unitPrice = li.unitPriceOverride != null ? Number(li.unitPriceOverride) : Number(li.unitPrice || 0);
     const totalPrice = li.totalPrice != null ? Number(li.totalPrice) : qty * unitPrice;
-  
-    if (li.lineType === "instrument") {
-      html += `
-        <tr>
-          <td><strong>${li.instrumentName || li.name || ""}</strong></td>
-          <td>${li.instrumentCode || li.code || ""}</td>
-          <td style="text-align:right;">${qty}</td>
-          <td style="text-align:right;">₹ ${moneyINR(unitPrice)}</td>
-          <td style="text-align:right;">₹ ${moneyINR(totalPrice)}</td>
-        </tr>
-      `;
-  
-      if (Array.isArray(li.configItems) && li.configItems.length) {
-        li.configItems.forEach((c) => {
-          html += `
-            <tr>
-              <td style="padding-left:1.5rem;">Config: ${c.name || ""}</td>
-              <td>${c.code || ""}</td>
-              <td style="text-align:right;">${c.quantity || "-"}</td>
-              <td style="text-align:right;">${c.priceLabel || "Included"}</td>
-              <td style="text-align:right;">—</td>
-            </tr>
-          `;
-        });
-      }
-  
-      if (Array.isArray(li.additionalItems) && li.additionalItems.length) {
-        li.additionalItems.forEach((a) => {
-          const aqty = Number(a.quantity || 1);
-          const aunit = Number(a.unitPrice || a.price || 0);
-          const atotal = aqty * aunit;
-          html += `
-            <tr>
-              <td style="padding-left:1.5rem;">Additional: ${a.name || ""}</td>
-              <td>${a.code || ""}</td>
-              <td style="text-align:right;">${aqty}</td>
-              <td style="text-align:right;">₹ ${moneyINR(aunit)}</td>
-              <td style="text-align:right;">₹ ${moneyINR(atotal)}</td>
-            </tr>
-          `;
-        });
-      }
-    } else {
-      html += `
-        <tr>
-          <td>${li.instrumentName || li.name || ""}</td>
-          <td>${li.instrumentCode || li.code || ""}</td>
-          <td style="text-align:right;">${qty}</td>
-          <td style="text-align:right;">₹ ${moneyINR(unitPrice)}</td>
-          <td style="text-align:right;">₹ ${moneyINR(totalPrice)}</td>
-        </tr>
-      `;
+
+    html += `
+      <tr>
+        <td><strong>${li.instrumentName || li.name || ""}</strong></td>
+        <td>${li.instrumentCode || li.code || ""}</td>
+        <td style="text-align:right;">${qty}</td>
+        <td style="text-align:right;">₹ ${moneyINR(unitPrice)}</td>
+        <td style="text-align:right;">₹ ${moneyINR(totalPrice)}</td>
+      </tr>
+    `;
+
+    if (Array.isArray(li.configItems) && li.configItems.length) {
+      li.configItems.forEach((c) => {
+        const cqty = Number(c.quantity || 0);
+        const cunit = Number(c.unitPrice || c.price || 0);
+        const ctotal = cqty * cunit;
+        html += `
+          <tr>
+            <td style="padding-left:1.5rem;">Config: ${c.name || ""}</td>
+            <td>${c.code || ""}</td>
+            <td style="text-align:right;">${cqty || "-"}</td>
+            <td style="text-align:right;">₹ ${moneyINR(cunit)}</td>
+            <td style="text-align:right;">₹ ${moneyINR(ctotal)}</td>
+          </tr>
+        `;
+      });
+    }
+
+    if (Array.isArray(li.additionalItems) && li.additionalItems.length) {
+      li.additionalItems.forEach((a) => {
+        const aqty = Number(a.quantity || 1);
+        const aunit = Number(a.unitPrice || a.price || 0);
+        const atotal = aqty * aunit;
+        html += `
+          <tr>
+            <td style="padding-left:1.5rem;">Additional: ${a.name || ""}</td>
+            <td>${a.code || ""}</td>
+            <td style="text-align:right;">${aqty}</td>
+            <td style="text-align:right;">₹ ${moneyINR(aunit)}</td>
+            <td style="text-align:right;">₹ ${moneyINR(atotal)}</td>
+          </tr>
+        `;
+      });
     }
   });
 
@@ -754,8 +745,13 @@ async function viewQuote(index) {
 
       <h4>Summary (Latest)</h4>
       <div class="details-grid">
-        <p><strong>GST @ ${lines[0]?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.gstValueINR)}</p>
-        <p><strong>Total Value:</strong> ₹ ${moneyINR(q.totalValueINR)}</p>
+        <p><strong>Items Total:</strong> ₹ ${moneyINR(q.localSummary?.itemsTotal || q.subtotalINR || 0)}</p>
+        <p><strong>Discount:</strong> ₹ ${moneyINR(q.localSummary?.discount || q.discount || 0)}</p>
+        <p><strong>After Discount:</strong> ₹ ${moneyINR(q.localSummary?.afterDiscount || q.afterDiscountINR || 0)}</p>
+        <p><strong>Freight:</strong> ${q.localSummary?.freight || "Included"}</p>
+        <p><strong>GST @ ${q.localSummary?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.localSummary?.gstAmount || q.gstValueINR || 0)}</p>
+        <p><strong>Total Value:</strong> ₹ ${moneyINR(q.localSummary?.totalValue || q.totalValueINR || 0)}</p>
+        <p><strong>Round Off:</strong> ₹ ${moneyINR(q.localSummary?.roundOff || 0)}</p>
       </div>
 
       <h4>Revisions</h4>
