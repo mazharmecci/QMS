@@ -428,9 +428,32 @@
       window.location.href = 'index.html';
     }
   }
+
   function toggleForm() {
     document.getElementById('instrumentForm').classList.toggle('active');
   }
+
+  // ✅ Sort table rows by Equipment Name (first column)
+  function sortTableByEquipName() {
+    const table = document.getElementById("instrumentTable");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    rows.sort((a, b) => {
+      const nameA = a.cells[0].textContent.trim().toLowerCase();
+      const nameB = b.cells[0].textContent.trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
+    // Re-append sorted rows
+    tbody.innerHTML = "";
+    rows.forEach(row => tbody.appendChild(row));
+  }
+
+  // Run sort after table is populated
+  document.addEventListener("DOMContentLoaded", () => {
+    sortTableByEquipName();
+  });
 </script>
 
 <!-- Modules -->
