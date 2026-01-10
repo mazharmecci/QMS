@@ -157,7 +157,7 @@ function computeTotalsFromQuoteLines() {
 
   const discount = Number(header.discount || 0);
   const afterDiscount = subtotal - discount;
-  const gstPercent = Number(header.gstPercent || 18); // default 18 if not set
+  const gstPercent = Number(header.gstPercent || 18);
   const gstValueINR = Math.round((afterDiscount * gstPercent) / 100);
   const totalValueINR = afterDiscount + gstValueINR;
 
@@ -188,7 +188,6 @@ export function buildQuoteObject(existingDoc = null) {
   const user = auth.currentUser;
   const createdByUid = user ? user.uid : null;
 
-  // Flattened items array kept for backward compatibility / exports
   const items = enrichedLines.map((line) => ({
     instrumentCode: line.instrumentCode || "",
     instrumentName: line.instrumentName || "",
@@ -224,9 +223,7 @@ export function buildQuoteObject(existingDoc = null) {
     gstPercent,
     gstValueINR,
     totalValueINR,
-    // canonical lines used by builder + history
     quoteLines: enrichedLines,
-    // legacy flattening
     items,
     salesNote: header.salesNote || "",
     termsHtml: header.termsHtml || "",
@@ -272,22 +269,12 @@ export function validateHeader(header) {
 
 async function saveBaseQuoteDocToFirestore(docId, data) {
   try {
-    console.log("[saveBaseQuoteDocToFirestore] docId:", docId);
-    console.log("[saveBaseQuoteDocToFirestore] payload.createdBy:", data.createdBy);
-
-    if (!data.createdBy) {
-      console.warn(
-        "[saveBaseQuoteDocToFirestore] createdBy is missing; Firestore rules may reject this."
-      );
-    }
-
     if (docId) {
       const ref = doc(db, "quoteHistory", docId);
       await updateDoc(ref, {
         ...data,
         updatedAt: serverTimestamp()
       });
-      console.log("[saveBaseQuoteDocToFirestore] updated doc:", docId);
       return docId;
     }
 
@@ -297,7 +284,6 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    console.log("[saveBaseQuoteDocToFirestore] created new doc:", newDoc.id);
     return newDoc.id;
   } catch (err) {
     console.error("[saveBaseQuoteDocToFirestore] Error writing to Firestore:", err);
@@ -308,7 +294,6 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
 
 async function appendRevisionSnapshot(docId, data) {
   try {
-    console.log("[appendRevisionSnapshot] for docId:", docId);
     const subCol = collection(db, "quoteHistory", docId, "revisions");
     await addDoc(subCol, {
       ...data,
