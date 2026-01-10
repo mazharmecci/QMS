@@ -433,16 +433,16 @@
     document.getElementById('instrumentForm').classList.toggle('active');
   }
 
-  // ✅ Sort table rows by Equipment Name (first column)
-  function sortTableByEquipName() {
+  // ✅ Sort table rows by Catalog (4th column)
+  function sortTableByCatalog() {
     const table = document.getElementById("instrumentTable");
     const tbody = table.querySelector("tbody");
     const rows = Array.from(tbody.querySelectorAll("tr"));
 
     rows.sort((a, b) => {
-      const nameA = a.cells[0].textContent.trim().toLowerCase();
-      const nameB = b.cells[0].textContent.trim().toLowerCase();
-      return nameA.localeCompare(nameB);
+      const catalogA = a.cells[3].textContent.trim().toLowerCase();
+      const catalogB = b.cells[3].textContent.trim().toLowerCase();
+      return catalogA.localeCompare(catalogB);
     });
 
     // Re-append sorted rows
@@ -452,8 +452,12 @@
 
   // Run sort after table is populated
   document.addEventListener("DOMContentLoaded", () => {
-    sortTableByEquipName();
+    sortTableByCatalog();
   });
+
+  // Optional: allow clicking the Catalog header to re-sort
+  document.querySelector("#instrumentTable th:nth-child(4)")
+    .addEventListener("click", sortTableByCatalog);
 </script>
 
 <!-- Modules -->
