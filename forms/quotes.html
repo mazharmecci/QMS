@@ -1218,13 +1218,12 @@ Next lines: brief description"
   function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData || typeof docData !== "object") return null;
     if (docId) currentQuoteDocId = docId;
-
+  
     const hosp = docData.hospital || {};
-
+  
     const header = {
       quoteNo: docData.quoteNo || "",
       quoteDate: toDateInputValue(docData.quoteDate),
-      // Map from nested hospital or top-level fields, to be safe
       hospitalName: hosp.name || docData.hospitalName || "",
       hospitalAddress: hosp.address || docData.hospitalAddress || "",
       contactPerson: hosp.contactPerson || docData.contactPerson || "",
@@ -1239,41 +1238,54 @@ Next lines: brief description"
       termsText: docData.termsText || "",
       discount: Number(docData.discount || 0),
       status: docData.status || "Submitted",
+      gstPercent: Number(docData.gstPercent || 0),
+      gstValueINR: Number(docData.gstValueINR || 0),
+      totalValueINR: Number(docData.totalValueINR || 0),
       quoteLines: []
     };
-
-    const instruments = getInstrumentsMaster();
-    const items = Array.isArray(docData.items) ? docData.items : [];
-
-    console.log("[hydrateLocalFromFirestoreDoc] items length:", items.length);
-
-    const quoteLines = items.map(item => {
-      const code = item.instrumentCode || item.code || "";
-      const name = item.instrumentName || item.name || "";
-
-      let idx = instruments.findIndex(inst =>
-        inst.instrumentCode === code ||
-        inst.catalog === code ||
-        inst.instrumentName === name ||
-        inst.name === name
-      );
-
-      if (idx < 0) {
-        console.warn("[hydrateLocalFromFirestoreDoc] Instrument not found in master:", item);
-        idx = 0;
-      }
-
-      return {
-        lineType: "instrument",
-        instrumentIndex: idx,
-        quantity: item.quantity || 1,
-        unitPriceOverride: item.unitPriceOverride || null,
-        configItems: item.configItems || [],
-        additionalItems: item.additionalItems || []
-      };
-    });
-
-    header.quoteLines = quoteLines;
+  
+    // 1) Prefer stored quoteLines (new model)
+    if (Array.isArray(docData.quoteLines) && docData.quoteLines.length) {
+      header.quoteLines = docData.quoteLines.map((line) => ({
+        lineType: line.lineType || "instrument",
+        instrumentIndex: line.instrumentIndex ?? 0,
+        quantity: Number(line.quantity || 1),
+        unitPriceOverride: line.unitPriceOverride ?? null,
+        configItems: Array.isArray(line.configItems) ? line.configItems : [],
+        additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+      }));
+      console.log("[hydrate] Using quoteLines from Firestore:", header.quoteLines.length);
+    } else {
+      // 2) Legacy fallback: map items[] to quoteLines using master
+      const instruments = getInstrumentsMaster();
+      const items = Array.isArray(docData.items) ? docData.items : [];
+      console.log("[hydrate] Legacy items length:", items.length);
+  
+      header.quoteLines = items.map((item) => {
+        const code = item.instrumentCode || item.code || "";
+        const name = item.instrumentName || item.name || "";
+        let idx = instruments.findIndex(
+          (inst) =>
+            inst.instrumentCode === code ||
+            inst.catalog === code ||
+            inst.instrumentName === name ||
+            inst.name === name
+        );
+        if (idx < 0) {
+          console.warn("[hydrate] Instrument not found in master:", item);
+          idx = 0;
+        }
+        return {
+          lineType: "instrument",
+          instrumentIndex: idx,
+          quantity: item.quantity || 1,
+          unitPriceOverride: item.unitPriceOverride || null,
+          configItems: item.configItems || [],
+          additionalItems: item.additionalItems || []
+        };
+      });
+    }
+  
     saveQuoteHeader(header);
     return header;
   }
@@ -1497,3 +1509,5 @@ Next lines: brief description"
   window.closeEditInstrument = closeEditInstrument;
   window.saveEditInstrument = saveEditInstrument;
 </script>
+</body>
+</html>
