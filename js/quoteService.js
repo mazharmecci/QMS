@@ -38,7 +38,7 @@ export function saveQuoteHeader(header) {
 export function getInstrumentsMaster() {
   try {
     const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
-    return instruments.map(inst => ({
+    return instruments.map((inst) => ({
       ...inst,
       suppliedCompleteWith:
         inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
@@ -57,20 +57,17 @@ export function getQuoteContext() {
 }
 
 /* ========================
- * Line items & summary
+ * Line items (flattened view)
  * =======================*/
 
 export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
 
-  (Array.isArray(lines) ? lines : []).forEach(line => {
+  (Array.isArray(lines) ? lines : []).forEach((line) => {
     const inst = instruments[line.instrumentIndex] || null;
     if (inst) {
-      // Prefer per‑line override, then master price
-      const price = Number(
-        line.unitPriceOverride ?? inst.unitPrice ?? 0
-      );
+      const price = Number(line.unitPriceOverride ?? inst.unitPrice ?? 0);
 
       items.push({
         name: inst.instrumentName || inst.name || "",
@@ -81,7 +78,7 @@ export function buildLineItemsFromCurrentQuote() {
       });
     }
 
-    (line.configItems || []).forEach(item => {
+    (line.configItems || []).forEach((item) => {
       const price =
         item.tpInr != null ? Number(item.tpInr) : Number(item.upInr || 0);
       items.push({
@@ -97,7 +94,7 @@ export function buildLineItemsFromCurrentQuote() {
       });
     });
 
-    (line.additionalItems || []).forEach(item => {
+    (line.additionalItems || []).forEach((item) => {
       const unitNum = Number(
         item.price || item.unitPrice || item.upInr || item.tpInr || 0
       );
@@ -120,53 +117,91 @@ export function buildLineItemsFromCurrentQuote() {
 }
 
 /* ========================
- * Firestore-friendly object
+ * Quote totals + Firestore object
  * =======================*/
 
+function computeTotalsFromQuoteLines() {
+  const { instruments, lines, header } = getQuoteContext();
+
+  let subtotal = 0;
+
+  const enrichedLines = (Array.isArray(lines) ? lines : []).map((line) => {
+    if (line.lineType && line.lineType !== "instrument") {
+      return line;
+    }
+
+    const inst = instruments[line.instrumentIndex] || {};
+    const qty = Number(line.quantity || 1);
+    const basePrice = Number(inst.unitPrice || 0);
+    const unitPrice =
+      line.unitPriceOverride != null
+        ? Number(line.unitPriceOverride)
+        : basePrice;
+
+    const lineTotal = qty * unitPrice;
+    subtotal += lineTotal;
+
+    return {
+      ...line,
+      lineType: "instrument",
+      instrumentName: inst.instrumentName || inst.name || line.instrumentName || "",
+      instrumentCode: inst.catalog || inst.instrumentCode || line.instrumentCode || "",
+      description: inst.longDescription || inst.description || line.description || "",
+      unitPrice,
+      totalPrice: lineTotal,
+      gstPercent: Number(inst.gstPercent || line.gstPercent || header.gstPercent || 0),
+      configItems: Array.isArray(line.configItems) ? line.configItems : [],
+      additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+    };
+  });
+
+  const discount = Number(header.discount || 0);
+  const afterDiscount = subtotal - discount;
+  const gstPercent = Number(header.gstPercent || 18); // default 18 if not set
+  const gstValueINR = Math.round((afterDiscount * gstPercent) / 100);
+  const totalValueINR = afterDiscount + gstValueINR;
+
+  return {
+    header,
+    enrichedLines,
+    discount,
+    subtotal,
+    afterDiscount,
+    gstPercent,
+    gstValueINR,
+    totalValueINR
+  };
+}
+
 export function buildQuoteObject(existingDoc = null) {
-  const { header, instruments, lines } = getQuoteContext();
-
-  let totalValueINR = 0;
-  let gstValueINR = 0;
-
-  const items = Array.isArray(lines)
-    ? lines.map(line => {
-        const inst = instruments[line.instrumentIndex] || {};
-        const qty = Number(line.quantity || 1);
-
-        // Prefer per‑line override, then master price
-        const unitPrice = Number(
-          line.unitPriceOverride ?? inst.unitPrice ?? 0
-        );
-
-        const totalPrice = qty * unitPrice;
-        totalValueINR += totalPrice;
-
-        const gstPercent = Number(inst.gstPercent || 0);
-        const gstAmount = totalPrice * (gstPercent / 100);
-        gstValueINR += gstAmount;
-
-        return {
-          instrumentCode: inst.instrumentCode || "",
-          instrumentName: inst.instrumentName || "",
-          description: inst.longDescription || inst.description || "",
-          quantity: qty,
-          unitPrice,
-          totalPrice,
-          gstPercent,
-          // keep overrides in the line document as well (for clarity/history)
-          unitPriceOverride:
-            line.unitPriceOverride != null
-              ? Number(line.unitPriceOverride)
-              : null,
-          configItems: Array.isArray(line.configItems) ? line.configItems : [],
-          additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
-        };
-      })
-    : [];
+  const {
+    header,
+    enrichedLines,
+    discount,
+    subtotal,
+    afterDiscount,
+    gstPercent,
+    gstValueINR,
+    totalValueINR
+  } = computeTotalsFromQuoteLines();
 
   const user = auth.currentUser;
   const createdByUid = user ? user.uid : null;
+
+  // Flattened items array kept for backward compatibility / exports
+  const items = enrichedLines.map((line) => ({
+    instrumentCode: line.instrumentCode || "",
+    instrumentName: line.instrumentName || "",
+    description: line.description || "",
+    quantity: Number(line.quantity || 1),
+    unitPrice: Number(line.unitPrice || 0),
+    totalPrice: Number(line.totalPrice || 0),
+    gstPercent: Number(line.gstPercent || gstPercent || 0),
+    unitPriceOverride:
+      line.unitPriceOverride != null ? Number(line.unitPriceOverride) : null,
+    configItems: Array.isArray(line.configItems) ? line.configItems : [],
+    additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+  }));
 
   return {
     quoteNo: header.quoteNo || "",
@@ -179,17 +214,28 @@ export function buildQuoteObject(existingDoc = null) {
       contactPerson: header.contactPerson || "",
       email: header.contactEmail || "",
       phone: header.contactPhone || "",
-      officePhone: header.officePhone || ""
+      officePhone: header.officePhone || "",
+      kindAttn: header.kindAttn || ""
     },
-    status: header.status || "Submitted",
-    discount: Number(header.discount || 0),
-    totalValueINR,
+    status: header.status || "SUBMITTED",
+    discount,
+    subtotalINR: subtotal,
+    afterDiscountINR: afterDiscount,
+    gstPercent,
     gstValueINR,
+    totalValueINR,
+    // canonical lines used by builder + history
+    quoteLines: enrichedLines,
+    // legacy flattening
     items,
     salesNote: header.salesNote || "",
     termsHtml: header.termsHtml || "",
     termsText: header.termsText || "",
-    createdBy: existingDoc?.createdBy || createdByUid
+    createdBy: existingDoc?.createdBy || createdByUid,
+    createdByLabel:
+      existingDoc?.createdByLabel ||
+      (user && (user.displayName || user.email || user.uid)) ||
+      ""
   };
 }
 
@@ -299,62 +345,48 @@ export async function finalizeQuote(rawArg = null) {
     const header = getQuoteHeaderRaw();
     if (!validateHeader(header)) return null;
 
-    const { instruments, lines } = getQuoteContext();
+    const { lines } = getQuoteContext();
     if (!Array.isArray(lines) || !lines.length) {
       alert("No instruments in this quote. Please add at least one instrument.");
       return null;
     }
 
     header.status = "SUBMITTED";
+    saveQuoteHeader(header);
 
-    // Use override price where present for summary
-    let itemsTotal = 0;
-    lines.forEach(line => {
-      const inst = instruments[line.instrumentIndex] || null;
-      if (inst) {
-        const qty = Number(line.quantity || 1);
-        const unitPrice = Number(
-          line.unitPriceOverride ?? inst.unitPrice ?? 0
-        );
-        itemsTotal += unitPrice * qty;
-      }
-      (line.additionalItems || []).forEach(item => {
-        const qtyNum = Number(item.qty || 1);
-        const unitNum = Number(item.price || item.unitPrice || 0);
-        itemsTotal += qtyNum * unitNum;
-      });
-    });
-
-    const gstPercent = 18;
-    const discount = Number(header.discount || 0);
-    const afterDisc = itemsTotal - discount;
-    const gstAmount = (afterDisc * gstPercent) / 100;
-    const totalValue = afterDisc + gstAmount;
-    const roundedTotal = Math.round(totalValue);
+    const {
+      enrichedLines,
+      discount,
+      subtotal,
+      afterDiscount,
+      gstPercent,
+      gstValueINR,
+      totalValueINR
+    } = computeTotalsFromQuoteLines();
 
     const summary = {
-      itemsTotal,
+      itemsTotal: subtotal,
       discount,
-      afterDiscount: afterDisc,
+      afterDiscount,
       freight: "Included",
       gstPercent,
-      gstAmount,
-      totalValue,
-      roundOff: roundedTotal - totalValue
+      gstAmount: gstValueINR,
+      totalValue: totalValueINR,
+      roundOff: Math.round(totalValueINR) - totalValueINR
     };
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
+    const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
     const lastRev = sameQuote.length
-      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      ? Math.max(...sameQuote.map((q) => Number(q.revision || 1)))
       : 0;
     const nextRev = lastRev + 1;
 
     const now = new Date();
     const quoteLocal = {
-      header,
+      header: { ...header, quoteLines: enrichedLines },
       lineItems,
       summary,
       quoteNo: header.quoteNo,
@@ -381,9 +413,7 @@ export async function finalizeQuote(rawArg = null) {
       statusHistory: [
         ...(baseQuoteDoc.statusHistory || []),
         { status: "SUBMITTED", date: now.toISOString().slice(0, 10) }
-      ],
-      createdBy: baseQuoteDoc.createdBy || user.uid,
-      createdByLabel: user.displayName || user.email || user.uid
+      ]
     };
 
     const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
@@ -430,23 +460,19 @@ export async function approveQuoteRevision(docId) {
         { status: "APPROVED", date: new Date().toISOString().slice(0, 10) }
       ]
     });
-    console.log("[approveQuoteRevision] Base quote marked APPROVED");
 
     const revRef = collection(db, "quoteHistory", docId, "revisions");
     const revSnap = await getDocs(revRef);
 
     let maxRev = 0;
-
-    revSnap.forEach(d => {
+    revSnap.forEach((d) => {
       const data = d.data();
       const rev = Number(data.revision || 0);
-      if (rev > maxRev) {
-        maxRev = rev;
-      }
+      if (rev > maxRev) maxRev = rev;
     });
 
     const updates = [];
-    revSnap.forEach(d => {
+    revSnap.forEach((d) => {
       const data = d.data();
       const rev = Number(data.revision || 0);
       const ref = d.ref;
@@ -455,8 +481,6 @@ export async function approveQuoteRevision(docId) {
     });
 
     await Promise.all(updates);
-    console.log("[approveQuoteRevision] Revisions updated: APPROVED + MINOR");
-
     alert(`Quote ${quoteNo} (Rev ${maxRev}) marked as APPROVED. All older revisions set to MINOR.`);
   } catch (err) {
     console.error("[approveQuoteRevision] Error:", err);
