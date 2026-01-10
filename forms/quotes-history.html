@@ -643,19 +643,23 @@ tr:hover td {
     }
   }
 
-  async function viewQuote(index) {
-    const q = filteredQuotes[index];
-    if (!q) return;
+async function viewQuote(index) {
+  const q = filteredQuotes[index];
+  if (!q) return;
 
-    const items = q.items || [];
-    const hosp  = q.hospital || {};
+  // Prefer quoteLines, fall back to legacy items
+  const lines = Array.isArray(q.quoteLines) && q.quoteLines.length
+    ? q.quoteLines
+    : (q.items || []);
 
-    let revisions = [];
-    try {
-      revisions = await loadRevisionsForQuote(q.id);
-    } catch (err) {
-      console.error("Failed to load revisions", err);
-    }
+  const hosp = q.hospital || {};
+
+  let revisions = [];
+  try {
+    revisions = await loadRevisionsForQuote(q.id);
+  } catch (err) {
+    console.error("Failed to load revisions", err);
+  }
 
   let html = `
     <div class="quote-details">
@@ -687,7 +691,6 @@ tr:hover td {
 
   lines.forEach((li) => {
     if (li.lineType === "instrument") {
-      // main instrument row
       html += `
         <tr>
           <td><strong>${li.instrumentName || li.name || ""}</strong></td>
@@ -698,7 +701,6 @@ tr:hover td {
         </tr>
       `;
 
-      // configuration items under this instrument
       if (Array.isArray(li.configItems) && li.configItems.length) {
         li.configItems.forEach((c) => {
           html += `
@@ -713,7 +715,6 @@ tr:hover td {
         });
       }
 
-      // additional priced items under this instrument
       if (Array.isArray(li.additionalItems) && li.additionalItems.length) {
         li.additionalItems.forEach((a) => {
           const qty = a.quantity || 1;
@@ -731,7 +732,6 @@ tr:hover td {
         });
       }
     } else {
-      // fallback: any legacy flat rows
       const qty = li.quantity || 0;
       const unit = Number(li.unitPrice || 0);
       const total = Number(li.totalPrice || qty * unit || 0);
@@ -759,6 +759,44 @@ tr:hover td {
 
       <h4>Revisions</h4>
   `;
+
+  if (revisions.length) {
+    html += `<ul style="margin-top:0.5rem;">`;
+    revisions.forEach((r) => {
+      const revNo = r.revision || "?";
+      const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
+      const createdAt =
+        r.createdAt && r.createdAt.toDate
+          ? r.createdAt.toDate().toISOString().slice(0, 10)
+          : "-";
+      html += `
+        <li style="margin-bottom:4px;">
+          <strong>Rev ${revNo}</strong>
+          &nbsp;|&nbsp; Date: ${createdAt}
+          &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
+        </li>
+      `;
+    });
+    html += `</ul>`;
+  } else {
+    html += `<p>No revision snapshots found.</p>`;
+  }
+
+  html += `
+      <div style="margin-top:1.5rem; text-align:right;">
+        <button id="closeDetails" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  `;
+
+  detailsDiv.innerHTML = html;
+  detailsDiv.classList.remove("hidden");
+
+  document
+    .getElementById("closeDetails")
+    .addEventListener("click", () => detailsDiv.classList.add("hidden"));
+}
+
 
   function exportCSV() {
     if (!quotes.length) {
