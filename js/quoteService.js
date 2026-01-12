@@ -13,6 +13,44 @@ import {
   getDocs
 } from "./firebase.js";
 
+async function callAIService(quoteObj) {
+  try {
+    const payload = {
+      quote: {
+        deal_value: quoteObj.totalValueINR,
+        hospital: quoteObj.hospital.name,
+        instrument_category: "Histopathology", // adjust if needed dynamically
+        configuration_complexity: "Medium", // or compute from quoteObj
+        items: quoteObj.items.map(item => ({
+          item_id: item.code,
+          quantity: item.quantity,
+          unit_price: item.unitPrice
+        }))
+      },
+      historical_context: {
+        avg_winning_price: 100000, // temporary, replace with real logic
+        similar_quotes_won: 12,    // temporary
+        similar_quotes_lost: 3     // temporary
+      }
+    };
+
+    const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("AI service call failed");
+
+    const data = await res.json();
+    return data;
+
+  } catch (err) {
+    console.error("[callAIService] Error:", err);
+    return null;
+  }
+}
+
 /* ========================
  * Local header & context
  * =======================*/
@@ -339,15 +377,8 @@ export async function finalizeQuote(rawArg = null) {
     header.status = "SUBMITTED";
     saveQuoteHeader(header);
 
-    const {
-      enrichedLines,
-      discount,
-      subtotal,
-      afterDiscount,
-      gstPercent,
-      gstValueINR,
-      totalValueINR
-    } = computeTotalsFromQuoteLines();
+    const { enrichedLines, discount, subtotal, afterDiscount, gstPercent, gstValueINR, totalValueINR } =
+      computeTotalsFromQuoteLines();
 
     const summary = {
       itemsTotal: subtotal,
@@ -364,9 +395,7 @@ export async function finalizeQuote(rawArg = null) {
 
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
-    const lastRev = sameQuote.length
-      ? Math.max(...sameQuote.map((q) => Number(q.revision || 1)))
-      : 0;
+    const lastRev = sameQuote.length ? Math.max(...sameQuote.map((q) => Number(q.revision || 1))) : 0;
     const nextRev = lastRev + 1;
 
     const now = new Date();
@@ -406,8 +435,65 @@ export async function finalizeQuote(rawArg = null) {
 
     await appendRevisionSnapshot(savedId, firestoreData);
 
+    // ================================
+    // AI Integration with Safeguard
+    // ================================
+    async function callAIService(quoteObj) {
+      try {
+        const payload = {
+          quote: {
+            deal_value: quoteObj.totalValueINR,
+            hospital: quoteObj.hospital.name,
+            instrument_category: "Histopathology",
+            configuration_complexity: "Medium",
+            items: quoteObj.items.map(item => ({
+              item_id: item.code,
+              quantity: item.quantity,
+              unit_price: item.unitPrice
+            }))
+          },
+          historical_context: {
+            avg_winning_price: 100000,
+            similar_quotes_won: 12,
+            similar_quotes_lost: 3
+          }
+        };
+
+        const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("AI service call failed");
+
+        return await res.json();
+      } catch (err) {
+        console.error("[callAIService] Error:", err);
+        return null; // safeguard: do not throw
+      }
+    }
+
+    try {
+      const aiResult = await callAIService(baseQuoteDoc);
+      const aiRef = doc(db, "quoteHistory", savedId);
+
+      if (aiResult) {
+        await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
+        console.log("[finalizeQuote] AI analysis saved successfully");
+      } else {
+        // Save AI failure status without blocking quote
+        await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
+        console.warn("[finalizeQuote] AI analysis failed, quote still finalized");
+      }
+    } catch (aiErr) {
+      console.error("[finalizeQuote] Unexpected AI error:", aiErr);
+      // Even if AI update fails completely, quote remains finalized
+    }
+
     alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
     return savedId;
+
   } catch (err) {
     console.error("[finalizeQuote] Error:", err);
     alert("Quote saved locally, but cloud save failed.");
