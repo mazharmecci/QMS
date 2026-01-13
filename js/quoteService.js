@@ -558,3 +558,53 @@ export async function approveQuoteRevision(docId) {
     alert("Failed to update quote status. Please try again.");
   }
 }
+
+
+// Generate and download PDF immediately after successful save
+try {
+  const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@latest/dist/jspdf.umd.min.js');
+  const doc = new jsPDF();
+
+  // Build PDF content from quote data (customize layout as needed)
+  let yPosition = 20;
+  doc.setFontSize(16);
+  doc.text(`Quote ${header.quoteNo} (Rev ${nextRev})`, 20, yPosition);
+  yPosition += 15;
+
+  doc.setFontSize(12);
+  doc.text(`Date: ${header.quoteDate}`, 20, yPosition);
+  yPosition += 10;
+  doc.text(`Hospital: ${header.hospitalName}`, 20, yPosition);
+  yPosition += 10;
+  doc.text(`Total: ₹${totalValueINR.toLocaleString()}`, 20, yPosition);
+  yPosition += 20;
+
+  // Add items summary
+  doc.text('Items:', 20, yPosition);
+  yPosition += 10;
+  lineItems.forEach((item, index) => {
+    if (yPosition > 270) { doc.addPage(); yPosition = 20; }
+    doc.text(`${item.name} (${item.code}) - ₹${item.price.toLocaleString()}`, 30, yPosition);
+    yPosition += 7;
+  });
+
+  // Add terms/sales note if needed
+  if (header.salesNote) {
+    yPosition += 10;
+    doc.text('Sales Note:', 20, yPosition);
+    yPosition += 7;
+    doc.text(header.salesNote.substring(0, 200), 20, yPosition); // Truncate if long
+  }
+
+  // Download with exact quote number filename
+  doc.save(`${header.quoteNo}.pdf`);  // e.g., "QT-2026-001.pdf"
+
+  console.log(`[finalizeQuote] PDF downloaded: ${header.quoteNo}.pdf`);
+} catch (pdfErr) {
+  console.error('[finalizeQuote] PDF generation failed:', pdfErr);
+  // Fallback alert
+  alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
+}
+
+// Remove old alert, or keep as fallback
+
