@@ -13,44 +13,6 @@ import {
   getDocs
 } from "./firebase.js";
 
-async function callAIService(quoteObj) {
-  try {
-    const payload = {
-      quote: {
-        deal_value: quoteObj.totalValueINR,
-        hospital: quoteObj.hospital.name,
-        instrument_category: "Histopathology", // adjust if needed dynamically
-        configuration_complexity: "Medium", // or compute from quoteObj
-        items: quoteObj.items.map(item => ({
-          item_id: item.code,
-          quantity: item.quantity,
-          unit_price: item.unitPrice
-        }))
-      },
-      historical_context: {
-        avg_winning_price: 100000, // temporary, replace with real logic
-        similar_quotes_won: 12,    // temporary
-        similar_quotes_lost: 3     // temporary
-      }
-    };
-
-    const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error("AI service call failed");
-
-    const data = await res.json();
-    return data;
-
-  } catch (err) {
-    console.error("[callAIService] Error:", err);
-    return null;
-  }
-}
-
 /* ========================
  * Local header & context
  * =======================*/
