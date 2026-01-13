@@ -283,73 +283,6 @@ header {
   text-align: right;
 }
 
-/* PRINT-FRIENDLY OVERRIDES */
-@media print {
-  .company-box {
-    background: #d0d4d9 !important; /* keep gray */
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .sales-box {
-    background: #d0d4d9 !important; /* keep gray */
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .attn-box {
-    background: #add8e6 !important; /* keep blue */
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .quote-meta-grid {
-    background: #fff !important; /* keep white for readability */
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-  }
-}
-
-  .quote-meta-grid .label {
-    font-size: 8px;
-    font-weight: 500;
-    color: #000;
-  }
-  .quote-meta-grid .value {
-    font-size: 10px;
-    font-weight: 500;
-    color: #000;
-    white-space: normal;
-    word-break: break-word;
-  }
-  .quote-meta-grid .value-small {
-    font-size: 9px;
-    font-weight: 600;
-  }
-  .quote-meta-grid {
-    column-gap: 0.5rem;
-    row-gap: 0.4rem;
-    grid-template-columns: minmax(0, auto) minmax(0, 2fr)
-                           minmax(0, auto) minmax(0, 1.5fr);
-  }
-}
-
-/* SALES NOTE */
-#salesNoteBlock {
-  margin: 0 0 1rem 0;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-line;
-  color: #333;
-  animation: fadeInUp 1.7s ease-out both;
-}
-
 /* QUOTE BUILDER */
 #quoteBuilder {
   margin-top: 1.5rem;
@@ -419,6 +352,78 @@ table.quote-table td:nth-child(2) {
 table.quote-table .cat-sub b,
 table.quote-table .cat-sub strong {
   font-weight: 500;
+}
+
+table.quote-table tr.section-header-row td {
+  border-top: none;       /* removes the extra border line */
+  padding-top: 0.35rem;   /* adjust if you want tighter spacing */
+}
+
+/* PRINT-FRIENDLY OVERRIDES */
+@media print {
+  .company-box {
+    background: #d0d4d9 !important; /* keep gray */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sales-box {
+    background: #d0d4d9 !important; /* keep gray */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .attn-box {
+    background: #add8e6 !important; /* keep blue */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .quote-meta-grid {
+    background: #fff !important; /* keep white for readability */
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+}
+
+  .quote-meta-grid .label {
+    font-size: 8px;
+    font-weight: 500;
+    color: #000;
+  }
+  .quote-meta-grid .value {
+    font-size: 10px;
+    font-weight: 500;
+    color: #000;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .quote-meta-grid .value-small {
+    font-size: 9px;
+    font-weight: 600;
+  }
+  .quote-meta-grid {
+    column-gap: 0.5rem;
+    row-gap: 0.4rem;
+    grid-template-columns: minmax(0, auto) minmax(0, 2fr)
+                           minmax(0, auto) minmax(0, 1.5fr);
+  }
+}
+
+/* SALES NOTE */
+#salesNoteBlock {
+  margin: 0 0 1rem 0;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: #333;
+  animation: fadeInUp 1.7s ease-out both;
 }
 
 /* FINALIZE BUTTON */
