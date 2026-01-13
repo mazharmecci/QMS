@@ -349,6 +349,213 @@ async function appendRevisionSnapshot(docId, data) {
 
 let finalizeInProgress = false;
 
+async function runAIAnalysis(quoteObj, docId) {
+  try {
+    const payload = {
+      quote: {
+        deal_value: quoteObj.totalValueINR,
+        hospital: quoteObj.hospital.name,
+        instrument_category: "Histopathology",
+        configuration_complexity: "Medium",
+        items: quoteObj.items.map(item => ({
+          item_id: item.code,
+          quantity: item.quantity,
+          unit_price: item.unitPrice
+        }))
+      },
+      historical_context: {
+        avg_winning_price: 100000,
+        similar_quotes_won: 12,
+        similar_quotes_lost: 3
+      }
+    };
+
+    const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("AI service call failed");
+
+    const aiResult = await res.json();
+    const aiRef = doc(db, "quoteHistory", docId);
+
+    await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
+    console.log("[finalizeQuote] AI analysis saved successfully");
+  } catch (err) {
+    console.error("[runAIAnalysis] Error:", err);
+    try {
+      const aiRef = doc(db, "quoteHistory", docId);
+      await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
+      console.warn("[runAIAnalysis] AI analysis failed, quote still finalized");
+    } catch (updateErr) {
+      console.error("[runAIAnalysis] Failed to mark AI status:", updateErr);
+    }
+  }
+}
+
+function saveLocalRevision(header, enrichedLines, lineItems, summary) {
+  const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
+  const lastRev = sameQuote.length
+    ? Math.max(...sameQuote.map((q) => Number(q.revision || 1)))
+    : 0;
+  const nextRev = lastRev + 1;
+
+  const now = new Date();
+  const quoteLocal = {
+    header: { ...header, quoteLines: enrichedLines },
+    lineItems,
+    summary,
+    quoteNo: header.quoteNo,
+    revision: nextRev,
+    status: "SUBMITTED",
+    history: [
+      {
+        status: "SUBMITTED",
+        date: now.toISOString().slice(0, 10),
+        time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      }
+    ]
+  };
+
+  existing.push(quoteLocal);
+  localStorage.setItem("quotes", JSON.stringify(existing));
+
+  return { nextRev, now };
+}
+
+async function saveFirestoreRevision(docId, baseQuoteDoc, summary, nextRev, now) {
+  const firestoreData = {
+    ...baseQuoteDoc,
+    revision: nextRev,
+    localSummary: summary,
+    status: "SUBMITTED",
+    statusHistory: [
+      ...(baseQuoteDoc.statusHistory || []),
+      { status: "SUBMITTED", date: now.toISOString().slice(0, 10) }
+    ]
+  };
+
+  const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
+  if (!savedId) return null;
+
+  await appendRevisionSnapshot(savedId, firestoreData);
+  return savedId;
+}
+
+function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
+  try {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      throw new Error("jsPDF not loaded. Check script tag in HTML.");
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF(); // A4 portrait
+
+    const {
+      itemsTotal: subtotal,
+      discount,
+      gstPercent,
+      gstAmount: gstValueINR,
+      totalValue: totalValueINR
+    } = summary;
+
+    let y = 20;
+    const maxY = 280;
+
+    // Header block
+    pdf.setFontSize(18);
+    pdf.text(`Quote: ${header.quoteNo} (Rev ${nextRev})`, 20, y);
+    y += 10;
+
+    pdf.setFontSize(12);
+    pdf.text(`Date: ${header.quoteDate || now.toISOString().slice(0, 10)}`, 20, y);
+    y += 7;
+
+    pdf.text(`Hospital: ${header.hospitalName}`, 20, y);
+    y += 7;
+
+    if (header.hospitalAddress) {
+      pdf.text(
+        `Address: ${header.hospitalAddress.substring(0, 80)}`,
+        20,
+        y,
+        { maxWidth: 170 }
+      );
+      y += 7;
+    }
+
+    if (header.contactPerson) {
+      pdf.text(`Contact: ${header.contactPerson}`, 20, y);
+      y += 7;
+    }
+
+    y += 5;
+
+    // Totals
+    pdf.text(`Subtotal: ₹${subtotal.toLocaleString()}`, 20, y);
+    y += 7;
+    pdf.text(`Discount: ₹${discount.toLocaleString()}`, 20, y);
+    y += 7;
+    pdf.text(`GST (${gstPercent}%): ₹${gstValueINR.toLocaleString()}`, 20, y);
+    y += 7;
+
+    pdf.setFontSize(14);
+    pdf.text(`TOTAL: ₹${totalValueINR.toLocaleString()}`, 20, y);
+    y += 12;
+    pdf.setFontSize(12);
+
+    // Items
+    pdf.text("Items:", 20, y);
+    y += 7;
+
+    lineItems.forEach((item, idx) => {
+      if (y > maxY) {
+        pdf.addPage();
+        y = 20;
+      }
+      const name = (item.name || "").substring(0, 60);
+      const code = item.code || "";
+      const priceStr = `₹${item.price.toLocaleString()}`;
+      pdf.text(
+        `${idx + 1}. ${code} - ${name} (${priceStr})`,
+        20,
+        y,
+        { maxWidth: 170 }
+      );
+      y += 6;
+    });
+
+    // Optional note
+    if (header.salesNote) {
+      if (y > maxY - 20) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.text("Sales Note:", 20, y);
+      y += 6;
+      pdf.text(
+        header.salesNote.substring(0, 300),
+        20,
+        y,
+        { maxWidth: 170 }
+      );
+    }
+
+    // Safe filename
+    const safeQuoteNo = (header.quoteNo || "QUOTE")
+      .toString()
+      .replace(/[^a-zA-Z0-9_\-]/g, "_");
+
+    pdf.save(`${safeQuoteNo}.pdf`); // triggers download with custom filename [web:23][web:29]
+    console.log(`[finalizeQuote] PDF downloaded: ${safeQuoteNo}.pdf`);
+  } catch (err) {
+    console.error("[finalizeQuote] PDF generation failed:", err);
+  }
+}
+
 export async function finalizeQuote(rawArg = null) {
   if (finalizeInProgress) {
     console.warn("[finalizeQuote] blocked: already in progress.");
@@ -356,7 +563,7 @@ export async function finalizeQuote(rawArg = null) {
   }
   finalizeInProgress = true;
 
-  let docId = typeof rawArg === "string" ? rawArg : null;
+  const docId = typeof rawArg === "string" ? rawArg : null;
 
   try {
     const user = auth.currentUser;
@@ -365,7 +572,6 @@ export async function finalizeQuote(rawArg = null) {
       return null;
     }
 
-    // -------- Header + validation --------
     const header = getQuoteHeaderRaw();
     if (!validateHeader(header)) return null;
 
@@ -378,7 +584,6 @@ export async function finalizeQuote(rawArg = null) {
     header.status = "SUBMITTED";
     saveQuoteHeader(header);
 
-    // -------- Totals + summary --------
     const {
       enrichedLines,
       discount,
@@ -402,191 +607,33 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // -------- Local history (revisions) --------
-    const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
-    const lastRev = sameQuote.length ? Math.max(...sameQuote.map((q) => Number(q.revision || 1))) : 0;
-    const nextRev = lastRev + 1;
-
-    const now = new Date();
-    const quoteLocal = {
-      header: { ...header, quoteLines: enrichedLines },
+    const { nextRev, now } = saveLocalRevision(
+      header,
+      enrichedLines,
       lineItems,
-      summary,
-      quoteNo: header.quoteNo,
-      revision: nextRev,
-      status: "SUBMITTED",
-      history: [
-        {
-          status: "SUBMITTED",
-          date: now.toISOString().slice(0, 10),
-          time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        }
-      ]
-    };
+      summary
+    );
 
-    existing.push(quoteLocal);
-    localStorage.setItem("quotes", JSON.stringify(existing));
-
-    // -------- Firestore base doc --------
     const baseQuoteDoc = buildQuoteObject();
-    const firestoreData = {
-      ...baseQuoteDoc,
-      revision: nextRev,
-      localSummary: summary,
-      status: "SUBMITTED",
-      statusHistory: [
-        ...(baseQuoteDoc.statusHistory || []),
-        { status: "SUBMITTED", date: now.toISOString().slice(0, 10) }
-      ]
-    };
-
-    const savedId = await saveBaseQuoteDocToFirestore(docId, firestoreData);
+    const savedId = await saveFirestoreRevision(
+      docId,
+      baseQuoteDoc,
+      summary,
+      nextRev,
+      now
+    );
     if (!savedId) return null;
 
-    await appendRevisionSnapshot(savedId, firestoreData);
+    // Fire and forget AI (still awaited here so status is stored)
+    await runAIAnalysis(baseQuoteDoc, savedId);
 
-    // ================================
-    // AI Integration with Safeguard
-    // ================================
-    async function callAIServiceLocal(quoteObj) {
-      try {
-        const payload = {
-          quote: {
-            deal_value: quoteObj.totalValueINR,
-            hospital: quoteObj.hospital.name,
-            instrument_category: "Histopathology",
-            configuration_complexity: "Medium",
-            items: quoteObj.items.map(item => ({
-              item_id: item.code,
-              quantity: item.quantity,
-              unit_price: item.unitPrice
-            }))
-          },
-          historical_context: {
-            avg_winning_price: 100000,
-            similar_quotes_won: 12,
-            similar_quotes_lost: 3
-          }
-        };
+    // Generate PDF
+    generateAndDownloadPdf(header, nextRev, summary, lineItems, now);
 
-        const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error("AI service call failed");
-
-        return await res.json();
-      } catch (err) {
-        console.error("[callAIService] Error:", err);
-        return null; // safeguard: do not throw
-      }
-    }
-
-    try {
-      const aiResult = await callAIServiceLocal(baseQuoteDoc);
-      const aiRef = doc(db, "quoteHistory", savedId);
-
-      if (aiResult) {
-        await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
-        console.log("[finalizeQuote] AI analysis saved successfully");
-      } else {
-        await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
-        console.warn("[finalizeQuote] AI analysis failed, quote still finalized");
-      }
-    } catch (aiErr) {
-      console.error("[finalizeQuote] Unexpected AI error:", aiErr);
-    }
-
-    // -------- PDF generation & download --------
-    try {
-      if (!window.jspdf || !window.jspdf.jsPDF) {
-        throw new Error("jsPDF not loaded. Check script tag in HTML.");
-      }
-
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF(); // A4 portrait by default [web:23]
-
-      let y = 20;
-
-      // Header block
-      pdf.setFontSize(18);
-      pdf.text(`Quote: ${header.quoteNo} (Rev ${nextRev})`, 20, y);
-      y += 10;
-
-      pdf.setFontSize(12);
-      pdf.text(`Date: ${header.quoteDate || now.toISOString().slice(0, 10)}`, 20, y);
-      y += 7;
-      pdf.text(`Hospital: ${header.hospitalName}`, 20, y);
-      y += 7;
-      if (header.hospitalAddress) {
-        pdf.text(`Address: ${header.hospitalAddress.substring(0, 80)}`, 20, y, { maxWidth: 170 });
-        y += 7;
-      }
-      if (header.contactPerson) {
-        pdf.text(`Contact: ${header.contactPerson}`, 20, y);
-        y += 7;
-      }
-      y += 5;
-
-      // Totals
-      pdf.text(`Subtotal: ₹${subtotal.toLocaleString()}`, 20, y);
-      y += 7;
-      pdf.text(`Discount: ₹${discount.toLocaleString()}`, 20, y);
-      y += 7;
-      pdf.text(`GST (${gstPercent}%): ₹${gstValueINR.toLocaleString()}`, 20, y);
-      y += 7;
-      pdf.setFontSize(14);
-      pdf.text(`TOTAL: ₹${totalValueINR.toLocaleString()}`, 20, y);
-      y += 12;
-      pdf.setFontSize(12);
-
-      // Items list
-      pdf.text("Items:", 20, y);
-      y += 7;
-
-      const maxY = 280;
-      lineItems.forEach((item, idx) => {
-        if (y > maxY) {
-          pdf.addPage();
-          y = 20;
-        }
-        const name = (item.name || "").substring(0, 60);
-        const code = item.code || "";
-        const priceStr = `₹${item.price.toLocaleString()}`;
-        pdf.text(`${idx + 1}. ${code} - ${name} (${priceStr})`, 20, y, { maxWidth: 170 });
-        y += 6;
-      });
-
-      // Optional note
-      if (header.salesNote) {
-        if (y > maxY - 20) {
-          pdf.addPage();
-          y = 20;
-        }
-        pdf.text("Sales Note:", 20, y);
-        y += 6;
-        pdf.text(header.salesNote.substring(0, 300), 20, y, { maxWidth: 170 });
-      }
-
-      // Safe filename: quoteNo.pdf
-      const safeQuoteNo = (header.quoteNo || "QUOTE")
-        .toString()
-        .replace(/[^a-zA-Z0-9_\-]/g, "_");
-
-      pdf.save(`${safeQuoteNo}.pdf`);  // e.g. QT_2026_001.pdf
-
-      console.log(`[finalizeQuote] PDF downloaded: ${safeQuoteNo}.pdf`);
-    } catch (pdfErr) {
-      console.error("[finalizeQuote] PDF generation failed:", pdfErr);
-      // Do not block user if PDF fails
-    }
-
-    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
+    alert(
+      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`
+    );
     return savedId;
-
   } catch (err) {
     console.error("[finalizeQuote] Error:", err);
     alert("Quote saved locally, but cloud save failed.");
@@ -595,6 +642,7 @@ export async function finalizeQuote(rawArg = null) {
     finalizeInProgress = false;
   }
 }
+
 
 /* ========================
  * Approve revision
