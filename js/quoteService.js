@@ -468,6 +468,28 @@ export async function finalizeQuote(rawArg = null) {
     // Notify user
     alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
 
+    // Copy quote number to clipboard with visual confirmation
+    try {
+      await navigator.clipboard.writeText(header.quoteNo);
+
+      const toast = document.createElement("div");
+      toast.textContent = `Quote number ${header.quoteNo} copied to clipboard`;
+      toast.style.position = "fixed";
+      toast.style.bottom = "20px";
+      toast.style.right = "20px";
+      toast.style.background = "#4caf50";
+      toast.style.color = "#fff";
+      toast.style.padding = "10px 16px";
+      toast.style.borderRadius = "4px";
+      toast.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+      toast.style.zIndex = "9999";
+      document.body.appendChild(toast);
+
+      setTimeout(() => toast.remove(), 3000);
+    } catch (clipErr) {
+      console.warn("[finalizeQuote] Clipboard copy failed:", clipErr);
+    }
+
     // Trigger print dialog (user can choose "Save as PDF")
     document.title = header.quoteNo || "Quote"; // sets default filename in Save as PDF
     setTimeout(() => window.print(), 200);
@@ -481,7 +503,6 @@ export async function finalizeQuote(rawArg = null) {
     finalizeInProgress = false;
   }
 }
-
 
 /* ========================
  * Approve revision
