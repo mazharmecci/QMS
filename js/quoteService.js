@@ -302,17 +302,17 @@ export function validateHeader(header) {
 }
 
 /* ========================
- * Firestore persistence
+ * Firestore Persistence
  * =======================*/
 
+/**
+ * Save or update a quote document in Firestore.
+ */
 async function saveBaseQuoteDocToFirestore(docId, data) {
   try {
     if (docId) {
       const ref = doc(db, "quoteHistory", docId);
-      await updateDoc(ref, {
-        ...data,
-        updatedAt: serverTimestamp()
-      });
+      await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
       return docId;
     }
 
@@ -324,31 +324,32 @@ async function saveBaseQuoteDocToFirestore(docId, data) {
     });
     return newDoc.id;
   } catch (err) {
-    console.error("[saveBaseQuoteDocToFirestore] Error writing to Firestore:", err);
+    console.error("[saveBaseQuoteDocToFirestore] Error:", err);
     alert("Cloud save failed. Quote saved locally, but not in Firestore.");
     return null;
   }
 }
 
+/**
+ * Append a revision snapshot to the quote's revisions sub-collection.
+ */
 async function appendRevisionSnapshot(docId, data) {
   try {
     const subCol = collection(db, "quoteHistory", docId, "revisions");
-    await addDoc(subCol, {
-      ...data,
-      createdAt: serverTimestamp()
-    });
-    console.log("[appendRevisionSnapshot] snapshot written");
+    await addDoc(subCol, { ...data, createdAt: serverTimestamp() });
+    console.log("[appendRevisionSnapshot] Snapshot written");
   } catch (err) {
-    console.error("[appendRevisionSnapshot] Error writing revision snapshot:", err);
+    console.error("[appendRevisionSnapshot] Error:", err);
   }
 }
 
 /* ========================
- * Finalization & local history
+ * AI Analysis
  * =======================*/
 
-let finalizeInProgress = false;
-
+/**
+ * Run AI analysis on a quote and persist results in Firestore.
+ */
 async function runAIAnalysis(quoteObj, docId) {
   try {
     const payload = {
@@ -379,15 +380,18 @@ async function runAIAnalysis(quoteObj, docId) {
     if (!res.ok) throw new Error("AI service call failed");
 
     const aiResult = await res.json();
-    const aiRef = doc(db, "quoteHistory", docId);
-
-    await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
-    console.log("[finalizeQuote] AI analysis saved successfully");
+    await updateDoc(doc(db, "quoteHistory", docId), {
+      ai_analysis: aiResult,
+      ai_status: "SUCCESS"
+    });
+    console.log("[runAIAnalysis] AI analysis saved successfully");
   } catch (err) {
     console.error("[runAIAnalysis] Error:", err);
     try {
-      const aiRef = doc(db, "quoteHistory", docId);
-      await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
+      await updateDoc(doc(db, "quoteHistory", docId), {
+        ai_analysis: null,
+        ai_status: "FAILED"
+      });
       console.warn("[runAIAnalysis] AI analysis failed, quote still finalized");
     } catch (updateErr) {
       console.error("[runAIAnalysis] Failed to mark AI status:", updateErr);
@@ -395,11 +399,18 @@ async function runAIAnalysis(quoteObj, docId) {
   }
 }
 
+/* ========================
+ * Local Revision
+ * =======================*/
+
+/**
+ * Save a local revision of the quote in browser storage.
+ */
 function saveLocalRevision(header, enrichedLines, lineItems, summary) {
   const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
+  const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
   const lastRev = sameQuote.length
-    ? Math.max(...sameQuote.map((q) => Number(q.revision || 1)))
+    ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
     : 0;
   const nextRev = lastRev + 1;
 
@@ -426,6 +437,9 @@ function saveLocalRevision(header, enrichedLines, lineItems, summary) {
   return { nextRev, now };
 }
 
+/**
+ * Save a revision snapshot in Firestore.
+ */
 async function saveFirestoreRevision(docId, baseQuoteDoc, summary, nextRev, now) {
   const firestoreData = {
     ...baseQuoteDoc,
@@ -445,6 +459,13 @@ async function saveFirestoreRevision(docId, baseQuoteDoc, summary, nextRev, now)
   return savedId;
 }
 
+/* ========================
+ * PDF Generation
+ * =======================*/
+
+/**
+ * Generate and download a professional PDF of the quote.
+ */
 function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
   try {
     if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -452,7 +473,7 @@ function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
     }
 
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: "mm", format: "a4" }); // better units
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
 
     const {
       itemsTotal: subtotal,
@@ -465,9 +486,16 @@ function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
     const marginLeft = 15;
     const marginTop = 20;
     const lineHeight = 6;
-    const pageWidth = 210;           // A4 mm
+    const pageWidth = 210;
     const usableWidth = pageWidth - marginLeft * 2;
+    const maxY = 280;
     let y = marginTop;
+
+    const drawSeparator = y => {
+      pdf.setDrawColor(180);
+      pdf.line(marginLeft, y, pageWidth - marginLeft, y);
+      return y + 2;
+    };
 
     const addWrappedText = (text, x, yStart, options = {}) => {
       const maxWidth = options.maxWidth || usableWidth;
@@ -479,91 +507,124 @@ function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
       return y;
     };
 
+    const rightAlignText = (label, value, y) => {
+      pdf.text(label, marginLeft, y);
+      pdf.text(value, pageWidth - marginLeft - pdf.getTextWidth(value), y);
+    };
+
+    const renderItemTable = (items, startY) => {
+      const colWidths = [10, 30, 110, 40];
+      const headers = ["#", "Code", "Instrument", "Price"];
+      const rowHeight = 8;
+      let y = startY;
+
+      pdf.setFont("helvetica", "bold");
+      headers.forEach((text, i) => {
+        const x = marginLeft + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+        pdf.text(text, x, y);
+      });
+      y += rowHeight;
+
+      pdf.setFont("helvetica", "normal");
+      items.forEach((item, idx) => {
+        if (y > maxY - rowHeight) {
+          pdf.addPage();
+          y = marginTop;
+        }
+        const row = [
+          `${idx + 1}`,
+          item.code || "",
+          item.name || "",
+          `₹${item.price.toLocaleString()}`
+        ];
+        row.forEach((text, i) => {
+          const x = marginLeft + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+          pdf.text(text, x, y);
+        });
+        y += rowHeight;
+      });
+
+      return y;
+    };
+
     // Title
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(16);
     pdf.text(`Quote: ${header.quoteNo} (Rev ${nextRev})`, marginLeft, y);
     y += lineHeight * 2;
 
-    // Header details
-    pdf.setFont("helvetica", "normal");
+    // Header
     pdf.setFontSize(11);
+    pdf.setFont("helvetica", "normal");
     pdf.text(`Date: ${header.quoteDate || now.toISOString().slice(0, 10)}`, marginLeft, y);
     y += lineHeight;
-
     y = addWrappedText(`Hospital: ${header.hospitalName}`, marginLeft, y);
-    y = addWrappedText(
-      `Address: ${header.hospitalAddress || ""}`,
-      marginLeft,
-      y
-    );
-    y = addWrappedText(
-      `Contact: ${header.contactPerson || ""}`,
-      marginLeft,
-      y
-    );
+    y = addWrappedText(`Address: ${header.hospitalAddress || ""}`, marginLeft, y);
+    y = addWrappedText(`Contact: ${header.contactPerson || ""}`, marginLeft, y);
+    y = drawSeparator(y);
+
+    // Summary (continued)
+    rightAlignText("Discount:", `₹${discount.toLocaleString()}`, y); 
     y += lineHeight;
 
-    // Totals block
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Summary", marginLeft, y);
+    rightAlignText(`GST (${gstPercent}%):`, `₹${gstValueINR.toLocaleString()}`, y); 
     y += lineHeight;
 
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`Subtotal: ₹${subtotal.toLocaleString()}`, marginLeft, y);
-    y += lineHeight;
-    pdf.text(`Discount: ₹${discount.toLocaleString()}`, marginLeft, y);
-    y += lineHeight;
-    pdf.text(`GST (${gstPercent}%): ₹${gstValueINR.toLocaleString()}`, marginLeft, y);
-    y += lineHeight;
     pdf.setFont("helvetica", "bold");
-    pdf.text(`TOTAL: ₹${totalValueINR.toLocaleString()}`, marginLeft, y);
+    rightAlignText("TOTAL:", `₹${totalValueINR.toLocaleString()}`, y); 
     y += lineHeight * 2;
 
+    y = drawSeparator(y);
+
     // Items
-    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
     pdf.text("Items", marginLeft, y);
     y += lineHeight;
-    pdf.setFont("helvetica", "normal");
 
-    const maxY = 280;
+    pdf.setFontSize(10);
+    y = renderItemTable(lineItems, y);
+    y = drawSeparator(y);
 
-    lineItems.forEach((item, idx) => {
-      if (y > maxY) {
-        pdf.addPage();
-        y = marginTop;
-      }
-      const code = item.code || "";
-      const name = item.name || "";
-      const priceStr = `₹${item.price.toLocaleString()}`;
-      const line = `${idx + 1}. ${code} - ${name} (${priceStr})`;
-      y = addWrappedText(line, marginLeft, y);
-    });
-
-    // Sales note
+    // Sales Note
     if (header.salesNote) {
       if (y > maxY - 20) {
         pdf.addPage();
         y = marginTop;
       }
       pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
       pdf.text("Sales Note", marginLeft, y);
       y += lineHeight;
+
       pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
       y = addWrappedText(header.salesNote, marginLeft, y);
+      y = drawSeparator(y);
     }
 
-    // File name
+    // Footer
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "italic");
+    pdf.text("ISTOS MEDICAL | www.istosmedical.com | +91-XXXXXXXXXX", marginLeft, 290);
+
+    // Save
     const safeQuoteNo = (header.quoteNo || "QUOTE")
       .toString()
       .replace(/[^a-zA-Z0-9_\-]/g, "_");
 
     pdf.save(`${safeQuoteNo}.pdf`);
   } catch (err) {
-    console.error("[finalizeQuote] PDF generation failed:", err);
+    console.error("[generateAndDownloadPdf] Error:", err);
   }
 }
 
+/* ========================
+ * Finalization
+ * =======================*/
+
+/**
+ * Finalize a quote: validate, persist locally & in Firestore, run AI analysis, and generate PDF.
+ */
 export async function finalizeQuote(rawArg = null) {
   if (finalizeInProgress) {
     console.warn("[finalizeQuote] blocked: already in progress.");
@@ -615,32 +676,21 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    const { nextRev, now } = saveLocalRevision(
-      header,
-      enrichedLines,
-      lineItems,
-      summary
-    );
+    // Save locally
+    const { nextRev, now } = saveLocalRevision(header, enrichedLines, lineItems, summary);
 
+    // Save in Firestore
     const baseQuoteDoc = buildQuoteObject();
-    const savedId = await saveFirestoreRevision(
-      docId,
-      baseQuoteDoc,
-      summary,
-      nextRev,
-      now
-    );
+    const savedId = await saveFirestoreRevision(docId, baseQuoteDoc, summary, nextRev, now);
     if (!savedId) return null;
 
-    // Fire and forget AI (still awaited here so status is stored)
+    // Run AI analysis
     await runAIAnalysis(baseQuoteDoc, savedId);
 
     // Generate PDF
     generateAndDownloadPdf(header, nextRev, summary, lineItems, now);
 
-    alert(
-      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`
-    );
+    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
     return savedId;
   } catch (err) {
     console.error("[finalizeQuote] Error:", err);
@@ -650,7 +700,7 @@ export async function finalizeQuote(rawArg = null) {
     finalizeInProgress = false;
   }
 }
-
+    
 
 /* ========================
  * Approve revision
