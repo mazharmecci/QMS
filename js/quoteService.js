@@ -356,7 +356,7 @@ export async function finalizeQuote(rawArg = null) {
   }
   finalizeInProgress = true;
 
-  let docId = typeof rawArg === "string" ? rawArg : null;
+  const docId = typeof rawArg === "string" ? rawArg : null;
 
   try {
     const user = auth.currentUser;
@@ -377,8 +377,15 @@ export async function finalizeQuote(rawArg = null) {
     header.status = "SUBMITTED";
     saveQuoteHeader(header);
 
-    const { enrichedLines, discount, subtotal, afterDiscount, gstPercent, gstValueINR, totalValueINR } =
-      computeTotalsFromQuoteLines();
+    const {
+      enrichedLines,
+      discount,
+      subtotal,
+      afterDiscount,
+      gstPercent,
+      gstValueINR,
+      totalValueINR
+    } = computeTotalsFromQuoteLines();
 
     const summary = {
       itemsTotal: subtotal,
@@ -393,9 +400,12 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
+    // Local revision
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
-    const lastRev = sameQuote.length ? Math.max(...sameQuote.map((q) => Number(q.revision || 1))) : 0;
+    const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
+    const lastRev = sameQuote.length
+      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      : 0;
     const nextRev = lastRev + 1;
 
     const now = new Date();
@@ -418,6 +428,7 @@ export async function finalizeQuote(rawArg = null) {
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
 
+    // Firestore persistence
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
@@ -434,6 +445,23 @@ export async function finalizeQuote(rawArg = null) {
     if (!savedId) return null;
 
     await appendRevisionSnapshot(savedId, firestoreData);
+
+    // Notify user
+    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
+
+    // Trigger print dialog (user can choose "Save as PDF")
+    document.title = header.quoteNo || "Quote"; // sets default filename in Save as PDF
+    setTimeout(() => window.print(), 200);
+
+    return savedId;
+  } catch (err) {
+    console.error("[finalizeQuote] Error:", err);
+    alert("Quote saved locally, but cloud save failed.");
+    return null;
+  } finally {
+    finalizeInProgress = false;
+  }
+}
 
     // ================================
     // AI Integration with Safeguard
