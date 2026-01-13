@@ -259,11 +259,11 @@ export function renderQuoteBuilder() {
         </tr>
       `);
     });
-  }
   
   body.innerHTML = rows.join("");
   renderSummaryRows(itemsTotal);
 
+}
 /* ========= Inline edit handlers ========= */
 
 export function quantityCommitted(lineIdx, rawValue) {
