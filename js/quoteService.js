@@ -365,6 +365,7 @@ export async function finalizeQuote(rawArg = null) {
       return null;
     }
 
+    // -------- Header + validation --------
     const header = getQuoteHeaderRaw();
     if (!validateHeader(header)) return null;
 
@@ -377,8 +378,16 @@ export async function finalizeQuote(rawArg = null) {
     header.status = "SUBMITTED";
     saveQuoteHeader(header);
 
-    const { enrichedLines, discount, subtotal, afterDiscount, gstPercent, gstValueINR, totalValueINR } =
-      computeTotalsFromQuoteLines();
+    // -------- Totals + summary --------
+    const {
+      enrichedLines,
+      discount,
+      subtotal,
+      afterDiscount,
+      gstPercent,
+      gstValueINR,
+      totalValueINR
+    } = computeTotalsFromQuoteLines();
 
     const summary = {
       itemsTotal: subtotal,
@@ -393,6 +402,7 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
+    // -------- Local history (revisions) --------
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter((q) => q.header?.quoteNo === header.quoteNo);
     const lastRev = sameQuote.length ? Math.max(...sameQuote.map((q) => Number(q.revision || 1))) : 0;
@@ -418,6 +428,7 @@ export async function finalizeQuote(rawArg = null) {
     existing.push(quoteLocal);
     localStorage.setItem("quotes", JSON.stringify(existing));
 
+    // -------- Firestore base doc --------
     const baseQuoteDoc = buildQuoteObject();
     const firestoreData = {
       ...baseQuoteDoc,
@@ -438,7 +449,7 @@ export async function finalizeQuote(rawArg = null) {
     // ================================
     // AI Integration with Safeguard
     // ================================
-    async function callAIService(quoteObj) {
+    async function callAIServiceLocal(quoteObj) {
       try {
         const payload = {
           quote: {
@@ -475,20 +486,102 @@ export async function finalizeQuote(rawArg = null) {
     }
 
     try {
-      const aiResult = await callAIService(baseQuoteDoc);
+      const aiResult = await callAIServiceLocal(baseQuoteDoc);
       const aiRef = doc(db, "quoteHistory", savedId);
 
       if (aiResult) {
         await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
         console.log("[finalizeQuote] AI analysis saved successfully");
       } else {
-        // Save AI failure status without blocking quote
         await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
         console.warn("[finalizeQuote] AI analysis failed, quote still finalized");
       }
     } catch (aiErr) {
       console.error("[finalizeQuote] Unexpected AI error:", aiErr);
-      // Even if AI update fails completely, quote remains finalized
+    }
+
+    // -------- PDF generation & download --------
+    try {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error("jsPDF not loaded. Check script tag in HTML.");
+      }
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF(); // A4 portrait by default [web:23]
+
+      let y = 20;
+
+      // Header block
+      pdf.setFontSize(18);
+      pdf.text(`Quote: ${header.quoteNo} (Rev ${nextRev})`, 20, y);
+      y += 10;
+
+      pdf.setFontSize(12);
+      pdf.text(`Date: ${header.quoteDate || now.toISOString().slice(0, 10)}`, 20, y);
+      y += 7;
+      pdf.text(`Hospital: ${header.hospitalName}`, 20, y);
+      y += 7;
+      if (header.hospitalAddress) {
+        pdf.text(`Address: ${header.hospitalAddress.substring(0, 80)}`, 20, y, { maxWidth: 170 });
+        y += 7;
+      }
+      if (header.contactPerson) {
+        pdf.text(`Contact: ${header.contactPerson}`, 20, y);
+        y += 7;
+      }
+      y += 5;
+
+      // Totals
+      pdf.text(`Subtotal: ₹${subtotal.toLocaleString()}`, 20, y);
+      y += 7;
+      pdf.text(`Discount: ₹${discount.toLocaleString()}`, 20, y);
+      y += 7;
+      pdf.text(`GST (${gstPercent}%): ₹${gstValueINR.toLocaleString()}`, 20, y);
+      y += 7;
+      pdf.setFontSize(14);
+      pdf.text(`TOTAL: ₹${totalValueINR.toLocaleString()}`, 20, y);
+      y += 12;
+      pdf.setFontSize(12);
+
+      // Items list
+      pdf.text("Items:", 20, y);
+      y += 7;
+
+      const maxY = 280;
+      lineItems.forEach((item, idx) => {
+        if (y > maxY) {
+          pdf.addPage();
+          y = 20;
+        }
+        const name = (item.name || "").substring(0, 60);
+        const code = item.code || "";
+        const priceStr = `₹${item.price.toLocaleString()}`;
+        pdf.text(`${idx + 1}. ${code} - ${name} (${priceStr})`, 20, y, { maxWidth: 170 });
+        y += 6;
+      });
+
+      // Optional note
+      if (header.salesNote) {
+        if (y > maxY - 20) {
+          pdf.addPage();
+          y = 20;
+        }
+        pdf.text("Sales Note:", 20, y);
+        y += 6;
+        pdf.text(header.salesNote.substring(0, 300), 20, y, { maxWidth: 170 });
+      }
+
+      // Safe filename: quoteNo.pdf
+      const safeQuoteNo = (header.quoteNo || "QUOTE")
+        .toString()
+        .replace(/[^a-zA-Z0-9_\-]/g, "_");
+
+      pdf.save(`${safeQuoteNo}.pdf`);  // e.g. QT_2026_001.pdf
+
+      console.log(`[finalizeQuote] PDF downloaded: ${safeQuoteNo}.pdf`);
+    } catch (pdfErr) {
+      console.error("[finalizeQuote] PDF generation failed:", pdfErr);
+      // Do not block user if PDF fails
     }
 
     alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
@@ -558,53 +651,4 @@ export async function approveQuoteRevision(docId) {
     alert("Failed to update quote status. Please try again.");
   }
 }
-
-
-// Generate and download PDF immediately after successful save
-try {
-  const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@latest/dist/jspdf.umd.min.js');
-  const doc = new jsPDF();
-
-  // Build PDF content from quote data (customize layout as needed)
-  let yPosition = 20;
-  doc.setFontSize(16);
-  doc.text(`Quote ${header.quoteNo} (Rev ${nextRev})`, 20, yPosition);
-  yPosition += 15;
-
-  doc.setFontSize(12);
-  doc.text(`Date: ${header.quoteDate}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Hospital: ${header.hospitalName}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Total: ₹${totalValueINR.toLocaleString()}`, 20, yPosition);
-  yPosition += 20;
-
-  // Add items summary
-  doc.text('Items:', 20, yPosition);
-  yPosition += 10;
-  lineItems.forEach((item, index) => {
-    if (yPosition > 270) { doc.addPage(); yPosition = 20; }
-    doc.text(`${item.name} (${item.code}) - ₹${item.price.toLocaleString()}`, 30, yPosition);
-    yPosition += 7;
-  });
-
-  // Add terms/sales note if needed
-  if (header.salesNote) {
-    yPosition += 10;
-    doc.text('Sales Note:', 20, yPosition);
-    yPosition += 7;
-    doc.text(header.salesNote.substring(0, 200), 20, yPosition); // Truncate if long
-  }
-
-  // Download with exact quote number filename
-  doc.save(`${header.quoteNo}.pdf`);  // e.g., "QT-2026-001.pdf"
-
-  console.log(`[finalizeQuote] PDF downloaded: ${header.quoteNo}.pdf`);
-} catch (pdfErr) {
-  console.error('[finalizeQuote] PDF generation failed:', pdfErr);
-  // Fallback alert
-  alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
-}
-
-// Remove old alert, or keep as fallback
 
