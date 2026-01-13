@@ -844,15 +844,14 @@
           }
         }
 
-            @media print {
-        /* whatever cell/row actually holds your Config / Additional buttons */
-        .config-actions-col,
-        .config-actions-row {
-          display: none !important;
-          padding: 0 !important;
-          margin: 0 !important;
+        @media print {
+          #quoteSummaryTable th.config-actions-col,
+          #quoteSummaryTable td.config-actions-col {
+            display: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
         }
-      }
       
   </style>
 </head>
