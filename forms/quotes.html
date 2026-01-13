@@ -359,12 +359,15 @@ table.quote-table tr.section-header-row td {
   padding-top: 0.35rem;   /* adjust if you want tighter spacing */
 }
 
-/* debug only */
-table.quote-table td {
-  outline: 1px solid red;
+
+/* debug grid – very thin, subtle light-blue lines */
+table.quote-table {
+  border-collapse: collapse;
 }
-table.quote-table tr {
-  outline: 1px solid blue;
+
+table.quote-table td,
+table.quote-table th {
+  border: 0.5px solid rgba(148, 196, 255, 0.6); /* light blue, very thin */
 }
 
 /* PRINT-FRIENDLY OVERRIDES */
