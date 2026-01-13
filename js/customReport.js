@@ -292,24 +292,15 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
   try {
     const docs = await getLatestHistoryDocs();
     let matchCount = 0;
-    let hospitalDocCount = 0;
 
-    docs.forEach((data, docIdx) => {
+    docs.forEach(data => {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
-      
-      console.log(`[showHospitalReport] Doc ${docIdx}: quoteNo="${quoteNo}", hospitalName="${hospitalName}", selected="${selectedHospital}"`);
-      
-      if (hospitalName !== selectedHospital) {
-        console.log(`[showHospitalReport] ⚠️ Hospital name mismatch: "${hospitalName}" !== "${selectedHospital}"`);
-        return;
-      }
-
-      hospitalDocCount++;
-      console.log(`[showHospitalReport] ✓ Quote ${quoteNo} matches. Lines count: ${(data.quoteLines || []).length}`);
+      if (hospitalName !== selectedHospital) return;
 
       const allLines = data.quoteLines || [];
 
-      allLines.forEach((item, itemIdx) => {
+      allLines.forEach(item => {
+        // Extract and display MAIN INSTRUMENT
         const catalogCode = 
           item.code ||
           item.catalogCode ||
@@ -318,50 +309,87 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           item.catalogNo ||
           item.catalogNoCode;
 
-        console.log(`[showHospitalReport] Line ${itemIdx}: catalogCode="${catalogCode}", item fields: ${Object.keys(item).join(", ")}`);
-
         const inst = findInstrument(instruments, catalogCode);
 
-        let label =
+        let mainLabel =
           inst.instrumentName ||
           inst.name ||
           item.instrumentName ||
           item.name ||
           "";
 
-        if (!label && item.description) {
-          label = (item.description.split("\n")[0] || "").trim();
+        if (!mainLabel && item.description) {
+          mainLabel = (item.description.split("\n")[0] || "").trim();
         }
 
-        if (!label) label = "—";
+        if (!mainLabel) mainLabel = "—";
 
-        const qty = item.quantity || 1;
-        const price =
+        const mainQty = item.quantity || 1;
+        const mainPrice =
           item.unitPriceOverride ??
           item.price ??
           item.unitPrice ??
           inst.unitPrice ??
           0;
 
-        console.log(`[showHospitalReport] → Adding row: "${label}" (qty=${qty}, price=${price})`);
-
+        // Add main instrument row
         appendRow(
           tbody,
           rowNum++,
           quoteNo,
           hospitalName,
-          label,
+          `[MAIN] ${mainLabel}`,
           quoteDate,
-          qty,
-          price
+          mainQty,
+          mainPrice
         );
         matchCount++;
+
+        // Add CONFIG ITEMS (nested under this main instrument)
+        const configItems = item.configItems || [];
+        configItems.forEach(config => {
+          const configLabel = config.name || config.code || "—";
+          const configQty = config.qty || "Included";
+          const configPrice = config.price || config.unitPrice || 0;
+
+          appendRow(
+            tbody,
+            rowNum++,
+            quoteNo,
+            hospitalName,
+            `  ├─ [CONFIG] ${configLabel}`,
+            quoteDate,
+            configQty,
+            configPrice
+          );
+          matchCount++;
+        });
+
+        // Add ADDITIONAL ITEMS (nested under this main instrument)
+        const additionalItems = item.additionalItems || [];
+        additionalItems.forEach(additional => {
+          const addLabel = additional.name || additional.code || "—";
+          const addQty = additional.qty || 1;
+          const addPrice = additional.price || additional.unitPrice || 0;
+
+          appendRow(
+            tbody,
+            rowNum++,
+            quoteNo,
+            hospitalName,
+            `  └─ [ADDITIONAL] ${addLabel}`,
+            quoteDate,
+            addQty,
+            addPrice
+          );
+          matchCount++;
+        });
       });
     });
 
-    console.log(`[showHospitalReport] ✓ ${hospitalDocCount} quotes found, ${matchCount} total items`);
+    console.log(`[showHospitalReport ${tableId}] ✓ ${matchCount} total items (main + config + additional)`);
   } catch (err) {
-    console.error(`[showHospitalReport] Error:`, err);
+    console.error(`[showHospitalReport ${tableId}] Error:`, err);
   }
 }
 
