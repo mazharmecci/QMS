@@ -1,6 +1,3 @@
-// customReport.js - COMPLETE & FIXED VERSION
-// Copy-paste this ENTIRE file - 100% syntax valid
-
 import { getInstrumentsMaster } from "../js/quoteService.js";
 import {
   db,
@@ -29,13 +26,21 @@ async function getLatestHistoryDocs() {
     snap.forEach((doc) => {
       const data = doc.data();
       const qn = data.quoteNo || "UNKNOWN";
+      
+      // FILTER: Skip deleted quotes
+      if (data.status === "DELETED") {
+        console.log(`[getLatestHistoryDocs] Skipping deleted quote: ${qn}`);
+        return;
+      }
+
+      // FILTER: Keep only latest revision per quote
       if (!latestByQuoteNo.has(qn)) {
         latestByQuoteNo.set(qn, { id: doc.id, ...data });
       }
     });
 
     const result = Array.from(latestByQuoteNo.values());
-    console.log(`[getLatestHistoryDocs] ✓ ${result.length} unique latest docs loaded`);
+    console.log(`[getLatestHistoryDocs] ✓ ${result.length} unique active docs loaded (deleted excluded)`);
     return result;
   } catch (err) {
     console.error("[getLatestHistoryDocs] Error:", err);
@@ -150,7 +155,7 @@ async function populateConfigDropdown() {
     const configs = new Set();
     
     docs.forEach(data => {
-      [...(data.items || []), ...(data.quoteLines || [])].forEach(item => {
+      (data.quoteLines || []).forEach(item => {
         (item.configItems || []).forEach(config => {
           const name = config.name || config.code;
           if (name) configs.add(name);
@@ -171,7 +176,7 @@ async function populateAdditionalDropdown() {
     const additionals = new Set();
     
     docs.forEach(data => {
-      [...(data.items || []), ...(data.quoteLines || [])].forEach(item => {
+      (data.quoteLines || []).forEach(item => {
         (item.additionalItems || []).forEach(additional => {
           const name = additional.name || additional.code;
           if (name) additionals.add(name);
@@ -227,10 +232,10 @@ async function generateReport(selectorId, tableId, filterFn, hasPriceColumn = tr
     docs.forEach(data => {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
       
-      const items = data.items || [];
-      const quoteLines = data.quoteLines || [];
+      // Use ONLY quoteLines (primary source), NOT items (legacy fallback)
+      const items = data.quoteLines || [];
       
-      [...quoteLines, ...items].forEach(item => {
+      items.forEach(item => {
         const rowData = filterFn(item, instruments, selectedValue, data);
         if (rowData) {
           matchCount++;
@@ -254,11 +259,9 @@ async function showInstrumentReport(tableId = "catalogReportTable") {
       item.code ||
       item.catalogCode ||
       item.catalog ||
-      item.instrumentCode ||      // add these guesses
+      item.instrumentCode ||
       item.catalogNo ||
       item.catalogNoCode;
-
-    console.log("[showInstrumentReport] item raw:", item, "resolvedCode:", code, "selected:", catalogCode);
 
     if (code !== catalogCode) return null;
 
@@ -294,18 +297,15 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
       if (hospitalName !== selectedHospital) return;
 
-      const items = data.items || [];
-      const quoteLines = data.quoteLines || [];
-      const allLines = [...quoteLines, ...items];
+      // Use ONLY quoteLines, NOT items
+      const allLines = data.quoteLines || [];
 
       allLines.forEach(item => {
-        // 1) Resolve instrument from master
         const inst = findInstrument(
           instruments,
           item.instrumentIndex ?? item.instrumentCode ?? item.code
         );
 
-        // 2) Build a clean label, preferring “name” fields
         let label =
           inst.instrumentName ||
           inst.name ||
@@ -313,7 +313,6 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           item.name ||
           "";
 
-        // 3) Only fall back to description if label is still empty
         if (!label && item.description) {
           label = (item.description.split("\n")[0] || "").trim();
         }
@@ -367,7 +366,7 @@ async function showAdditionalReport(tableId = "additionalReportTable") {
     return {
       label: additional.name || additional.code || "—",
       qty: additional.qty || 1,
-      price: additional.price || 0
+      price: additional.price || additional.unitPrice || 0
     };
   });
 }
@@ -441,3 +440,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   console.log("[customReport] ===== INITIALIZATION COMPLETE =====");
 });
+
