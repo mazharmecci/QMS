@@ -301,10 +301,17 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       const allLines = data.quoteLines || [];
 
       allLines.forEach(item => {
-        const inst = findInstrument(
-          instruments,
-          item.instrumentIndex ?? item.instrumentCode ?? item.code
-        );
+        // Extract catalog code using same logic as showInstrumentReport
+        const catalogCode = 
+          item.code ||
+          item.catalogCode ||
+          item.catalog ||
+          item.instrumentCode ||
+          item.catalogNo ||
+          item.catalogNoCode;
+
+        // Find instrument by catalog code (not by index)
+        const inst = findInstrument(instruments, catalogCode);
 
         let label =
           inst.instrumentName ||
