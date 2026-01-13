@@ -194,72 +194,75 @@ export function renderQuoteBuilder() {
       </tr>
     `);
 
-    // CONFIG ITEMS (display only)
-    const configItems = line.configItems || [];
-    if (configItems.length) {
+  // CONFIG ITEMS (display only)
+  const configItems = line.configItems || [];
+  if (configItems.length) {
+    // section header row
+    rows.push(`
+      <tr class="config-section-row">
+        <td colspan="5" style="background:#00B0F0; color:#000; font-weight:700;">
+          Configuration Items
+        </td>
+      </tr>
+    `);
+  
+    configItems.forEach(function (item) {
+      const itemCode = String(runningItemCode).padStart(3, "0");
+      runningItemCode += 1;
+  
+      const q = item.qty != null ? item.qty : "Included";
+      const upRaw = item.upInr != null ? item.upInr : "Included";
+      const tpRaw = item.tpInr != null ? item.tpInr : "Included";
+  
+      const upCell = typeof upRaw === "number" ? "₹ " + moneyINR(upRaw) : upRaw;
+      const tpCell = typeof tpRaw === "number" ? "₹ " + moneyINR(tpRaw) : tpRaw;
+  
       rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">Configuration Items</td>
+        <tr class="config-item-row">
+          <td>${itemCode}</td>
+          ${formatItemCell(item)}
+          <td>${q}</td>
+          <td>${upCell}</td>
+          <td>${tpCell}</td>
         </tr>
       `);
-
-      configItems.forEach(function (item) {
-        const itemCode = String(runningItemCode).padStart(3, "0");
-        runningItemCode += 1;
-
-        const q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
-        const upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
-        const tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
-
-        const upCell = (typeof upRaw === "number") ? ("₹ " + moneyINR(upRaw)) : upRaw;
-        const tpCell = (typeof tpRaw === "number") ? ("₹ " + moneyINR(tpRaw)) : tpRaw;
-
-        rows.push(`
-          <tr>
-            <td>${itemCode}</td>
-            ${formatItemCell(item)}
-            <td>${q}</td>
-            <td>${upCell}</td>
-            <td>${tpCell}</td>
-          </tr>
-        `);
-      });
-    }
-
-    // ADDITIONAL ITEMS (included in itemsTotal)
-    const additionalItems = line.additionalItems || [];
-    if (additionalItems.length) {
+    });
+  }
+  
+  // ADDITIONAL ITEMS (included in itemsTotal)
+  const additionalItems = line.additionalItems || [];
+  if (additionalItems.length) {
+    rows.push(`
+      <tr class="additional-section-row">
+        <td colspan="5" style="background:#00B0F0; color:#000; font-weight:700;">
+          Additional Items
+        </td>
+      </tr>
+    `);
+  
+    additionalItems.forEach(function (item) {
+      const itemCode = String(runningItemCode).padStart(3, "0");
+      runningItemCode += 1;
+  
+      const qtyNum = Number(item.qty || 1);
+      const unitNum = Number(item.price || item.unitPrice || 0);
+      const totalNum = unitNum * qtyNum;
+      itemsTotal += totalNum;
+  
       rows.push(`
-        <tr style="background:#00B0F0; color:#000;">
-          <td colspan="5" style="font-weight:700;">Additional Items</td>
+        <tr class="additional-item-row">
+          <td>${itemCode}</td>
+          ${formatItemCell(item)}
+          <td>${qtyNum.toString().padStart(2, "0")}</td>
+          <td>₹ ${moneyINR(unitNum)}</td>
+          <td>₹ ${moneyINR(totalNum)}</td>
         </tr>
       `);
-
-      additionalItems.forEach(function (item) {
-        const itemCode = String(runningItemCode).padStart(3, "0");
-        runningItemCode += 1;
-
-        const qtyNum = Number(item.qty || 1);
-        const unitNum = Number(item.price || item.unitPrice || 0);
-        const totalNum = unitNum * qtyNum;
-        itemsTotal += totalNum;
-
-        rows.push(`
-          <tr>
-            <td>${itemCode}</td>
-            ${formatItemCell(item)}
-            <td>${qtyNum.toString().padStart(2, "0")}</td>
-            <td>₹ ${moneyINR(unitNum)}</td>
-            <td>₹ ${moneyINR(totalNum)}</td>
-          </tr>
-        `);
-      });
-    }
-  });
-
+    });
+  }
+  
   body.innerHTML = rows.join("");
   renderSummaryRows(itemsTotal);
-}
 
 /* ========= Inline edit handlers ========= */
 
