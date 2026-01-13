@@ -13,14 +13,16 @@ import {
   getDocs
 } from "./firebase.js";
 
+const AI_BASE_URL = "https://ai.istosmedical.com"; // production
+
 async function callAIService(quoteObj) {
   try {
     const payload = {
       quote: {
         deal_value: quoteObj.totalValueINR,
         hospital: quoteObj.hospital.name,
-        instrument_category: "Histopathology", // adjust if needed dynamically
-        configuration_complexity: "Medium", // or compute from quoteObj
+        instrument_category: "Histopathology",
+        configuration_complexity: "Medium",
         items: quoteObj.items.map(item => ({
           item_id: item.code,
           quantity: item.quantity,
@@ -28,13 +30,13 @@ async function callAIService(quoteObj) {
         }))
       },
       historical_context: {
-        avg_winning_price: 100000, // temporary, replace with real logic
-        similar_quotes_won: 12,    // temporary
-        similar_quotes_lost: 3     // temporary
+        avg_winning_price: 100000,
+        similar_quotes_won: 12,
+        similar_quotes_lost: 3
       }
     };
 
-    const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
+    const res = await fetch(`${AI_BASE_URL}/analyze-quote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -42,9 +44,7 @@ async function callAIService(quoteObj) {
 
     if (!res.ok) throw new Error("AI service call failed");
 
-    const data = await res.json();
-    return data;
-
+    return await res.json();
   } catch (err) {
     console.error("[callAIService] Error:", err);
     return null;
