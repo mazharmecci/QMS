@@ -72,12 +72,11 @@ export function parseDetailsText(rawText) {
  * @param {number} lineIdx - index of the line
  * @returns {string} HTML string
  */
-
 export function formatInstrumentCell(inst, lineIdx) {
-  const code     = inst.catalog || inst.instrumentCode || inst.code || "";
-  const name     = inst.instrumentName || inst.name || "Unnamed Instrument";
-  const descText = inst.longDescription || inst.description || "";
-  const descLines = parseLines(descText);
+  const code       = inst.catalog || inst.instrumentCode || inst.code || "";
+  const name       = inst.instrumentName || inst.name || "Unnamed Instrument";
+  const descText   = inst.longDescription || inst.description || "";
+  const descLines  = parseLines(descText);
 
   const suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || "";
   const { suppliedLines, metaLines } = parseSuppliedBlock(suppliedRaw);
@@ -87,43 +86,58 @@ export function formatInstrumentCell(inst, lineIdx) {
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
 
-  // instrument code in bold
-  if (code) html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
-  if (name) html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
-  if (descLines.length) {
-    html += `<div style="font-weight:600;">${descLines.join(" ")}</div>`;
-    html += `<div style="height:8px;"></div>`;
+  // Code
+  if (code) {
+    html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
   }
 
+  // Name
+  if (name) {
+    html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
+  }
+
+  // Description
+  if (descLines.length) {
+    html += `<div style="font-weight:600; margin-bottom:4px;">${descLines.join(" ")}</div>`;
+  }
+
+  // Supplied complete with
   if (suppliedLines.length) {
-    html += `<div style="font-weight:600; margin-bottom:2px;">Supplied Complete with:</div>`;
+    html += `<div style="font-weight:600; margin:4px 0 2px;">Supplied Complete with:</div>`;
     suppliedLines.forEach(line => {
-      html += `<div style="padding-left:1.25rem;">- ${line}</div>`;
+      html += `<div style="padding-left:1.25rem; margin-bottom:2px;">- ${line}</div>`;
     });
   }
 
+  // Meta / origin / HSN
   if (metaLines.length || origin || hsn) {
-    html += `<div style="height:8px;"></div>`;
+    metaLines.forEach(line => {
+      html += `<div style="margin-bottom:2px;">${line}</div>`;
+    });
+
+    if (origin) {
+      html += `<div style="margin-bottom:2px;">Country of Origin: ${origin}</div>`;
+    }
+    if (hsn) {
+      html += `<div>HSN Code: ${hsn}</div>`;
+    }
   }
 
-  metaLines.forEach(line => {
-    html += `<div>${line}</div>`;
-  });
-
-  if (origin) html += `<div>Country of Origin: ${origin}</div>`;
-  if (hsn) html += `<div>HSN Code: ${hsn}</div>`;
-
+  // Config / Additional buttons – very small top margin
   html += `
-    <div style="margin-top:8px; display:flex; gap:0.4rem; flex-wrap:wrap;">
-      <button type="button" class="btn-quote" onclick="openConfigModal(${lineIdx})">Config Items</button>
-      <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal(${lineIdx})">Additional Items</button>
+    <div style="margin-top:2px; display:flex; gap:0.4rem; flex-wrap:wrap;">
+      <button type="button" class="btn-quote" onclick="openConfigModal(${lineIdx})">
+        Config Items
+      </button>
+      <button type="button" class="btn-quote btn-quote-secondary" onclick="openAdditionalModal(${lineIdx})">
+        Additional Items
+      </button>
     </div>
   `;
 
   html += `</td>`;
   return html;
 }
-
 
 /**
  * Render a generic item cell (config/additional) with preserved formatting.
