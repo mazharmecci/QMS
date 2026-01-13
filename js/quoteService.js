@@ -467,13 +467,17 @@ export async function finalizeQuote(rawArg = null) {
 
     // Notify user
     alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
-
-    // Copy quote number to clipboard with visual confirmation
+    
+    // Sanitize quote number for filename
+    const safeQuoteNo = (header.quoteNo || "Quote").replace(/[\/\\]/g, "-");
+    
+    // Copy to clipboard with visual toast
     try {
-      await navigator.clipboard.writeText(header.quoteNo);
-
+      await navigator.clipboard.writeText(safeQuoteNo);
+    
       const toast = document.createElement("div");
-      toast.textContent = `Quote number ${header.quoteNo} copied to clipboard`;
+      toast.className = "quote-toast";
+      toast.textContent = `Quote number ${safeQuoteNo} copied to clipboard`;
       toast.style.position = "fixed";
       toast.style.bottom = "20px";
       toast.style.right = "20px";
@@ -484,14 +488,17 @@ export async function finalizeQuote(rawArg = null) {
       toast.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
       toast.style.zIndex = "9999";
       document.body.appendChild(toast);
-
-      setTimeout(() => toast.remove(), 3000);
+    
+      // Remove toast after 3 seconds or on print
+      const removeToast = () => toast.remove();
+      setTimeout(removeToast, 3000);
+      window.addEventListener("beforeprint", removeToast);
     } catch (clipErr) {
       console.warn("[finalizeQuote] Clipboard copy failed:", clipErr);
     }
-
-    // Trigger print dialog (user can choose "Save as PDF")
-    document.title = header.quoteNo || "Quote"; // sets default filename in Save as PDF
+    
+    // Trigger print dialog
+    document.title = safeQuoteNo;
     setTimeout(() => window.print(), 200);
 
     return savedId;
