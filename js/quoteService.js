@@ -15,6 +15,8 @@ import {
 
 const AI_BASE_URL = "https://ai.istosmedical.com"; // production
 
+let finalizeInProgress = false;
+
 async function callAIService(quoteObj) {
   try {
     const payload = {
