@@ -297,7 +297,10 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
       if (hospitalName !== selectedHospital) return;
 
-      const allLines = data.quoteLines || [];
+      // Use quoteLines if available, otherwise fallback to legacy items
+      const allLines = data.quoteLines || data.items || [];
+      
+      console.log(`[showHospitalReport] Quote ${quoteNo}: using ${data.quoteLines ? 'quoteLines' : 'legacy items'}, count: ${allLines.length}`);
 
       allLines.forEach(item => {
         // Extract and display MAIN INSTRUMENT
@@ -345,7 +348,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
         );
         matchCount++;
 
-        // Add CONFIG ITEMS (nested under this main instrument)
+        // Add CONFIG ITEMS (nested)
         const configItems = item.configItems || [];
         configItems.forEach(config => {
           const configLabel = config.name || config.code || "—";
@@ -365,7 +368,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           matchCount++;
         });
 
-        // Add ADDITIONAL ITEMS (nested under this main instrument)
+        // Add ADDITIONAL ITEMS (nested)
         const additionalItems = item.additionalItems || [];
         additionalItems.forEach(additional => {
           const addLabel = additional.name || additional.code || "—";
