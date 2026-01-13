@@ -349,6 +349,47 @@ async function appendRevisionSnapshot(docId, data) {
 
 let finalizeInProgress = false;
 
+/**
+ * Safely call the AI service for quote analysis.
+ */
+async function callAIService(quoteObj) {
+  try {
+    const payload = {
+      quote: {
+        deal_value: quoteObj.totalValueINR,
+        hospital: quoteObj.hospital.name,
+        instrument_category: "Histopathology",
+        configuration_complexity: "Medium",
+        items: quoteObj.items.map(item => ({
+          item_id: item.code,
+          quantity: item.quantity,
+          unit_price: item.unitPrice
+        }))
+      },
+      historical_context: {
+        avg_winning_price: 100000,
+        similar_quotes_won: 12,
+        similar_quotes_lost: 3
+      }
+    };
+
+    const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("AI service call failed");
+    return await res.json();
+  } catch (err) {
+    console.error("[callAIService] Error:", err);
+    return null; // safeguard: do not throw
+  }
+}
+
+/**
+ * Finalize a quote: validate, persist locally & in Firestore, run AI analysis, and trigger print dialog.
+ */
 export async function finalizeQuote(rawArg = null) {
   if (finalizeInProgress) {
     console.warn("[finalizeQuote] blocked: already in progress.");
@@ -446,6 +487,22 @@ export async function finalizeQuote(rawArg = null) {
 
     await appendRevisionSnapshot(savedId, firestoreData);
 
+    // AI analysis (non-blocking for print UX)
+    try {
+      const aiResult = await callAIService(baseQuoteDoc);
+      const aiRef = doc(db, "quoteHistory", savedId);
+
+      if (aiResult) {
+        await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
+        console.log("[finalizeQuote] AI analysis saved successfully");
+      } else {
+        await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
+        console.warn("[finalizeQuote] AI analysis failed, quote still finalized");
+      }
+    } catch (aiErr) {
+      console.error("[finalizeQuote] Unexpected AI error:", aiErr);
+    }
+
     // Notify user
     alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
 
@@ -463,73 +520,6 @@ export async function finalizeQuote(rawArg = null) {
   }
 }
 
-    // ================================
-    // AI Integration with Safeguard
-    // ================================
-    async function callAIService(quoteObj) {
-      try {
-        const payload = {
-          quote: {
-            deal_value: quoteObj.totalValueINR,
-            hospital: quoteObj.hospital.name,
-            instrument_category: "Histopathology",
-            configuration_complexity: "Medium",
-            items: quoteObj.items.map(item => ({
-              item_id: item.code,
-              quantity: item.quantity,
-              unit_price: item.unitPrice
-            }))
-          },
-          historical_context: {
-            avg_winning_price: 100000,
-            similar_quotes_won: 12,
-            similar_quotes_lost: 3
-          }
-        };
-
-        const res = await fetch("http://127.0.0.1:8001/analyze-quote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error("AI service call failed");
-
-        return await res.json();
-      } catch (err) {
-        console.error("[callAIService] Error:", err);
-        return null; // safeguard: do not throw
-      }
-    }
-
-    try {
-      const aiResult = await callAIService(baseQuoteDoc);
-      const aiRef = doc(db, "quoteHistory", savedId);
-
-      if (aiResult) {
-        await updateDoc(aiRef, { ai_analysis: aiResult, ai_status: "SUCCESS" });
-        console.log("[finalizeQuote] AI analysis saved successfully");
-      } else {
-        // Save AI failure status without blocking quote
-        await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
-        console.warn("[finalizeQuote] AI analysis failed, quote still finalized");
-      }
-    } catch (aiErr) {
-      console.error("[finalizeQuote] Unexpected AI error:", aiErr);
-      // Even if AI update fails completely, quote remains finalized
-    }
-
-    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
-    return savedId;
-
-  } catch (err) {
-    console.error("[finalizeQuote] Error:", err);
-    alert("Quote saved locally, but cloud save failed.");
-    return null;
-  } finally {
-    finalizeInProgress = false;
-  }
-}
 
 /* ========================
  * Approve revision
