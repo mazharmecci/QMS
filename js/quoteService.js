@@ -452,7 +452,7 @@ function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
     }
 
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF(); // A4 portrait
+    const pdf = new jsPDF({ unit: "mm", format: "a4" }); // better units
 
     const {
       itemsTotal: subtotal,
@@ -462,95 +462,103 @@ function generateAndDownloadPdf(header, nextRev, summary, lineItems, now) {
       totalValue: totalValueINR
     } = summary;
 
-    let y = 20;
-    const maxY = 280;
+    const marginLeft = 15;
+    const marginTop = 20;
+    const lineHeight = 6;
+    const pageWidth = 210;           // A4 mm
+    const usableWidth = pageWidth - marginLeft * 2;
+    let y = marginTop;
 
-    // Header block
-    pdf.setFontSize(18);
-    pdf.text(`Quote: ${header.quoteNo} (Rev ${nextRev})`, 20, y);
-    y += 10;
+    const addWrappedText = (text, x, yStart, options = {}) => {
+      const maxWidth = options.maxWidth || usableWidth;
+      const lines = pdf.splitTextToSize(String(text || ""), maxWidth);
+      lines.forEach(line => {
+        pdf.text(line, x, y);
+        y += lineHeight;
+      });
+      return y;
+    };
 
-    pdf.setFontSize(12);
-    pdf.text(`Date: ${header.quoteDate || now.toISOString().slice(0, 10)}`, 20, y);
-    y += 7;
+    // Title
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.text(`Quote: ${header.quoteNo} (Rev ${nextRev})`, marginLeft, y);
+    y += lineHeight * 2;
 
-    pdf.text(`Hospital: ${header.hospitalName}`, 20, y);
-    y += 7;
+    // Header details
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text(`Date: ${header.quoteDate || now.toISOString().slice(0, 10)}`, marginLeft, y);
+    y += lineHeight;
 
-    if (header.hospitalAddress) {
-      pdf.text(
-        `Address: ${header.hospitalAddress.substring(0, 80)}`,
-        20,
-        y,
-        { maxWidth: 170 }
-      );
-      y += 7;
-    }
+    y = addWrappedText(`Hospital: ${header.hospitalName}`, marginLeft, y);
+    y = addWrappedText(
+      `Address: ${header.hospitalAddress || ""}`,
+      marginLeft,
+      y
+    );
+    y = addWrappedText(
+      `Contact: ${header.contactPerson || ""}`,
+      marginLeft,
+      y
+    );
+    y += lineHeight;
 
-    if (header.contactPerson) {
-      pdf.text(`Contact: ${header.contactPerson}`, 20, y);
-      y += 7;
-    }
+    // Totals block
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Summary", marginLeft, y);
+    y += lineHeight;
 
-    y += 5;
-
-    // Totals
-    pdf.text(`Subtotal: ₹${subtotal.toLocaleString()}`, 20, y);
-    y += 7;
-    pdf.text(`Discount: ₹${discount.toLocaleString()}`, 20, y);
-    y += 7;
-    pdf.text(`GST (${gstPercent}%): ₹${gstValueINR.toLocaleString()}`, 20, y);
-    y += 7;
-
-    pdf.setFontSize(14);
-    pdf.text(`TOTAL: ₹${totalValueINR.toLocaleString()}`, 20, y);
-    y += 12;
-    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Subtotal: ₹${subtotal.toLocaleString()}`, marginLeft, y);
+    y += lineHeight;
+    pdf.text(`Discount: ₹${discount.toLocaleString()}`, marginLeft, y);
+    y += lineHeight;
+    pdf.text(`GST (${gstPercent}%): ₹${gstValueINR.toLocaleString()}`, marginLeft, y);
+    y += lineHeight;
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`TOTAL: ₹${totalValueINR.toLocaleString()}`, marginLeft, y);
+    y += lineHeight * 2;
 
     // Items
-    pdf.text("Items:", 20, y);
-    y += 7;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Items", marginLeft, y);
+    y += lineHeight;
+    pdf.setFont("helvetica", "normal");
+
+    const maxY = 280;
 
     lineItems.forEach((item, idx) => {
       if (y > maxY) {
         pdf.addPage();
-        y = 20;
+        y = marginTop;
       }
-      const name = (item.name || "").substring(0, 60);
       const code = item.code || "";
+      const name = item.name || "";
       const priceStr = `₹${item.price.toLocaleString()}`;
-      pdf.text(
-        `${idx + 1}. ${code} - ${name} (${priceStr})`,
-        20,
-        y,
-        { maxWidth: 170 }
-      );
-      y += 6;
+      const line = `${idx + 1}. ${code} - ${name} (${priceStr})`;
+      y = addWrappedText(line, marginLeft, y);
     });
 
-    // Optional note
+    // Sales note
     if (header.salesNote) {
       if (y > maxY - 20) {
         pdf.addPage();
-        y = 20;
+        y = marginTop;
       }
-      pdf.text("Sales Note:", 20, y);
-      y += 6;
-      pdf.text(
-        header.salesNote.substring(0, 300),
-        20,
-        y,
-        { maxWidth: 170 }
-      );
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Sales Note", marginLeft, y);
+      y += lineHeight;
+      pdf.setFont("helvetica", "normal");
+      y = addWrappedText(header.salesNote, marginLeft, y);
     }
 
-    // Safe filename
+    // File name
     const safeQuoteNo = (header.quoteNo || "QUOTE")
       .toString()
       .replace(/[^a-zA-Z0-9_\-]/g, "_");
 
-    pdf.save(`${safeQuoteNo}.pdf`); // triggers download with custom filename [web:23][web:29]
-    console.log(`[finalizeQuote] PDF downloaded: ${safeQuoteNo}.pdf`);
+    pdf.save(`${safeQuoteNo}.pdf`);
   } catch (err) {
     console.error("[finalizeQuote] PDF generation failed:", err);
   }
