@@ -292,16 +292,24 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
   try {
     const docs = await getLatestHistoryDocs();
     let matchCount = 0;
+    let hospitalDocCount = 0;
 
-    docs.forEach(data => {
+    docs.forEach((data, docIdx) => {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
-      if (hospitalName !== selectedHospital) return;
+      
+      console.log(`[showHospitalReport] Doc ${docIdx}: quoteNo="${quoteNo}", hospitalName="${hospitalName}", selected="${selectedHospital}"`);
+      
+      if (hospitalName !== selectedHospital) {
+        console.log(`[showHospitalReport] ⚠️ Hospital name mismatch: "${hospitalName}" !== "${selectedHospital}"`);
+        return;
+      }
 
-      // Use ONLY quoteLines, NOT items
+      hospitalDocCount++;
+      console.log(`[showHospitalReport] ✓ Quote ${quoteNo} matches. Lines count: ${(data.quoteLines || []).length}`);
+
       const allLines = data.quoteLines || [];
 
-      allLines.forEach(item => {
-        // Extract catalog code using same logic as showInstrumentReport
+      allLines.forEach((item, itemIdx) => {
         const catalogCode = 
           item.code ||
           item.catalogCode ||
@@ -310,7 +318,8 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           item.catalogNo ||
           item.catalogNoCode;
 
-        // Find instrument by catalog code (not by index)
+        console.log(`[showHospitalReport] Line ${itemIdx}: catalogCode="${catalogCode}", item fields: ${Object.keys(item).join(", ")}`);
+
         const inst = findInstrument(instruments, catalogCode);
 
         let label =
@@ -334,6 +343,8 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           inst.unitPrice ??
           0;
 
+        console.log(`[showHospitalReport] → Adding row: "${label}" (qty=${qty}, price=${price})`);
+
         appendRow(
           tbody,
           rowNum++,
@@ -348,9 +359,9 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       });
     });
 
-    console.log(`[showHospitalReport ${tableId}] ✓ ${matchCount} items`);
+    console.log(`[showHospitalReport] ✓ ${hospitalDocCount} quotes found, ${matchCount} total items`);
   } catch (err) {
-    console.error(`[showHospitalReport ${tableId}] Error:`, err);
+    console.error(`[showHospitalReport] Error:`, err);
   }
 }
 
