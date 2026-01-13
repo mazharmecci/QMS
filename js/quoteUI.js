@@ -159,14 +159,16 @@ export function renderQuoteBuilder() {
     const codeText = String(runningItemCode).padStart(3, "0");
     runningItemCode += 1;
 
-    let unitBase =
-      (line.unitPriceOverride !== undefined && line.unitPriceOverride !== null)
+    const unitBase =
+      line.unitPriceOverride !== undefined && line.unitPriceOverride !== null
         ? line.unitPriceOverride
-        : (inst.unitPrice || 0);
+        : inst.unitPrice || 0;
+
     const instUnit = Number(unitBase || 0);
     const instTotal = instUnit * qty;
     itemsTotal += instTotal;
 
+    // main instrument row
     rows.push(`
       <tr>
         <td>${codeText}</td>
@@ -181,7 +183,7 @@ export function renderQuoteBuilder() {
             onblur="quantityCommitted(${lineIdx}, this.value)"
           />
         </td>
-        <td>
+        <td class="config-actions-col">
           ₹
           <input
             type="text"
@@ -194,7 +196,7 @@ export function renderQuoteBuilder() {
       </tr>
     `);
 
-      // CONFIG ITEMS (display only)
+    // CONFIG ITEMS (display only)
     const configItems = line.configItems || [];
     if (configItems.length) {
       rows.push(`
@@ -207,12 +209,21 @@ export function renderQuoteBuilder() {
         const itemCode = String(runningItemCode).padStart(3, "0");
         runningItemCode += 1;
 
-        const q = (item.qty !== undefined && item.qty !== null) ? item.qty : "Included";
-        const upRaw = (item.upInr !== undefined && item.upInr !== null) ? item.upInr : "Included";
-        const tpRaw = (item.tpInr !== undefined && item.tpInr !== null) ? item.tpInr : "Included";
+        const q =
+          item.qty !== undefined && item.qty !== null ? item.qty : "Included";
+        const upRaw =
+          item.upInr !== undefined && item.upInr !== null
+            ? item.upInr
+            : "Included";
+        const tpRaw =
+          item.tpInr !== undefined && item.tpInr !== null
+            ? item.tpInr
+            : "Included";
 
-        const upCell = (typeof upRaw === "number") ? ("₹ " + moneyINR(upRaw)) : upRaw;
-        const tpCell = (typeof tpRaw === "number") ? ("₹ " + moneyINR(tpRaw)) : tpRaw;
+        const upCell =
+          typeof upRaw === "number" ? "₹ " + moneyINR(upRaw) : upRaw;
+        const tpCell =
+          typeof tpRaw === "number" ? "₹ " + moneyINR(tpRaw) : tpRaw;
 
         rows.push(`
           <tr>
