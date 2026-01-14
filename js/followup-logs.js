@@ -9,7 +9,27 @@ import {
 
 // ---------- Helpers ----------
 
-function formatDateDMY(isoDate) {
+// Normalize Firestore Timestamp / Date / string to "yyyy-mm-dd"
+function toIsoDateString(value) {
+  if (!value) return "";
+  // Firestore Timestamp
+  if (value.toDate && typeof value.toDate === "function") {
+    return value.toDate().toISOString().split("T")[0];
+  }
+  // JS Date
+  if (value instanceof Date) {
+    return value.toISOString().split("T")[0];
+  }
+  // String
+  if (typeof value === "string") {
+    return value.includes("T") ? value.split("T")[0] : value;
+  }
+  return "";
+}
+
+// Display in dd-mm-yyyy
+function formatDateDMY(value) {
+  const isoDate = toIsoDateString(value);
   if (!isoDate) return "";
   const [y, m, d] = isoDate.split("-");
   return `${d}-${m}-${y}`;
@@ -94,8 +114,8 @@ function renderFollowupPanel() {
         </div>
         ${list
           .map(q => {
-            const baseDate = q.quoteDate || todayIso;
-            const diff = daysBetween(baseDate, todayIso);
+            const baseIso = q.quoteDate || todayIso;
+            const diff = daysBetween(baseIso, todayIso);
             const daysAgo = Number.isFinite(diff) ? diff : "";
             const overdueLabel =
               daysBetween(todayIso, q.nextFollowUpDate) < 0 ? " (OVERDUE)" : "";
@@ -149,7 +169,7 @@ function showQuoteDetail(docId) {
             <div class="log-entry">
               <div class="log-header">
                 <div>
-                  <div class="log-date">📅 ${note.date || ""} | ${
+                  <div class="log-date">📅 ${formatDateDMY(note.date) || ""} | ${
             note.time || ""
           }</div>
                   <div class="log-author">By: ${note.followedBy || ""}</div>
@@ -170,14 +190,14 @@ function showQuoteDetail(docId) {
     : '<div class="empty-state">No follow-up notes yet.</div>';
 
   const todayIso = new Date().toISOString().split("T")[0];
-  const baseDate = quote.quoteDate || todayIso;
-  const daysAgo = daysBetween(baseDate, todayIso);
+  const baseIso = quote.quoteDate || todayIso;
+  const daysAgo = daysBetween(baseIso, todayIso);
 
   container.innerHTML = `
     <div class="quote-card">
       <div class="quote-header">
         <div class="quote-title">
-          ${quote.quoteNo || ""} | ${quote.name || ""}
+          ${quote.quoteNo || ""} | ${quote.hospitalName || ""}
         </div>
       </div>
 
@@ -202,11 +222,15 @@ function showQuoteDetail(docId) {
         </div>
         <div class="meta-item">
           <div class="meta-label">Created On</div>
-          <div class="meta-value">${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}</div>
+          <div class="meta-value">
+            ${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}
+          </div>
         </div>
         <div class="meta-item">
           <div class="meta-label">Next Follow-Up Due</div>
-          <div class="meta-value">${formatDateDMY(quote.nextFollowUpDate) || ""}</div>
+          <div class="meta-value">
+            ${formatDateDMY(quote.nextFollowUpDate) || ""}
+          </div>
         </div>
       </div>
 
@@ -214,7 +238,7 @@ function showQuoteDetail(docId) {
         <h3 style="font-size:1rem; margin-bottom:8px;">✏️ FOLLOW-UP LOG HISTORY</h3>
         ${notesHtml}
         <div class="action-buttons">
-          <button class="btn btn-primary" type="button">➕ Add Follow-Up Note</button>          
+          <button class="btn btn-primary" type="button">➕ Add Follow-Up Note</button>
           <button class="btn btn-secondary" type="button">📧 Send Email</button>
         </div>
       </div>
@@ -241,25 +265,29 @@ async function loadQuoteLogs() {
 
     quoteLogs = snap.docs.map(docSnap => {
       const data = docSnap.data() || {};
-      const base = data.quoteDate || todayIso;
-      const nextFollow =
-        data.nextFollowUpDate || (base ? addDays(base, 3) : null);
-    
+
+      const quoteDateIso = toIsoDateString(data.quoteDate) || todayIso;
+      const createdAtIso = toIsoDateString(data.createdAt);
+      const nextFollowIso = data.nextFollowUpDate
+        ? toIsoDateString(data.nextFollowUpDate)
+        : addDays(quoteDateIso, 3);
+
       return {
         id: docSnap.id,
         quoteNo: data.quoteNo || "",
-        hospitalName: data.name || "",       
+        hospitalName: data.name || "",
         contactPerson: data.contactPerson || "",
         phone: data.phone || "",
         email: data.email || "",
-        quoteDate: data.quoteDate || null,
-        createdAt: data.createdAt || null,
+        quoteDate: quoteDateIso,
+        createdAt: createdAtIso,
         currentStatus: data.currentStatus || data.status || "",
-        quoteValue: typeof data.totalValue === "number" ? data.totalValue : 0,
+        quoteValue:
+          typeof data.totalValue === "number" ? data.totalValue : 0,
         followUpNotes: Array.isArray(data.followUpNotes)
           ? data.followUpNotes
           : [],
-        nextFollowUpDate: nextFollow
+        nextFollowUpDate: nextFollowIso
       };
     });
 
