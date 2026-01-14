@@ -1,312 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quote Follow-up Log System</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .section-header { font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
-        .followup-panel { display: grid; gap: 20px; }
-        .followup-group { border: 2px solid; border-radius: 8px; padding: 16px; }
-        .overdue { border-color: #dc2626; background: #fef2f2; }
-        .due-today { border-color: #f59e0b; background: #fffbeb; }
-        .due-soon { border-color: #10b981; background: #ecfdf5; }
-        .group-header { font-weight: 600; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .quote-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-        .quote-item:last-child { border-bottom: none; }
-        .quote-info { display: flex; flex-direction: column; gap: 4px; }
-        .quote-no { font-weight: 600; color: #1e293b; }
-        .hospital-name { font-size: 0.95rem; color: #475569; }
-        .due-date { font-size: 0.9rem; font-weight: 500; }
-        .quote-card { border-left: 4px solid #3b82f6; padding-left: 20px; }
-        .quote-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-        .quote-title { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
-        .quote-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .meta-item { display: flex; flex-direction: column; gap: 4px; }
-        .meta-label { font-size: 0.85rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        .meta-value { font-weight: 600; color: #1e293b; }
-        .log-history { background: #f8fafc; border-radius: 8px; padding: 20px; }
-        .log-entry { background: white; border-left: 4px solid #10b981; padding: 16px; margin-bottom: 16px; border-radius: 0 8px 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .log-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .log-date { font-weight: 600; color: #1e293b; }
-        .log-author { color: #64748b; font-size: 0.9rem; }
-        .log-status { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .status-sent { background: #dbeafe; color: #1e40af; }
-        .status-review { background: #fef3c7; color: #d97706; }
-        .log-note { color: #475569; line-height: 1.6; margin-bottom: 12px; }
-        .log-actions { display: flex; gap: 8px; }
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-secondary { background: #f1f5f9; color: #475569; }
-        .btn-danger { background: #ef4444; color: white; }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .action-buttons { display: flex; gap: 12px; }
-        .empty-state { text-align: center; padding: 40px; color: #64748b; }
-        @media (max-width: 768px) { .quote-item { flex-direction: column; align-items: flex-start; gap: 8px; } }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Quote Follow-Up Logs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px rgba(15, 23, 42, 0.06);
+    }
+    .section-header {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+    .followup-panel { display: grid; gap: 18px; }
+    .followup-group {
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 2px solid transparent;
+    }
+    .followup-group.overdue {
+      border-color: #ef4444;
+      background: #fef2f2;
+    }
+    .followup-group.due-today {
+      border-color: #f97316;
+      background: #fffbeb;
+    }
+    .followup-group.due-soon {
+      border-color: #22c55e;
+      background: #ecfdf5;
+    }
+    .group-header {
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+    }
+    .quote-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+    .quote-item:first-of-type { border-top: none; }
+    .quote-item:hover { background: rgba(15, 23, 42, 0.02); }
+    .quote-info { display: flex; flex-direction: column; gap: 3px; }
+    .quote-no { font-weight: 600; font-size: 0.95rem; }
+    .hospital-name { font-size: 0.9rem; color: #6b7280; }
+    .due-date { font-size: 0.85rem; color: #374151; font-weight: 500; }
+
+    .quote-card {
+      border-left: 4px solid #3b82f6;
+      padding-left: 18px;
+    }
+    .quote-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .quote-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .quote-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .meta-item { font-size: 0.9rem; }
+    .meta-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+      margin-bottom: 3px;
+    }
+    .meta-value { font-weight: 600; color: #111827; }
+
+    .log-history {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 8px;
+    }
+    .log-entry {
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 12px;
+      border-left: 3px solid #22c55e;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .log-date {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .log-author {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .log-status {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .status-sent {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .status-review {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .log-note {
+      font-size: 0.9rem;
+      color: #374151;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .log-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn {
+      border: none;
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #ffffff;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 30px 10px;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      .quote-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .quote-card { padding-left: 10px; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Daily Follow-up Picker -->
-        <div class="section">
-            <h2 class="section-header">📋 Follow-Up Due (Next 3 Days)</h2>
-            <div id="followupPanel" class="followup-panel">
-                <div class="empty-state">
-                    Loading follow-ups...
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <section class="section">
+      <h2 class="section-header">📋 Follow-Up Due (Next 3 Days)</h2>
+      <div id="followupPanel" class="followup-panel">
+        <div class="empty-state">Loading follow-ups...</div>
+      </div>
+    </section>
 
-        <!-- Quote Detail Cards -->
-        <div id="quoteCards" class="section" style="display: none;">
-            <!-- Dynamic quote cards will be inserted here -->
-        </div>
-    </div>
+    <section id="quoteDetailSection" class="section" style="display:none;">
+      <div id="quoteDetailContainer"></div>
+    </section>
+  </div>
 
-    <script>
-        // Firebase Config (replace with your actual config)
-        const firebaseConfig = {
-            // Your Firebase config here
-            apiKey: "your-api-key",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "your-app-id"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Sample data (replace with real Firestore data)
-        const sampleData = [
-            {
-                quoteNo: "QT-2024-001",
-                hospitalName: "G-LIFESCIENCE SOLUTIONS PVT LTD",
-                contactPerson: "Dr. John Doe",
-                phone: "+91-98765-43210",
-                email: "john@glsc.com",
-                lastStatusUpdate: "2026-01-14",
-                currentStatus: "Submitted",
-                daysAgo: 5,
-                lastFollowUpDate: "2026-01-12",
-                nextFollowUpDate: "2026-01-15",
-                followUpNotes: [
-                    {
-                        date: "2026-01-12",
-                        time: "2:45 PM",
-                        note: "Called - spoke with Dr. Patel. Said they'll review by next week. Seems interested in the configuration items we discussed.",
-                        followedBy: "mazhar",
-                        status: "In Review"
-                    },
-                    {
-                        date: "2026-01-10",
-                        time: "11:30 AM",
-                        note: "Email sent with quotation details and technical specs. Attachment size: 2.4 MB",
-                        followedBy: "s.khan",
-                        status: "Sent"
-                    }
-                ],
-                quoteValue: 1915700,
-                instruments: ["IST-LG6", "IST-XYZ"],
-                createdDate: "2026-01-09",
-                createdBy: "mazhar",
-                isOverdue: true,
-                priority: "medium"
-            },
-            {
-                quoteNo: "QT-2024-002",
-                hospitalName: "Alvas Medical",
-                contactPerson: "Dr. Smith",
-                phone: "+91-98765-43211",
-                email: "smith@alvas.com",
-                lastStatusUpdate: "2026-01-14",
-                currentStatus: "Submitted",
-                daysAgo: 3,
-                lastFollowUpDate: "2026-01-11",
-                nextFollowUpDate: "2026-01-14",
-                followUpNotes: [],
-                quoteValue: 850000,
-                instruments: ["IST-LG5"],
-                createdDate: "2026-01-11",
-                createdBy: "s.khan",
-                isOverdue: false,
-                priority: "high"
-            }
-        ];
-
-        // Calculate days difference
-        function daysBetween(date1, date2) {
-            const d1 = new Date(date1);
-            const d2 = new Date(date2);
-            return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
-        }
-
-        // Format Indian Rupees
-        function formatINR(amount) {
-            return new Intl.NumberFormat('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                maximumFractionDigits: 0
-            }).format(amount);
-        }
-
-        // Get status class
-        function getStatusClass(status) {
-            const classes = {
-                'Sent': 'status-sent',
-                'In Review': 'status-review'
-            };
-            return classes[status] || '';
-        }
-
-        // Calculate follow-up category
-        function getFollowupCategory(quote) {
-            const today = new Date();
-            const nextDue = new Date(quote.nextFollowUpDate);
-            const diffDays = daysBetween(today.toISOString().split('T')[0], nextDue.toISOString().split('T')[0]);
-            
-            if (diffDays < 0) return { category: 'overdue', label: '⚠️ OVERDUE', count: 0 };
-            if (diffDays === 0) return { category: 'due-today', label: '📅 DUE TODAY', count: 0 };
-            if (diffDays <= 3) return { category: 'due-soon', label: '⏰ DUE IN 1-3 DAYS', count: 0 };
-            return null;
-        }
-
-        // Render follow-up panel
-        function renderFollowupPanel() {
-            const panel = document.getElementById('followupPanel');
-            const today = new Date().toISOString().split('T')[0];
-            
-            const categories = {
-                overdue: [],
-                'due-today': [],
-                'due-soon': []
-            };
-
-            sampleData.forEach(quote => {
-                const categoryInfo = getFollowupCategory(quote);
-                if (categoryInfo) {
-                    categories[categoryInfo.category].push(quote);
-                    categoryInfo.count = categories[categoryInfo.category].length;
-                }
-            });
-
-            let html = '';
-            ['overdue', 'due-today', 'due-soon'].forEach(cat => {
-                if (categories[cat].length > 0) {
-                    const categoryInfo = getFollowupCategory(categories[cat][0]);
-                    html += `
-                        <div class="followup-group ${cat}">
-                            <div class="group-header">${categoryInfo.label} (${categories[cat].length})</div>
-                            ${categories[cat].map(quote => `
-                                <div class="quote-item" onclick="showQuoteDetail('${quote.quoteNo}')">
-                                    <div class="quote-info">
-                                        <div class="quote-no">${quote.quoteNo}</div>
-                                        <div class="hospital-name">${quote.hospitalName} | ${quote.daysAgo} days ago</div>
-                                    </div>
-                                    <div class="due-date">
-                                        Next Due: ${quote.nextFollowUpDate}
-                                        ${daysBetween(today, quote.nextFollowUpDate) < 0 ? '(OVERDUE)' : ''}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-            });
-
-            panel.innerHTML = html || '<div class="empty-state">No follow-ups due in next 3 days</div>';
-        }
-
-        // Render quote detail card
-        function showQuoteDetail(quoteNo) {
-            const quote = sampleData.find(q => q.quoteNo === quoteNo);
-            if (!quote) return;
-
-            const cardsContainer = document.getElementById('quoteCards');
-            cardsContainer.style.display = 'block';
-            cardsContainer.scrollIntoView({ behavior: 'smooth' });
-
-            const notesHtml = quote.followUpNotes.length > 0 ? 
-                quote.followUpNotes.map(note => `
-                    <div class="log-entry">
-                        <div class="log-header">
-                            <div>
-                                <div class="log-date">📅 ${note.date} | ${note.time}</div>
-                                <div class="log-author">By: ${note.followedBy}</div>
-                            </div>
-                            <span class="log-status ${getStatusClass(note.status)}">${note.status}</span>
-                        </div>
-                        <div class="log-note">${note.note}</div>
-                        <div class="log-actions">
-                            <button class="btn btn-secondary">Edit</button>
-                            <button class="btn btn-danger">Delete</button>
-                        </div>
-                    </div>
-                `).join('') : '<div class="empty-state">No follow-up notes yet</div>';
-
-            cardsContainer.innerHTML = `
-                <div class="quote-card">
-                    <div class="quote-header">
-                        <div class="quote-title">${quote.quoteNo} | ${quote.hospitalName}</div>
-                    </div>
-                    <div class="quote-meta">
-                        <div class="meta-item">
-                            <div class="meta-label">Status</div>
-                            <div class="meta-value">📤 ${quote.currentStatus} (since ${quote.daysAgo} days)</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Value</div>
-                            <div class="meta-value">${formatINR(quote.quoteValue)}</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Contact</div>
-                            <div class="meta-value">${quote.contactPerson} | ${quote.phone}</div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-label">Next Follow-up</div>
-                            <div class="meta-value">${quote.nextFollowUpDate}</div>
-                        </div>
-                    </div>
-                    <div class="log-history">
-                        <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-weight: 600;">✏️ FOLLOW-UP LOG HISTORY</h3>
-                        ${notesHtml}
-                        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                            <div class="action-buttons">
-                                <button class="btn btn-primary">➕ Add Follow-Up Note</button>
-                                <button class="btn btn-secondary">📞 Schedule Call</button>
-                                <button class="btn btn-secondary">📧 Send Email</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            renderFollowupPanel();
-        });
-
-        // Real-time Firestore listener (uncomment when Firebase config is set)
-        /*
-        db.collection('quoteLogs')
-            .orderBy('nextFollowUpDate')
-            .onSnapshot(snapshot => {
-                sampleData.length = 0; // Clear sample data
-                snapshot.forEach(doc => {
-                    sampleData.push({ id: doc.id, ...doc.data() });
-                });
-                renderFollowupPanel();
-            });
-        */
-    </script>
+  <!-- UI logic only; Firebase comes from firebase.js -->
+  <script type="module" src="./followup-logs.js"></script>
 </body>
 </html>
