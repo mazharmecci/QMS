@@ -70,10 +70,11 @@ function getFollowupCategory(quote) {
   return null;
 }
 
-// ---------- Rendering ----------
+// ---------- State ----------
 let quoteLogs = [];
 
-// save contact to Firestore on blur
+// ---------- Firestore updates ----------
+
 async function saveContact(docId, newContact) {
   try {
     const ref = doc(db, "quoteHistory", docId);
@@ -85,6 +86,42 @@ async function saveContact(docId, newContact) {
     alert("Could not save contact. Please try again.");
   }
 }
+
+async function addFollowUpNote(quote) {
+  const noteText = prompt("Enter follow-up note:");
+  if (!noteText) return;
+
+  const now = new Date();
+  const dateIso = now.toISOString().split("T")[0];
+  const timeStr = now.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  const newNote = {
+    date: dateIso,
+    time: timeStr,
+    note: noteText,
+    followedBy: "sales", // TODO: replace with logged-in user
+    status: "In Review"
+  };
+
+  const notes = Array.isArray(quote.followUpNotes)
+    ? [...quote.followUpNotes, newNote]
+    : [newNote];
+
+  try {
+    const ref = doc(db, "quoteHistory", quote.id);
+    await updateDoc(ref, { followUpNotes: notes });
+    quote.followUpNotes = notes;
+    showQuoteDetail(quote.id); // re-render card
+  } catch (err) {
+    console.error("[followup-logs] Failed to add note:", err);
+    alert("Could not save follow-up note. Please try again.");
+  }
+}
+
+// ---------- Rendering list ----------
 
 function renderFollowupPanel() {
   const panel = document.getElementById("followupPanel");
@@ -158,6 +195,8 @@ function renderFollowupPanel() {
     });
   });
 }
+
+// ---------- Rendering detail card ----------
 
 function showQuoteDetail(docId) {
   const detailSection = document.getElementById("quoteDetailSection");
@@ -252,14 +291,18 @@ function showQuoteDetail(docId) {
         <h3 style="font-size:1rem; margin-bottom:8px;">✏️ FOLLOW-UP LOG HISTORY</h3>
         ${notesHtml}
         <div class="action-buttons">
-          <button class="btn btn-primary" type="button">➕ Add Follow-Up Note</button>
-          <button class="btn btn-secondary" type="button">📧 Send Email</button>
+          <button class="btn btn-primary" type="button" id="add-note-btn">
+            ➕ Add Follow-Up Note
+          </button>
+          <button class="btn btn-secondary" type="button" id="send-email-btn">
+            📧 Send Email
+          </button>
         </div>
       </div>
     </div>
   `;
 
-  // wire contact input save
+  // contact save on blur
   const contactInput = document.getElementById("contact-input");
   if (contactInput) {
     contactInput.addEventListener("blur", () => {
@@ -270,11 +313,33 @@ function showQuoteDetail(docId) {
     });
   }
 
+  // Add follow-up note
+  const addNoteBtn = document.getElementById("add-note-btn");
+  if (addNoteBtn) {
+    addNoteBtn.addEventListener("click", () => addFollowUpNote(quote));
+  }
+
+  // Send Email (opens Outlook / default mail client)
+  const sendEmailBtn = document.getElementById("send-email-btn");
+  if (sendEmailBtn) {
+    sendEmailBtn.addEventListener("click", () => {
+      const to = quote.email || "";
+      const subject = encodeURIComponent(`Quotation ${quote.quoteNo}`);
+      const body = encodeURIComponent(
+        `Dear ${quote.hospitalName || ""},\n\n` +
+          `This is a follow-up regarding quotation ${quote.quoteNo}.\n\n` +
+          `Regards,\nSales Team`
+      );
+      window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+    });
+  }
+
   detailSection.style.display = "block";
   detailSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ---------- Firestore load from quoteHistory ----------
+
 async function loadQuoteLogs() {
   const panel = document.getElementById("followupPanel");
   if (panel) {
