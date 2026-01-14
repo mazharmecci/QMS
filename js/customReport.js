@@ -254,25 +254,78 @@ async function generateReport(selectorId, tableId, filterFn, hasPriceColumn = tr
 /* ========= Table-Aware Report Functions ========= */
 
 async function showInstrumentReport(tableId = "catalogReportTable") {
-  await generateReport("catalogSelector", tableId, (item, instruments, catalogCode) => {
-    const code =
-      item.code ||
-      item.catalogCode ||
-      item.catalog ||
-      item.instrumentCode ||
-      item.catalogNo ||
-      item.catalogNoCode;
+  const selector = document.getElementById("catalogSelector");
+  if (!selector?.value) {
+    console.warn("[showInstrumentReport] No selection");
+    return;
+  }
 
-    if (code !== catalogCode) return null;
+  const tbody = clearTbody(tableId);
+  if (!tbody) return;
 
-    const inst = findInstrument(instruments, code);
-    return {
-      label: inst.instrumentName || inst.name ||
-             item.name || (item.description?.split("\n")[0] || "").trim() || "—",
-      qty: item.quantity || 1,
-      price: item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0
-    };
-  });
+  const instruments = getInstrumentsMaster();
+  const selectedCatalog = selector.value;
+  let rowNum = 1;
+
+  try {
+    console.log(`[showInstrumentReport] Generating for "${selectedCatalog}"...`);
+    const docs = await getLatestHistoryDocs();
+    
+    let matchCount = 0;
+    docs.forEach(data => {
+      const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
+      
+      // Use quoteLines if available, otherwise fallback to legacy items
+      const items = data.quoteLines || data.items || [];
+      
+      console.log(`[showInstrumentReport] Quote ${quoteNo}: using ${data.quoteLines ? 'quoteLines' : 'legacy items'}, count: ${items.length}`);
+      
+      items.forEach(item => {
+        const code =
+          item.code ||
+          item.catalogCode ||
+          item.catalog ||
+          item.instrumentCode ||
+          item.catalogNo ||
+          item.catalogNoCode;
+
+        if (code !== selectedCatalog) return;
+
+        const inst = findInstrument(instruments, code);
+        return {
+          label: inst.instrumentName || inst.name ||
+                 item.name || (item.description?.split("\n")[0] || "").trim() || "—",
+          qty: item.quantity || 1,
+          price: item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0
+        };
+      });
+
+      items.forEach(item => {
+        const code =
+          item.code ||
+          item.catalogCode ||
+          item.catalog ||
+          item.instrumentCode ||
+          item.catalogNo ||
+          item.catalogNoCode;
+
+        if (code !== selectedCatalog) return;
+
+        const inst = findInstrument(instruments, code);
+        const label = inst.instrumentName || inst.name ||
+                     item.name || (item.description?.split("\n")[0] || "").trim() || "—";
+        const qty = item.quantity || 1;
+        const price = item.unitPriceOverride ?? item.price ?? item.unitPrice ?? inst.unitPrice ?? 0;
+
+        appendRow(tbody, rowNum++, quoteNo, hospitalName, label, quoteDate, qty, price);
+        matchCount++;
+      });
+    });
+    
+    console.log(`[showInstrumentReport] ✓ ${matchCount} rows from ${docs.length} docs`);
+  } catch (err) {
+    console.error(`[showInstrumentReport] Error:`, err);
+  }
 }
 
 async function showHospitalReport(tableId = "hospitalReportTable") {
