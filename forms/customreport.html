@@ -242,11 +242,12 @@
       width: 15%;
     }
     
-    /* Instrument / Item Name - multi-line support */
-    .instrument-report-table th:nth-child(4),
+    /* Instrument / Item Name - ensure it can wrap and expand */
     .instrument-report-table td:nth-child(4) {
       width: 32%;
       vertical-align: top;
+      padding: 0.75rem 0.6rem; /* Increase padding for breathing room */
+      line-height: 1.4; /* Improve line spacing */
     }
     
     /* Date - keep nowrap */
@@ -286,7 +287,8 @@
       background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-      height: auto; /* Allow rows to expand */
+      height: auto;
+      min-height: 3rem; /* Force minimum row height for wrapped content */
     }
     
     .instrument-report-table tbody td {
