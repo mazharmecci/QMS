@@ -327,7 +327,14 @@ function appendRow(tbody, rowNum, quoteNo, hospitalName, label, quoteDate, qty, 
 
   row.insertCell().textContent = quoteDate;
   row.insertCell().textContent = qty;
-  row.insertCell().textContent = price.toFixed(2);
+  
+  // Format price with Indian numbering (19,15,700.00)
+  const priceCell = row.insertCell();
+  if (price != null && price !== 0) {
+    priceCell.textContent = "₹ " + formatINR(price);
+  } else {
+    priceCell.textContent = "₹ —";
+  }
 }
 
 async function showHospitalReport(tableId = "hospitalReportTable") {
