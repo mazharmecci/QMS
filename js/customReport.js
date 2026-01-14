@@ -340,6 +340,37 @@ async function showInstrumentReport(tableId = "catalogReportTable") {
   }
 }
 
+// Format instrument labels with CSS classes instead of inline styles
+function formatLabel(rawLabel) {
+  // Regex: optional ├─ or └─, then [MAIN|CONFIG|ADDITIONAL], then <br>, then the name
+  const match = rawLabel.match(/^\s*(├─|└─)?\s*
+
+\[(MAIN|CONFIG|ADDITIONAL)\]
+
+<br>(.*)$/i);
+  if (!match) return rawLabel;
+
+  const prefix = match[1] || "";
+  const type = match[2];
+  const name = match[3];
+
+  return `${prefix} <span class="label-header">[${type}]</span><br><span class="label-name">${name}</span>`;
+}
+
+function appendRow(tbody, rowNum, quoteNo, hospitalName, label, quoteDate, qty, price) {
+  const row = tbody.insertRow();
+  row.insertCell().textContent = rowNum;
+  row.insertCell().textContent = quoteNo;
+  row.insertCell().textContent = hospitalName;
+
+  const labelCell = row.insertCell();
+  labelCell.innerHTML = formatLabel(label); // ✅ render with CSS classes
+
+  row.insertCell().textContent = quoteDate;
+  row.insertCell().textContent = qty;
+  row.insertCell().textContent = price.toFixed(2);
+}
+
 async function showHospitalReport(tableId = "hospitalReportTable") {
   const selector = document.getElementById("hospitalSelector");
   if (!selector?.value) {
@@ -362,13 +393,10 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       const { quoteNo, quoteDate, hospitalName } = getQuoteInfo(data);
       if (hospitalName !== selectedHospital) return;
 
-      // Use quoteLines if available, otherwise fallback to legacy items
       const allLines = data.quoteLines || data.items || [];
-      
       console.log(`[showHospitalReport] Quote ${quoteNo}: using ${data.quoteLines ? 'quoteLines' : 'legacy items'}, count: ${allLines.length}`);
 
       allLines.forEach(item => {
-        // Extract and display MAIN INSTRUMENT
         const catalogCode = 
           item.code ||
           item.catalogCode ||
@@ -389,7 +417,6 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
         if (!mainLabel && item.description) {
           mainLabel = (item.description.split("\n")[0] || "").trim();
         }
-
         if (!mainLabel) mainLabel = "—";
 
         const mainQty = item.quantity || 1;
@@ -400,7 +427,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           inst.unitPrice ??
           0;
 
-        // Add main instrument row with [MAIN] on separate line
+        // MAIN row
         appendRow(
           tbody,
           rowNum++,
@@ -413,9 +440,8 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
         );
         matchCount++;
 
-        // Add CONFIG ITEMS (nested)
-        const configItems = item.configItems || [];
-        configItems.forEach(config => {
+        // CONFIG rows
+        (item.configItems || []).forEach(config => {
           const configLabel = config.name || config.code || "—";
           const configQty = config.qty || "Included";
           const configPrice = config.price || config.unitPrice || 0;
@@ -425,7 +451,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
             rowNum++,
             quoteNo,
             hospitalName,
-            `  ├─ [CONFIG]<br>${configLabel}`,
+            `├─ [CONFIG]<br>${configLabel}`,
             quoteDate,
             configQty,
             configPrice
@@ -433,9 +459,8 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           matchCount++;
         });
 
-        // Add ADDITIONAL ITEMS (nested)
-        const additionalItems = item.additionalItems || [];
-        additionalItems.forEach(additional => {
+        // ADDITIONAL rows
+        (item.additionalItems || []).forEach(additional => {
           const addLabel = additional.name || additional.code || "—";
           const addQty = additional.qty || 1;
           const addPrice = additional.price || additional.unitPrice || 0;
@@ -445,7 +470,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
             rowNum++,
             quoteNo,
             hospitalName,
-            `  └─ [ADDITIONAL]<br>${addLabel}`,
+            `└─ [ADDITIONAL]<br>${addLabel}`,
             quoteDate,
             addQty,
             addPrice
