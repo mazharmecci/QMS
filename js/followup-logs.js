@@ -203,8 +203,7 @@ function showQuoteDetail(docId) {
         <h3 style="font-size:1rem; margin-bottom:8px;">✏️ FOLLOW-UP LOG HISTORY</h3>
         ${notesHtml}
         <div class="action-buttons">
-          <button class="btn btn-primary" type="button">➕ Add Follow-Up Note</button>
-          <button class="btn btn-secondary" type="button">📞 Schedule Call</button>
+          <button class="btn btn-primary" type="button">➕ Add Follow-Up Note</button>          
           <button class="btn btn-secondary" type="button">📧 Send Email</button>
         </div>
       </div>
