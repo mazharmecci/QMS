@@ -199,13 +199,13 @@
       box-shadow: 0 14px 30px rgba(37, 99, 235, 0.55);
     }
     
-    /* Shared table styling */
+    /* ===== Fix table row height for wrapped content ===== */
     .instrument-report-table {
       width: 100%;
       border-collapse: collapse;
       border-spacing: 0;
       margin-top: 0.5rem;
-      table-layout: fixed; /* keep predictable column widths */
+      table-layout: auto; /* Allow columns to expand based on content */
     }
     
     .instrument-report-table th,
@@ -213,57 +213,50 @@
       padding: 0.5rem 0.6rem;
       font-size: 0.85rem;
       text-align: left;
-    
-      /* allow wrapping */
       white-space: normal;
-      overflow-wrap: break-word;  /* modern */
-      word-wrap: break-word;      /* legacy alias */
-      /* remove clipping */
+      overflow-wrap: break-word;
+      word-wrap: break-word;
       overflow: visible;
       text-overflow: clip;
     }
     
-    /* If you still want truncation (ellipsis) for some *narrow* columns
-       like Quote No. or Date, you can override just those: */
-    .instrument-report-table th:nth-child(2),
-    .instrument-report-table td:nth-child(2),
-    .instrument-report-table th:nth-child(5),
-    .instrument-report-table td:nth-child(5) {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    /* # */
+    /* # Column */
     .instrument-report-table th:nth-child(1),
     .instrument-report-table td:nth-child(1) {
       width: 4%;
       text-align: center;
     }
     
-    /* Quote No. */
+    /* Quote No. - keep nowrap */
     .instrument-report-table th:nth-child(2),
     .instrument-report-table td:nth-child(2) {
       width: 17%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
-    /* Hospital (allow wrapping) */
+    /* Hospital - allow wrapping */
     .instrument-report-table th:nth-child(3),
     .instrument-report-table td:nth-child(3) {
       width: 15%;
     }
     
-    /* Instrument / Item Name (allow wrapping) */
+    /* Instrument / Item Name - multi-line support */
     .instrument-report-table th:nth-child(4),
     .instrument-report-table td:nth-child(4) {
       width: 32%;
+      vertical-align: top;
     }
     
-    /* Date */
+    /* Date - keep nowrap */
     .instrument-report-table th:nth-child(5),
     .instrument-report-table td:nth-child(5) {
       width: 10%;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     /* Quantity */
@@ -280,6 +273,7 @@
       text-align: right;
     }
     
+    /* Header styling */
     .instrument-report-table th {
       background: rgba(241, 245, 249, 0.98);
       color: #4b5563;
@@ -287,10 +281,12 @@
       font-weight: 600;
     }
     
+    /* Row styling */
     .instrument-report-table tbody tr {
       background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      height: auto; /* Allow rows to expand */
     }
     
     .instrument-report-table tbody td {
@@ -308,13 +304,6 @@
       border-radius: 0 8px 8px 0;
     }
 
-    /* Report table label cells - allow line breaks */
-    td.label-cell {
-      white-space: normal;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      max-width: 400px;
-    }
 
     /* 🔹 Responsive tweaks */
     @media (max-width: 768px) {
