@@ -5,7 +5,7 @@ import {
   query,
   orderBy,
   getDocs
-} from "../js/firebase.js";
+} from "./QMS/js/firebase.js";
 
 // ---------- Helpers ----------
 function daysBetween(isoStart, isoEnd) {
@@ -13,6 +13,12 @@ function daysBetween(isoStart, isoEnd) {
   const d2 = new Date(isoEnd);
   const diffMs = d2 - d1;
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function addDays(isoDate, days) {
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
 }
 
 function formatINR(amount) {
@@ -50,7 +56,8 @@ function renderFollowupPanel() {
   if (!panel) return;
 
   if (!quoteLogs.length) {
-    panel.innerHTML = '<div class="empty-state">No follow-ups due in the next 3 days.</div>';
+    panel.innerHTML =
+      '<div class="empty-state">No follow-ups due in the next 3 days.</div>';
     return;
   }
 
@@ -80,16 +87,19 @@ function renderFollowupPanel() {
         </div>
         ${list
           .map(q => {
-            const diff = daysBetween(q.createdDate || q.lastStatusUpdate || todayIso, todayIso);
+            const baseDate = q.quoteDate || todayIso;
+            const diff = daysBetween(baseDate, todayIso);
             const daysAgo = Number.isFinite(diff) ? diff : "";
             const overdueLabel =
               daysBetween(todayIso, q.nextFollowUpDate) < 0 ? " (OVERDUE)" : "";
             return `
-              <div class="quote-item" data-quote-no="${q.quoteNo}">
+              <div class="quote-item" data-quote-id="${q.id}">
                 <div class="quote-info">
                   <div class="quote-no">${q.quoteNo || ""}</div>
                   <div class="hospital-name">
-                    ${q.hospitalName || ""}${daysAgo !== "" ? ` | ${daysAgo} days ago` : ""}
+                    ${q.hospitalName || ""}${
+              daysAgo !== "" ? ` | ${daysAgo} days ago` : ""
+            }
                   </div>
                 </div>
                 <div class="due-date">
@@ -103,23 +113,23 @@ function renderFollowupPanel() {
     `;
   });
 
-  panel.innerHTML = html || '<div class="empty-state">No follow-ups due in the next 3 days.</div>';
+  panel.innerHTML =
+    html || '<div class="empty-state">No follow-ups due in the next 3 days.</div>';
 
-  // Attach click handlers
   panel.querySelectorAll(".quote-item").forEach(el => {
     el.addEventListener("click", () => {
-      const quoteNo = el.getAttribute("data-quote-no");
-      showQuoteDetail(quoteNo);
+      const id = el.getAttribute("data-quote-id");
+      showQuoteDetail(id);
     });
   });
 }
 
-function showQuoteDetail(quoteNo) {
+function showQuoteDetail(docId) {
   const detailSection = document.getElementById("quoteDetailSection");
   const container = document.getElementById("quoteDetailContainer");
   if (!detailSection || !container) return;
 
-  const quote = quoteLogs.find(q => q.quoteNo === quoteNo);
+  const quote = quoteLogs.find(q => q.id === docId);
   if (!quote) return;
 
   const notes = Array.isArray(quote.followUpNotes) ? quote.followUpNotes : [];
@@ -132,7 +142,9 @@ function showQuoteDetail(quoteNo) {
             <div class="log-entry">
               <div class="log-header">
                 <div>
-                  <div class="log-date">📅 ${note.date || ""} | ${note.time || ""}</div>
+                  <div class="log-date">📅 ${note.date || ""} | ${
+            note.time || ""
+          }</div>
                   <div class="log-author">By: ${note.followedBy || ""}</div>
                 </div>
                 <span class="log-status ${statusClass}">
@@ -151,10 +163,8 @@ function showQuoteDetail(quoteNo) {
     : '<div class="empty-state">No follow-up notes yet.</div>';
 
   const todayIso = new Date().toISOString().split("T")[0];
-  const daysAgo = daysBetween(
-    quote.lastStatusUpdate || quote.createdDate || todayIso,
-    todayIso
-  );
+  const baseDate = quote.quoteDate || todayIso;
+  const daysAgo = daysBetween(baseDate, todayIso);
 
   container.innerHTML = `
     <div class="quote-card">
@@ -205,7 +215,7 @@ function showQuoteDetail(quoteNo) {
   detailSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ---------- Firestore load ----------
+// ---------- Firestore load from quoteHistory ----------
 async function loadQuoteLogs() {
   const panel = document.getElementById("followupPanel");
   if (panel) {
@@ -213,12 +223,19 @@ async function loadQuoteLogs() {
   }
 
   try {
-    const colRef = collection(db, "quoteLogs");
-    const q = query(colRef, orderBy("nextFollowUpDate", "asc"));
+    const colRef = collection(db, "quoteHistory");
+    const q = query(colRef, orderBy("quoteDate", "desc"));
     const snap = await getDocs(q);
+
+    const todayIso = new Date().toISOString().split("T")[0];
 
     quoteLogs = snap.docs.map(docSnap => {
       const data = docSnap.data() || {};
+
+      const base = data.quoteDate || todayIso;
+      const nextFollow =
+        data.nextFollowUpDate || (base ? addDays(base, 3) : null);
+
       return {
         id: docSnap.id,
         quoteNo: data.quoteNo || "",
@@ -226,22 +243,24 @@ async function loadQuoteLogs() {
         contactPerson: data.contactPerson || "",
         phone: data.phone || "",
         email: data.email || "",
-        lastStatusUpdate: data.lastStatusUpdate || null,
-        currentStatus: data.currentStatus || "",
-        quoteValue: typeof data.quoteValue === "number" ? data.quoteValue : 0,
-        instruments: data.instruments || [],
-        createdDate: data.createdDate || null,
-        createdBy: data.createdBy || "",
-        lastFollowUpDate: data.lastFollowUpDate || null,
-        nextFollowUpDate: data.nextFollowUpDate || null,
-        followUpNotes: Array.isArray(data.followUpNotes) ? data.followUpNotes : [],
-        priority: data.priority || "medium"
+        quoteDate: data.quoteDate || null,
+        currentStatus: data.currentStatus || data.status || "",
+        quoteValue:
+          typeof data.totalValue === "number"
+            ? data.totalValue
+            : typeof data.quoteValue === "number"
+            ? data.quoteValue
+            : 0,
+        followUpNotes: Array.isArray(data.followUpNotes)
+          ? data.followUpNotes
+          : [],
+        nextFollowUpDate: nextFollow
       };
     });
 
     renderFollowupPanel();
   } catch (err) {
-    console.error("[followup-logs] Failed to load quoteLogs:", err);
+    console.error("[followup-logs] Failed to load quoteHistory:", err);
     if (panel) {
       panel.innerHTML =
         '<div class="empty-state">Error loading follow-ups. Please try again.</div>';
