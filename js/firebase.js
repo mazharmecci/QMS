@@ -1,9 +1,13 @@
+// QMS/js/firebase.js
 // ===== Firebase Core =====
-import { initializeApp, getApps, getApp } 
-  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  initializeApp,
+  getApps,
+  getApp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 
 // ===== Firestore =====
-import { 
+import {
   getFirestore,
   collection,
   addDoc,
@@ -20,7 +24,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ===== Auth =====
-import { 
+import {
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -59,6 +63,7 @@ const storage = getStorage(app);
 
 // ===== Unified exports =====
 export {
+  app,
   // Core instances
   db,
   auth,
