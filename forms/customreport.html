@@ -328,6 +328,13 @@
       margin-left: 2rem;
     }
 
+    .header-title img {
+      width: 28px;
+      height: 28px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
     /* 🔹 Responsive tweaks */
     @media (max-width: 768px) {
       .hospital-search-row {
@@ -346,8 +353,13 @@
 <body>
   <header>
     <div class="header-inner">
-      <button type="button" class="back-btn" onclick="goBack()">← Back</button>
-      <div class="header-title">ISTOS Medical Private Limited – Instrument supply reports</div>
+      <button type="button" class="back-btn" onclick="goBack()" aria-label="Go back">← Back</button>
+      <div class="header-title">
+        <img src="images/istosmini.png" alt="ISTOS Logo" />
+        <h1>
+          ISTOS Medical Private Limited <span>- Instrument Supply Reports</span>
+        </h1>
+      </div>
     </div>
   </header>
 
