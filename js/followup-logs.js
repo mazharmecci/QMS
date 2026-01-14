@@ -5,7 +5,7 @@ import {
   query,
   orderBy,
   getDocs
-} from "./QMS/js/firebase.js";
+} from "../js/firebase.js";
 
 // ---------- Helpers ----------
 function daysBetween(isoStart, isoEnd) {
