@@ -12,15 +12,13 @@ import {
 // Normalize Firestore Timestamp / Date / string to "yyyy-mm-dd"
 function toIsoDateString(value) {
   if (!value) return "";
-  // Firestore Timestamp
   if (value.toDate && typeof value.toDate === "function") {
+    // Firestore Timestamp
     return value.toDate().toISOString().split("T")[0];
   }
-  // JS Date
   if (value instanceof Date) {
     return value.toISOString().split("T")[0];
   }
-  // String
   if (typeof value === "string") {
     return value.includes("T") ? value.split("T")[0] : value;
   }
@@ -268,14 +266,21 @@ async function loadQuoteLogs() {
 
       const quoteDateIso = toIsoDateString(data.quoteDate) || todayIso;
       const createdAtIso = toIsoDateString(data.createdAt);
-      const nextFollowIso = data.nextFollowUpDate
+
+      // Base next follow from stored field or quoteDate + 3
+      let nextFollowIso = data.nextFollowUpDate
         ? toIsoDateString(data.nextFollowUpDate)
         : addDays(quoteDateIso, 3);
+
+      // If next follow-up is in the past, push it to today + 3
+      if (nextFollowIso < todayIso) {
+        nextFollowIso = addDays(todayIso, 3);
+      }
 
       return {
         id: docSnap.id,
         quoteNo: data.quoteNo || "",
-        hospitalName: data.name || "",
+        hospitalName: data.clientName || "",   // <== from quoteHistory
         contactPerson: data.contactPerson || "",
         phone: data.phone || "",
         email: data.email || "",
