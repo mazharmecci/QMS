@@ -4,16 +4,16 @@ import {
   collection,
   query,
   orderBy,
-  getDocs
+  getDocs,
+  doc,
+  updateDoc
 } from "../js/firebase.js";
 
 // ---------- Helpers ----------
 
-// Normalize Firestore Timestamp / Date / string to "yyyy-mm-dd"
 function toIsoDateString(value) {
   if (!value) return "";
   if (value.toDate && typeof value.toDate === "function") {
-    // Firestore Timestamp
     return value.toDate().toISOString().split("T")[0];
   }
   if (value instanceof Date) {
@@ -25,7 +25,6 @@ function toIsoDateString(value) {
   return "";
 }
 
-// Display in dd-mm-yyyy
 function formatDateDMY(value) {
   const isoDate = toIsoDateString(value);
   if (!isoDate) return "";
@@ -63,10 +62,8 @@ function getStatusClass(status) {
 
 function getFollowupCategory(quote) {
   if (!quote.nextFollowUpDate) return null;
-
   const todayIso = new Date().toISOString().split("T")[0];
   const diff = daysBetween(todayIso, quote.nextFollowUpDate);
-
   if (diff < 0) return "overdue";
   if (diff === 0) return "due-today";
   if (diff <= 3) return "due-soon";
@@ -75,6 +72,19 @@ function getFollowupCategory(quote) {
 
 // ---------- Rendering ----------
 let quoteLogs = [];
+
+// save contact to Firestore on blur
+async function saveContact(docId, newContact) {
+  try {
+    const ref = doc(db, "quoteHistory", docId);
+    await updateDoc(ref, { contactPerson: newContact });
+    const q = quoteLogs.find(x => x.id === docId);
+    if (q) q.contactPerson = newContact;
+  } catch (err) {
+    console.error("[followup-logs] Failed to update contact:", err);
+    alert("Could not save contact. Please try again.");
+  }
+}
 
 function renderFollowupPanel() {
   const panel = document.getElementById("followupPanel");
@@ -215,7 +225,13 @@ function showQuoteDetail(docId) {
         <div class="meta-item">
           <div class="meta-label">Contact</div>
           <div class="meta-value">
-            ${quote.contactPerson || ""} | ${quote.phone || ""}
+            <input
+              type="text"
+              id="contact-input"
+              value="${quote.contactPerson || ""}"
+              placeholder="Enter contact name / number"
+              style="width:100%;border:1px solid #d1d5db;border-radius:4px;padding:4px 6px;font-size:0.85rem;"
+            />
           </div>
         </div>
         <div class="meta-item">
@@ -243,6 +259,17 @@ function showQuoteDetail(docId) {
     </div>
   `;
 
+  // wire contact input save
+  const contactInput = document.getElementById("contact-input");
+  if (contactInput) {
+    contactInput.addEventListener("blur", () => {
+      const newValue = contactInput.value.trim();
+      if (newValue !== (quote.contactPerson || "")) {
+        saveContact(quote.id, newValue);
+      }
+    });
+  }
+
   detailSection.style.display = "block";
   detailSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -267,12 +294,10 @@ async function loadQuoteLogs() {
       const quoteDateIso = toIsoDateString(data.quoteDate) || todayIso;
       const createdAtIso = toIsoDateString(data.createdAt);
 
-      // Base next follow from stored field or quoteDate + 3
       let nextFollowIso = data.nextFollowUpDate
         ? toIsoDateString(data.nextFollowUpDate)
         : addDays(quoteDateIso, 3);
 
-      // If next follow-up is in the past, push it to today + 3
       if (nextFollowIso < todayIso) {
         nextFollowIso = addDays(todayIso, 3);
       }
@@ -280,7 +305,7 @@ async function loadQuoteLogs() {
       return {
         id: docSnap.id,
         quoteNo: data.quoteNo || "",
-        hospitalName: data.clientName || "",   // <== from quoteHistory
+        hospitalName: data.clientName || "",
         contactPerson: data.contactPerson || "",
         phone: data.phone || "",
         email: data.email || "",
