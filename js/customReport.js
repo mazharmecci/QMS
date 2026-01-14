@@ -388,13 +388,13 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
           inst.unitPrice ??
           0;
 
-        // Add main instrument row
+        // Add main instrument row with [MAIN] on separate line
         appendRow(
           tbody,
           rowNum++,
           quoteNo,
           hospitalName,
-          `[MAIN] ${mainLabel}`,
+          `[MAIN]<br>${mainLabel}`,
           quoteDate,
           mainQty,
           mainPrice
@@ -413,7 +413,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
             rowNum++,
             quoteNo,
             hospitalName,
-            `  ├─ [CONFIG] ${configLabel}`,
+            `  ├─ [CONFIG]<br>${configLabel}`,
             quoteDate,
             configQty,
             configPrice
@@ -433,7 +433,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
             rowNum++,
             quoteNo,
             hospitalName,
-            `  └─ [ADDITIONAL] ${addLabel}`,
+            `  └─ [ADDITIONAL]<br>${addLabel}`,
             quoteDate,
             addQty,
             addPrice
