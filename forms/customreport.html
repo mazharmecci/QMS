@@ -314,6 +314,19 @@
     .label-name {
       color: black;
     }
+    
+    /* Indentation for hierarchy */
+    .instrument-report-table td:nth-child(4) .label-header {
+      display: inline-block;
+    }
+    
+    .instrument-report-table td:nth-child(4) .label-header:has-text("CONFIG") {
+      margin-left: 1rem;
+    }
+    
+    .instrument-report-table td:nth-child(4) .label-header:has-text("ADDITIONAL") {
+      margin-left: 2rem;
+    }
 
     /* 🔹 Responsive tweaks */
     @media (max-width: 768px) {
