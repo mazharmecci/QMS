@@ -85,26 +85,38 @@ function appendRow(tbody, rowNum, quoteNo, hospitalName, label, date, qty, unitP
   const tableId = tbody.closest("table")?.id || "";
   const hasPriceColumn = tableId !== "configReportTable";
 
+  // Create cells individually instead of innerHTML
+  const cells = [rowNum, quoteNo, hospitalName];
+  
+  cells.forEach(cellContent => {
+    const td = document.createElement("td");
+    td.textContent = cellContent;
+    tr.appendChild(td);
+  });
+
+  // Label cell - use innerHTML to preserve <br>
+  const labelTd = document.createElement("td");
+  labelTd.className = "label-cell";
+  labelTd.innerHTML = label; // This preserves <br> tags
+  tr.appendChild(labelTd);
+
+  // Date cell
+  const dateTd = document.createElement("td");
+  dateTd.textContent = formattedDate;
+  tr.appendChild(dateTd);
+
+  // Quantity cell
+  const qtyTd = document.createElement("td");
+  qtyTd.textContent = qty;
+  tr.appendChild(qtyTd);
+
+  // Price cell (if applicable)
   if (hasPriceColumn) {
-    tr.innerHTML = `
-      <td>${rowNum}</td>
-      <td>${quoteNo}</td>
-      <td>${hospitalName}</td>
-      <td class="label-cell">${label}</td>
-      <td>${formattedDate}</td>
-      <td>${qty}</td>
-      <td>${unitPrice != null ? "₹ " + formatINR(unitPrice) : "₹ —"}</td>
-    `;
-  } else {
-    tr.innerHTML = `
-      <td>${rowNum}</td>
-      <td>${quoteNo}</td>
-      <td>${hospitalName}</td>
-      <td class="label-cell">${label}</td>
-      <td>${formattedDate}</td>
-      <td>${qty}</td>
-    `;
+    const priceTd = document.createElement("td");
+    priceTd.textContent = unitPrice != null ? "₹ " + formatINR(unitPrice) : "₹ —";
+    tr.appendChild(priceTd);
   }
+
   tbody.appendChild(tr);
 }
 
