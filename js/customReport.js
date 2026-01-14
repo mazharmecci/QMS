@@ -340,21 +340,21 @@ async function showInstrumentReport(tableId = "catalogReportTable") {
   }
 }
 
-// Format instrument labels with CSS classes instead of inline styles
+// Format instrument labels with CSS classes + icons
 function formatLabel(rawLabel) {
-  // Regex: optional ├─ or └─, then [MAIN|CONFIG|ADDITIONAL], then <br>, then the name
-  const match = rawLabel.match(/^\s*(├─|└─)?\s*
+  const parts = rawLabel.split("<br>");
+  if (parts.length < 2) return rawLabel; // fallback if no <br>
 
-\[(MAIN|CONFIG|ADDITIONAL)\]
+  const header = parts[0].trim();
+  const name = parts[1].trim();
 
-<br>(.*)$/i);
-  if (!match) return rawLabel;
+  // Choose icon based on header type
+  let icon = "";
+  if (header.includes("MAIN")) icon = "📦";        // Main instrument
+  else if (header.includes("CONFIG")) icon = "⚙️"; // Config item
+  else if (header.includes("ADDITIONAL")) icon = "➕"; // Additional item
 
-  const prefix = match[1] || "";
-  const type = match[2];
-  const name = match[3];
-
-  return `${prefix} <span class="label-header">[${type}]</span><br><span class="label-name">${name}</span>`;
+  return `<span class="label-header">${icon} ${header}</span><br><span class="label-name">${name}</span>`;
 }
 
 function appendRow(tbody, rowNum, quoteNo, hospitalName, label, quoteDate, qty, price) {
@@ -364,7 +364,7 @@ function appendRow(tbody, rowNum, quoteNo, hospitalName, label, quoteDate, qty, 
   row.insertCell().textContent = hospitalName;
 
   const labelCell = row.insertCell();
-  labelCell.innerHTML = formatLabel(label); // ✅ render with CSS classes
+  labelCell.innerHTML = formatLabel(label);
 
   row.insertCell().textContent = quoteDate;
   row.insertCell().textContent = qty;
@@ -397,7 +397,7 @@ async function showHospitalReport(tableId = "hospitalReportTable") {
       console.log(`[showHospitalReport] Quote ${quoteNo}: using ${data.quoteLines ? 'quoteLines' : 'legacy items'}, count: ${allLines.length}`);
 
       allLines.forEach(item => {
-        const catalogCode = 
+        const catalogCode =
           item.code ||
           item.catalogCode ||
           item.catalog ||
@@ -497,6 +497,7 @@ async function showConfigReport(tableId = "configReportTable") {
     };
   }, false);
 }
+
 
 async function showAdditionalReport(tableId = "additionalReportTable") {
   await generateReport("additionalSelector", tableId, (item, instruments, additionalName) => {
