@@ -8,6 +8,13 @@ import {
 } from "../js/firebase.js";
 
 // ---------- Helpers ----------
+
+function formatDateDMY(isoDate) {
+  if (!isoDate) return "";
+  const [y, m, d] = isoDate.split("-");
+  return `${d}-${m}-${y}`;
+}
+
 function daysBetween(isoStart, isoEnd) {
   const d1 = new Date(isoStart);
   const d2 = new Date(isoEnd);
@@ -103,7 +110,7 @@ function renderFollowupPanel() {
                   </div>
                 </div>
                 <div class="due-date">
-                  Next Due: ${q.nextFollowUpDate || ""}${overdueLabel}
+                  Next Due: ${formatDateDMY(q.nextFollowUpDate) || ""}${overdueLabel}
                 </div>
               </div>
             `;
@@ -170,7 +177,7 @@ function showQuoteDetail(docId) {
     <div class="quote-card">
       <div class="quote-header">
         <div class="quote-title">
-          ${quote.quoteNo || ""} | ${quote.hospitalName || ""}
+          ${quote.quoteNo || ""} | ${quote.name || ""}
         </div>
       </div>
 
@@ -194,8 +201,12 @@ function showQuoteDetail(docId) {
           </div>
         </div>
         <div class="meta-item">
+          <div class="meta-label">Created On</div>
+          <div class="meta-value">${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}</div>
+        </div>
+        <div class="meta-item">
           <div class="meta-label">Next Follow-Up Due</div>
-          <div class="meta-value">${quote.nextFollowUpDate || ""}</div>
+          <div class="meta-value">${formatDateDMY(quote.nextFollowUpDate) || ""}</div>
         </div>
       </div>
 
@@ -230,26 +241,21 @@ async function loadQuoteLogs() {
 
     quoteLogs = snap.docs.map(docSnap => {
       const data = docSnap.data() || {};
-
       const base = data.quoteDate || todayIso;
       const nextFollow =
         data.nextFollowUpDate || (base ? addDays(base, 3) : null);
-
+    
       return {
         id: docSnap.id,
         quoteNo: data.quoteNo || "",
-        hospitalName: data.hospitalName || "",
+        hospitalName: data.name || "",       
         contactPerson: data.contactPerson || "",
         phone: data.phone || "",
         email: data.email || "",
         quoteDate: data.quoteDate || null,
+        createdAt: data.createdAt || null,
         currentStatus: data.currentStatus || data.status || "",
-        quoteValue:
-          typeof data.totalValue === "number"
-            ? data.totalValue
-            : typeof data.quoteValue === "number"
-            ? data.quoteValue
-            : 0,
+        quoteValue: typeof data.totalValue === "number" ? data.totalValue : 0,
         followUpNotes: Array.isArray(data.followUpNotes)
           ? data.followUpNotes
           : [],
