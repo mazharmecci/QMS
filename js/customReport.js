@@ -90,7 +90,7 @@ function appendRow(tbody, rowNum, quoteNo, hospitalName, label, date, qty, unitP
       <td>${rowNum}</td>
       <td>${quoteNo}</td>
       <td>${hospitalName}</td>
-      <td>${label}</td>
+      <td class="label-cell">${label}</td>
       <td>${formattedDate}</td>
       <td>${qty}</td>
       <td>${unitPrice != null ? "₹ " + formatINR(unitPrice) : "₹ —"}</td>
@@ -100,7 +100,7 @@ function appendRow(tbody, rowNum, quoteNo, hospitalName, label, date, qty, unitP
       <td>${rowNum}</td>
       <td>${quoteNo}</td>
       <td>${hospitalName}</td>
-      <td>${label}</td>
+      <td class="label-cell">${label}</td>
       <td>${formattedDate}</td>
       <td>${qty}</td>
     `;
