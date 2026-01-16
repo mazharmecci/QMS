@@ -37,14 +37,21 @@ export function saveQuoteHeader(header) {
 
 export function getInstrumentsMaster() {
   try {
-    const instruments = JSON.parse(localStorage.getItem("instruments") || "[]");
+    const raw = localStorage.getItem("instruments");
+    const instruments = raw ? JSON.parse(raw) : [];
+    const timestamp = localStorage.getItem("instrumentsTimestamp");
+    if (!timestamp || Date.now() - parseInt(timestamp) > 24*60*60*1000) {  // 24h TTL
+      fetchInstruments().then(instList => {
+        localStorage.setItem("instruments", JSON.stringify(instList));
+        localStorage.setItem("instrumentsTimestamp", Date.now().toString());
+      }).catch(() => {});  // Fallback to cache
+    }
     return instruments.map((inst) => ({
       ...inst,
-      suppliedCompleteWith:
-        inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
+      suppliedCompleteWith: inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
     }));
   } catch (err) {
-    console.error("[getInstrumentsMaster] Failed to parse instruments:", err);
+    console.error("[getInstrumentsMaster] Failed:", err);
     return [];
   }
 }
