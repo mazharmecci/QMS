@@ -491,25 +491,25 @@ table td:nth-child(5) {
 
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = "";
-  
+
     data.forEach((q, i) => {
       const quoteNo   = q.quoteNo || "-";
-      const revision  = Number(q.revision || 1);
+      const revisionN = Number(q.revision || 1);
       const date      = formatDateDisplay(q.quoteDate) || "-";
       const hospital  = q.hospital?.name || "-";
       const total     = q.totalValueINR || 0;
       const status    = q.status || "Submitted";
       const creator   = createdByLabel(q.createdBy);
-  
+
       // Display rule:
-      //  - base/original: no suffix when revision <= 1
-      //  - edits: show (Rev N-1) so first edit is Rev 1, second edit Rev 2, etc.
+      //  - revision 1  => base quote, no suffix
+      //  - revision 2+ => show (Rev revision-1)
       let displayQuoteNo = quoteNo;
-      if (revision > 1) {
-        const displayRev = revision - 1;
+      if (revisionN > 1) {
+        const displayRev = revisionN - 1;
         displayQuoteNo = `${quoteNo} (Rev ${displayRev})`;
       }
-  
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
@@ -528,7 +528,7 @@ table td:nth-child(5) {
       `;
       tbody.appendChild(tr);
     });
-  
+
     updateDashboard();
   }
 
@@ -659,9 +659,8 @@ table td:nth-child(5) {
       return;
     }
 
-    // Clear stale local header so edit always hydrates fresh from Firestore
     localStorage.removeItem("quoteHeader");
-    localStorage.removeItem("quotes"); // optional: prevents local-only revisions from interfering
+    localStorage.removeItem("quotes");
 
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
@@ -756,40 +755,6 @@ table td:nth-child(5) {
           <td style="text-align:right;">₹ ${moneyINR(totalPrice)}</td>
         </tr>
       `;
-
-      if (Array.isArray(li.configItems) && li.configItems.length) {
-        li.configItems.forEach((c) => {
-          const cqty = Number(c.quantity || 0);
-          const cunit = Number(c.unitPrice || c.price || 0);
-          const ctotal = cqty * cunit;
-          html += `
-            <tr>
-              <td style="padding-left:1.5rem;">Config: ${c.name || ""}</td>
-              <td>${c.code || ""}</td>
-              <td style="text-align:right;">${cqty || "-"}</td>
-              <td style="text-align:right;">₹ ${moneyINR(cunit)}</td>
-              <td style="text-align:right;">₹ ${moneyINR(ctotal)}</td>
-            </tr>
-          `;
-        });
-      }
-
-      if (Array.isArray(li.additionalItems) && li.additionalItems.length) {
-        li.additionalItems.forEach((a) => {
-          const aqty = Number(a.quantity || 1);
-          const aunit = Number(a.unitPrice || a.price || 0);
-          const atotal = aqty * aunit;
-          html += `
-            <tr>
-              <td style="padding-left:1.5rem;">Additional: ${a.name || ""}</td>
-              <td>${a.code || ""}</td>
-              <td style="text-align:right;">${aqty}</td>
-              <td style="text-align:right;">₹ ${moneyINR(aunit)}</td>
-              <td style="text-align:right;">₹ ${moneyINR(atotal)}</td>
-            </tr>
-          `;
-        });
-      }
     });
 
     html += `
@@ -892,7 +857,6 @@ table td:nth-child(5) {
     URL.revokeObjectURL(url);
   }
 
-  // Delegate actions instead of inline onclicks
   tbody.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-action]");
     if (!btn) return;
@@ -900,9 +864,9 @@ table td:nth-child(5) {
     const action = btn.dataset.action;
     if (idx < 0) return;
 
-    if (action === "view") return viewQuote(idx);
-    if (action === "edit") return editQuote(idx);
-    if (action === "next") return advanceStatus(idx);
+    if (action === "view")   return viewQuote(idx);
+    if (action === "edit")   return editQuote(idx);
+    if (action === "next")   return advanceStatus(idx);
     if (action === "delete") return deleteQuote(idx);
   });
 
@@ -912,21 +876,14 @@ table td:nth-child(5) {
   window.sortBy       = sortBy;
   window.exportCSV    = exportCSV;
 
-  document
-    .getElementById("filterQuoteNo")
-    .addEventListener("input", applyFilters);
-  document
-    .getElementById("filterHospital")
-    .addEventListener("input", applyFilters);
-  document
-    .getElementById("filterStatus")
-    .addEventListener("input", applyFilters);
-  document
-    .getElementById("filterDate")
-    .addEventListener("change", applyFilters);
+  document.getElementById("filterQuoteNo").addEventListener("input", applyFilters);
+  document.getElementById("filterHospital").addEventListener("input", applyFilters);
+  document.getElementById("filterStatus").addEventListener("input", applyFilters);
+  document.getElementById("filterDate").addEventListener("change", applyFilters);
 
   loadQuotes();
 </script>
+
 
 </body>
 </html>
