@@ -429,6 +429,21 @@ async function callAIService(quoteObj) {
   }
 }
 
+async function getCurrentFirestoreRevision(docId) {
+  if (!docId) return 0;
+  try {
+    const ref = doc(db, "quoteHistory", docId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return 0;
+    const data = snap.data();
+    return Number(data.revision || 0);
+  } catch (err) {
+    console.error("[getCurrentFirestoreRevision] Error:", err);
+    return 0;
+  }
+}
+
+
 /**
  * Finalize a quote: validate, persist locally & in Firestore, run AI analysis, and trigger print dialog.
  */
@@ -483,15 +498,33 @@ export async function finalizeQuote(rawArg = null) {
 
     const lineItems = buildLineItemsFromCurrentQuote();
 
-    // Local revision
+    // Local revision (kept for offline history / legacy UI)
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
     const sameQuote = existing.filter(
       (q) => q.header?.quoteNo === header.quoteNo
     );
-    const lastRev = sameQuote.length
+    const lastRevLocal = sameQuote.length
       ? Math.max(...sameQuote.map((q) => Number(q.revision || 1)))
       : 0;
-    const nextRev = lastRev + 1;
+
+    // Firestore-based current revision for this doc (if editing an existing one)
+    let currentRevFirestore = 0;
+    if (docId) {
+      try {
+        const baseRef = doc(db, "quoteHistory", docId);
+        const baseSnap = await getDoc(baseRef);
+        if (baseSnap.exists()) {
+          const baseData = baseSnap.data();
+          currentRevFirestore = Number(baseData.revision || 0);
+        }
+      } catch (revErr) {
+        console.error("[finalizeQuote] Failed to read current Firestore revision:", revErr);
+      }
+    }
+
+    // Next revision: take the higher of local and Firestore, then +1
+    const effectiveCurrent = Math.max(lastRevLocal, currentRevFirestore);
+    const nextRev = effectiveCurrent > 0 ? effectiveCurrent + 1 : 1;
 
     const now = new Date();
     const quoteLocal = {
