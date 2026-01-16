@@ -491,16 +491,11 @@ table td:nth-child(5) {
 
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = "";
-
+  
     data.forEach((q, i) => {
       const quoteNo   = q.quoteNo || "-";
       const revisionN = Number(q.revision || 1);
-      const date      = formatDateDisplay(q.quoteDate) || "-";
-      const hospital  = q.hospital?.name || "-";
-      const total     = q.totalValueINR || 0;
-      const status    = q.status || "Submitted";
-      const creator   = createdByLabel(q.createdBy);
-
+  
       // Display rule:
       //  - revision 1  => base quote, no suffix
       //  - revision 2+ => show (Rev revision-1)
@@ -509,7 +504,13 @@ table td:nth-child(5) {
         const displayRev = revisionN - 1;
         displayQuoteNo = `${quoteNo} (Rev ${displayRev})`;
       }
-
+  
+      const date     = formatDateDisplay(q.quoteDate) || "-";
+      const hospital = q.hospital?.name || "-";
+      const total    = q.totalValueINR || 0;
+      const status   = q.status || "Submitted";
+      const creator  = createdByLabel(q.createdBy);
+  
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
@@ -528,7 +529,7 @@ table td:nth-child(5) {
       `;
       tbody.appendChild(tr);
     });
-
+  
     updateDashboard();
   }
 
