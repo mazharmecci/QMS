@@ -205,9 +205,11 @@ export function buildQuoteObject(existingDoc = null) {
 
   return {
     quoteNo: header.quoteNo || "",
+    legacyQuoteNo: header.legacyQuoteNo || existingDoc?.legacyQuoteNo || "",
     quoteDate: header.quoteDate || "",
     yourReference: header.yourReference || "",
     refDate: header.refDate || "",
+    hospitalName,
     hospital: {
       name: header.hospitalName || "",
       address: header.hospitalAddress || "",
