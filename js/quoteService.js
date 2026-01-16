@@ -209,7 +209,7 @@ export function buildQuoteObject(existingDoc = null) {
     quoteDate: header.quoteDate || "",
     yourReference: header.yourReference || "",
     refDate: header.refDate || "",
-    hospitalName,
+    hospitalName: header.hospitalName || "",
     hospital: {
       name: header.hospitalName || "",
       address: header.hospitalAddress || "",
