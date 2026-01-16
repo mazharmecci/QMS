@@ -491,20 +491,29 @@ table td:nth-child(5) {
 
   function renderTable(data = filteredQuotes) {
     tbody.innerHTML = "";
-
+  
     data.forEach((q, i) => {
-      const quoteNo  = q.quoteNo || "-";
-      const revision = q.revision || 1;
-      const date     = formatDateDisplay(q.quoteDate) || "-";
-      const hospital = q.hospital?.name || "-";
-      const total    = q.totalValueINR || 0;
-      const status   = q.status || "Submitted";
-      const creator  = createdByLabel(q.createdBy);
-
+      const quoteNo   = q.quoteNo || "-";
+      const revision  = Number(q.revision || 1);
+      const date      = formatDateDisplay(q.quoteDate) || "-";
+      const hospital  = q.hospital?.name || "-";
+      const total     = q.totalValueINR || 0;
+      const status    = q.status || "Submitted";
+      const creator   = createdByLabel(q.createdBy);
+  
+      // Display rule:
+      //  - base/original: no suffix when revision <= 1
+      //  - edits: show (Rev N-1) so first edit is Rev 1, second edit Rev 2, etc.
+      let displayQuoteNo = quoteNo;
+      if (revision > 1) {
+        const displayRev = revision - 1;
+        displayQuoteNo = `${quoteNo} (Rev ${displayRev})`;
+      }
+  
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>${quoteNo} (Rev ${revision})</td>
+        <td>${displayQuoteNo}</td>
         <td>${date}</td>
         <td>${hospital}</td>
         <td>₹ ${moneyINR(total)}</td>
@@ -519,7 +528,7 @@ table td:nth-child(5) {
       `;
       tbody.appendChild(tr);
     });
-
+  
     updateDashboard();
   }
 
