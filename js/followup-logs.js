@@ -240,67 +240,85 @@ function showQuoteDetail(docId) {
   const baseIso = quote.quoteDate || todayIso;
   const daysAgo = daysBetween(baseIso, todayIso);
 
-  container.innerHTML = `
-    <div class="quote-card">
-      <div class="quote-header">
-        <div class="quote-title">
-          ${quote.quoteNo || ""} | ${quote.hospitalName || ""}
+container.innerHTML = `
+  <div class="quote-card">
+    <div class="quote-header">
+      <div class="quote-title">
+        ${quote.quoteNo || ""} | ${quote.hospitalName || ""}
+      </div>
+    </div>
+
+    <div class="quote-meta">
+      <div class="meta-item">
+        <div class="meta-label">Status</div>
+        <div class="meta-value">
+          📤 ${quote.currentStatus || ""}${
+            Number.isFinite(daysAgo) ? ` (since ${daysAgo} days)` : ""
+          }
         </div>
       </div>
 
-      <div class="quote-meta">
-        <div class="meta-item">
-          <div class="meta-label">Status</div>
-          <div class="meta-value">
-            📤 ${quote.currentStatus || ""}${
-    Number.isFinite(daysAgo) ? ` (since ${daysAgo} days)` : ""
-  }
-          </div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Value</div>
-          <div class="meta-value">${formatINR(quote.quoteValue)}</div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Contact</div>
-          <div class="meta-value">
-            <input
-              type="text"
-              id="contact-input"
-              value="${quote.contactPerson || ""}"
-              placeholder="Enter contact name / number"
-              style="width:100%;border:1px solid #d1d5db;border-radius:4px;padding:4px 6px;font-size:0.85rem;"
-            />
-          </div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Created On</div>
-          <div class="meta-value">
-            ${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}
-          </div>
-        </div>
-        <div class="meta-item">
-          <div class="meta-label">Next Follow-Up Due</div>
-          <div class="meta-value">
-            ${formatDateDMY(quote.nextFollowUpDate) || ""}
-          </div>
+      <div class="meta-item">
+        <div class="meta-label">Value</div>
+        <div class="meta-value">${formatINR(quote.quoteValue)}</div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Contact</div>
+        <div class="meta-value">
+          <input
+            type="text"
+            id="contact-input"
+            value="${quote.contactPerson || ""}"
+            placeholder="Enter contact name / number"
+            style="width:100%;border:1px solid #d1d5db;border-radius:4px;padding:4px 6px;font-size:0.85rem;"
+          />
         </div>
       </div>
 
-      <div class="log-history">
-        <h3 style="font-size:1rem; margin-bottom:8px;">✏️ FOLLOW-UP LOG HISTORY</h3>
-        ${notesHtml}
-        <div class="action-buttons">
-          <button class="btn btn-primary" type="button" id="add-note-btn">
-            ➕ Add Follow-Up Note
-          </button>
-          <button class="btn btn-secondary" type="button" id="send-email-btn">
-            📧 Send Email
-          </button>
+      <div class="meta-item">
+        <div class="meta-label">Created On</div>
+        <div class="meta-value">
+          ${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}
+        </div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Next Follow-Up Due</div>
+        <div class="meta-value">
+          ${formatDateDMY(quote.nextFollowUpDate) || ""}
+        </div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Quote Date (from file)</div>
+        <div class="meta-value">
+          ${formatDateDMY(quote.quoteDate) || ""}
+        </div>
+      </div>
+
+      <div class="meta-item">
+        <div class="meta-label">Created In Tool</div>
+        <div class="meta-value">
+          ${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}
         </div>
       </div>
     </div>
-  `;
+
+    <div class="log-history">
+      <h3 style="font-size:1rem; margin-bottom:8px;">✏️ FOLLOW-UP LOG HISTORY</h3>
+      ${notesHtml}
+      <div class="action-buttons">
+        <button class="btn btn-primary" type="button" id="add-note-btn">
+          ➕ Add Follow-Up Note
+        </button>
+        <button class="btn btn-secondary" type="button" id="send-email-btn">
+          📧 Send Email
+        </button>
+      </div>
+    </div>
+  </div>
+`;
 
   // contact save on blur
   const contactInput = document.getElementById("contact-input");
