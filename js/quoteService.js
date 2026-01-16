@@ -573,3 +573,35 @@ export async function approveQuoteRevision(docId) {
     alert("Failed to update quote status. Please try again.");
   }
 }
+
+async function loadQuoteFromFirestoreIfNeeded() {
+  const quoteId = getQueryParam("id");
+  const quoteNoParam = getQueryParam("quoteNo");
+
+  if (quoteId) {
+    try {
+      const ref = doc(db, "quoteHistory", quoteId);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        hydrateLocalFromFirestoreDoc(data, quoteId); // must overwrite header + quoteLines
+        console.log("[quotes.html] Loaded Firestore doc for edit", quoteId);
+      } else {
+        console.warn("[quotes.html] No quoteHistory doc for id", quoteId);
+      }
+    } catch (err) {
+      console.error("[quotes.html] Error loading quote from Firestore:", err);
+    }
+    return;
+  }
+
+  const existingHeader = getQuoteHeaderRaw();
+  if (existingHeader && existingHeader.quoteNo) {
+    console.log("[quotes.html] Using existing local header (no Firestore id).");
+    return;
+  }
+
+  if (quoteNoParam) {
+    console.warn("Query by quoteNo not implemented; only ?id=<docId> is supported for now.");
+  }
+}
