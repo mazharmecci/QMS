@@ -451,7 +451,7 @@ table td:nth-child(5) {
 
   async function loadQuotes() {
     const snap = await getDocs(collection(db, "quoteHistory"));
-    quotes = snap.docs.map(d => ({
+    quotes = snap.docs.map((d) => ({
       id: d.id,
       ...d.data()
     }));
@@ -463,7 +463,7 @@ table td:nth-child(5) {
     const revColRef = collection(db, "quoteHistory", quoteId, "revisions");
     const revSnap = await getDocs(revColRef);
 
-    const revisions = revSnap.docs.map(d => ({
+    const revisions = revSnap.docs.map((d) => ({
       id: d.id,
       ...d.data()
     }));
@@ -479,7 +479,7 @@ table td:nth-child(5) {
     });
   }
 
-    function formatDateDisplay(dateStr) {
+  function formatDateDisplay(dateStr) {
     if (!dateStr || dateStr === "-") return "-";
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return dateStr;
@@ -493,14 +493,14 @@ table td:nth-child(5) {
     tbody.innerHTML = "";
 
     data.forEach((q, i) => {
-      const quoteNo   = q.quoteNo || "-";
-      const revision  = q.revision || 1;
-      const date      = formatDateDisplay(q.quoteDate) || "-";  // ← Updated line
-      const hospital  = q.hospital?.name || "-";
-      const total     = q.totalValueINR || 0;
-      const status    = q.status || "Submitted";
-      const creator   = createdByLabel(q.createdBy);
-    
+      const quoteNo  = q.quoteNo || "-";
+      const revision = q.revision || 1;
+      const date     = formatDateDisplay(q.quoteDate) || "-";
+      const hospital = q.hospital?.name || "-";
+      const total    = q.totalValueINR || 0;
+      const status   = q.status || "Submitted";
+      const creator  = createdByLabel(q.createdBy);
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
@@ -511,10 +511,10 @@ table td:nth-child(5) {
         <td><span class="status-badge ${getStatusClass(status)}">${status}</span></td>
         <td>${creator}</td>
         <td class="actions">
-          <button class="view-btn" onclick="viewQuote(${i})">View</button>
-          <button class="view-btn" onclick="editQuote(${i})">Edit</button>
-          <button class="view-btn" onclick="advanceStatus(${i})">Next</button>
-          <button class="delete-btn" onclick="deleteQuote(${i})">Delete</button>
+          <button class="view-btn" data-idx="${i}" data-action="view">View</button>
+          <button class="view-btn" data-idx="${i}" data-action="edit">Edit</button>
+          <button class="view-btn" data-idx="${i}" data-action="next">Next</button>
+          <button class="delete-btn" data-idx="${i}" data-action="delete">Delete</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -525,11 +525,13 @@ table td:nth-child(5) {
 
   function updateDashboard() {
     const total = quotes.length;
-    const submittedOrApproved = quotes.filter(q => {
+    const submittedOrApproved = quotes.filter((q) => {
       const s = (q.status || "submitted").toLowerCase();
       return s === "submitted" || s === "approved";
     }).length;
-    const approved = quotes.filter(q => (q.status || "").toLowerCase() === "approved").length;
+    const approved = quotes.filter(
+      (q) => (q.status || "").toLowerCase() === "approved"
+    ).length;
     const approvalRate = submittedOrApproved
       ? Math.round((approved / submittedOrApproved) * 100)
       : 0;
@@ -547,7 +549,7 @@ table td:nth-child(5) {
     const fStatus   = document.getElementById("filterStatus").value.trim().toLowerCase();
     const fDate     = document.getElementById("filterDate").value;
 
-    filteredQuotes = quotes.filter(q => {
+    filteredQuotes = quotes.filter((q) => {
       const quoteNo  = (q.quoteNo || "").toLowerCase();
       const hospital = (q.hospital?.name || "").toLowerCase();
       const status   = (q.status || "submitted").toLowerCase();
@@ -582,12 +584,28 @@ table td:nth-child(5) {
     filteredQuotes.sort((a, b) => {
       let av, bv;
       switch (key) {
-        case "quoteNo":   av = a.quoteNo   || ""; bv = b.quoteNo   || ""; break;
-        case "date":      av = a.quoteDate || ""; bv = b.quoteDate || ""; break;
-        case "hospital":  av = a.hospital?.name || ""; bv = b.hospital?.name || ""; break;
-        case "value":     av = a.totalValueINR || 0; bv = b.totalValueINR || 0; break;
-        case "status":    av = a.status || "Submitted"; bv = b.status || "Submitted"; break;
-        default: return 0;
+        case "quoteNo":
+          av = a.quoteNo || "";
+          bv = b.quoteNo || "";
+          break;
+        case "date":
+          av = a.quoteDate || "";
+          bv = b.quoteDate || "";
+          break;
+        case "hospital":
+          av = a.hospital?.name || "";
+          bv = b.hospital?.name || "";
+          break;
+        case "value":
+          av = a.totalValueINR || 0;
+          bv = b.totalValueINR || 0;
+          break;
+        case "status":
+          av = a.status || "Submitted";
+          bv = b.status || "Submitted";
+          break;
+        default:
+          return 0;
       }
 
       if (typeof av === "number") {
@@ -613,7 +631,7 @@ table td:nth-child(5) {
     try {
       await updateDoc(doc(db, "quoteHistory", q.id), { status: next });
 
-      const base = quotes.find(x => x.id === q.id);
+      const base = quotes.find((x) => x.id === q.id);
       if (base) base.status = next;
 
       renderTable(filteredQuotes);
@@ -632,6 +650,10 @@ table td:nth-child(5) {
       return;
     }
 
+    // Clear stale local header so edit always hydrates fresh from Firestore
+    localStorage.removeItem("quoteHeader");
+    localStorage.removeItem("quotes"); // optional: prevents local-only revisions from interfering
+
     window.location.href = `${QUOTES_URL}?id=${encodeURIComponent(q.id)}`;
   }
 
@@ -649,8 +671,8 @@ table td:nth-child(5) {
     try {
       await deleteDoc(doc(db, "quoteHistory", q.id));
 
-      quotes = quotes.filter(x => x.id !== q.id);
-      filteredQuotes = filteredQuotes.filter(x => x.id !== q.id);
+      quotes = quotes.filter((x) => x.id !== q.id);
+      filteredQuotes = filteredQuotes.filter((x) => x.id !== q.id);
 
       renderTable(filteredQuotes);
       detailsDiv.classList.add("hidden");
@@ -660,156 +682,177 @@ table td:nth-child(5) {
     }
   }
 
-async function viewQuote(index) {
-  const q = filteredQuotes[index];
-  if (!q) return;
+  async function viewQuote(index) {
+    const q = filteredQuotes[index];
+    if (!q) return;
 
-  // Prefer enriched quoteLines, fall back to legacy items
-  const lines = Array.isArray(q.quoteLines) && q.quoteLines.length
-    ? q.quoteLines
-    : (q.items || []);
+    const lines = Array.isArray(q.quoteLines) && q.quoteLines.length
+      ? q.quoteLines
+      : (q.items || []);
 
-  const hosp = q.hospital || {};
+    const hosp = q.hospital || {};
 
-  let revisions = [];
-  try {
-    revisions = await loadRevisionsForQuote(q.id);
-  } catch (err) {
-    console.error("Failed to load revisions", err);
-  }
+    let revisions = [];
+    try {
+      revisions = await loadRevisionsForQuote(q.id);
+    } catch (err) {
+      console.error("Failed to load revisions", err);
+    }
 
-  let html = `
-    <div class="quote-details">
-      <h3>Quote Details - ${q.quoteNo || ""}</h3>
-      <div class="details-grid">
-        <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
-        <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
-        <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
-        <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(q.status)}">${q.status || "Submitted"}</span></p>
-        <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
-        <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
-        <p><strong>Email:</strong> ${hosp.email || "-"}</p>
-        <p><strong>Address:</strong> ${hosp.address || "-"}</p>
-      </div>
+    let html = `
+      <div class="quote-details">
+        <h3>Quote Details - ${q.quoteNo || ""}</h3>
+        <div class="details-grid">
+          <p><strong>Quote No:</strong> ${q.quoteNo || "-"}</p>
+          <p><strong>Date:</strong> ${q.quoteDate || "-"}</p>
+          <p><strong>Hospital:</strong> ${hosp.name || "-"}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${getStatusClass(
+            q.status
+          )}">${q.status || "Submitted"}</span></p>
+          <p><strong>Contact:</strong> ${hosp.contactPerson || "-"}</p>
+          <p><strong>Phone:</strong> ${hosp.phone || "-"}</p>
+          <p><strong>Email:</strong> ${hosp.email || "-"}</p>
+          <p><strong>Address:</strong> ${hosp.address || "-"}</p>
+        </div>
 
-      <h4>Line Items (Latest)</h4>
-      <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
-        <thead>
-          <tr style="background:#f0f4f8;">
-            <th>Item</th>
-            <th>Code</th>
-            <th style="text-align:right;">Qty</th>
-            <th style="text-align:right;">Unit Price</th>
-            <th style="text-align:right;">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
-
-  lines.forEach((li) => {
-    const qty = Number(li.quantity || 0);
-    const unitPrice = li.unitPriceOverride != null ? Number(li.unitPriceOverride) : Number(li.unitPrice || 0);
-    const totalPrice = li.totalPrice != null ? Number(li.totalPrice) : qty * unitPrice;
-
-    html += `
-      <tr>
-        <td><strong>${li.instrumentName || li.name || ""}</strong></td>
-        <td>${li.instrumentCode || li.code || ""}</td>
-        <td style="text-align:right;">${qty}</td>
-        <td style="text-align:right;">₹ ${moneyINR(unitPrice)}</td>
-        <td style="text-align:right;">₹ ${moneyINR(totalPrice)}</td>
-      </tr>
+        <h4>Line Items (Latest)</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:1rem;">
+          <thead>
+            <tr style="background:#f0f4f8;">
+              <th>Item</th>
+              <th>Code</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Unit Price</th>
+              <th style="text-align:right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
 
-    if (Array.isArray(li.configItems) && li.configItems.length) {
-      li.configItems.forEach((c) => {
-        const cqty = Number(c.quantity || 0);
-        const cunit = Number(c.unitPrice || c.price || 0);
-        const ctotal = cqty * cunit;
-        html += `
-          <tr>
-            <td style="padding-left:1.5rem;">Config: ${c.name || ""}</td>
-            <td>${c.code || ""}</td>
-            <td style="text-align:right;">${cqty || "-"}</td>
-            <td style="text-align:right;">₹ ${moneyINR(cunit)}</td>
-            <td style="text-align:right;">₹ ${moneyINR(ctotal)}</td>
-          </tr>
-        `;
-      });
-    }
+    lines.forEach((li) => {
+      const qty = Number(li.quantity || 0);
+      const unitPrice =
+        li.unitPriceOverride != null
+          ? Number(li.unitPriceOverride)
+          : Number(li.unitPrice || 0);
+      const totalPrice =
+        li.totalPrice != null ? Number(li.totalPrice) : qty * unitPrice;
 
-    if (Array.isArray(li.additionalItems) && li.additionalItems.length) {
-      li.additionalItems.forEach((a) => {
-        const aqty = Number(a.quantity || 1);
-        const aunit = Number(a.unitPrice || a.price || 0);
-        const atotal = aqty * aunit;
-        html += `
-          <tr>
-            <td style="padding-left:1.5rem;">Additional: ${a.name || ""}</td>
-            <td>${a.code || ""}</td>
-            <td style="text-align:right;">${aqty}</td>
-            <td style="text-align:right;">₹ ${moneyINR(aunit)}</td>
-            <td style="text-align:right;">₹ ${moneyINR(atotal)}</td>
-          </tr>
-        `;
-      });
-    }
-  });
-
-  html += `
-        </tbody>
-      </table>
-
-      <h4>Summary (Latest)</h4>
-      <div class="details-grid">
-        <p><strong>Items Total:</strong> ₹ ${moneyINR(q.localSummary?.itemsTotal || q.subtotalINR || 0)}</p>
-        <p><strong>Discount:</strong> ₹ ${moneyINR(q.localSummary?.discount || q.discount || 0)}</p>
-        <p><strong>After Discount:</strong> ₹ ${moneyINR(q.localSummary?.afterDiscount || q.afterDiscountINR || 0)}</p>
-        <p><strong>Freight:</strong> ${q.localSummary?.freight || "Included"}</p>
-        <p><strong>GST @ ${q.localSummary?.gstPercent || q.gstPercent || 0}%:</strong> ₹ ${moneyINR(q.localSummary?.gstAmount || q.gstValueINR || 0)}</p>
-        <p><strong>Total Value:</strong> ₹ ${moneyINR(q.localSummary?.totalValue || q.totalValueINR || 0)}</p>
-        <p><strong>Round Off:</strong> ₹ ${moneyINR(q.localSummary?.roundOff || 0)}</p>
-      </div>
-
-      <h4>Revisions</h4>
-  `;
-
-  if (revisions.length) {
-    html += `<ul style="margin-top:0.5rem;">`;
-    revisions.forEach((r) => {
-      const revNo = r.revision || "?";
-      const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
-      const createdAt =
-        r.createdAt && r.createdAt.toDate
-          ? r.createdAt.toDate().toISOString().slice(0, 10)
-          : "-";
       html += `
-        <li style="margin-bottom:4px;">
-          <strong>Rev ${revNo}</strong>
-          &nbsp;|&nbsp; Date: ${createdAt}
-          &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
-        </li>
+        <tr>
+          <td><strong>${li.instrumentName || li.name || ""}</strong></td>
+          <td>${li.instrumentCode || li.code || ""}</td>
+          <td style="text-align:right;">${qty}</td>
+          <td style="text-align:right;">₹ ${moneyINR(unitPrice)}</td>
+          <td style="text-align:right;">₹ ${moneyINR(totalPrice)}</td>
+        </tr>
       `;
+
+      if (Array.isArray(li.configItems) && li.configItems.length) {
+        li.configItems.forEach((c) => {
+          const cqty = Number(c.quantity || 0);
+          const cunit = Number(c.unitPrice || c.price || 0);
+          const ctotal = cqty * cunit;
+          html += `
+            <tr>
+              <td style="padding-left:1.5rem;">Config: ${c.name || ""}</td>
+              <td>${c.code || ""}</td>
+              <td style="text-align:right;">${cqty || "-"}</td>
+              <td style="text-align:right;">₹ ${moneyINR(cunit)}</td>
+              <td style="text-align:right;">₹ ${moneyINR(ctotal)}</td>
+            </tr>
+          `;
+        });
+      }
+
+      if (Array.isArray(li.additionalItems) && li.additionalItems.length) {
+        li.additionalItems.forEach((a) => {
+          const aqty = Number(a.quantity || 1);
+          const aunit = Number(a.unitPrice || a.price || 0);
+          const atotal = aqty * aunit;
+          html += `
+            <tr>
+              <td style="padding-left:1.5rem;">Additional: ${a.name || ""}</td>
+              <td>${a.code || ""}</td>
+              <td style="text-align:right;">${aqty}</td>
+              <td style="text-align:right;">₹ ${moneyINR(aunit)}</td>
+              <td style="text-align:right;">₹ ${moneyINR(atotal)}</td>
+            </tr>
+          `;
+        });
+      }
     });
-    html += `</ul>`;
-  } else {
-    html += `<p>No revision snapshots found.</p>`;
-  }
 
-  html += `
-      <div style="margin-top:1.5rem; text-align:right;">
-        <button id="closeDetails" class="btn btn-secondary">Close</button>
+    html += `
+          </tbody>
+        </table>
+
+        <h4>Summary (Latest)</h4>
+        <div class="details-grid">
+          <p><strong>Items Total:</strong> ₹ ${moneyINR(
+            q.localSummary?.itemsTotal || q.subtotalINR || 0
+          )}</p>
+          <p><strong>Discount:</strong> ₹ ${moneyINR(
+            q.localSummary?.discount || q.discount || 0
+          )}</p>
+          <p><strong>After Discount:</strong> ₹ ${moneyINR(
+            q.localSummary?.afterDiscount || q.afterDiscountINR || 0
+          )}</p>
+          <p><strong>Freight:</strong> ${
+            q.localSummary?.freight || "Included"
+          }</p>
+          <p><strong>GST @ ${
+            q.localSummary?.gstPercent || q.gstPercent || 0
+          }%:</strong> ₹ ${moneyINR(
+            q.localSummary?.gstAmount || q.gstValueINR || 0
+          )}</p>
+          <p><strong>Total Value:</strong> ₹ ${moneyINR(
+            q.localSummary?.totalValue || q.totalValueINR || 0
+          )}</p>
+          <p><strong>Round Off:</strong> ₹ ${moneyINR(
+            q.localSummary?.roundOff || 0
+          )}</p>
+        </div>
+
+        <h4>Revisions</h4>
+    `;
+
+    if (revisions.length) {
+      html += `<ul style="margin-top:0.5rem;">`;
+      revisions.forEach((r) => {
+        const revNo = r.revision || "?";
+        const revTotal = r.localSummary?.totalValue || r.totalValueINR || 0;
+        const createdAt =
+          r.createdAt && r.createdAt.toDate
+            ? r.createdAt.toDate().toISOString().slice(0, 10)
+            : "-";
+        html += `
+          <li style="margin-bottom:4px;">
+            <strong>Rev ${revNo}</strong>
+            &nbsp;|&nbsp; Date: ${createdAt}
+            &nbsp;|&nbsp; Total: ₹ ${moneyINR(revTotal)}
+          </li>
+        `;
+      });
+      html += `</ul>`;
+    } else {
+      html += `<p>No revision snapshots found.</p>`;
+    }
+
+    html += `
+        <div style="margin-top:1.5rem; text-align:right;">
+          <button id="closeDetails" class="btn btn-secondary">Close</button>
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  detailsDiv.innerHTML = html;
-  detailsDiv.classList.remove("hidden");
+    detailsDiv.innerHTML = html;
+    detailsDiv.classList.remove("hidden");
 
-  document
-    .getElementById("closeDetails")
-    .addEventListener("click", () => detailsDiv.classList.add("hidden"));
-}
+    document
+      .getElementById("closeDetails")
+      .addEventListener("click", () => detailsDiv.classList.add("hidden"));
+  }
 
   function exportCSV() {
     if (!quotes.length) {
@@ -817,10 +860,10 @@ async function viewQuote(index) {
       return;
     }
 
-    const headerRow = ["Quote No","Date","Hospital","Total Value","Status"];
+    const headerRow = ["Quote No", "Date", "Hospital", "Total Value", "Status"];
     const lines = [headerRow.join(",")];
 
-    quotes.forEach(q => {
+    quotes.forEach((q) => {
       const row = [
         `"${(q.quoteNo || "").replace(/"/g, '""')}"`,
         q.quoteDate || "",
@@ -840,22 +883,41 @@ async function viewQuote(index) {
     URL.revokeObjectURL(url);
   }
 
-  window.goBack        = goBack;
-  window.applyFilters  = applyFilters;
-  window.clearFilters  = clearFilters;
-  window.sortBy        = sortBy;
-  window.viewQuote     = viewQuote;
-  window.advanceStatus = advanceStatus;
-  window.deleteQuote   = deleteQuote;
-  window.exportCSV     = exportCSV;
-  window.editQuote     = editQuote;
+  // Delegate actions instead of inline onclicks
+  tbody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const idx = Number(btn.dataset.idx || -1);
+    const action = btn.dataset.action;
+    if (idx < 0) return;
 
-  document.getElementById("filterQuoteNo").addEventListener("input", applyFilters);
-  document.getElementById("filterHospital").addEventListener("input", applyFilters);
-  document.getElementById("filterStatus").addEventListener("input", applyFilters);
-  document.getElementById("filterDate").addEventListener("change", applyFilters);
+    if (action === "view") return viewQuote(idx);
+    if (action === "edit") return editQuote(idx);
+    if (action === "next") return advanceStatus(idx);
+    if (action === "delete") return deleteQuote(idx);
+  });
+
+  window.goBack       = goBack;
+  window.applyFilters = applyFilters;
+  window.clearFilters = clearFilters;
+  window.sortBy       = sortBy;
+  window.exportCSV    = exportCSV;
+
+  document
+    .getElementById("filterQuoteNo")
+    .addEventListener("input", applyFilters);
+  document
+    .getElementById("filterHospital")
+    .addEventListener("input", applyFilters);
+  document
+    .getElementById("filterStatus")
+    .addEventListener("input", applyFilters);
+  document
+    .getElementById("filterDate")
+    .addEventListener("change", applyFilters);
 
   loadQuotes();
 </script>
+
 </body>
 </html>
