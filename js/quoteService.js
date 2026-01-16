@@ -587,7 +587,7 @@ export async function finalizeQuote(rawArg = null) {
 
     // Notify user
     alert(
-      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`
+      `Quote saved as ${header.quoteNo}${displayRev} and marked as SUBMITTED.`
     );
 
     // Sanitize quote number for filename
