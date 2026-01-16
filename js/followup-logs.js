@@ -277,31 +277,24 @@ container.innerHTML = `
       </div>
 
       <div class="meta-item">
-        <div class="meta-label">Created On</div>
-        <div class="meta-value">
-          ${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}
-        </div>
-      </div>
-
-      <div class="meta-item">
-        <div class="meta-label">Next Follow-Up Due</div>
-        <div class="meta-value">
-          ${formatDateDMY(quote.nextFollowUpDate) || ""}
-        </div>
-      </div>
-
-      <div class="meta-item">
-        <div class="meta-label">Quote Date (from file)</div>
+        <div class="meta-label">Quote Date (from word file)</div>
         <div class="meta-value">
           ${formatDateDMY(quote.quoteDate) || ""}
         </div>
       </div>
 
       <div class="meta-item">
-        <div class="meta-label">Created In Tool</div>
+        <div class="meta-label">Quote created In Tool</div>
         <div class="meta-value">
           ${formatDateDMY(quote.createdAt || quote.quoteDate) || ""}
         </div>
+      </div>
+    </div>
+
+    <div class="meta-item">
+      <div class="meta-label">Next Follow-Up Due</div>
+      <div class="meta-value">
+        ${formatDateDMY(quote.nextFollowUpDate) || ""}
       </div>
     </div>
 
