@@ -586,6 +586,8 @@ export async function finalizeQuote(rawArg = null) {
     }
 
     // Notify user
+    const displayRev =
+      nextRev > 1 ? ` (Rev ${nextRev - 1})` : "";
     alert(
       `Quote saved as ${header.quoteNo}${displayRev} and marked as SUBMITTED.`
     );
