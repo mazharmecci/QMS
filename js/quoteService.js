@@ -35,20 +35,32 @@ export function saveQuoteHeader(header) {
   }
 }
 
+/**
+ * Instruments master is only for enriching labels/prices.
+ * Quote lines themselves are the source of truth for what instruments exist in a quote.
+ */
 export function getInstrumentsMaster() {
   try {
     const raw = localStorage.getItem("instruments");
     const instruments = raw ? JSON.parse(raw) : [];
     const timestamp = localStorage.getItem("instrumentsTimestamp");
-    if (!timestamp || Date.now() - parseInt(timestamp) > 24*60*60*1000) {  // 24h TTL
-      fetchInstruments().then(instList => {
-        localStorage.setItem("instruments", JSON.stringify(instList));
-        localStorage.setItem("instrumentsTimestamp", Date.now().toString());
-      }).catch(() => {});  // Fallback to cache
+
+    // background refresh (24h TTL)
+    if (!timestamp || Date.now() - parseInt(timestamp, 10) > 24 * 60 * 60 * 1000) {
+      fetchInstruments()
+        .then((instList) => {
+          localStorage.setItem("instruments", JSON.stringify(instList));
+          localStorage.setItem("instrumentsTimestamp", Date.now().toString());
+        })
+        .catch(() => {
+          // silent fallback
+        });
     }
+
     return instruments.map((inst) => ({
       ...inst,
-      suppliedCompleteWith: inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
+      suppliedCompleteWith:
+        inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || ""
     }));
   } catch (err) {
     console.error("[getInstrumentsMaster] Failed:", err);
@@ -57,34 +69,59 @@ export function getInstrumentsMaster() {
 }
 
 export function getQuoteContext() {
-  const instruments = getInstrumentsMaster();
   const header = getQuoteHeaderRaw();
   const lines = Array.isArray(header.quoteLines) ? header.quoteLines : [];
-  return { instruments, lines, header };
+  const instruments = getInstrumentsMaster();
+  return { header, lines, instruments };
 }
 
 /* ========================
  * Line items (flattened view)
  * =======================*/
 
+/**
+ * Build flat line items from current quote.
+ * Uses header.quoteLines as truth; master instruments only enrich if index matches.
+ */
 export function buildLineItemsFromCurrentQuote() {
   const { instruments, lines } = getQuoteContext();
   const items = [];
 
   (Array.isArray(lines) ? lines : []).forEach((line) => {
-    const inst = instruments[line.instrumentIndex] || null;
-    if (inst) {
-      const price = Number(line.unitPriceOverride ?? inst.unitPrice ?? 0);
+    const inst =
+      typeof line.instrumentIndex === "number"
+        ? instruments[line.instrumentIndex] || null
+        : null;
+
+    // Instrument line itself
+    if (line.instrumentName || inst) {
+      const basePrice = inst ? Number(inst.unitPrice || 0) : Number(line.unitPrice || 0);
+      const price =
+        line.unitPriceOverride != null
+          ? Number(line.unitPriceOverride)
+          : basePrice;
 
       items.push({
-        name: inst.instrumentName || inst.name || "",
-        code: inst.catalog || inst.instrumentCode || "",
+        name:
+          line.instrumentName ||
+          inst?.instrumentName ||
+          inst?.name ||
+          "",
+        code:
+          line.instrumentCode ||
+          inst?.catalog ||
+          inst?.instrumentCode ||
+          "",
         type: "Instrument",
         price,
-        supplied: inst.suppliedCompleteWith || ""
+        supplied:
+          line.suppliedCompleteWith ||
+          inst?.suppliedCompleteWith ||
+          ""
       });
     }
 
+    // Configuration items
     (line.configItems || []).forEach((item) => {
       const price =
         item.tpInr != null ? Number(item.tpInr) : Number(item.upInr || 0);
@@ -101,6 +138,7 @@ export function buildLineItemsFromCurrentQuote() {
       });
     });
 
+    // Additional items
     (line.additionalItems || []).forEach((item) => {
       const unitNum = Number(
         item.price || item.unitPrice || item.upInr || item.tpInr || 0
@@ -133,13 +171,27 @@ function computeTotalsFromQuoteLines() {
   let subtotal = 0;
 
   const enrichedLines = (Array.isArray(lines) ? lines : []).map((line) => {
+    // Non-instrument lines pass through untouched
     if (line.lineType && line.lineType !== "instrument") {
-      return line;
+      return {
+        ...line,
+        configItems: Array.isArray(line.configItems) ? line.configItems : [],
+        additionalItems: Array.isArray(line.additionalItems)
+          ? line.additionalItems
+          : []
+      };
     }
 
-    const inst = instruments[line.instrumentIndex] || {};
+    const inst =
+      typeof line.instrumentIndex === "number"
+        ? instruments[line.instrumentIndex] || {}
+        : {};
+
     const qty = Number(line.quantity || 1);
-    const basePrice = Number(inst.unitPrice || 0);
+    const basePrice =
+      line.unitPrice != null
+        ? Number(line.unitPrice)
+        : Number(inst.unitPrice || 0);
     const unitPrice =
       line.unitPriceOverride != null
         ? Number(line.unitPriceOverride)
@@ -151,14 +203,33 @@ function computeTotalsFromQuoteLines() {
     return {
       ...line,
       lineType: "instrument",
-      instrumentName: inst.instrumentName || inst.name || line.instrumentName || "",
-      instrumentCode: inst.catalog || inst.instrumentCode || line.instrumentCode || "",
-      description: inst.longDescription || inst.description || line.description || "",
+      instrumentName:
+        line.instrumentName ||
+        inst.instrumentName ||
+        inst.name ||
+        "",
+      instrumentCode:
+        line.instrumentCode ||
+        inst.catalog ||
+        inst.instrumentCode ||
+        "",
+      description:
+        line.description ||
+        inst.longDescription ||
+        inst.description ||
+        "",
       unitPrice,
       totalPrice: lineTotal,
-      gstPercent: Number(inst.gstPercent || line.gstPercent || header.gstPercent || 0),
+      gstPercent: Number(
+        line.gstPercent ||
+          inst.gstPercent ||
+          header.gstPercent ||
+          0
+      ),
       configItems: Array.isArray(line.configItems) ? line.configItems : [],
-      additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+      additionalItems: Array.isArray(line.additionalItems)
+        ? line.additionalItems
+        : []
     };
   });
 
@@ -206,7 +277,9 @@ export function buildQuoteObject(existingDoc = null) {
     unitPriceOverride:
       line.unitPriceOverride != null ? Number(line.unitPriceOverride) : null,
     configItems: Array.isArray(line.configItems) ? line.configItems : [],
-    additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+    additionalItems: Array.isArray(line.additionalItems)
+      ? line.additionalItems
+      : []
   }));
 
   return {
@@ -329,8 +402,8 @@ async function callAIService(quoteObj) {
         hospital: quoteObj.hospital.name,
         instrument_category: "Histopathology",
         configuration_complexity: "Medium",
-        items: quoteObj.items.map(item => ({
-          item_id: item.code,
+        items: quoteObj.items.map((item) => ({
+          item_id: item.instrumentCode,
           quantity: item.quantity,
           unit_price: item.unitPrice
         }))
@@ -412,9 +485,11 @@ export async function finalizeQuote(rawArg = null) {
 
     // Local revision
     const existing = JSON.parse(localStorage.getItem("quotes") || "[]");
-    const sameQuote = existing.filter(q => q.header?.quoteNo === header.quoteNo);
+    const sameQuote = existing.filter(
+      (q) => q.header?.quoteNo === header.quoteNo
+    );
     const lastRev = sameQuote.length
-      ? Math.max(...sameQuote.map(q => Number(q.revision || 1)))
+      ? Math.max(...sameQuote.map((q) => Number(q.revision || 1)))
       : 0;
     const nextRev = lastRev + 1;
 
@@ -430,7 +505,10 @@ export async function finalizeQuote(rawArg = null) {
         {
           status: "SUBMITTED",
           date: now.toISOString().slice(0, 10),
-          time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          time: now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+          })
         }
       ]
     };
@@ -466,22 +544,26 @@ export async function finalizeQuote(rawArg = null) {
         console.log("[finalizeQuote] AI analysis saved successfully");
       } else {
         await updateDoc(aiRef, { ai_analysis: null, ai_status: "FAILED" });
-        console.warn("[finalizeQuote] AI analysis failed, quote still finalized");
+        console.warn(
+          "[finalizeQuote] AI analysis failed, quote still finalized"
+        );
       }
     } catch (aiErr) {
       console.error("[finalizeQuote] Unexpected AI error:", aiErr);
     }
 
     // Notify user
-    alert(`Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`);
-    
+    alert(
+      `Quote saved as ${header.quoteNo} (Rev ${nextRev}) and marked as SUBMITTED.`
+    );
+
     // Sanitize quote number for filename
     const safeQuoteNo = (header.quoteNo || "Quote").replace(/[\/\\]/g, "-");
-    
+
     // Copy to clipboard with visual toast
     try {
       await navigator.clipboard.writeText(safeQuoteNo);
-    
+
       const toast = document.createElement("div");
       toast.className = "quote-toast";
       toast.textContent = `Quote number ${safeQuoteNo} copied to clipboard`;
@@ -492,18 +574,17 @@ export async function finalizeQuote(rawArg = null) {
       toast.style.color = "#fff";
       toast.style.padding = "10px 16px";
       toast.style.borderRadius = "4px";
-      toast.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+      toast.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.2)";
       toast.style.zIndex = "9999";
       document.body.appendChild(toast);
-    
-      // Remove toast after 3 seconds or on print
+
       const removeToast = () => toast.remove();
       setTimeout(removeToast, 3000);
       window.addEventListener("beforeprint", removeToast);
     } catch (clipErr) {
       console.warn("[finalizeQuote] Clipboard copy failed:", clipErr);
     }
-    
+
     // Trigger print dialog
     document.title = safeQuoteNo;
     setTimeout(() => window.print(), 200);
@@ -537,13 +618,17 @@ export async function approveQuoteRevision(docId) {
     }
 
     const baseData = baseSnap.data();
-    const quoteNo = baseData.quoteNo || "UNKNOWN";
+    const quoteNo =
+      baseData.quoteNo || "UNKNOWN";
 
     await updateDoc(baseRef, {
       status: "APPROVED",
       statusHistory: [
         ...(baseData.statusHistory || []),
-        { status: "APPROVED", date: new Date().toISOString().slice(0, 10) }
+        {
+          status: "APPROVED",
+          date: new Date().toISOString().slice(0, 10)
+        }
       ]
     });
 
@@ -567,41 +652,11 @@ export async function approveQuoteRevision(docId) {
     });
 
     await Promise.all(updates);
-    alert(`Quote ${quoteNo} (Rev ${maxRev}) marked as APPROVED. All older revisions set to MINOR.`);
+    alert(
+      `Quote ${quoteNo} (Rev ${maxRev}) marked as APPROVED. All older revisions set to MINOR.`
+    );
   } catch (err) {
     console.error("[approveQuoteRevision] Error:", err);
     alert("Failed to update quote status. Please try again.");
-  }
-}
-
-async function loadQuoteFromFirestoreIfNeeded() {
-  const quoteId = getQueryParam("id");
-  const quoteNoParam = getQueryParam("quoteNo");
-
-  if (quoteId) {
-    try {
-      const ref = doc(db, "quoteHistory", quoteId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        hydrateLocalFromFirestoreDoc(data, quoteId); // must overwrite header + quoteLines
-        console.log("[quotes.html] Loaded Firestore doc for edit", quoteId);
-      } else {
-        console.warn("[quotes.html] No quoteHistory doc for id", quoteId);
-      }
-    } catch (err) {
-      console.error("[quotes.html] Error loading quote from Firestore:", err);
-    }
-    return;
-  }
-
-  const existingHeader = getQuoteHeaderRaw();
-  if (existingHeader && existingHeader.quoteNo) {
-    console.log("[quotes.html] Using existing local header (no Firestore id).");
-    return;
-  }
-
-  if (quoteNoParam) {
-    console.warn("Query by quoteNo not implemented; only ?id=<docId> is supported for now.");
   }
 }
