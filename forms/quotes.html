@@ -1483,12 +1483,17 @@ Next lines: brief description"
     
         console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
     
+        // 1) Validate header; if invalid, show message and STOP
         const ok = validateHeaderIfReady();
-        if (!ok) return;
+        if (!ok) {
+          console.warn("[quotes.html] Header validation failed, aborting finalize.");
+          return;
+        }
     
+        // 2) Only now perform Firestore writes
         finalizeBtn.disabled = true;
         try {
-          await finalizeQuote(currentQuoteDocId);   // <<< must pass this
+          await finalizeQuote(currentQuoteDocId);
         } finally {
           finalizeBtn.disabled = false;
         }
