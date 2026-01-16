@@ -26,9 +26,9 @@ function normalizeInstrument(raw = {}) {
 }
 
 /**
- * Fetch all instruments from Firestore and mirror into localStorage.
+ * Internal helper: refresh instruments from Firestore into localStorage.
  */
-export async function fetchInstruments() {
+async function refreshInstrumentCache() {
   try {
     const snapshot = await getDocs(instrumentsRef);
     const list = snapshot.docs.map(d =>
@@ -37,7 +37,25 @@ export async function fetchInstruments() {
     localStorage.setItem("instruments", JSON.stringify(list));
     return list;
   } catch (err) {
-    console.error("Error fetching instruments, falling back to localStorage:", err);
+    console.error("[instrumentService] Failed to refresh cache:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch all instruments from Firestore and mirror into localStorage.
+ * Use this at app init or when you need a fresh list.
+ */
+export async function fetchInstruments() {
+  try {
+    const list = await refreshInstrumentCache();
+    return list;
+  } catch (err) {
+    // Should rarely hit, but keep a localStorage fallback.
+    console.error(
+      "[instrumentService] Error fetching instruments, falling back to localStorage:",
+      err
+    );
     const cached = JSON.parse(localStorage.getItem("instruments") || "[]");
     return cached.map(normalizeInstrument);
   }
@@ -53,9 +71,10 @@ export async function addInstrument(instrument) {
       createdAt: new Date().toISOString()
     };
     const docRef = await addDoc(instrumentsRef, payload);
+    await refreshInstrumentCache();
     return docRef.id;
   } catch (err) {
-    console.error("Error adding instrument:", err);
+    console.error("[instrumentService] Error adding instrument:", err);
     throw err;
   }
 }
@@ -65,7 +84,7 @@ export async function addInstrument(instrument) {
  */
 export async function updateInstrument(id, instrument) {
   if (!id) {
-    console.error("updateInstrument called without a valid ID");
+    console.error("[instrumentService] updateInstrument called without a valid ID");
     return;
   }
   try {
@@ -74,8 +93,9 @@ export async function updateInstrument(id, instrument) {
       updatedAt: new Date().toISOString()
     };
     await updateDoc(doc(db, "instruments", id), payload);
+    await refreshInstrumentCache();
   } catch (err) {
-    console.error("Error updating instrument:", err);
+    console.error("[instrumentService] Error updating instrument:", err);
     throw err;
   }
 }
@@ -85,13 +105,14 @@ export async function updateInstrument(id, instrument) {
  */
 export async function deleteInstrument(id) {
   if (!id) {
-    console.error("deleteInstrument called without a valid ID");
+    console.error("[instrumentService] deleteInstrument called without a valid ID");
     return;
   }
   try {
     await deleteDoc(doc(db, "instruments", id));
+    await refreshInstrumentCache();
   } catch (err) {
-    console.error("Error deleting instrument:", err);
+    console.error("[instrumentService] Error deleting instrument:", err);
     throw err;
   }
 }
