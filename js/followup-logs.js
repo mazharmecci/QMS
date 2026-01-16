@@ -370,15 +370,33 @@ async function loadQuoteLogs() {
       return {
         id: docSnap.id,
         quoteNo: data.quoteNo || "",
-        hospitalName: data.clientName || "",
-        contactPerson: data.contactPerson || "",
-        phone: data.phone || "",
-        email: data.email || "",
+        // prefer new hospitalName field, then hospital.name, then old clientName
+        hospitalName:
+          data.hospitalName ||
+          (data.hospital && data.hospital.name) ||
+          data.clientName ||
+          "",
+        contactPerson:
+          data.contactPerson ||
+          (data.hospital && data.hospital.contactPerson) ||
+          "",
+        phone:
+          data.phone ||
+          (data.hospital && data.hospital.phone) ||
+          "",
+        email:
+          data.email ||
+          (data.hospital && data.hospital.email) ||
+          "",
         quoteDate: quoteDateIso,
         createdAt: createdAtIso,
         currentStatus: data.currentStatus || data.status || "",
         quoteValue:
-          typeof data.totalValue === "number" ? data.totalValue : 0,
+          typeof data.totalValueINR === "number"
+            ? data.totalValueINR
+            : typeof data.totalValue === "number"
+            ? data.totalValue
+            : 0,
         followUpNotes: Array.isArray(data.followUpNotes)
           ? data.followUpNotes
           : [],
