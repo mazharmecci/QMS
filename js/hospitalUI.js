@@ -24,12 +24,13 @@ export async function renderTable() {
   }
 
   hospitals.forEach((h, index) => {
+    const formattedAddress = (h.address || "").replace(/,/g, "<br>");
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${index + 1}</td>
       <td>${h.clientCode || ""}</td>
       <td>${h.clientName || ""}</td>
-      <td>${h.address || ""}</td>
+      <td>${formattedAddress}</td>
       <td>${h.area || ""}</td>
       <td>${h.mobile || ""}</td>
       <td>${h.email || ""}</td>
