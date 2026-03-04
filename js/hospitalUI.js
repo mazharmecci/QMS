@@ -24,24 +24,28 @@ export async function renderTable() {
   }
 
   hospitals.forEach((h, index) => {
-  const formattedAddress = (h.address || "")
-    .replace(/\n/g, "<br>")
-    .replace(/,/g, ",<br>");
+    const row = document.createElement("tr");
   
-  row.innerHTML = `
-    <td>${index + 1}</td>
-    <td>${h.clientCode || ""}</td>
-    <td>${h.clientName || ""}</td>
-    <td>${formattedAddress}</td>
-    <td>${h.area || ""}</td>
-    <td>${h.mobile || ""}</td>
-    <td>${h.email || ""}</td>
-    <td>${h.gst || ""}</td>
-    <td class="actions">
-      <button class="edit-btn" onclick="editHospital(${index})">Edit</button>
-      <button class="delete-btn" onclick="deleteHospitalUI(${index})">Delete</button>
-    </td>
-  `;
+    // Format address: preserve commas and newlines
+    const formattedAddress = (h.address || "")
+      .replace(/\n/g, "<br>")
+      .replace(/,/g, ",<br>");
+  
+    row.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${h.clientCode || ""}</td>
+      <td>${h.clientName || ""}</td>
+      <td>${formattedAddress}</td>
+      <td>${h.area || ""}</td>
+      <td>${h.mobile || ""}</td>
+      <td>${h.email || ""}</td>
+      <td>${h.gst || ""}</td>
+      <td class="actions">
+        <button class="edit-btn" onclick="editHospital(${index})">Edit</button>
+        <button class="delete-btn" onclick="deleteHospitalUI(${index})">Delete</button>
+      </td>
+    `;
+  
     tableBody.appendChild(row);
   });
 
