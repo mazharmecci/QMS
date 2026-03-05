@@ -854,6 +854,42 @@ table.quote-table th {
       }
     }
 
+  @media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  .container,
+  .quote-header,
+  #quoteBuilder,
+  table.quote-table,
+  #termsBlock {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5rem !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  table.quote-table {
+    table-layout: auto !important;
+    word-wrap: break-word;
+  }
+
+  .quote-table td, .quote-table th {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  header, .btn-finalize, .btn-quote, .no-print {
+    display: none !important;
+  }
+}
+
   </style>
 </head>
 
@@ -1469,36 +1505,42 @@ Next lines: brief description"
       });
     });
 
-    // Finalize button
-    const finalizeBtn = document.getElementById("finalizeQuoteBtn");
-    if (finalizeBtn) {
-      let lastClickTime = 0;
-      finalizeBtn.addEventListener("click", async () => {
-        const now = Date.now();
-        if (now - lastClickTime < 3000) {
-          console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
-          return;
-        }
-        lastClickTime = now;
-    
-        console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
-    
-        // 1) Validate header; if invalid, show message and STOP
-        const ok = validateHeaderIfReady();
-        if (!ok) {
-          console.warn("[quotes.html] Header validation failed, aborting finalize.");
-          return;
-        }
-    
-        // 2) Only now perform Firestore writes
-        finalizeBtn.disabled = true;
-        try {
-          await finalizeQuote(currentQuoteDocId);
-        } finally {
-          finalizeBtn.disabled = false;
-        }
-      });
-    }
+  // Finalize button
+  const finalizeBtn = document.getElementById("finalizeQuoteBtn");
+  if (finalizeBtn) {
+    let lastClickTime = 0;
+    finalizeBtn.addEventListener("click", async () => {
+      const now = Date.now();
+      if (now - lastClickTime < 3000) {
+        console.warn("[finalizeQuoteBtn] Ignored duplicate click.");
+        return;
+      }
+      lastClickTime = now;
+  
+      console.log("[quotes.html] Finalize button clicked:", currentQuoteDocId);
+  
+      // 1) Validate header; if invalid, show message and STOP
+      const ok = validateHeaderIfReady();
+      if (!ok) {
+        console.warn("[quotes.html] Header validation failed, aborting finalize.");
+        return;
+      }
+  
+      // 2) Perform Firestore writes
+      finalizeBtn.disabled = true;
+      try {
+        await finalizeQuote(currentQuoteDocId);
+  
+        // ✅ Trigger print after saving
+        window.print();
+  
+      } catch (err) {
+        console.error("Finalize failed:", err);
+      } finally {
+        finalizeBtn.disabled = false;
+      }
+    });
+  }
 
     // Next buttons (if any)
     const nextButtons = document.querySelectorAll(".btn-next");
