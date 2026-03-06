@@ -772,6 +772,26 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
+@media print {
+  /* Prevent wrapping for meta info */
+  .quote-meta-grid .label,
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+  }
+
+  /* Keep table headers and cells on one line */
+  table.quote-table th,
+  table.quote-table td {
+    white-space: nowrap !important;
+  }
+
+  /* Allow wrapping only for long descriptions */
+  table.quote-table td.description {
+    white-space: normal !important;
+    word-break: break-word;
+  }
+}
+
 </style>
 
 </head>
