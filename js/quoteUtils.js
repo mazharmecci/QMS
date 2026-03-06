@@ -159,18 +159,16 @@ export function parseLines(raw) {
  * Render a generic item cell (config/additional) with preserved formatting.
  * First line: code (bold)
  * Second line: main title (bold)
- * Remaining lines: shown exactly as typed (including "Supplied Complete with", bullets, origin, HSN).
+ * Remaining lines: description + additionalDescription shown with bullets, origin, HSN.
  * @param {object} item
  * @returns {string} HTML string
  */
 export function formatItemCell(item) {
   const code = item.code || item.catalog || "";
-  const descSource = item.description || item.longDescription || "";
 
-  const rawLines = descSource.split(/\r?\n/);
-
-  const titleLine = rawLines[0] || item.name || item.itemName || "Unnamed Item";
-  const contentLines = rawLines.slice(1);
+  // ✅ Use new fields
+  const mainDesc = item.description || "";
+  const extraDesc = item.additionalDescription || "";
 
   const escape = str =>
     String(str)
@@ -180,42 +178,39 @@ export function formatItemCell(item) {
 
   let html = `<td style="white-space:normal; vertical-align:top; line-height:1.4;">`;
 
+  // Code
   if (code) {
     html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${escape(code)}</div>`;
   }
 
-  if (titleLine) {
-    html += `<div style="font-weight:700; margin-bottom:4px;">${escape(titleLine)}</div>`;
+  // Main description (title line)
+  if (mainDesc) {
+    html += `<div style="font-weight:700; margin-bottom:4px;">${escape(mainDesc)}</div>`;
   }
 
-  contentLines.forEach(line => {
-    const trimmed = line.trim();
-
-    if (!trimmed) {
-      html += `<div style="height:4px;"></div>`;
-      return;
-    }
-
-    // Bullet lines: "- something"
-    if (trimmed.startsWith("-")) {
-      const bulletText = trimmed.replace(/^-+\s*/, "");
-      html += `<div style="padding-left:1.25rem;">- ${escape(bulletText)}</div>`;
-      return;
-    }
-
-    // Meta lines: Country / HSN should NOT be indented
-    if (
-      trimmed.toLowerCase().startsWith("country of origin:") ||
-      trimmed.toLowerCase().startsWith("hsn code:")
-    ) {
-      html += `<div>${escape(trimmed)}</div>`;
-      return;
-    }
-
-    // Normal non-bullet text
-    html += `<div>${escape(trimmed)}</div>`;
-  });
+  // Additional description (bullet points or plain lines)
+  if (extraDesc) {
+    escape(extraDesc)
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(Boolean)
+      .forEach(line => {
+        if (line.startsWith("-")) {
+          const bulletText = line.replace(/^-+\s*/, "");
+          html += `<div style="padding-left:1.25rem;">- ${escape(bulletText)}</div>`;
+        } else if (
+          line.toLowerCase().startsWith("country of origin:") ||
+          line.toLowerCase().startsWith("hsn code:")
+        ) {
+          // Meta lines not indented
+          html += `<div>${escape(line)}</div>`;
+        } else {
+          html += `<div>${escape(line)}</div>`;
+        }
+      });
+  }
 
   html += `</td>`;
   return html;
 }
+
