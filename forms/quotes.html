@@ -783,6 +783,13 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
+@media print {
+  #termsBlock {
+    break-before: page;           /* modern */
+    page-break-before: always;    /* legacy */
+  }
+}
+
 </style>
 </head>
 
