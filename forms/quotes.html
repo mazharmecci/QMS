@@ -825,6 +825,16 @@ table.quote-table th {
   }
 }
 
+@media print {
+  .quote-meta-grid {
+    border: none !important;      /* remove border in print */
+  }
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 11pt !important;   /* keep readable size */
+  }
+}
+
 </style>
 
 </head>
