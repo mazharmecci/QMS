@@ -61,10 +61,12 @@ export function formatInstrumentCell(inst, lineIdx) {
 
   let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
 
+  // Code
   if (code) {
     html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
   }
 
+  // Name
   if (name) {
     html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
   }
@@ -79,6 +81,7 @@ export function formatInstrumentCell(inst, lineIdx) {
     }
   });
 
+  // Supplied complete with
   if (suppliedLines.length) {
     html += `<div style="font-weight:600; margin:4px 0 2px;">Supplied Complete with:</div>`;
     suppliedLines.forEach(line => {
@@ -86,10 +89,12 @@ export function formatInstrumentCell(inst, lineIdx) {
     });
   }
 
+  // Meta / origin / HSN
   if (metaLines.length || origin || hsn) {
     metaLines.forEach(line => {
       html += `<div style="margin-bottom:2px;">${line}</div>`;
     });
+
     if (origin) {
       html += `<div style="margin-bottom:2px;">Country of Origin: ${origin}</div>`;
     }
@@ -98,6 +103,7 @@ export function formatInstrumentCell(inst, lineIdx) {
     }
   }
 
+  // Config / Additional buttons
   html += `
     <div style="margin-top:2px; display:flex; gap:0.4rem; flex-wrap:wrap;">
       <button type="button" class="btn-quote" onclick="openConfigModal(${lineIdx})">Config Items</button>
