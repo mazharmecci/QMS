@@ -147,7 +147,8 @@ function computeTotalsFromQuoteLines() {
       lineType: "instrument",
       instrumentName: inst.instrumentName || inst.name || line.instrumentName || "",
       instrumentCode: inst.catalog || inst.instrumentCode || line.instrumentCode || "",
-      description: inst.longDescription || inst.description || line.description || "",
+      description: inst.description || line.description || "",
+      additionalDescription: inst.additionalDescription || line.additionalDescription || "", // ✅ new field
       unitPrice,
       totalPrice: lineTotal,
       gstPercent: Number(inst.gstPercent || line.gstPercent || header.gstPercent || 0),
@@ -193,6 +194,7 @@ export function buildQuoteObject(existingDoc = null) {
     instrumentCode: line.instrumentCode || "",
     instrumentName: line.instrumentName || "",
     description: line.description || "",
+    additionalDescription: line.additionalDescription || "", // ✅ new field
     quantity: Number(line.quantity || 1),
     unitPrice: Number(line.unitPrice || 0),
     totalPrice: Number(line.totalPrice || 0),
