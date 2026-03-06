@@ -44,6 +44,7 @@ export function parseSuppliedBlock(raw) {
  * @param {string} raw
  * @returns {string[]}
  */
+
 export function parseLines(raw) {
   if (!raw) return [];
   return String(raw)
@@ -52,91 +53,74 @@ export function parseLines(raw) {
     .filter(Boolean);
 }
 
-  /**
-   * Parse details text into structured parts.
-   * @param {string} rawText
-   * @returns {{ name: string, description: string }}
-   */
-  export function parseDetailsText(rawText) {
-    const lines = parseLines(rawText);
-    const name = lines[0] || "";
-    const description = lines.slice(1).join("\n");
-    return { name, description };
+/**
+ * Parse details text into structured parts.
+ * @param {string} rawText
+ * @returns {{ name: string, description: string }}
+ */
+
+export function parseDetailsText(rawText) {
+  const lines = parseLines(rawText);
+  const name = lines[0] || "";
+  const description = lines.slice(1).join("\n");
+  return { name, description };
+}
+
+/**
+ * Render the instrument cell for the quote builder table.
+ * @param {object} inst - instrument object
+ * @param {number} lineIdx - index of the line
+ * @returns {string} HTML string
+ */
+export function formatInstrumentCell(inst, lineIdx) {
+  const code       = inst.catalog || inst.instrumentCode || inst.code || "";
+  const name       = inst.instrumentName || inst.name || "Unnamed Instrument";
+  const descText   = inst.longDescription || inst.description || "";
+  const descLines  = parseLines(descText);
+
+  const suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || "";
+  const { suppliedLines, metaLines } = parseSuppliedBlock(suppliedRaw);
+
+  const origin = inst.origin || inst.country || inst.countryOfOrigin || "";
+  const hsn    = inst.hsn || inst.hsnCode || "";
+
+  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+
+  // Code
+  if (code) {
+    html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
   }
-    
-  /**
-   * Render the instrument cell for the quote builder table.
-   * @param {object} inst - instrument object
-   * @param {number} lineIdx - index of the line
-   * @returns {string} HTML string
-   */
-  export function formatInstrumentCell(inst, lineIdx) {
-    const code       = inst.catalog || inst.instrumentCode || inst.code || "";
-    const name       = inst.instrumentName || inst.name || "Unnamed Instrument";
-  
-    // Refactored: separate fields for description and additionalDescription
-    const mainDesc   = inst.description || "";
-    const extraDesc  = inst.additionalDescription || "";
-  
-    const suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || "";
-    const { suppliedLines, metaLines } = parseSuppliedBlock(suppliedRaw);
-  
-    const origin = inst.origin || inst.country || inst.countryOfOrigin || "";
-    const hsn    = inst.hsn || inst.hsnCode || "";
-  
-    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
-  
-    // Code
-    if (code) {
-      html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
+
+  // Name
+  if (name) {
+    html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
+  }
+
+  // Description
+  if (descLines.length) {
+    html += `<div style="font-weight:600; margin-bottom:4px;">${descLines.join(" ")}</div>`;
+  }
+
+  // Supplied complete with
+  if (suppliedLines.length) {
+    html += `<div style="font-weight:600; margin:4px 0 2px;">Supplied Complete with:</div>`;
+    suppliedLines.forEach(line => {
+      html += `<div style="padding-left:1.25rem; margin-bottom:2px;">- ${line}</div>`;
+    });
+  }
+
+  // Meta / origin / HSN
+  if (metaLines.length || origin || hsn) {
+    metaLines.forEach(line => {
+      html += `<div style="margin-bottom:2px;">${line}</div>`;
+    });
+
+    if (origin) {
+      html += `<div style="margin-bottom:2px;">Country of Origin: ${origin}</div>`;
     }
-  
-    // Name
-    if (name) {
-      html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
+    if (hsn) {
+      html += `<div>HSN Code: ${hsn}</div>`;
     }
-  
-    // Main description
-    if (mainDesc) {
-      html += `<div style="font-weight:600; margin-bottom:4px;">${mainDesc}</div>`;
-    }
-  
-    // Additional description / technical specs
-    if (extraDesc) {
-      html += `<div style="height:10px;"></div>`; // spacer before second block
-      // Split into lines and render as bullet points
-      parseLines(extraDesc).forEach(line => {
-        html += `<div style="margin-bottom:2px;">• ${line}</div>`;
-      });
-    }
-  
-    // Supplied complete with
-    if (suppliedLines.length) {
-      html += `<div style="height:12px;"></div>`; // spacer before heading
-      html += `<div style="font-weight:600; margin:4px 0 2px;">Supplied Complete with:</div>`;
-      suppliedLines.forEach(line => {
-        html += `<div style="padding-left:1.25rem; margin-bottom:2px;">- ${line}</div>`;
-      });
-    }
-  
-    // Meta / origin / HSN
-    if (metaLines.length || origin || hsn) {
-      metaLines.forEach(line => {
-        html += `<div style="margin-bottom:2px;">${line}</div>`;
-      });
-  
-      if (origin) {
-        html += `<div style="height:10px;"></div>`; // spacer before origin
-        html += `<div style="margin-bottom:2px;">Country of Origin: ${origin}</div>`;
-      }
-      if (hsn) {
-        html += `<div style="height:6px;"></div>`; // spacer before HSN
-        html += `<div>HSN Code: ${hsn}</div>`;
-      }
-    }
-  
-    html += `</td>`;
-    return html;
   }
 
   // Config / Additional buttons – very small top margin
@@ -159,16 +143,18 @@ export function parseLines(raw) {
  * Render a generic item cell (config/additional) with preserved formatting.
  * First line: code (bold)
  * Second line: main title (bold)
- * Remaining lines: description + additionalDescription shown with bullets, origin, HSN.
+ * Remaining lines: shown exactly as typed (including "Supplied Complete with", bullets, origin, HSN).
  * @param {object} item
  * @returns {string} HTML string
  */
 export function formatItemCell(item) {
   const code = item.code || item.catalog || "";
+  const descSource = item.description || item.longDescription || "";
 
-  // ✅ Use new fields
-  const mainDesc = item.description || "";
-  const extraDesc = item.additionalDescription || "";
+  const rawLines = descSource.split(/\r?\n/);
+
+  const titleLine = rawLines[0] || item.name || item.itemName || "Unnamed Item";
+  const contentLines = rawLines.slice(1);
 
   const escape = str =>
     String(str)
@@ -178,39 +164,42 @@ export function formatItemCell(item) {
 
   let html = `<td style="white-space:normal; vertical-align:top; line-height:1.4;">`;
 
-  // Code
   if (code) {
     html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${escape(code)}</div>`;
   }
 
-  // Main description (title line)
-  if (mainDesc) {
-    html += `<div style="font-weight:700; margin-bottom:4px;">${escape(mainDesc)}</div>`;
+  if (titleLine) {
+    html += `<div style="font-weight:700; margin-bottom:4px;">${escape(titleLine)}</div>`;
   }
 
-  // Additional description (bullet points or plain lines)
-  if (extraDesc) {
-    escape(extraDesc)
-      .split(/\r?\n/)
-      .map(l => l.trim())
-      .filter(Boolean)
-      .forEach(line => {
-        if (line.startsWith("-")) {
-          const bulletText = line.replace(/^-+\s*/, "");
-          html += `<div style="padding-left:1.25rem;">- ${escape(bulletText)}</div>`;
-        } else if (
-          line.toLowerCase().startsWith("country of origin:") ||
-          line.toLowerCase().startsWith("hsn code:")
-        ) {
-          // Meta lines not indented
-          html += `<div>${escape(line)}</div>`;
-        } else {
-          html += `<div>${escape(line)}</div>`;
-        }
-      });
-  }
+  contentLines.forEach(line => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      html += `<div style="height:4px;"></div>`;
+      return;
+    }
+
+    // Bullet lines: "- something"
+    if (trimmed.startsWith("-")) {
+      const bulletText = trimmed.replace(/^-+\s*/, "");
+      html += `<div style="padding-left:1.25rem;">- ${escape(bulletText)}</div>`;
+      return;
+    }
+
+    // Meta lines: Country / HSN should NOT be indented
+    if (
+      trimmed.toLowerCase().startsWith("country of origin:") ||
+      trimmed.toLowerCase().startsWith("hsn code:")
+    ) {
+      html += `<div>${escape(trimmed)}</div>`;
+      return;
+    }
+
+    // Normal non-bullet text
+    html += `<div>${escape(trimmed)}</div>`;
+  });
 
   html += `</td>`;
   return html;
 }
-
