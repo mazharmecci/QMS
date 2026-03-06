@@ -63,82 +63,81 @@ export function parseLines(raw) {
     const description = lines.slice(1).join("\n");
     return { name, description };
   }
+    
+  /**
+   * Render the instrument cell for the quote builder table.
+   * @param {object} inst - instrument object
+   * @param {number} lineIdx - index of the line
+   * @returns {string} HTML string
+   */
+  export function formatInstrumentCell(inst, lineIdx) {
+    const code       = inst.catalog || inst.instrumentCode || inst.code || "";
+    const name       = inst.instrumentName || inst.name || "Unnamed Instrument";
   
-/**
- * Render the instrument cell for the quote builder table.
- * @param {object} inst - instrument object
- * @param {number} lineIdx - index of the line
- * @returns {string} HTML string
- */
-export function formatInstrumentCell(inst, lineIdx) {
-  const code       = inst.catalog || inst.instrumentCode || inst.code || "";
-  const name       = inst.instrumentName || inst.name || "Unnamed Instrument";
-  const descText   = inst.longDescription || inst.description || "";
-  const descLines  = parseLines(descText);
-
-  const suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || "";
-  const { suppliedLines, metaLines } = parseSuppliedBlock(suppliedRaw);
-
-  const origin = inst.origin || inst.country || inst.countryOfOrigin || "";
-  const hsn    = inst.hsn || inst.hsnCode || "";
-
-  let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
-
-  // Code
-  if (code) {
-    html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
-  }
-
-  // Name
-  if (name) {
-    html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
-  }
-
-  // Description
-  if (descLines.length) {
-    if (descLines.length > 1) {
-      // First description block
-      html += `<div style="font-weight:600; margin-bottom:4px;">${descLines[0]}</div>`;
-      // Spacer before second description block
-      html += `<div style="height:10px;"></div>`;
-      // Show remaining description lines (bullets or text)
-      descLines.slice(1).forEach(line => {
+    // Refactored: separate fields for description and additionalDescription
+    const mainDesc   = inst.description || "";
+    const extraDesc  = inst.additionalDescription || "";
+  
+    const suppliedRaw = inst.suppliedCompleteWith || inst.suppliedWith || inst.supplied || "";
+    const { suppliedLines, metaLines } = parseSuppliedBlock(suppliedRaw);
+  
+    const origin = inst.origin || inst.country || inst.countryOfOrigin || "";
+    const hsn    = inst.hsn || inst.hsnCode || "";
+  
+    let html = `<td style="white-space:pre-line; vertical-align:top; line-height:1.35;">`;
+  
+    // Code
+    if (code) {
+      html += `<div class="cat-main" style="margin-bottom:2px; font-weight:700;">${code}</div>`;
+    }
+  
+    // Name
+    if (name) {
+      html += `<div style="font-weight:600; margin-bottom:4px;">${name}</div>`;
+    }
+  
+    // Main description
+    if (mainDesc) {
+      html += `<div style="font-weight:600; margin-bottom:4px;">${mainDesc}</div>`;
+    }
+  
+    // Additional description / technical specs
+    if (extraDesc) {
+      html += `<div style="height:10px;"></div>`; // spacer before second block
+      // Split into lines and render as bullet points
+      parseLines(extraDesc).forEach(line => {
         html += `<div style="margin-bottom:2px;">• ${line}</div>`;
       });
-    } else {
-      html += `<div style="font-weight:600; margin-bottom:4px;">${descLines[0]}</div>`;
     }
-  }
-
-  // Supplied complete with
-  if (suppliedLines.length) {
-    html += `<div style="height:12px;"></div>`; // spacer before heading
-    html += `<div style="font-weight:600; margin:4px 0 2px;">Supplied Complete with:</div>`;
-    suppliedLines.forEach(line => {
-      html += `<div style="padding-left:1.25rem; margin-bottom:2px;">- ${line}</div>`;
-    });
-  }
-
-  // Meta / origin / HSN
-  if (metaLines.length || origin || hsn) {
-    metaLines.forEach(line => {
-      html += `<div style="margin-bottom:2px;">${line}</div>`;
-    });
-
-    if (origin) {
-      html += `<div style="height:10px;"></div>`; // spacer before origin
-      html += `<div style="margin-bottom:2px;">Country of Origin: ${origin}</div>`;
+  
+    // Supplied complete with
+    if (suppliedLines.length) {
+      html += `<div style="height:12px;"></div>`; // spacer before heading
+      html += `<div style="font-weight:600; margin:4px 0 2px;">Supplied Complete with:</div>`;
+      suppliedLines.forEach(line => {
+        html += `<div style="padding-left:1.25rem; margin-bottom:2px;">- ${line}</div>`;
+      });
     }
-    if (hsn) {
-      html += `<div style="height:6px;"></div>`; // spacer before HSN
-      html += `<div>HSN Code: ${hsn}</div>`;
+  
+    // Meta / origin / HSN
+    if (metaLines.length || origin || hsn) {
+      metaLines.forEach(line => {
+        html += `<div style="margin-bottom:2px;">${line}</div>`;
+      });
+  
+      if (origin) {
+        html += `<div style="height:10px;"></div>`; // spacer before origin
+        html += `<div style="margin-bottom:2px;">Country of Origin: ${origin}</div>`;
+      }
+      if (hsn) {
+        html += `<div style="height:6px;"></div>`; // spacer before HSN
+        html += `<div>HSN Code: ${hsn}</div>`;
+      }
     }
+  
+    html += `</td>`;
+    return html;
   }
-
-  html += `</td>`;
-  return html;
-}
-
 
   // Config / Additional buttons – very small top margin
   html += `
