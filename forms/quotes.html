@@ -772,26 +772,10 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
-@media print {
-  /* Ensure footer repeats and fits */
-  .quote-table tfoot.print-footer {
-    display: table-footer-group;
-  }
-
-  .footer {
-    font-size: 10pt;              /* slightly smaller for print */
-    margin: 0 !important;         /* remove extra margins */
-    padding: 2mm 0 !important;    /* controlled padding */
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.3;             /* tighter line spacing */
-  }
-}
-
 /* Page settings */
 @page {
   size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* increase bottom margin to give footer space */
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom margin for footer */
 
   /* Page numbers in footer */
   @bottom-right {
@@ -801,31 +785,92 @@ table.quote-table th {
   }
 }
 
+/* Print overrides */
 @media print {
-  /* Ensure footer repeats */
+  body {
+    margin: 0;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    font-size: 12pt;
+  }
+
+  /* Hide interactive UI */
+  header,
+  .no-print,
+  .overlay,
+  button,
+  .btn-quote,
+  .btn-finalize,
+  .quote-toast {
+    display: none !important;
+  }
+
+  .container {
+    margin: 0 !important;
+    padding: 5mm 5mm 8mm 5mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Ensure tables break correctly */
+  table {
+    page-break-inside: auto;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  tr, td, th {
+    page-break-inside: avoid;
+  }
+
+  /* Keep first item row together */
+  .quote-table tr.item-row-1 td {
+    page-break-inside: avoid;
+  }
+
+  /* Force Terms & Conditions to new page */
+  #termsBlock {
+    page-break-before: always;
+  }
+
+  /* Repeat header and footer on each page */
+  .quote-table thead.print-header {
+    display: table-header-group;
+  }
   .quote-table tfoot.print-footer {
     display: table-footer-group;
   }
 
-  /* Footer styling for print */
+  /* Logo styling */
+  .quote-logo-wrap img {
+    max-height: 70px;
+    width: auto;
+  }
+
+  /* Footer styling */
   .footer {
-    font-size: 8pt;              /* slightly smaller */
-    margin: 0 !important;        /* remove extra margins */
-    padding: 2mm 0 !important;   /* controlled padding */
+    display: flex;               /* two-column layout */
+    justify-content: space-between;
+    font-size: 9pt;
+    margin: 0 !important;
+    padding: 2mm 0 !important;
     border-top: 1px solid #ccc;
     color: #555;
-    line-height: 1.2;            /* tighter line spacing */
-    text-align: right;          /* center footer text */
+    line-height: 1.2;
+  }
+
+  .footer-left {
+    text-align: left;
+    max-width: 70%;              /* prevent overflow */
+  }
+
+  .footer-right {
+    text-align: right;
+    flex-shrink: 0;
   }
 }
-
-@media print {
-  /* Force Terms & Conditions to start on a new page */
-  #termsBlock {
-    page-break-before: always;
-  }
-}
-
 
 </style>
 
