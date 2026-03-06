@@ -795,16 +795,19 @@ table.quote-table th {
     white-space: nowrap !important;
   }
 }
+
 /* Page settings */
 @page {
   size: A4;
   margin: 8mm 8mm 12mm 8mm;
 
-  /* Add page numbers in the footer */
-  @bottom-center {
+  /* Page numbers in footer */
+  @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-size: 10pt;
     color: #555;
+    border-top: 1px solid #ccc;
+    padding-top: 4px;
   }
 }
 
@@ -851,6 +854,12 @@ table.quote-table th {
     page-break-after: auto;
   }
 
+  /* Keep first item row together */
+  .quote-table tr.item-row-1,
+  .quote-table tr.item-row-1 td {
+    page-break-inside: avoid;
+  }
+
   /* Force Terms & Conditions to new page */
   #termsBlock {
     page-break-before: always;
@@ -860,13 +869,15 @@ table.quote-table th {
   .quote-logo-wrap {
     display: table-header-group; /* ensures logo repeats */
     text-align: left;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
   }
   .quote-logo-wrap img {
     max-height: 70px;
     width: auto;
   }
 }
-
 
 </style>
 </head>
