@@ -772,22 +772,6 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
-@media print {
-  /* Ensure footer repeats and fits */
-  .quote-table tfoot.print-footer {
-    display: table-footer-group;
-  }
-
-  .footer {
-    font-size: 10pt;              /* slightly smaller for print */
-    margin: 0 !important;         /* remove extra margins */
-    padding: 2mm 0 !important;    /* controlled padding */
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.3;             /* tighter line spacing */
-  }
-}
-
 /* Page settings */
 @page {
   size: A4;
@@ -809,7 +793,7 @@ table.quote-table th {
 
   /* Footer styling for print */
   .footer {
-    font-size: 8pt;              /* slightly smaller */
+    font-size: 9pt;              /* slightly smaller */
     margin: 0 !important;        /* remove extra margins */
     padding: 2mm 0 !important;   /* controlled padding */
     border-top: 1px solid #ccc;
