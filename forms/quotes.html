@@ -211,22 +211,11 @@ header {
 .sales-title {
   margin-left: auto;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1;
   padding-top: 0.1rem;
   letter-spacing: 0.03em;
   color: #0d6efd;
-}
-
-@media print {
-  /* Keep SALES QUOTATION on one line */
-  .sales-box {
-    white-space: nowrap !important;
-  }
-
-  .sales-title {
-    white-space: nowrap !important;
-  }
 }
 
 /* HOSPITAL + ATTENTION BOX */
@@ -783,108 +772,8 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
-@media print {
-  #termsBlock {
-    break-before: page;           /* modern */
-    page-break-before: always;    /* legacy */
-  }
-}
-
-/* Page settings */
-@page {
-  size: A4;
-  margin: 8mm 8mm 12mm 8mm;
-
-  /* Page numbers in footer */
-  @bottom-right {
-    content: "Page " counter(page) " of " counter(pages);
-    font-size: 10pt;
-    color: #555;
-    border-top: 1px solid #ccc;
-    padding-top: 4px;
-  }
-}
-
-/* Print overrides */
-@media print {
-  body {
-    margin: 0;
-    background: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-    font-size: 12pt;
-  }
-
-  /* Prevent wrapping for meta grid values */
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Specifically target Handphone and Office fields */
-  .quote-meta-grid .value.handphone,
-  .quote-meta-grid .value.office {
-    white-space: nowrap !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* Hide interactive UI */
-  header,
-  .no-print,
-  .overlay,
-  button,
-  .btn-quote,
-  .btn-finalize,
-  .quote-toast {
-    display: none !important;
-  }
-
-  .container {
-    margin: 0 !important;
-    padding: 5mm 5mm 8mm 5mm !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-  }
-
-  /* Ensure tables break correctly */
-  table {
-    page-break-inside: auto;
-    width: 100%;
-    border-collapse: collapse;
-  }
-  tr, td, th {
-    page-break-inside: avoid;
-  }
-
-  /* Keep first item row together */
-  .quote-table tr.item-row-1 td {
-    page-break-inside: avoid;
-  }
-
-  /* Force Terms & Conditions to new page */
-  #termsBlock {
-    page-break-before: always;
-  }
-
-  /* Repeat header logo and footer on each page */
-  .quote-table thead.print-header {
-    display: table-header-group;
-  }
-  .quote-table tfoot.print-footer {
-    display: table-footer-group;
-  }
-
-  .quote-logo-wrap img {
-    max-height: 70px;
-    width: auto;
-  }
-}
-
 </style>
+
 </head>
 
 <body>
