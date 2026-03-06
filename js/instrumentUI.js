@@ -80,11 +80,16 @@ form.addEventListener("submit", async e => {
 
   const instrument = {
     instrumentName: mainItemNameInput.value.trim(),
-    longDescription: descriptionTextarea.value.trim(),
+
+    // ✅ Split into two fields
+    description: descriptionTextarea.value.trim(), 
+    additionalDescription: (document.getElementById("additionalDescription")?.value.trim()) || "",
+
     suppliedWith: (suppliedWithInput.value || "")
       .split("\n")
       .map(l => l.trim())
       .filter(Boolean),
+
     origin: document.getElementById("origin").value.trim(),
     catalog: document.getElementById("catalog").value.trim(),
     hsn: hsnInput.value.trim(),
@@ -201,7 +206,14 @@ window.editInstrument = function(i) {
   if (!inst) return;
 
   mainItemNameInput.value = inst.instrumentName || "";
-  descriptionTextarea.value = inst.longDescription || "";
+
+  // ✅ Use separate fields now
+  descriptionTextarea.value = inst.description || "";
+  const additionalDescriptionTextarea = document.getElementById("additionalDescription");
+  if (additionalDescriptionTextarea) {
+    additionalDescriptionTextarea.value = inst.additionalDescription || "";
+  }
+
   document.getElementById("origin").value = inst.origin || "";
   document.getElementById("catalog").value = inst.catalog || "";
   hsnInput.value = inst.hsn || "";
