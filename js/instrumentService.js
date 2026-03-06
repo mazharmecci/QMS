@@ -20,9 +20,6 @@ function parseNumber(value) {
 function normalizeInstrument(raw = {}) {
   return {
     ...raw,
-    // ✅ Legacy fallback: map longDescription into description if missing
-    description: raw.description || raw.longDescription || "",
-    additionalDescription: raw.additionalDescription || "",
     unitPrice: parseNumber(raw.unitPrice),
     gstPercent: parseNumber(raw.gstPercent)
   };
@@ -54,6 +51,7 @@ export async function fetchInstruments() {
     const list = await refreshInstrumentCache();
     return list;
   } catch (err) {
+    // Should rarely hit, but keep a localStorage fallback.
     console.error(
       "[instrumentService] Error fetching instruments, falling back to localStorage:",
       err
@@ -87,7 +85,7 @@ export async function addInstrument(instrument) {
 export async function updateInstrument(id, instrument) {
   if (!id) {
     console.error("[instrumentService] updateInstrument called without a valid ID");
-    return null;
+    return;
   }
   try {
     const payload = {
@@ -96,7 +94,6 @@ export async function updateInstrument(id, instrument) {
     };
     await updateDoc(doc(db, "instruments", id), payload);
     await refreshInstrumentCache();
-    return id; // ✅ consistency: return the updated ID
   } catch (err) {
     console.error("[instrumentService] Error updating instrument:", err);
     throw err;
@@ -109,12 +106,11 @@ export async function updateInstrument(id, instrument) {
 export async function deleteInstrument(id) {
   if (!id) {
     console.error("[instrumentService] deleteInstrument called without a valid ID");
-    return null;
+    return;
   }
   try {
     await deleteDoc(doc(db, "instruments", id));
     await refreshInstrumentCache();
-    return id; // ✅ consistency: return the deleted ID
   } catch (err) {
     console.error("[instrumentService] Error deleting instrument:", err);
     throw err;
