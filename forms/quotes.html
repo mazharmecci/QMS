@@ -772,10 +772,26 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
+@media print {
+  /* Ensure footer repeats and fits */
+  .quote-table tfoot.print-footer {
+    display: table-footer-group;
+  }
+
+  .footer {
+    font-size: 10pt;              /* slightly smaller for print */
+    margin: 0 !important;         /* remove extra margins */
+    padding: 2mm 0 !important;    /* controlled padding */
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.3;             /* tighter line spacing */
+  }
+}
+
 /* Page settings */
 @page {
   size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* extra bottom margin for footer */
+  margin: 8mm 8mm 22mm 8mm; /* increase bottom margin to give footer space */
 
   /* Page numbers in footer */
   @bottom-right {
@@ -785,90 +801,28 @@ table.quote-table th {
   }
 }
 
-/* Print overrides */
 @media print {
-  body {
-    margin: 0;
-    background: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-    font-size: 12pt;
-  }
-
-  /* Hide interactive UI */
-  header,
-  .no-print,
-  .overlay,
-  button,
-  .btn-quote,
-  .btn-finalize,
-  .quote-toast {
-    display: none !important;
-  }
-
-  .container {
-    margin: 0 !important;
-    padding: 5mm 5mm 8mm 5mm !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-  }
-
-  /* Ensure tables break correctly */
-  table {
-    page-break-inside: auto;
-    width: 100%;
-    border-collapse: collapse;
-  }
-  tr, td, th {
-    page-break-inside: avoid;
-  }
-
-  /* Keep first item row together */
-  .quote-table tr.item-row-1 td {
-    page-break-inside: avoid;
-  }
-
-  /* Force Terms & Conditions to new page */
-  #termsBlock {
-    page-break-before: always;
-  }
-
-  /* Repeat header and footer on each page */
-  .quote-table thead.print-header {
-    display: table-header-group;
-  }
+  /* Ensure footer repeats */
   .quote-table tfoot.print-footer {
     display: table-footer-group;
   }
 
-  /* Logo styling */
-  .quote-logo-wrap img {
-    max-height: 70px;
-    width: auto;
-  }
-
-  /* Footer styling */
+  /* Footer styling for print */
   .footer {
-    display: flex;               /* two-column layout */
-    justify-content: space-between;
-    font-size: 9pt;
-    margin: 0 !important;
-    padding: 2mm 0 !important;
+    font-size: 8pt;              /* slightly smaller */
+    margin: 0 !important;        /* remove extra margins */
+    padding: 2mm 0 !important;   /* controlled padding */
     border-top: 1px solid #ccc;
     color: #555;
-    line-height: 1.2;
+    line-height: 1.2;            /* tighter line spacing */
+    text-align: center;          /* center footer text */
   }
+}
 
-  .footer-left {
-    text-align: left;
-    max-width: 70%;              /* prevent overflow */
-  }
-
-  .footer-right {
-    text-align: right;
-    flex-shrink: 0;
+@media print {
+  /* Force Terms & Conditions to start on a new page */
+  #termsBlock {
+    page-break-before: always;
   }
 }
 
@@ -1176,20 +1130,15 @@ Next lines: brief description"
 
       <tfoot class="print-footer">
         <tr>
-          <td colspan="5">
+          <td>
             <div class="footer">
-              <div class="footer-left">
-                ISTOS Medical Private Limited<br>
-                # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
-                Bikasipura Main Road, Yelachenahalli,<br>
-                BANGALORE, Karnataka, INDIA 560 062<br>
-                P: +91 80 2686 0607 | F: +91 80 2686 0668 |
-                E: talktous@istos.in | www.istosmedical.com<br>
-                CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
-              </div>
-              <div class="footer-right">
-                Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-              </div>
+              ISTOS Medical Private Limited<br>
+              # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
+              Bikasipura Main Road, Yelachenahalli,<br>
+              BANGALORE, Karnataka, INDIA 560 062<br>
+              P: +91 80 2686 0607 | F: +91 80 2686 0668 |
+              E: talktous@istos.in | www.istosmedical.com<br>
+              CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
             </div>
           </td>
         </tr>
