@@ -844,19 +844,17 @@ table.quote-table th {
   /* Ensure tables break correctly */
   table {
     page-break-inside: auto;
+    width: 100%;
+    border-collapse: collapse;
   }
-  tr {
+  tr, td, th {
     page-break-inside: avoid;
-    page-break-after: auto;
-  }
-  td, th {
-    page-break-inside: avoid;
-    page-break-after: auto;
   }
 
   /* Keep first item row together */
-  .quote-table tr.item-row-1,
-  .quote-table tr.item-row-1 td {
+  .quote-table tr.item-row-1 {
+    page-break-before: avoid;
+    page-break-after: avoid;
     page-break-inside: avoid;
   }
 
@@ -866,12 +864,11 @@ table.quote-table th {
   }
 
   /* Repeat header logo on each page */
-  .quote-logo-wrap {
-    display: table-header-group; /* ensures logo repeats */
-    text-align: left;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 4px;
-    margin-bottom: 6px;
+  .quote-table thead.print-header {
+    display: table-header-group; /* ensures logo/header repeats */
+  }
+  .quote-table tfoot.print-footer {
+    display: table-footer-group; /* optional footer repeat */
   }
   .quote-logo-wrap img {
     max-height: 70px;
