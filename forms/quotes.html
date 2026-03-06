@@ -835,6 +835,15 @@ table.quote-table th {
   }
 }
 
+@media print {
+  /* Reduce font size inside Sales Box */
+  .sales-box,
+  .sales-box .sales-title {
+    font-size: 11pt !important;   /* slightly smaller for print */
+    line-height: 1.2;             /* tighter spacing */
+  }
+}
+
 </style>
 
 </head>
