@@ -791,12 +791,31 @@ table.quote-table th {
 /* Page settings */
 @page {
   size: A4;
-  margin: 8mm 8mm 18mm 8mm; /* increase bottom margin to give footer space */
+  margin: 8mm 8mm 22mm 8mm; /* increase bottom margin to give footer space */
 
+  /* Page numbers in footer */
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-size: 9pt;
     color: #555;
+  }
+}
+
+@media print {
+  /* Ensure footer repeats */
+  .quote-table tfoot.print-footer {
+    display: table-footer-group;
+  }
+
+  /* Footer styling for print */
+  .footer {
+    font-size: 9pt;              /* slightly smaller */
+    margin: 0 !important;        /* remove extra margins */
+    padding: 2mm 0 !important;   /* controlled padding */
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;            /* tighter line spacing */
+    text-align: center;          /* center footer text */
   }
 }
 
