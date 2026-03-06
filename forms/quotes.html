@@ -818,13 +818,16 @@ table.quote-table th {
   /* Prevent wrapping for meta grid values */
   .quote-meta-grid .value {
     white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* Shrink font size slightly for Handphone and Office fields */
+  /* Specifically target Handphone and Office fields */
   .quote-meta-grid .value.handphone,
   .quote-meta-grid .value.office {
     white-space: nowrap !important;
-    font-size: 10pt !important; /* slightly smaller only in print */
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Hide interactive UI */
