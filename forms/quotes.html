@@ -795,6 +795,78 @@ table.quote-table th {
     white-space: nowrap !important;
   }
 }
+/* Page settings */
+@page {
+  size: A4;
+  margin: 8mm 8mm 12mm 8mm;
+
+  /* Add page numbers in the footer */
+  @bottom-center {
+    content: "Page " counter(page) " of " counter(pages);
+    font-size: 10pt;
+    color: #555;
+  }
+}
+
+/* Print overrides */
+@media print {
+  body {
+    margin: 0;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    font-size: 12pt;
+  }
+
+  /* Hide interactive UI */
+  header,
+  .no-print,
+  .overlay,
+  button,
+  .btn-quote,
+  .btn-finalize,
+  .quote-toast {
+    display: none !important;
+  }
+
+  .container {
+    margin: 0 !important;
+    padding: 5mm 5mm 8mm 5mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Ensure tables break correctly */
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  td, th {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  /* Force Terms & Conditions to new page */
+  #termsBlock {
+    page-break-before: always;
+  }
+
+  /* Repeat header logo on each page */
+  .quote-logo-wrap {
+    display: table-header-group; /* ensures logo repeats */
+    text-align: left;
+  }
+  .quote-logo-wrap img {
+    max-height: 70px;
+    width: auto;
+  }
+}
+
 
 </style>
 </head>
