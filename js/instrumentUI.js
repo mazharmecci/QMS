@@ -82,7 +82,7 @@ form.addEventListener("submit", async e => {
   const instrument = {
     instrumentName: mainItemNameInput.value.trim(),
     description: descriptionTextarea.value.trim(),
-    additionalDescription: additionalDescriptionTextarea?.value.trim() || "", // ✅ new field
+    additionalDescription: additionalDescriptionTextarea?.value.trim() || "",
     suppliedWith: (suppliedWithInput.value || "")
       .split("\n")
       .map(l => l.trim())
@@ -117,6 +117,7 @@ form.addEventListener("submit", async e => {
 
   form.reset();
   unitPriceInput.value = "";
+  additionalDescriptionTextarea.value = ""; // ✅ clear explicitly
   form.classList.remove("active");
 
   await renderTable();
@@ -135,17 +136,15 @@ export async function renderTable() {
   localStorage.setItem("instruments", JSON.stringify(instruments));
   tableBody.innerHTML = "";
 
-  // Filter by equipment name / description
   let filtered = instruments;
   if (searchQuery) {
     filtered = instruments.filter(inst => {
-      const name = (inst.instrumentName || inst.description || "").toLowerCase();
-      const desc = (inst.description || inst.additionalDescription || "").toLowerCase();
+      const name = (inst.instrumentName || inst.description || inst.longDescription || "").toLowerCase();
+      const desc = (inst.description || inst.additionalDescription || inst.longDescription || "").toLowerCase();
       return name.includes(searchQuery) || desc.includes(searchQuery);
     });
   }
 
-  // Pagination
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
 
@@ -157,37 +156,18 @@ export async function renderTable() {
 
     const row = document.createElement("tr");
     row.innerHTML = `
-      <!-- Equip-Name -->
-      <td><strong>${inst.instrumentName || inst.description || ""}</strong></td>
-
-      <!-- Equip-Desc -->
+      <td><strong>${inst.instrumentName || inst.description || inst.longDescription || ""}</strong></td>
       <td>
-        <div><strong>${inst.description || ""}</strong></div>
+        <div><strong>${inst.description || inst.longDescription || ""}</strong></div>
         ${inst.additionalDescription ? `<div style="margin-top:6px;">${inst.additionalDescription}</div>` : ""}
       </td>
-
-      <!-- Origin -->
       <td>${inst.origin || ""}</td>
-
-      <!-- Catalog -->
       <td>${inst.catalog || ""}</td>
-
-      <!-- HSN -->
       <td>${inst.hsn || ""}</td>
-
-      <!-- Code -->
       <td>${inst.instrumentCode || ""}</td>
-
-      <!-- Price -->
       <td class="price-cell">${formatPriceDisplay(inst.unitPrice)}</td>
-
-      <!-- GST Type -->
       <td>${inst.gstType || ""}</td>
-
-      <!-- GST % -->
       <td>${inst.gstPercent || ""}</td>
-
-      <!-- Actions -->
       <td class="actions">
         <button type="button" class="edit-btn" onclick="editInstrument(${idx})">Edit</button>
         <button type="button" class="delete-btn" onclick="deleteInstrumentRow(${idx})">Delete</button>
@@ -205,7 +185,7 @@ window.editInstrument = function(i) {
   if (!inst) return;
 
   mainItemNameInput.value = inst.instrumentName || "";
-  descriptionTextarea.value = inst.description || "";
+  descriptionTextarea.value = inst.description || inst.longDescription || ""; // ✅ fallback
   if (additionalDescriptionTextarea) {
     additionalDescriptionTextarea.value = inst.additionalDescription || "";
   }
