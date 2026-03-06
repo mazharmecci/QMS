@@ -983,6 +983,41 @@ Next lines: brief description"
   </div>
 
   <!-- Main container -->
+
+<script>
+  // Function to render instruments in the modal list
+  function renderInstrumentModalList(instruments) {
+    const tbody = document.getElementById("instrumentModalList");
+    tbody.innerHTML = "";
+
+    instruments.forEach((inst, idx) => {
+      const qty = inst.quantity || 1;
+      const unitPrice = Number(inst.unitPrice || 0);
+      const totalPrice = qty * unitPrice;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${inst.catalog || inst.instrumentCode || ""}</td>
+        <td>
+          <div><strong>${inst.description || inst.longDescription || ""}</strong></div>
+          ${inst.additionalDescription ? `<div style="margin-top:6px;">${inst.additionalDescription}</div>` : ""}
+        </td>
+        <td>${qty}</td>
+        <td>${unitPrice.toLocaleString("en-IN", { style: "currency", currency: "INR" })}</td>
+        <td>${totalPrice.toLocaleString("en-IN", { style: "currency", currency: "INR" })}</td>
+        <td>
+          <button type="button" class="btn-quote btn-quote-secondary" onclick="editInstrumentLine(${idx})">Edit</button>
+          <button type="button" class="btn-quote btn-quote-secondary" onclick="removeInstrumentLine(${idx})">Remove</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+</script>
+
+
+  <!-- Main container -->
   <div class="container">
     <table class="print-frame">
       <thead class="print-header">
