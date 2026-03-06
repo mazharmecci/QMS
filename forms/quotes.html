@@ -810,6 +810,19 @@ table.quote-table th {
   }
 }
 
+@media print {
+  /* Prevent wrapping for contact info */
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+  }
+
+  /* Specifically target Handphone and Office fields */
+  .quote-meta-grid .value.handphone,
+  .quote-meta-grid .value.office {
+    white-space: nowrap !important;
+  }
+}
+
 </style>
 
 </head>
