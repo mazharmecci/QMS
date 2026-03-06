@@ -13,6 +13,7 @@ const hsnInput = document.getElementById("hsn");
 const unitPriceInput = document.getElementById("unitPrice");
 const mainItemNameInput = document.getElementById("mainItemName");
 const descriptionTextarea = document.getElementById("description");
+const additionalDescriptionTextarea = document.getElementById("additionalDescription"); // ✅ new field
 const suppliedWithInput = document.getElementById("suppliedWithInput");
 const searchInput = document.getElementById("searchInput");
 
@@ -80,16 +81,12 @@ form.addEventListener("submit", async e => {
 
   const instrument = {
     instrumentName: mainItemNameInput.value.trim(),
-
-    // ✅ Split into two fields
-    description: descriptionTextarea.value.trim(), 
-    additionalDescription: (document.getElementById("additionalDescription")?.value.trim()) || "",
-
+    description: descriptionTextarea.value.trim(),
+    additionalDescription: additionalDescriptionTextarea?.value.trim() || "", // ✅ new field
     suppliedWith: (suppliedWithInput.value || "")
       .split("\n")
       .map(l => l.trim())
       .filter(Boolean),
-
     origin: document.getElementById("origin").value.trim(),
     catalog: document.getElementById("catalog").value.trim(),
     hsn: hsnInput.value.trim(),
@@ -125,7 +122,7 @@ form.addEventListener("submit", async e => {
   await renderTable();
 });
 
-/* ========= Render table with search (no # column) ========= */
+/* ========= Render table with search ========= */
 export async function renderTable() {
   try {
     instruments = await fetchInstruments();
@@ -138,17 +135,17 @@ export async function renderTable() {
   localStorage.setItem("instruments", JSON.stringify(instruments));
   tableBody.innerHTML = "";
 
-  // 1) Filter by equipment name / description
+  // Filter by equipment name / description
   let filtered = instruments;
   if (searchQuery) {
     filtered = instruments.filter(inst => {
       const name = (inst.instrumentName || inst.description || "").toLowerCase();
-      const desc = (inst.longDescription || "").toLowerCase();
+      const desc = (inst.description || inst.additionalDescription || "").toLowerCase();
       return name.includes(searchQuery) || desc.includes(searchQuery);
     });
   }
 
-  // 2) Pagination based on filtered list
+  // Pagination
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
 
@@ -156,7 +153,6 @@ export async function renderTable() {
   const end = start + pageSize;
 
   filtered.slice(start, end).forEach(inst => {
-    // index in full array so edit/delete still work on original instruments[]
     const idx = instruments.indexOf(inst);
 
     const row = document.createElement("tr");
@@ -165,7 +161,10 @@ export async function renderTable() {
       <td><strong>${inst.instrumentName || inst.description || ""}</strong></td>
 
       <!-- Equip-Desc -->
-      <td><strong>${inst.longDescription || ""}</strong></td>
+      <td>
+        <div><strong>${inst.description || ""}</strong></div>
+        ${inst.additionalDescription ? `<div style="margin-top:6px;">${inst.additionalDescription}</div>` : ""}
+      </td>
 
       <!-- Origin -->
       <td>${inst.origin || ""}</td>
@@ -206,10 +205,7 @@ window.editInstrument = function(i) {
   if (!inst) return;
 
   mainItemNameInput.value = inst.instrumentName || "";
-
-  // ✅ Use separate fields now
   descriptionTextarea.value = inst.description || "";
-  const additionalDescriptionTextarea = document.getElementById("additionalDescription");
   if (additionalDescriptionTextarea) {
     additionalDescriptionTextarea.value = inst.additionalDescription || "";
   }
