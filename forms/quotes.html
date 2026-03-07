@@ -416,30 +416,25 @@ table.quote-table th {
 /* TERMS BLOCK */
 #termsBlock {
   margin-top: 1.5rem;
-  background: rgba(255,255,255,0.9);
-  border: 1px solid rgba(200,200,200,0.4);
-  border-radius: 10px;
+  background: #fff;              /* solid background */
+  border: 1px solid #ccc;        /* simple border */
+  border-radius: 4px;            /* subtle rounding */
   padding: 1rem 1.25rem;
   font-size: 14px;
   line-height: 1.4;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  animation: fadeInUp 2s ease-out both;
+  box-shadow: none;              /* remove shadow */
+  animation: none;               /* remove animation */
 }
+
 #termsBlock h2 {
   margin-top: 0;
-  color: #0d6efd;
+  color: #000;                   /* plain black heading */
   font-size: 15px;
   font-weight: 700;
 }
+
 #termsTextBlock { margin-top: 0.25rem; }
 #termsTextBlock p { margin: 0.35rem 0; }
-
-/* ANIMATIONS */
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
-  50% { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
-  100% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
-}
 
 /* Remove embossed effect from Terms and Conditions */
 .terms-and-conditions {
@@ -447,8 +442,8 @@ table.quote-table th {
   box-shadow: none !important;
   text-shadow: none !important;
   filter: none !important;
-  font-weight: normal; /* keeps text crisp */
-  color: #000; /* ensures solid black print */
+  font-weight: normal;
+  color: #000;
 }
 
 /* Print-specific cleanup */
