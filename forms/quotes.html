@@ -186,7 +186,7 @@ header {
 }
 .company-box p {
   margin: 0;
-  font-size: 10px;
+  font-size: 11px;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
@@ -416,44 +416,29 @@ table.quote-table th {
 /* TERMS BLOCK */
 #termsBlock {
   margin-top: 1.5rem;
-  background: #fff;              /* solid background */
-  border: 1px solid #ccc;        /* simple border */
-  border-radius: 4px;            /* subtle rounding */
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(200,200,200,0.4);
+  border-radius: 10px;
   padding: 1rem 1.25rem;
   font-size: 14px;
   line-height: 1.4;
-  box-shadow: none;              /* remove shadow */
-  animation: none;               /* remove animation */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  animation: fadeInUp 2s ease-out both;
 }
-
 #termsBlock h2 {
   margin-top: 0;
-  color: #000;                   /* plain black heading */
+  color: #0d6efd;
   font-size: 15px;
   font-weight: 700;
 }
-
 #termsTextBlock { margin-top: 0.25rem; }
 #termsTextBlock p { margin: 0.35rem 0; }
 
-/* Remove embossed effect from Terms and Conditions */
-.terms-and-conditions {
-  background: none !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  filter: none !important;
-  font-weight: normal;
-  color: #000;
-}
-
-/* Print-specific cleanup */
-@media print {
-  .terms-and-conditions {
-    background: none !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    filter: none !important;
-  }
+/* ANIMATIONS */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
+  50% { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
+  100% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
 }
 
 /* FOOTER */
@@ -807,19 +792,31 @@ table.quote-table th {
     font-size: 11pt !important;   /* keep readable size */
   }
 }
-@media print {
-  body {
-    margin: 20mm; /* ensures footer fits */
-  }
-  .footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    font-size: 10pt;
-  }
-  .page-break {
-    page-break-before: always;
-  }
+
+/* SALES BOX */
+.sales-box {
+  flex: 0 0 auto;
+  background: #d0d4d9;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.4s ease-out both;
+}
+.sales-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(127,182,255,0.4), 0 6px 14px rgba(0,0,0,0.08);
+}
+.sales-title {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  padding-top: 0.1rem;
+  letter-spacing: 0.03em;
+  color: #0d6efd;
 }
 
 </style>
