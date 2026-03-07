@@ -172,24 +172,23 @@ header {
   border-radius: 8px;
   padding: 0.5rem 1rem;
   display: flex;
-  align-items: center;
-  margin-top: 4.85rem;
+  align-items: flex-start;   /* align text at top for multi-line */
+  margin-top: 2rem;
   min-width: 0;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.3s ease-out both;
+  box-shadow: none;          /* remove inset shadow */
+  transition: none;          /* no hover animation */
+  animation: none;           /* no fade-in */
 }
-.company-box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
-}
+
 .company-box p {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;       /* allow wrapping */
+  word-wrap: break-word;     /* break long words if needed */
+  overflow: visible;         /* show full text */
+  text-overflow: clip;       /* no ellipsis */
+  line-height: 1.4;
 }
 
 /* HOSPITAL + ATTENTION BOX */
