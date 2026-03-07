@@ -31,13 +31,12 @@ header {
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* back left, logout right */
+  justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 2rem;
 }
 
-/* TITLE */
 .header-title {
   flex: 1;
   text-align: center;
@@ -47,35 +46,28 @@ header {
   text-transform: uppercase;
   color: #f9fafb;
 }
-.header-title span {
-  color: var(--accent);
-}
+.header-title span { color: var(--accent); }
 
-/* BACK BUTTON */
-.back-btn {
-  border: none;
+.back-btn,
+.logout-btn {
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+}
+.back-btn {
   background: rgba(255,255,255,0.1);
   color: #f9fafb;
-  cursor: pointer;
   transition: background 0.16s ease-out, transform 0.12s ease-out;
 }
 .back-btn:hover {
   background: rgba(255,255,255,0.2);
   transform: translateY(-1px);
 }
-
-/* LOGOUT BUTTON */
 .logout-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.95rem;
   background: rgba(15, 23, 42, 0.96);
   color: #f9fafb;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -99,9 +91,7 @@ header {
   font-size: 1.05rem;
   color: var(--text-muted);
 }
-.subheader span {
-  color: var(--accent);
-}
+.subheader span { color: var(--accent); }
 
 /* MAIN FRAME */
 .container {
@@ -153,16 +143,10 @@ header {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
 }
 
-/* FADE-IN ANIMATION */
+/* ANIMATION */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* COMPANY BOX */
@@ -194,11 +178,9 @@ header {
 
 /* HOSPITAL + ATTENTION BOX */
 .hospital-box,
+.attn-box { margin-top: 0.3rem; }
+
 .attn-box {
-  margin-top: 0.3rem;
-}
-.attn-box {
-  margin-top: 0.3rem;
   background: #add8e6;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -252,9 +234,7 @@ header {
   font-weight: 600;
 }
 .quote-meta-grid .label.right,
-.quote-meta-grid .value.right {
-  text-align: right;
-}
+.quote-meta-grid .value.right { text-align: right; }
 
 /* QUOTE BUILDER */
 #quoteBuilder {
@@ -319,19 +299,15 @@ table.quote-table th:nth-child(3) {
   white-space: nowrap;
 }
 table.quote-table td:nth-child(1),
-table.quote-table td:nth-child(2) {
-  vertical-align: top;
-}
+table.quote-table td:nth-child(2) { vertical-align: top; }
 table.quote-table .cat-sub b,
-table.quote-table .cat-sub strong {
-  font-weight: 500;
-}
+table.quote-table .cat-sub strong { font-weight: 500; }
 table.quote-table tr.section-header-row td {
   border-top: none;
   padding-top: 0.35rem;
 }
 
-/* debug grid – very thin, subtle light-blue lines */
+/* Debug grid */
 table.quote-table td,
 table.quote-table th {
   border: 0.5px solid rgba(148, 196, 255, 0.6);
@@ -433,10 +409,10 @@ table.quote-table th {
 #termsTextBlock { margin-top: 0.25rem; }
 #termsTextBlock p { margin: 0.35rem 0; }
 
-/* ANIMATIONS */
+/* PULSE ANIMATION */
 @keyframes pulseGlow {
-  0% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
-  50% { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
+  0%   { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
+  50%  { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
   100% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
 }
 
@@ -496,14 +472,8 @@ table.quote-table th {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
-
-/* CUSTOM SCROLLBAR for overlay */
-.overlay-body::-webkit-scrollbar {
-  width: 6px;
-}
-.overlay-body::-webkit-scrollbar-track {
-  background: transparent;
-}
+.overlay-body::-webkit-scrollbar { width: 6px; }
+.overlay-body::-webkit-scrollbar-track { background: transparent; }
 .overlay-body::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 999px;
@@ -590,9 +560,7 @@ table.quote-table th {
   border-color:#2563eb;
   box-shadow:0 0 0 1px rgba(37,99,235,0.15);
 }
-.item-modal-details {
-  grid-column:1 / -1;
-}
+.item-modal-details { grid-column:1 / -1; }
 .item-modal-footer {
   display:flex;
   align-items:center;
@@ -637,20 +605,10 @@ table.quote-table th {
   padding:0.35rem 0;
   border-bottom:1px dashed #e2e8f0;
 }
-.item-row:last-child {
-  border-bottom:none;
-}
-.item-row-main {
-  flex:1;
-  margin-right:0.5rem;
-}
-.item-row-main-title {
-  font-weight:600;
-  color:#0f172a;
-}
-.item-row-main-meta {
-  color:#64748b;
-}
+.item-row:last-child { border-bottom:none; }
+.item-row-main { flex:1; margin-right:0.5rem; }
+.item-row-main-title { font-weight:600; color:#0f172a; }
+.item-row-main-meta { color:#64748b; }
 .item-row-actions {
   display:flex;
   flex-direction:column;
@@ -664,147 +622,11 @@ table.quote-table th {
   cursor:pointer;
   background:#f8fafc;
 }
-.item-row-actions button:nth-child(1) {
-  color:#0f172a;
-}
+.item-row-actions button:nth-child(1) { color:#0f172a; }
 .item-row-actions button:nth-child(2) {
   color:#b91c1c;
   border-color:#fecaca;
   background:#fef2f2;
-}
-
-/* PAGE SETTINGS (PRINT) */
-@page {
-  size: A4;
-  margin: 8mm 8mm 12mm 8mm;
-}
-
-/* PRINT OVERRIDES (single, deduped) */
-@media print {
-  body {
-    margin: 0;
-    background: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-    font-size: 12pt;
-  }
-
-  header { display: none !important; }
-
-  .container {
-    margin: 0 !important;
-    padding: 5mm 5mm 8mm 5mm !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-  }
-
-  .company-box {
-    background: #d0d4d9 !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-  }
-  .attn-box {
-    background: #add8e6 !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-  }
-  .quote-meta-grid {
-    background: #fff !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-  }
-
-  thead.print-header { display: table-header-group; }
-  tfoot.print-footer { display: table-footer-group; }
-
-  .no-print,
-  .overlay,
-  button,
-  .btn-quote,
-  .btn-finalize,
-  .quote-toast {
-    display: none !important;
-  }
-
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  input[type="number"] { -moz-appearance: textfield; }
-
-  .discount-row,
-  .after-discount-row { display: table-row; }
-  .discount-zero .discount-row,
-  .discount-zero .after-discount-row { display: none !important; }
-}
-
-/* Page settings */
-@page {
-  size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* extra bottom margin for footer */
-
-  /* Page numbers in footer, centered */
-  @bottom-center {
-    content: "Page " counter(page) " of " counter(pages);
-    font-size: 9pt;
-    color: #555;
-    border-top: 1px solid #ccc;
-    padding-top: 4px;
-    text-align: center;
-  }
-}
-
-@media print {
-  /* Ensure footer repeats */
-  .quote-table tfoot.print-footer {
-    display: table-footer-group;
-  }
-
-  /* Footer styling for print */
-  .footer {
-    font-size: 9pt;              /* slightly smaller */
-    margin: 0 !important;        /* remove extra margins */
-    padding: 2mm 0 !important;   /* controlled padding */
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;            /* tighter line spacing */
-    text-align: right;          /* center footer text */
-  }
-}
-
-@media print {
-  /* Force Terms & Conditions to start on a new page */
-  #termsBlock {
-    page-break-before: always;
-  }
-}
-
-@media print {
-  /* Prevent wrapping for contact info */
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 10pt !important;   /* slightly smaller in print */
-  }
-
-  /* Specifically target Handphone and Office fields */
-  .quote-meta-grid .value.handphone,
-  .quote-meta-grid .value.office {
-    white-space: nowrap !important;
-    font-size: 9pt !important;    /* even smaller for long numbers */
-  }
-}
-
-@media print {
-  .quote-meta-grid {
-    border: none !important;      /* remove border in print */
-  }
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 11pt !important;   /* keep readable size */
-  }
 }
 
 /* SALES BOX */
@@ -833,12 +655,108 @@ table.quote-table th {
   color: #0d6efd;
 }
 
+/* PAGE SETTINGS (PRINT) */
+@page {
+  size: A4;
+  margin: 8mm 8mm 20mm 8mm;
+}
+
+/* PRINT OVERRIDES */
 @media print {
-  /* Reduce font size inside Sales Box */
+  body {
+    margin: 0;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    font-size: 12pt;
+  }
+
+  header { display: none !important; }
+
+  .container {
+    margin: 0 !important;
+    padding: 5mm 8mm 8mm 8mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .company-box {
+    background: #d0d4d9 !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+
+  .attn-box {
+    background: #add8e6 !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+
+  .quote-meta-grid {
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+
+  /* Header/footer repeat */
+  thead.print-header { display: table-header-group; }
+  tfoot.print-footer { display: table-footer-group; }
+
+  .no-print,
+  .overlay,
+  button,
+  .btn-quote,
+  .btn-finalize,
+  .quote-toast {
+    display: none !important;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] { -moz-appearance: textfield; }
+
+  .discount-row,
+  .after-discount-row { display: table-row; }
+  .discount-zero .discount-row,
+  .discount-zero .after-discount-row { display: none !important; }
+
+  /* Terms on new page */
+  #termsBlock {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* Prevent wrapping for meta values (tune if needed) */
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 10pt !important;
+  }
+
+  /* Footer: keep inside printable width */
+  .footer {
+    box-sizing: border-box;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 2mm 0 0 0 !important;
+    font-size: 9pt;
+    line-height: 1.2;
+    border-top: 1px solid #ccc;
+    color: #555;
+    text-align: right;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Sales box smaller in print */
   .sales-box,
   .sales-box .sales-title {
-    font-size: 10pt !important;   /* slightly smaller for print */
-    line-height: 1.2;             /* tighter spacing */
+    font-size: 10pt !important;
+    line-height: 1.2;
   }
 }
 
