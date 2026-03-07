@@ -768,15 +768,9 @@ table.quote-table th {
     line-height: 1.2;
   }
 
-  /* Safety: prevent any element from exceeding page width */
-  * {
-    max-width: 100% !important;
-  }
-}
-
 @page {
   size: A4;
-  margin: 8mm 8mm 15mm 8mm;   /* smaller left/right, reasonable bottom */
+  margin: 8mm 8mm 15mm 8mm;
 }
 
 @media print {
@@ -785,7 +779,12 @@ table.quote-table th {
     width: 100%;
     max-width: 100%;
     margin: 0 !important;
-    padding: 4mm 6mm 6mm 6mm !important;  /* less padding than before */
+    padding: 4mm 6mm 6mm 6mm !important;
+  }
+
+  /* Optional: narrower override instead of global * selector */
+  img, table {
+    max-width: 100% !important;
   }
 }
 
