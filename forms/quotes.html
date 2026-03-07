@@ -6,7 +6,6 @@
   <title>QMS - Quotes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-
 /* GLOBAL */
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -31,7 +30,7 @@ header {
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* back left, logout right */
+  justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 2rem;
@@ -47,9 +46,7 @@ header {
   text-transform: uppercase;
   color: #f9fafb;
 }
-.header-title span {
-  color: var(--accent);
-}
+.header-title span { color: var(--accent); }
 
 /* BACK BUTTON */
 .back-btn {
@@ -99,9 +96,7 @@ header {
   font-size: 1.05rem;
   color: var(--text-muted);
 }
-.subheader span {
-  color: var(--accent);
-}
+.subheader span { color: var(--accent); }
 
 /* MAIN FRAME */
 .container {
@@ -155,21 +150,15 @@ header {
 
 /* FADE-IN ANIMATION */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* HEADER ROW WRAPPER */
 .header-row {
   display: flex;
   flex-direction: row;
-  gap: 1rem;                  /* spacing between boxes */
+  gap: 1rem;
   align-items: center;
   justify-content: space-between;
 }
@@ -185,7 +174,6 @@ header {
   display: flex;
   align-items: center;
 }
-
 .sales-quotation-box h1 {
   font-size: 18px;
   font-weight: 700;
@@ -205,14 +193,13 @@ header {
   min-width: 0;
   box-shadow: none;
 }
-
 .company-box p {
   margin: 0;
   font-size: 13px;
   color: #333;
-  white-space: nowrap;        /* single line only */
-  overflow: hidden;           /* prevent overflow */
-  text-overflow: ellipsis;    /* ellipsis if too long */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.4;
 }
 
@@ -226,7 +213,6 @@ header {
   align-items: center;
   box-shadow: none;
 }
-
 .sales-title {
   margin-left: auto;
   font-weight: 700;
@@ -236,26 +222,10 @@ header {
   color: #0d6efd;
 }
 
-/* Print-specific cleanup */
-@media print {
-  .sales-quotation-box h1 {
-    font-size: 12pt !important;
-    line-height: 1.2;
-  }
-
-  .company-box p {
-    font-size: 11pt !important;
-    line-height: 1.3;
-    white-space: nowrap;       /* keep single line in print */
-
-
 /* HOSPITAL + ATTENTION BOX */
 .hospital-box,
+.attn-box { margin-top: 0.3rem; }
 .attn-box {
-  margin-top: 0.3rem;
-}
-.attn-box {
-  margin-top: 0.3rem;
   background: #add8e6;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -284,7 +254,7 @@ header {
   row-gap: 0.4rem;
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.6s ease-out both;
+  animation: fadeInUp 1.6s.ease-out both;
 }
 .quote-meta-grid:hover {
   transform: translateY(-2px);
@@ -309,9 +279,7 @@ header {
   font-weight: 400;
 }
 .quote-meta-grid .label.right,
-.quote-meta-grid .value.right {
-  text-align: right;
-}
+.quote-meta-grid .value.right { text-align: right; }
 
 /* QUOTE BUILDER */
 #quoteBuilder {
@@ -376,19 +344,15 @@ table.quote-table th:nth-child(3) {
   white-space: nowrap;
 }
 table.quote-table td:nth-child(1),
-table.quote-table td:nth-child(2) {
-  vertical-align: top;
-}
+table.quote-table td:nth-child(2) { vertical-align: top; }
 table.quote-table .cat-sub b,
-table.quote-table .cat-sub strong {
-  font-weight: 500;
-}
+table.quote-table .cat-sub strong { font-weight: 500; }
 table.quote-table tr.section-header-row td {
   border-top: none;
   padding-top: 0.35rem;
 }
 
-/* debug grid – very thin, subtle light-blue lines */
+/* debug grid */
 table.quote-table td,
 table.quote-table th {
   border: 0.5px solid rgba(148, 196, 255, 0.6);
@@ -422,7 +386,7 @@ table.quote-table th {
   text-transform: uppercase;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   transition: all 0.25s ease;
-  animation: pulseGlow 2.5s infinite ease-in-out;
+  animation: pulseGlow 2.5s infinite.ease-in-out;
 }
 .btn-finalize:hover {
   background: linear-gradient(135deg, #82b4ff, #2a7bff);
@@ -490,7 +454,7 @@ table.quote-table th {
 #termsTextBlock { margin-top: 0.25rem; }
 #termsTextBlock p { margin: 0.35rem 0; }
 
-/* ANIMATIONS */
+/* PULSE ANIMATION */
 @keyframes pulseGlow {
   0% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
   50% { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
@@ -553,14 +517,8 @@ table.quote-table th {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
-
-/* CUSTOM SCROLLBAR for overlay */
-.overlay-body::-webkit-scrollbar {
-  width: 6px;
-}
-.overlay-body::-webkit-scrollbar-track {
-  background: transparent;
-}
+.overlay-body::-webkit-scrollbar { width: 6px; }
+.overlay-body::-webkit-scrollbar-track { background: transparent; }
 .overlay-body::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 999px;
@@ -647,9 +605,7 @@ table.quote-table th {
   border-color:#2563eb;
   box-shadow:0 0 0 1px rgba(37,99,235,0.15);
 }
-.item-modal-details {
-  grid-column:1 / -1;
-}
+.item-modal-details { grid-column:1 / -1; }
 .item-modal-footer {
   display:flex;
   align-items:center;
@@ -694,20 +650,10 @@ table.quote-table th {
   padding:0.35rem 0;
   border-bottom:1px dashed #e2e8f0;
 }
-.item-row:last-child {
-  border-bottom:none;
-}
-.item-row-main {
-  flex:1;
-  margin-right:0.5rem;
-}
-.item-row-main-title {
-  font-weight:600;
-  color:#0f172a;
-}
-.item-row-main-meta {
-  color:#64748b;
-}
+.item-row:last-child { border-bottom:none; }
+.item-row-main { flex:1; margin-right:0.5rem; }
+.item-row-main-title { font-weight:600; color:#0f172a; }
+.item-row-main-meta { color:#64748b; }
 .item-row-actions {
   display:flex;
   flex-direction:column;
@@ -721,9 +667,7 @@ table.quote-table th {
   cursor:pointer;
   background:#f8fafc;
 }
-.item-row-actions button:nth-child(1) {
-  color:#0f172a;
-}
+.item-row-actions button:nth-child(1) { color:#0f172a; }
 .item-row-actions button:nth-child(2) {
   color:#b91c1c;
   border-color:#fecaca;
@@ -733,10 +677,10 @@ table.quote-table th {
 /* PAGE SETTINGS (PRINT) */
 @page {
   size: A4;
-  margin: 8mm 8mm 12mm 8mm;
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
 }
 
-/* PRINT OVERRIDES (single, deduped) */
+/* PRINT OVERRIDES */
 @media print {
   body {
     margin: 0;
@@ -762,17 +706,20 @@ table.quote-table th {
     box-shadow: none !important;
     border: 1px solid #ccc;
   }
+
   .attn-box {
     background: #add8e6 !important;
     box-shadow: none !important;
     border: 1px solid #ccc;
   }
+
   .quote-meta-grid {
     background: #fff !important;
     box-shadow: none !important;
     border: 1px solid #ccc;
   }
 
+  /* header/footer repeat */
   thead.print-header { display: table-header-group; }
   tfoot.print-footer { display: table-footer-group; }
 
@@ -796,73 +743,51 @@ table.quote-table th {
   .after-discount-row { display: table-row; }
   .discount-zero .discount-row,
   .discount-zero .after-discount-row { display: none !important; }
+
+  /* Print-specific adjustments */
+  .sales-quotation-box h1 {
+    font-size: 12pt !important;
+    line-height: 1.2;
+  }
+
+  .company-box p {
+    font-size: 11pt !important;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  /* Terms on new page */
+  #termsBlock {
+    page-break-before: always;
+  }
+
+  /* Contact info nowrap */
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 10pt !important;
+  }
+
+  /* Footer styling + page numbers */
+  .footer {
+    font-size: 9pt;
+    margin: 0 !important;
+    padding: 2mm 0 !important;
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;
+    text-align: left;
+  }
 }
 
-/* Page settings */
+/* Paged media page numbers */
 @page {
-  size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* increase bottom margin to give footer space */
-
-  /* Page numbers in footer */
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-size: 9pt;
     color: #555;
   }
 }
-
-@media print {
-  /* Ensure footer repeats */
-  .quote-table tfoot.print-footer {
-    display: table-footer-group;
-  }
-
-  /* Footer styling for print */
-  .footer {
-    font-size: 9pt;              /* slightly smaller */
-    margin: 0 !important;        /* remove extra margins */
-    padding: 2mm 0 !important;   /* controlled padding */
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;            /* tighter line spacing */
-    text-align: left;          /* center footer text */
-  }
-}
-
-@media print {
-  /* Force Terms & Conditions to start on a new page */
-  #termsBlock {
-    page-break-before: always;
-  }
-}
-
-@media print {
-  /* Prevent wrapping for contact info */
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 10pt !important;   /* slightly smaller in print */
-  }
-
-  /* Specifically target Handphone and Office fields */
-  .quote-meta-grid .value.handphone,
-  .quote-meta-grid .value.office {
-    white-space: nowrap !important;
-    font-size: 9pt !important;    /* even smaller for long numbers */
-  }
-}
-
-@media print {
-  .quote-meta-grid {
-    border: none !important;      /* remove border in print */
-  }
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 11pt !important;   /* keep readable size */
-  }
-}
-
 </style>
-
 </head>
 
 <body>
