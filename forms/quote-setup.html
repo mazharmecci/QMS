@@ -540,6 +540,13 @@ function formatDateDDMMYYYY(date = new Date()) {
   return `${dd}-${mm}-${yyyy}`;
 }
 
+  function isoToDDMMYYYY(iso) {
+  if (!iso) return "";
+  const [yyyy, mm, dd] = iso.split("-");
+  if (!yyyy || !mm || !dd) return iso; // fallback if something odd
+  return `${dd}-${mm}-${yyyy}`;
+}
+
 // ===== Determine current financial year string =====
 function getFinancialYearString(date = new Date()) {
   const year = date.getFullYear();
@@ -681,13 +688,17 @@ console.log("Financial Year:", getFinancialYearString(today));
   // ===== Submit handler =====
   document.getElementById("quoteSetupForm").addEventListener("submit", async function (e) {
     e.preventDefault();
-
+  
     const termsBlock = document.getElementById("termsTextBlock");
+  
+    const quoteDateISO = document.getElementById("quoteDate").value || "";
+    const refDateISO   = document.getElementById("refDate").value || "";
+  
     const headerData = {
       quoteNo: document.getElementById("quoteNo").value || "",
-      quoteDate: document.getElementById("quoteDate").value || "",
+      quoteDate: isoToDDMMYYYY(quoteDateISO),   // << formatted
       yourReference: document.getElementById("yourReference").value || "",
-      refDate: document.getElementById("refDate").value || "",
+      refDate: isoToDDMMYYYY(refDateISO),       // << formatted
       hospitalName: document.getElementById("hospitalName").value || "",
       hospitalAddress: document.getElementById("hospitalAddress").value || "",
       kindAttn: document.getElementById("kindAttn").value || "",
