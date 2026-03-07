@@ -441,6 +441,26 @@ table.quote-table th {
   100% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
 }
 
+/* Remove embossed effect from Terms and Conditions */
+.terms-and-conditions {
+  background: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  font-weight: normal; /* keeps text crisp */
+  color: #000; /* ensures solid black print */
+}
+
+/* Print-specific cleanup */
+@media print {
+  .terms-and-conditions {
+    background: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+  }
+}
+
 /* FOOTER */
 .footer {
   font-size: 12px;
