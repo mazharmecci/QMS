@@ -185,7 +185,7 @@ header {
 }
 .company-box p {
   margin: 0;
-  font-size: 12px;
+  font-size: 10px;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
@@ -744,13 +744,16 @@ table.quote-table th {
 /* Page settings */
 @page {
   size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* increase bottom margin to give footer space */
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom margin for footer */
 
-  /* Page numbers in footer */
-  @bottom-right {
+  /* Page numbers in footer, centered */
+  @bottom-center {
     content: "Page " counter(page) " of " counter(pages);
     font-size: 9pt;
     color: #555;
+    border-top: 1px solid #ccc;
+    padding-top: 4px;
+    text-align: center;
   }
 }
 
@@ -768,7 +771,7 @@ table.quote-table th {
     border-top: 1px solid #ccc;
     color: #555;
     line-height: 1.2;            /* tighter line spacing */
-    text-align: center;          /* center footer text */
+    text-align: right;          /* center footer text */
   }
 }
 
@@ -1039,7 +1042,7 @@ Next lines: brief description"
                   <div class="company-box">
                     <p>
                       <strong>ISTOS Medical Pvt Ltd.</strong>
-                      BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
+                      51/5, 2nd Cr J.C Indl Area, Bikasipura Mn Rd,
                       Yelachenahalli, Bangalore-560062
                     </p>
                   </div>
@@ -1076,16 +1079,16 @@ Next lines: brief description"
                     <div class="label right">Quotation Date</div>
                     <div class="value value-small right" id="metaQuoteDate"></div>
 
-                    <div class="label">Your Reference</div>
+                    <div class="label">Your Ref.</div>
                     <div class="value value-small" id="metaYourRef"></div>
 
                     <div class="label right">Ref Date</div>
                     <div class="value value-small right" id="metaRefDate"></div>
 
-                    <div class="label">Your Contact Person</div>
+                    <div class="label">Your Contact</div>
                     <div class="value value-small" id="metaContactPerson"></div>
 
-                    <div class="label right">Handphone</div>
+                    <div class="label right">Mobile</div>
                     <div class="value value-small right" id="metaPhone"></div>
 
                     <div class="label">Email</div>
@@ -1149,7 +1152,7 @@ Next lines: brief description"
               # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
               Bikasipura Main Road, Yelachenahalli,<br>
               BANGALORE, Karnataka, INDIA 560 062<br>
-              P: +91 80 2686 0607 | F: +91 80 2686 0668 |
+              P: +91 80 2686 0607 | F: +91 80 2686 0668 |<br>
               E: talktous@istos.in | www.istosmedical.com<br>
               CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
             </div>
