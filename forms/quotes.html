@@ -819,6 +819,21 @@ table.quote-table th {
   color: #0d6efd;
 }
 
+@media print {
+  body {
+    margin: 20mm; /* ensures footer fits */
+  }
+  .footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    font-size: 10pt;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+}
+
 </style>
 </head>
 
