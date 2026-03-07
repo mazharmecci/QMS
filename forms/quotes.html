@@ -779,6 +779,16 @@ table.quote-table th {
   margin: 8mm 8mm 15mm 8mm;   /* smaller left/right, reasonable bottom */
 }
 
+@media print {
+  .container {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 4mm 6mm 6mm 6mm !important;  /* less padding than before */
+  }
+}
+
 </style>
 </head>
 
