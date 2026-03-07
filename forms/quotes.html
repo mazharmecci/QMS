@@ -819,6 +819,36 @@ table.quote-table th {
   color: #0d6efd;
 }
 
+@media print {
+  /* Reduce font size inside Sales Box */
+  .sales-box,
+  .sales-box .sales-title {
+    font-size: 10pt !important;   /* slightly smaller for print */
+    line-height: 1.2;             /* tighter spacing */
+  }
+}
+
+@page {
+  size: A4;
+  margin: 8mm 8mm 15mm 8mm;
+}
+
+@media print {
+  .container {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 4mm 6mm 6mm 6mm !important;
+  }
+
+  /* Optional: narrower override instead of global * selector */
+  img, table {
+    max-width: 100% !important;
+  }
+}
+
+
 </style>
 </head>
 
@@ -1018,7 +1048,7 @@ Next lines: brief description"
                   <div class="company-box">
                     <p>
                       <strong>ISTOS Medical Pvt Ltd.</strong>
-                      51/5, 2nd Cr J.C Indl Area, Bikasipura,
+                      51/5, 2nd Cr J.C Indl Area, Bikasipura Main Road,
                       Yelachenahalli, Bangalore-560062
                     </p>
                   </div>
