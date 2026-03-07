@@ -794,19 +794,20 @@ table.quote-table th {
   border-radius: 6px;
   padding: 0.5rem 1rem;
   display: flex;
-  align-items: center;
-  margin-top: 1rem;           /* reduced margin for better fit */
+  align-items: flex-start;   /* align text at top for multi-line */
+  margin-top: 1rem;          /* reduced margin for better fit */
   min-width: 0;
-  box-shadow: none;           /* no inset shadow */
+  box-shadow: none;          /* no inset shadow */
 }
 
 .company-box p {
   margin: 0;
   font-size: 13px;
   color: #333;
-  white-space: nowrap;        /* keep single line */
-  overflow: hidden;           /* prevent overflow */
-  text-overflow: ellipsis;    /* ellipsis if too long */
+  white-space: normal;       /* allow wrapping */
+  word-wrap: break-word;     /* break long words if needed */
+  overflow: visible;         /* show full text */
+  text-overflow: clip;       /* no ellipsis */
   line-height: 1.4;
 }
 
