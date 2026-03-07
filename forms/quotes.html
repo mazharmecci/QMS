@@ -5,8 +5,7 @@
   <meta charset="UTF-8">
   <title>QMS - Quotes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-  <style>
+<style>
 
 /* GLOBAL */
 body {
@@ -148,7 +147,7 @@ header {
   margin-bottom: 0.5rem;
 }
 .quote-logo-wrap img {
-  max-height: 80px;
+  max-height: 70px;
   width: auto;
   display: block;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
@@ -186,7 +185,7 @@ header {
 }
 .company-box p {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
@@ -235,13 +234,13 @@ header {
   box-shadow: 0 0 12px rgba(127,182,255,0.4), 0 6px 16px rgba(0,0,0,0.08);
 }
 .quote-meta-grid .label {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 500;
   color: #555;
   text-align: left;
 }
 .quote-meta-grid .value {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: #111;
   text-align: left;
@@ -761,6 +760,18 @@ table.quote-table th {
     display: table-footer-group;
   }
 
+  /* Footer styling for print */
+  .footer {
+    font-size: 9pt;              /* slightly smaller */
+    margin: 0 !important;        /* remove extra margins */
+    padding: 2mm 0 !important;   /* controlled padding */
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;            /* tighter line spacing */
+    text-align: center;          /* center footer text */
+  }
+}
+
 @media print {
   /* Force Terms & Conditions to start on a new page */
   #termsBlock {
@@ -828,28 +839,8 @@ table.quote-table th {
   }
 }
 
-@page {
-  size: A4;
-  margin: 8mm 8mm 15mm 8mm;
-}
-
-@media print {
-  .container {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-    margin: 0 !important;
-    padding: 4mm 6mm 6mm 6mm !important;
-  }
-
-  /* Optional: narrower override instead of global * selector */
-  img, table {
-    max-width: 100% !important;
-  }
-}
-
-
 </style>
+
 </head>
 
 <body>
@@ -1048,7 +1039,7 @@ Next lines: brief description"
                   <div class="company-box">
                     <p>
                       <strong>ISTOS Medical Pvt Ltd.</strong>
-                      51/5, 2nd Cr J.C Indl Area, Bikasipura Main Road,
+                      BSTN Heights, 2nd Cr J.C Indl Area, Bikasipura Main Road,
                       Yelachenahalli, Bangalore-560062
                     </p>
                   </div>
@@ -1085,16 +1076,16 @@ Next lines: brief description"
                     <div class="label right">Quotation Date</div>
                     <div class="value value-small right" id="metaQuoteDate"></div>
 
-                    <div class="label">Your Ref.</div>
+                    <div class="label">Your Reference</div>
                     <div class="value value-small" id="metaYourRef"></div>
 
                     <div class="label right">Ref Date</div>
                     <div class="value value-small right" id="metaRefDate"></div>
 
-                    <div class="label">Your Contact</div>
+                    <div class="label">Your Contact Person</div>
                     <div class="value value-small" id="metaContactPerson"></div>
 
-                    <div class="label right">Mobile</div>
+                    <div class="label right">Handphone</div>
                     <div class="value value-small right" id="metaPhone"></div>
 
                     <div class="label">Email</div>
@@ -1158,7 +1149,7 @@ Next lines: brief description"
               # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area,
               Bikasipura Main Road, Yelachenahalli,<br>
               BANGALORE, Karnataka, INDIA 560 062<br>
-              P: +91 80 2686 0607 | F: +91 80 2686 0668 |<br>
+              P: +91 80 2686 0607 | F: +91 80 2686 0668 |
               E: talktous@istos.in | www.istosmedical.com<br>
               CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV
             </div>
