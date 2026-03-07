@@ -165,33 +165,6 @@ header {
   }
 }
 
-/* COMPANY BOX */
-.company-box {
-  flex: 1 1 auto;
-  background: #d0d4d9;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  margin-top: 4.85rem;
-  min-width: 0;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.3s ease-out both;
-}
-.company-box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
-}
-.company-box p {
-  margin: 0;
-  font-size: 12px;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* HOSPITAL + ATTENTION BOX */
 .hospital-box,
 .attn-box {
@@ -804,9 +777,44 @@ table.quote-table th {
   }
 }
 
+/* HEADER ROW: company + sales */
+.header-row {
+  display: flex;
+  align-items: center;          /* vertically align both boxes */
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* COMPANY BOX */
+.company-box {
+  flex: 1 1 auto;               /* fill remaining width */
+  background: #d0d4d9;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  margin-top: 0;                /* IMPORTANT: was 4.85rem */
+  min-width: 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.3s ease-out both;
+}
+.company-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
+}
+.company-box p {
+  margin: 0;
+  font-size: 12px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* SALES BOX */
 .sales-box {
-  flex: 0 0 auto;
+  flex: 0 0 auto;               /* size to content on the right */
   background: #d0d4d9;
   border-radius: 8px;
   padding: 0.4rem 1rem;
@@ -830,12 +838,12 @@ table.quote-table th {
   color: #0d6efd;
 }
 
+/* PRINT tweak */
 @media print {
-  /* Reduce font size inside Sales Box */
   .sales-box,
   .sales-box .sales-title {
-    font-size: 10pt !important;   /* slightly smaller for print */
-    line-height: 1.2;             /* tighter spacing */
+    font-size: 10pt !important;
+    line-height: 1.2;
   }
 }
 
@@ -1036,14 +1044,20 @@ Next lines: brief description"
               <div class="quote-header-body">
                 <!-- Left side: company + hospital -->
                 <div class="quote-left">
-                  <div class="company-box">
-                    <p>
-                      <strong>ISTOS Medical Pvt Ltd.</strong>
-                      51/5, 2nd Cr J.C Indl Area, Bikasipura Main Road,
-                      Yelachenahalli, Bangalore-560062
-                    </p>
+                  <div class="header-row">
+                    <div class="company-box">
+                      <p>
+                        <strong>ISTOS Medical Pvt Ltd.</strong>
+                        51/5, 2nd Cr J.C Indl Area, Bikasipura Main Road,
+                        Yelachenahalli, Bangalore-560062
+                      </p>
+                    </div>
+                
+                    <div class="sales-box">
+                      <div class="sales-title">SALES QUOTATION</div>
+                    </div>
                   </div>
-
+                
                   <div class="hospital-box">
                     <p>
                       <strong>To:</strong><br>
@@ -1052,7 +1066,7 @@ Next lines: brief description"
                       <span id="toHospitalAddressLine2"></span>
                     </p>
                   </div>
-
+                
                   <div class="attn-box">
                     <span><strong>Kind Attn:</strong></span>
                     <span id="toAttn"></span>
