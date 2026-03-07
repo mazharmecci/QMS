@@ -1227,10 +1227,11 @@ Next lines: brief description"
     if (!d) return "";
     const date = d instanceof Date ? d : new Date(d.seconds ? d.seconds * 1000 : d);
     if (Number.isNaN(date.getTime())) return "";
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
     const dd = String(date.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    // show as dd-mm-yyyy everywhere we *display* the date
+    return `${dd}-${mm}-${yyyy}`;
   }
 
   function hydrateLocalFromFirestoreDoc(docData, docId = null) {
