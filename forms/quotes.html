@@ -791,61 +791,58 @@ table.quote-table th {
 .company-box {
   flex: 1 1 auto;
   background: #d0d4d9;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 0.5rem 1rem;
   display: flex;
   align-items: center;
-  margin-top: 4.85rem;
+  margin-top: 1rem;           /* reduced margin for better fit */
   min-width: 0;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.3s ease-out both;
+  box-shadow: none;           /* no inset shadow */
 }
-.company-box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
-}
+
 .company-box p {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;        /* keep single line */
+  overflow: hidden;           /* prevent overflow */
+  text-overflow: ellipsis;    /* ellipsis if too long */
+  line-height: 1.4;
 }
 
 /* SALES BOX */
 .sales-box {
   flex: 0 0 auto;
   background: #d0d4d9;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 0.4rem 1rem;
   display: flex;
   align-items: center;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.4s ease-out both;
+  box-shadow: none;
 }
-.sales-box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(127,182,255,0.4), 0 6px 14px rgba(0,0,0,0.08);
-}
+
 .sales-title {
   margin-left: auto;
   font-weight: 700;
-  font-size: 18px;
-  line-height: 1;
-  padding-top: 0.1rem;
+  font-size: 16px;
+  line-height: 1.2;
   letter-spacing: 0.03em;
   color: #0d6efd;
 }
 
+/* Print-specific cleanup */
 @media print {
-  /* Reduce font size inside Sales Box */
+  .company-box p {
+    font-size: 11pt !important;
+    line-height: 1.3;
+    white-space: nowrap;       /* force single line in print */
+    text-overflow: clip;       /* no ellipsis in print */
+  }
+
   .sales-box,
   .sales-box .sales-title {
-    font-size: 10pt !important;   /* slightly smaller for print */
-    line-height: 1.2;             /* tighter spacing */
+    font-size: 10pt !important;
+    line-height: 1.2;
   }
 }
 
