@@ -532,20 +532,34 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
     backBtn.addEventListener("click", goBack);
   }
 
-  // ===== Determine current financial year string =====
-  function getFinancialYearString(date = new Date()) {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // Jan=1, Dec=12
-    if (month >= 4) {
-      const startYY = String(year).slice(-2);
-      const endYY   = String(year + 1).slice(-2);
-      return `${startYY}-${endYY}`;
-    } else {
-      const startYY = String(year - 1).slice(-2);
-      const endYY   = String(year).slice(-2);
-      return `${startYY}-${endYY}`;
-    }
+// ===== Format date as dd-mm-yyyy =====
+function formatDateDDMMYYYY(date = new Date()) {
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0'); // Jan=0
+  const yyyy = date.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
+// ===== Determine current financial year string =====
+function getFinancialYearString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // Jan=1, Dec=12
+  if (month >= 4) {
+    const startYY = String(year).slice(-2);
+    const endYY   = String(year + 1).slice(-2);
+    return `${startYY}-${endYY}`;
+  } else {
+    const startYY = String(year - 1).slice(-2);
+    const endYY   = String(year).slice(-2);
+    return `${startYY}-${endYY}`;
   }
+}
+
+// Example usage:
+const today = new Date();
+console.log("Quotation Date:", formatDateDDMMYYYY(today));
+console.log("Financial Year:", getFinancialYearString(today));
+
 
   // ===== Fetch last quoteNo from Firestore =====
   async function fetchLastQuoteNo() {
@@ -592,7 +606,7 @@ As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices
       newFY = currentFY;
     }
 
-    const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(5, "0")}`;
+    const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(4, "0")}`;
     console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
     return newNo;
   }
