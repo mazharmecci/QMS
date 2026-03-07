@@ -714,12 +714,11 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
-/* Page settings */
+/* Page settings: A4 + page numbers in margin */
 @page {
   size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* increase bottom margin to give footer space */
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
 
-  /* Page numbers in footer */
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-size: 9pt;
@@ -728,20 +727,31 @@ table.quote-table th {
 }
 
 @media print {
-  /* Ensure footer repeats */
+  /* We do NOT use table-footer-group anymore for HTML footer */
   .quote-table tfoot.print-footer {
-    display: table-footer-group;
+    display: none !important;
   }
 
-  /* Footer styling for print */
+  /* Spacer directly before footer in HTML:
+     <div id="footer-spacer"></div>
+     <div class="footer">...</div>
+  */
+  #footer-spacer {
+    page-break-after: always;   /* push footer to new page */
+  }
+
+  /* Footer only on last page (pulled back from the extra page) */
   .footer {
-    font-size: 9pt;              /* slightly smaller */
-    margin: 0 !important;        /* remove extra margins */
-    padding: 2mm 0 !important;   /* controlled padding */
+    font-size: 9pt;
+    margin: 0 !important;
+    padding: 2mm 0 !important;
     border-top: 1px solid #ccc;
     color: #555;
-    line-height: 1.2;            /* tighter line spacing */
-    text-align: left;          /* center footer text */
+    line-height: 1.2;
+    text-align: left;
+
+    height: 25mm;               /* tune to your footer height */
+    margin-top: -25mm;          /* same as height: pulls footer up */
   }
 }
 
