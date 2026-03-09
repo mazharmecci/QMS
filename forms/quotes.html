@@ -794,21 +794,6 @@ table.quote-table th {
 }
 
 @media print {
-  /* Contact info: prevent wrapping */
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 10pt !important;
-  }
-  .quote-meta-grid .value.handphone,
-  .quote-meta-grid .value.office {
-    font-size: 9pt !important;
-  }
-
-  /* Remove border in print */
-  .quote-meta-grid {
-    border: none !important;
-  }
-
   /* Compact header spacing so Item 1 fits on page 1 */
   .company-box,
   .sales-quotation-box,
@@ -817,6 +802,20 @@ table.quote-table th {
     margin-bottom: 2mm !important;
     padding: 2mm 3mm !important;
     box-shadow: none !important;
+    border: 1px solid #ccc;
+    display: inline-block;       /* keeps company + sales box aligned */
+    vertical-align: top;
+    width: 48%;                  /* side-by-side layout */
+  }
+
+  /* Contact info: prevent wrapping */
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 10pt !important;
+  }
+  .quote-meta-grid .value.handphone,
+  .quote-meta-grid .value.office {
+    font-size: 9pt !important;
   }
 
   /* Sales box font size */
@@ -862,6 +861,7 @@ table.quote-table th {
     page-break-inside: avoid !important;
   }
 }
+
 
 </style>
 </head>
