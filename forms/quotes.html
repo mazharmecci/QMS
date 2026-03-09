@@ -720,6 +720,36 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
+@media print {
+  /* Make sure table rows and summary can split across pages */
+  table.quote-table,
+  table.quote-table tr,
+  table.quote-table td {
+    page-break-inside: auto !important;
+    overflow: visible !important;
+  }
+
+  /* If you have a summary/total block below the table, ensure it can print */
+  #quoteSummary,
+  .quote-summary,
+  .summary-block {
+    page-break-inside: avoid;
+    overflow: visible !important;
+  }
+
+  /* Give a tiny bit more room at bottom to prevent clipping */
+  @page {
+    size: A4;
+    margin: 8mm 8mm 18mm 8mm; /* was 22mm bottom, reduce slightly */
+  }
+
+  .footer {
+    height: 18mm;
+    margin-top: -18mm;
+  }
+}
+
+
 /* Footer and spacer behaviour in print */
 @media print {
   /* We do NOT use table-footer-group anymore for HTML footer */
