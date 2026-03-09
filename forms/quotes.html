@@ -794,58 +794,7 @@ table.quote-table th {
 }
 
 @media print {
-  body {
-    margin: 0;
-    background: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    color-adjust: exact;
-    font-size: 12pt;
-  }
-
-  header { display: none !important; }
-
-  .container {
-    margin: 0 !important;
-    padding: 5mm 5mm 8mm 5mm !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-    overflow: visible !important;
-  }
-
-  /* Compact header spacing and align boxes side-by-side */
-  .company-box,
-  .sales-box {
-    margin: 2mm !important;
-    padding: 2mm 3mm !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc;
-    display: inline-block;
-    vertical-align: top;
-    width: 48%; /* side-by-side layout */
-  }
-
-  .company-box p {
-    font-size: 10pt !important;
-    line-height: 1.3;
-    white-space: normal !important;
-    word-break: break-word;
-    text-overflow: clip;
-  }
-
-  .sales-title {
-    font-size: 10pt !important;
-    line-height: 1.2;
-  }
-
-  /* Contact info grid */
-  .quote-meta-grid {
-    margin: 2mm 0 !important;
-    padding: 2mm 3mm !important;
-    border: none !important;
-    box-shadow: none !important;
-  }
+  /* Contact info: prevent wrapping */
   .quote-meta-grid .value {
     white-space: nowrap !important;
     font-size: 10pt !important;
@@ -855,35 +804,33 @@ table.quote-table th {
     font-size: 9pt !important;
   }
 
-  /* Ensure Item 1 prints on page 1 */
-  .quote-header,
-  #quoteBuilder,
-  table.quote-table {
-    page-break-before: avoid !important;
-    page-break-inside: avoid !important;
+  /* Remove border in print */
+  .quote-meta-grid {
+    border: none !important;
   }
 
+  /* Sales box font size */
+  .sales-box,
+  .sales-box .sales-title {
+    font-size: 10pt !important;
+    line-height: 1.2;
+  }
+
+  /* Ensure all table rows print */
   table.quote-table tr,
   table.quote-table td,
   table.quote-table th {
     page-break-inside: avoid;
   }
 
+  /* Allow tfoot summary to print */
   table.quote-table tfoot {
     display: table-footer-group !important;
   }
 
-  /* Footer */
-  .footer {
-    font-size: 9pt;
-    margin: 0 !important;
-    padding: 2mm 0 !important;
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;
-    text-align: right;
-    height: 25mm;
-    margin-top: -25mm;
+  /* Footer spacer should not force blank page */
+  #footer-spacer {
+    page-break-after: auto !important;
   }
 
   /* Terms block starts new page */
@@ -891,12 +838,12 @@ table.quote-table th {
     page-break-before: always;
   }
 
-  /* Footer spacer should not force blank page */
-  #footer-spacer {
-    page-break-after: auto !important;
+  /* Prevent clipping */
+  .container,
+  #quoteBuilder {
+    overflow: visible !important;
   }
 }
-
 
 </style>
 </head>
