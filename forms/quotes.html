@@ -714,32 +714,6 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
-/* Page settings: A4 + page numbers in margin */
-@page {
-  size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
-
-  @bottom-right {
-    content: "Page " counter(page) " of " counter(pages);
-    font-size: 9pt;
-    color: #555;
-  }
-}
-
-@media print {
-  /* We do NOT use table-footer-group anymore for HTML footer */
-  .quote-table tfoot.print-footer {
-    display: none !important;
-  }
-
-  /* Spacer directly before footer in HTML:
-     <div id="footer-spacer"></div>
-     <div class="footer">...</div>
-  */
-  #footer-spacer {
-    page-break-after: always;   /* push footer to new page */
-  }
-
   /* Footer only on last page (pulled back from the extra page) */
   .footer {
     font-size: 9pt;
@@ -752,38 +726,6 @@ table.quote-table th {
 
     height: 25mm;               /* tune to your footer height */
     margin-top: -25mm;          /* same as height: pulls footer up */
-  }
-}
-
-@media print {
-  /* Force Terms & Conditions to start on a new page */
-  #termsBlock {
-    page-break-before: always;
-  }
-}
-
-@media print {
-  /* Prevent wrapping for contact info */
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 10pt !important;   /* slightly smaller in print */
-  }
-
-  /* Specifically target Handphone and Office fields */
-  .quote-meta-grid .value.handphone,
-  .quote-meta-grid .value.office {
-    white-space: nowrap !important;
-    font-size: 9pt !important;    /* even smaller for long numbers */
-  }
-}
-
-@media print {
-  .quote-meta-grid {
-    border: none !important;      /* remove border in print */
-  }
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 11pt !important;   /* keep readable size */
   }
 }
 
@@ -840,12 +782,66 @@ table.quote-table th {
   color: #0d6efd;
 }
 
+/* Page settings: A4 + page numbers in margin */
+@page {
+  size: A4;
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-size: 9pt;
+    color: #555;
+  }
+}
+
 @media print {
-  /* Reduce font size inside Sales Box */
+  /* Contact info: prevent wrapping */
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 10pt !important;
+  }
+  .quote-meta-grid .value.handphone,
+  .quote-meta-grid .value.office {
+    font-size: 9pt !important;
+  }
+
+  /* Remove border in print */
+  .quote-meta-grid {
+    border: none !important;
+  }
+
+  /* Sales box font size */
   .sales-box,
   .sales-box .sales-title {
-    font-size: 10pt !important;   /* slightly smaller for print */
-    line-height: 1.2;             /* tighter spacing */
+    font-size: 10pt !important;
+    line-height: 1.2;
+  }
+
+  /* Ensure all table rows print */
+  table.quote-table tr,
+  table.quote-table td,
+  table.quote-table th {
+    page-break-inside: avoid;
+  }
+
+  /* Allow tfoot summary to print */
+  table.quote-table tfoot {
+    display: table-footer-group !important;
+  }
+
+  /* Footer spacer should not force blank page */
+  #footer-spacer {
+    page-break-after: auto !important;
+  }
+
+  /* Terms block starts new page */
+  #termsBlock {
+    page-break-before: always;
+  }
+
+  /* Prevent clipping */
+  .container,
+  #quoteBuilder {
+    overflow: visible !important;
   }
 }
 
