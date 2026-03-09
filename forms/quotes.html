@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <title>QMS - Quotes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
 
+  <script>
 /* GLOBAL */
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -646,13 +646,19 @@ table.quote-table th {
   background:#fef2f2;
 }
 
-/* PAGE SETTINGS (PRINT) */
+/* PAGE SETTINGS (PRINT) – single @page */
 @page {
   size: A4;
-  margin: 8mm 8mm 12mm 8mm;
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
+
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-size: 9pt;
+    color: #555;
+  }
 }
 
-/* PRINT OVERRIDES (single, deduped) */
+/* PRINT OVERRIDES */
 @media print {
   body {
     margin: 0;
@@ -714,33 +720,17 @@ table.quote-table th {
   .discount-zero .after-discount-row { display: none !important; }
 }
 
-/* Page settings: A4 + page numbers in margin */
-@page {
-  size: A4;
-  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
-
-  @bottom-right {
-    content: "Page " counter(page) " of " counter(pages);
-    font-size: 9pt;
-    color: #555;
-  }
-}
-
+/* Footer and spacer behaviour in print */
 @media print {
   /* We do NOT use table-footer-group anymore for HTML footer */
   .quote-table tfoot.print-footer {
     display: none !important;
   }
 
-  /* Spacer directly before footer in HTML:
-     <div id="footer-spacer"></div>
-     <div class="footer">...</div>
-  */
   #footer-spacer {
-    page-break-after: always;   /* push footer to new page */
+    page-break-after: avoid !important;
   }
 
-  /* Footer only on last page (pulled back from the extra page) */
   .footer {
     font-size: 9pt;
     margin: 0 !important;
@@ -750,40 +740,57 @@ table.quote-table th {
     line-height: 1.2;
     text-align: right;
 
-    height: 25mm;               /* tune to your footer height */
-    margin-top: -25mm;          /* same as height: pulls footer up */
+    height: 20mm;
+    margin-top: -20mm;
+    page-break-inside: avoid !important;
   }
 }
 
+/* Force Terms & Conditions to start on a new page */
 @media print {
-  /* Force Terms & Conditions to start on a new page */
   #termsBlock {
     page-break-before: always;
   }
 }
 
+/* Contact info adjustments */
 @media print {
-  /* Prevent wrapping for contact info */
   .quote-meta-grid .value {
     white-space: nowrap !important;
-    font-size: 10pt !important;   /* slightly smaller in print */
+    font-size: 11pt !important;
   }
 
-  /* Specifically target Handphone and Office fields */
   .quote-meta-grid .value.handphone,
   .quote-meta-grid .value.office {
     white-space: nowrap !important;
-    font-size: 9pt !important;    /* even smaller for long numbers */
+    font-size: 9pt !important;
+  }
+
+  .quote-meta-grid {
+    border: none !important;
   }
 }
 
+/* Global print fixes: let content flow to all pages */
 @media print {
-  .quote-meta-grid {
-    border: none !important;      /* remove border in print */
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
   }
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 11pt !important;   /* keep readable size */
+
+  .container {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .quote-header,
+  #quoteBuilder,
+  #termsBlock {
+    page-break-inside: auto !important;
+    overflow: visible !important;
   }
 }
 
@@ -841,15 +848,13 @@ table.quote-table th {
 }
 
 @media print {
-  /* Reduce font size inside Sales Box */
   .sales-box,
   .sales-box .sales-title {
-    font-size: 10pt !important;   /* slightly smaller for print */
-    line-height: 1.2;             /* tighter spacing */
+    font-size: 10pt !important;
+    line-height: 1.2;
   }
 }
-
-</style>
+</script>
 </head>
 
 <body>
