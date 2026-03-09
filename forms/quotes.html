@@ -809,6 +809,16 @@ table.quote-table th {
     border: none !important;
   }
 
+  /* Compact header spacing so Item 1 fits on page 1 */
+  .company-box,
+  .sales-quotation-box,
+  .quote-meta-grid {
+    margin-top: 2mm !important;
+    margin-bottom: 2mm !important;
+    padding: 2mm 3mm !important;
+    box-shadow: none !important;
+  }
+
   /* Sales box font size */
   .sales-box,
   .sales-box .sales-title {
@@ -816,7 +826,7 @@ table.quote-table th {
     line-height: 1.2;
   }
 
-  /* Ensure all table rows print */
+  /* Ensure all table rows print together */
   table.quote-table tr,
   table.quote-table td,
   table.quote-table th {
@@ -842,6 +852,14 @@ table.quote-table th {
   .container,
   #quoteBuilder {
     overflow: visible !important;
+  }
+
+  /* Prevent page break between header and first item */
+  .quote-header,
+  #quoteBuilder,
+  table.quote-table {
+    page-break-before: avoid !important;
+    page-break-inside: avoid !important;
   }
 }
 
