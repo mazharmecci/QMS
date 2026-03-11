@@ -422,7 +422,8 @@ document.addEventListener('DOMContentLoaded', function () {
     taskList.appendChild(li);
     updateDescription();
   }
-
+  }
+                          
   // Add new task via button
   addBtn.addEventListener('click', () => addTask());
 
