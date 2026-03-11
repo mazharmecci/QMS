@@ -415,14 +415,13 @@
         
           <!-- 📝 Task Form -->
         <form id="taskForm">
-          <div class="form-row full">
-            <label for="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              placeholder="Add context, outcomes, and key details..."
-              required
-            ></textarea>
+          <div class="form-row full">  
+            <label>Description</label>
+            <div id="task-list-container">
+              <ul id="task-list" class="bullet-list"></ul>
+              <button id="add-task" type="button">+ Add Task</button>
+            </div>
+            <input type="hidden" id="description" name="description">
           </div>
 
           <!-- 🎯 Actions -->
