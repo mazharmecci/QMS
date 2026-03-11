@@ -331,42 +331,6 @@
       .card { padding: 1.7rem 1.5rem 2rem; }
       form { grid-template-columns: 1fr; }
     }
-
-    .bullet-list {
-  list-style-type: disc;
-  padding-left: 20px;
-  min-height: 100px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 4px;
-}
-.bullet-list li {
-  position: relative;
-  padding: 5px 25px 5px 5px;
-  margin-bottom: 5px;
-  background: #f9f9f9;
-  border-radius: 3px;
-}
-.bullet-list li input {
-  border: none;
-  background: transparent;
-  width: 100%;
-  font-family: inherit;
-}
-.bullet-list li button {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #ff4444;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-}
-
   </style>
 </head>
 <body>
@@ -426,6 +390,38 @@
           </select>
         </div>
 
+        <!-- 📝 Task Form -->
+        <form id="taskForm">
+          <div class="form-row full">
+            <label for="title">Task Title</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              placeholder="Short clear title for this task"
+              required
+            />
+          </div>
+
+          <div class="form-row full">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Add context, outcomes, and key details..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority" class="compact-select" required>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+
           <div class="form-row">
             <label for="assignee">Assign To</label>
             <select id="assignee" name="assignee" class="compact-select" required>
@@ -438,30 +434,6 @@
               <option value="Sridhar">Sridhar</option>
               <option value="Manager">Naushad Sir</option>
             </select>
-          </div>
-
-         <div class="form-row">
-            <label for="priority">Priority</label>
-            <select id="priority" name="priority" class="compact-select" required>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-         </div>
-        
-        <!-- 📝 Task Form -->
-
-          <div class="form-row full">
-            <label for="task-count">Number of Tasks (optional)</label>
-            <input type="number" id="task-count" min="1" max="20" placeholder="e.g., 5" style="width: 100px; margin-bottom: 10px;">
-            <button id="generate-tasks" type="button">Generate Bullets</button>
-            
-            <label>Description</label>
-            <div id="task-list-container">
-              <ul id="task-list" class="bullet-list"></ul>
-              <button id="add-task" type="button">+ Add Task</button>
-            </div>
-            <input type="hidden" id="description" name="description">
           </div>
 
           <!-- 🎯 Actions -->
