@@ -331,6 +331,49 @@
       .card { padding: 1.7rem 1.5rem 2rem; }
       form { grid-template-columns: 1fr; }
     }
+
+   .bullet-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    min-height: 110px;
+    border: 1px solid #cbd5e1;
+    padding: 10px;
+    border-radius: 0.7rem;
+    background: #f8fafc;
+  }
+  
+  /* Make each li a flex row so input can grow and button stays small */
+  .bullet-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  
+  /* Make the text input take full remaining width */
+  .bullet-list li input {
+    flex: 1;              /* grow to fill */
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+  
+  /* Keep the remove button compact */
+  .bullet-list li .remove-task {
+    flex: 0 0 auto;
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    border-radius: 999px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
   </style>
 </head>
 <body>
