@@ -391,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-<script>
+
 document.addEventListener('DOMContentLoaded', function() {
   const taskCountInput = document.getElementById('task-count');
   const generateBtn = document.getElementById('generate-tasks');
@@ -432,5 +432,5 @@ document.addEventListener('DOMContentLoaded', function() {
   // Optional: Generate on load if count pre-filled
   if (taskCountInput.value) generateTasks();
 });
-</script>
+
 
