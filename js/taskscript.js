@@ -390,3 +390,47 @@ document.addEventListener("DOMContentLoaded", () => {
     loadTasks();
   });
 });
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const taskCountInput = document.getElementById('task-count');
+  const generateBtn = document.getElementById('generate-tasks');
+  const addBtn = document.getElementById('add-task');
+  const taskList = document.getElementById('task-list');
+  const hiddenDesc = document.getElementById('description');
+
+  function addTask(text = '') {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <input type="text" value="${text}" placeholder="Task...">
+      <button type="button" onclick="this.parentElement.remove(); updateDescription();">×</button>
+    `;
+    taskList.appendChild(li);
+    updateDescription();
+  }
+
+  function generateTasks() {
+    const count = parseInt(taskCountInput.value) || 0;
+    taskList.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      addTask();
+    }
+  }
+
+  function updateDescription() {
+    const tasks = Array.from(taskList.querySelectorAll('input')).map(input => input.value.trim()).filter(v => v);
+    hiddenDesc.value = tasks.map(t => `• ${t}`).join('\n');
+  }
+
+  // Event listeners
+  generateBtn.onclick = generateTasks;
+  addBtn.onclick = () => addTask();
+  
+  // Update hidden field on input change
+  taskList.addEventListener('input', updateDescription);
+
+  // Optional: Generate on load if count pre-filled
+  if (taskCountInput.value) generateTasks();
+});
+</script>
+
