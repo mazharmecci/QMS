@@ -391,6 +391,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+/* ============================
+   Bullet points format - Entering task
+   ============================ */
 
 document.addEventListener('DOMContentLoaded', function() {
   const taskCountInput = document.getElementById('task-count');
