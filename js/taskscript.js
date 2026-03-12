@@ -253,47 +253,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function loadTasks() {
-      table.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
-
+      table.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+    
       try {
         const snapshot = await getDocs(collection(db, "employeeTasks"));
         const allTasks = snapshot.docs.map((d) => ({
           id: d.id,
           ...d.data()
         }));
-
+    
         const tasks = allTasks.filter((t) => {
           if (currentFilter === "assigned") return t.assigneeId === user.uid;
           if (currentFilter === "created") return t.createdByUid === user.uid;
-          return (
-            t.assigneeId === user.uid || t.createdByUid === user.uid
-          );
+          return t.assigneeId === user.uid || t.createdByUid === user.uid;
         });
-
+    
         if (!tasks.length) {
-          table.innerHTML =
-            `<tr><td colspan="6">No tasks found</td></tr>`;
+          table.innerHTML = `<tr><td colspan="5">No tasks found</td></tr>`;
           return;
         }
-
+    
         table.innerHTML = tasks
           .map((task) => {
             const isCompleted = task.status === "Completed";
             const showDelete = localUser.role === "manager";
-
+    
             return `
-              <tr data-id="${task.id}" class="${
-              isCompleted ? "task-completed" : ""
-            }">
-                <td>${task.title || "(Untitled)"}</td>
+              <tr data-id="${task.id}" class="${isCompleted ? "task-completed" : ""}">
                 <td>${task.description || "-"}</td>
                 <td>${task.priority || "-"}</td>
                 <td>${task.assignee || "-"}</td>
                 <td>
                   <span class="status-badge ${
-                    isCompleted
-                      ? "status-completed"
-                      : "status-pending"
+                    isCompleted ? "status-completed" : "status-pending"
                   }">
                     ${task.status || "Pending"}
                   </span>
@@ -314,13 +306,12 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
           })
           .join("");
-
+    
         attachTaskActions();
       } catch (err) {
         console.error("Error loading tasks:", err);
         showToast("⚠️ Failed to load tasks");
-        table.innerHTML =
-          `<tr><td colspan="6">Failed to load tasks</td></tr>`;
+        table.innerHTML = `<tr><td colspan="5">Failed to load tasks</td></tr>`;
       }
     }
 
@@ -335,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             showToast("✅ Task marked completed");
             row.classList.add("task-completed");
-            row.querySelector("td:nth-child(5)").innerHTML =
+            row.querySelector("td:nth-child(4)").innerHTML =
               '<span class="status-badge status-completed">Completed</span>';
             btn.disabled = true;
             btn.textContent = "✔ Done";
