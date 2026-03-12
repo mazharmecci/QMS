@@ -207,13 +207,13 @@ header {
   box-shadow: 0 0 12px rgba(127,182,255,0.4), 0 6px 16px rgba(0,0,0,0.08);
 }
 .quote-meta-grid .label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 200;
   color: #555;
   text-align: left;
 }
 .quote-meta-grid .value {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 200;
   color: #111;
   text-align: right;
@@ -221,7 +221,7 @@ header {
   word-break: break-word;
 }
 .quote-meta-grid .value-small {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 200;
 }
 .quote-meta-grid .label.right,
@@ -823,6 +823,7 @@ table.quote-table th {
     overflow: visible !important;
   }
 }
+
 /* COMPANY BOX */
 .company-box {
   flex: 1 1 auto;
@@ -830,7 +831,7 @@ table.quote-table th {
   border-radius: 8px;
   padding: 0.5rem 1rem;
   display: flex;
-  align-items: flex-start; /* FIXED */
+  align-items: left;
   margin-top: 5.95rem;
   min-width: 0;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
@@ -852,7 +853,7 @@ table.quote-table th {
 
 /* SALES BOX */
 .sales-box {
-  flex: 1 1 auto; /* changed for consistency */
+  flex: 0 0 auto;
   background: #d0d4d9;
   border-radius: 8px;
   padding: 0.4rem 1rem;
@@ -868,26 +869,21 @@ table.quote-table th {
 }
 .sales-title {
   margin-left: auto;
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 18px;
   line-height: 1;
   padding-top: 0.1rem;
   letter-spacing: 0.03em;
   color: #0d6efd;
 }
 
-/* PRINT STYLES */
 @media print {
-  .company-box,
-  .company-box p,
   .sales-box,
   .sales-box .sales-title {
     font-size: 10pt !important;
     line-height: 1.2;
   }
 }
-
-
 </style>
 </head>
 
@@ -1074,60 +1070,48 @@ Next lines: brief description"
     </div>
   </div>
 
-<!-- Main container -->
-<div class="container">
-  <table class="print-frame">
-    <thead class="print-header">
-      <tr>
-        <td>
-          <div class="quote-header">
-            <div class="quote-header-body">
-              
-              <!-- Left side: logo + company details -->
-              <div class="quote-left">
-                <div class="quote-logo-wrap">
-                  <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+  <!-- Main container -->
+  <div class="container">
+    <table class="print-frame">
+      <thead class="print-header">
+        <tr>
+          <td>
+            <div class="quote-header">
+              <div class="quote-header-body">
+                <!-- Left side: company + hospital -->
+                <div class="quote-left">
+                  <div class="company-box">
+                    <p>
+                      <strong>ISTOS MEDICAL PVT LTD;</strong>
+                      51/5, 2nd Cr J.C Indl Area, Bikasipura,
+                      Yelachenahalli, Bangalore-560062
+                    </p>
+                  </div>
+
+                  <div class="hospital-box">
+                    <p>
+                      <strong>To:</strong><br>
+                      <span id="toHospitalNameLine"></span><br>
+                      <span id="toHospitalAddressLine1"></span><br>
+                      <span id="toHospitalAddressLine2"></span>
+                    </p>
+                  </div>
+
+                  <div class="attn-box">
+                    <span><strong>Kind Attn:</strong></span>
+                    <span id="toAttn"></span>
+                  </div>
                 </div>
 
-                <div class="sales-box">
-                  <p>
-                    <strong>ISTOS MEDICAL PVT LTD;</strong><br>
-                    51/5, 2nd Cr J.C Indl Area, Bikasipura,<br>
-                    Yelachenahalli, Bangalore-560062
-                  </p>
-                </div>
-              </div>
+                <!-- Right side: logo + meta -->
+                <div class="quote-right">
+                  <div class="quote-logo-wrap">
+                    <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+                  </div>
 
-              <!-- Right side: quotation title + hospital -->
-              <div class="quote-right">
-                <div class="company-box">
-                  <div class="sales-title">SALES QUOTATION</div>
-                </div>
-
-                <div class="hospital-box">
-                  <p>
-                    <strong>To:</strong><br>
-                    <span id="toHospitalNameLine"></span><br>
-                    <span id="toHospitalAddressLine1"></span><br>
-                    <span id="toHospitalAddressLine2"></span>
-                  </p>
-                </div>
-
-                <div class="attn-box">
-                  <span><strong>Kind Attn:</strong></span>
-                  <span id="toAttn"></span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </td>
-      </tr>
-    </thead>
-  </table>
-</div>
-
-
+                  <div class="sales-box">
+                    <div class="sales-title">SALES QUOTATION</div>
+                  </div>
 
                   <div class="quote-meta-grid">
                     <div class="label">Quote No.</div>
