@@ -829,12 +829,12 @@ table.quote-table th {
   flex: 1 1 auto;
   background: #d0d4d9;
   border-radius: 8px;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1rem;          /* slightly more padding */
   display: flex;
-  align-items: flex-start;       /* fixed invalid 'left' */
+  align-items: center;           /* vertically center content */
   margin-top: 5.95rem;
   min-width: 0;
-  min-height: 61px;              /* consistent height */
+  min-height: 61px;              /* same as sales-box */
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.3s ease-out both;
@@ -850,17 +850,18 @@ table.quote-table th {
   line-height: 1.3;              /* better readability */
   white-space: normal;           /* allow wrapping */
   overflow: visible;             /* no truncation */
-  text-overflow: clip;           /* disable ellipsis */
+  text-overflow: clip;
 }
 
 /* SALES BOX */
 .sales-box {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   background: #d0d4d9;
   border-radius: 8px;
-  padding: 0.4rem 1rem;
+  padding: 0.6rem 1rem;          /* match company-box padding */
   display: flex;
   align-items: center;
+  min-height: 61px;              /* consistent with company-box */
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.4s ease-out both;
@@ -873,8 +874,7 @@ table.quote-table th {
   margin-left: auto;
   font-weight: 700;
   font-size: 18px;
-  line-height: 1;
-  padding-top: 0.1rem;
+  line-height: 1.2;
   letter-spacing: 0.03em;
   color: #0d6efd;
 }
