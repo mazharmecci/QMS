@@ -823,7 +823,6 @@ table.quote-table th {
     overflow: visible !important;
   }
 }
-
 /* COMPANY BOX */
 .company-box {
   flex: 1 1 auto;
@@ -831,7 +830,7 @@ table.quote-table th {
   border-radius: 8px;
   padding: 0.5rem 1rem;
   display: flex;
-  align-items: left;
+  align-items: flex-start; /* FIXED */
   margin-top: 5.95rem;
   min-width: 0;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
@@ -853,7 +852,7 @@ table.quote-table th {
 
 /* SALES BOX */
 .sales-box {
-  flex: 0 0 auto;
+  flex: 1 1 auto; /* changed for consistency */
   background: #d0d4d9;
   border-radius: 8px;
   padding: 0.4rem 1rem;
@@ -877,13 +876,17 @@ table.quote-table th {
   color: #0d6efd;
 }
 
+/* PRINT STYLES */
 @media print {
+  .company-box,
+  .company-box p,
   .sales-box,
   .sales-box .sales-title {
     font-size: 10pt !important;
     line-height: 1.2;
   }
 }
+
 
 </style>
 </head>
