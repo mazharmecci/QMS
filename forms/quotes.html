@@ -824,17 +824,16 @@ table.quote-table th {
   }
 }
 
-/* COMPANY BOX */
 .company-box {
   flex: 1 1 auto;
   background: #d0d4d9;
   border-radius: 8px;
-  padding: 0.6rem 1rem;          /* slightly more padding */
+  padding: 0.6rem 1rem;          /* match sales-box padding */
   display: flex;
   align-items: center;           /* vertically center content */
   margin-top: 5.95rem;
   min-width: 0;
-  min-height: 61px;              /* same as sales-box */
+  min-height: 65px;              /* slightly taller for balance */
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.3s ease-out both;
@@ -847,10 +846,14 @@ table.quote-table th {
   margin: 0;
   font-size: 9px;                /* slightly smaller text */
   color: #333;
-  line-height: 1.3;              /* better readability */
+  line-height: 1.4;              /* better spacing for multiple lines */
   white-space: normal;           /* allow wrapping */
-  overflow: visible;             /* no truncation */
-  text-overflow: clip;
+  overflow: visible;
+}
+.company-box p strong {
+  display: block;                /* force company name on its own line */
+  font-size: 10px;               /* slightly larger for emphasis */
+  font-weight: 600;
 }
 
 /* SALES BOX */
