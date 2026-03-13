@@ -613,9 +613,9 @@ console.log("Financial Year:", getFinancialYearString(today));
       newFY = currentFY;
     }
 
-    const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(4, "0")}`;
-    console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
-    return newNo;
+  const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(4, "0")} `;
+  console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
+  return newNo;
   }
 
   // ===== Populate hospital dropdown =====
