@@ -1635,30 +1635,64 @@ Next lines: brief description"
     });
   });
 
-  // Instrument picker search
-document.getElementById('instrumentSearchBtn').addEventListener('click', function() {
-  const query = document.getElementById('instrumentSearchInput').value;
-  filterInstrumentList(query);
-});
 
-// Config picker search
-document.getElementById('configSearchBtn').addEventListener('click', function() {
-  const query = document.getElementById('configSearchInput').value;
-  filterConfigList(query);
-});
+function filterListByText(containerId, query) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-// Additional picker search
-document.getElementById('additionalSearchBtn').addEventListener('click', function() {
-  const query = document.getElementById('additionalSearchInput').value;
-  filterAdditionalList(query);
-});
+  const q = (query || '').trim().toLowerCase();
 
-// Optional: Add Enter key support
+  // Adjust this selector if your items are not direct children
+  const items = Array.from(container.children);
+
+  items.forEach(el => {
+    const text = (el.innerText || el.textContent || '').toLowerCase();
+    const match = !q || text.includes(q);
+    el.style.display = match ? '' : 'none';
+  });
+}
+
+// Instrument picker live filter
+function filterInstrumentList(query) {
+  filterListByText('instrumentPickerList', query);
+}
+
+// Config picker live filter
+function filterConfigList(query) {
+  filterListByText('configPickerList', query);
+}
+
+// Additional picker live filter
+function filterAdditionalList(query) {
+  filterListByText('additionalPickerList', query);
+}
+  
+// Live filtering on type
 ['instrumentSearchInput', 'configSearchInput', 'additionalSearchInput'].forEach(id => {
-  document.getElementById(id).addEventListener('keypress', function(e) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.addEventListener('input', function (e) {
+    const q = e.target.value;
+
+    if (id === 'instrumentSearchInput') {
+      filterInstrumentList(q);
+    } else if (id === 'configSearchInput') {
+      filterConfigList(q);
+    } else if (id === 'additionalSearchInput') {
+      filterAdditionalList(q);
+    }
+  });
+});
+
+// Optional: still prevent form submit on Enter, but no button click
+['instrumentSearchInput', 'configSearchInput', 'additionalSearchInput'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      this.parentElement.querySelector('.search-btn').click();
     }
   });
 });
