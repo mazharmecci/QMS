@@ -772,6 +772,60 @@ table.quote-table th {
   }
 }
 
+/* Overlay search buttons */
+
+.overlay-search {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.search-container {
+  display: flex;
+  gap: 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.search-btn:active {
+  background: #e5e7eb;
+}
+
+
 /* Force Terms & Conditions to start on a new page */
 @media print {
   #termsBlock {
@@ -973,98 +1027,126 @@ table.quote-table th {
     </div>
   </div>
 
-  <!-- Instrument picker -->
-  <div id="instrumentPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-    <div class="overlay-panel">
-      <div class="overlay-header">
-        <h3 class="overlay-title">Select Instrument from Master</h3>
-        <button type="button" class="overlay-close" id="closeInstrumentPickerBtn">✕</button>
-      </div>
-      <div id="instrumentPickerList" class="overlay-body"></div>
+<!-- Instrument picker -->
+<div id="instrumentPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Select Instrument from Master</h3>
+      <button type="button" class="overlay-close" id="closeInstrumentPickerBtn">✕</button>
     </div>
-  </div>
-
-  <!-- Shared item modal -->
-  <div id="itemModalOverlay">
-    <div id="itemModal">
-      <div class="item-modal-header">
-        <div>
-          <h3 id="itemModalTitle" class="item-modal-title">Additional Items for this Instrument</h3>
-          <span id="itemModalTag" class="item-modal-tag">Additional</span>
-        </div>
-        <button type="button" id="closeItemModalBtn" class="item-modal-close">×</button>
+    
+    <!-- Instrument Search -->
+    <div class="overlay-search">
+      <div class="search-container">
+        <input type="text" id="instrumentSearchInput" class="search-input" placeholder="Search instruments...">
+        <button type="button" id="instrumentSearchBtn" class="search-btn">🔍</button>
       </div>
+    </div>
+    
+    <div id="instrumentPickerList" class="overlay-body"></div>
+  </div>
+</div>
 
-      <form id="itemModalForm">
-        <input type="hidden" id="itemModalType" value="config" />
-        <input type="hidden" id="itemLineIndex" value="" />
+<!-- Shared item modal -->
+<div id="itemModalOverlay">
+  <div id="itemModal">
+    <div class="item-modal-header">
+      <div>
+        <h3 id="itemModalTitle" class="item-modal-title">Additional Items for this Instrument</h3>
+        <span id="itemModalTag" class="item-modal-tag">Additional</span>
+      </div>
+      <button type="button" id="closeItemModalBtn" class="item-modal-close">×</button>
+    </div>
 
-        <div class="item-modal-grid">
-          <div class="item-modal-field">
-            <label for="itemCodeInput">Item code</label>
-            <input id="itemCodeInput" type="text" placeholder="Auto if left blank" />
-          </div>
+    <form id="itemModalForm">
+      <input type="hidden" id="itemModalType" value="config" />
+      <input type="hidden" id="itemLineIndex" value="" />
 
-          <div class="item-modal-field" id="itemQtyGroup">
-            <label for="itemQty">Quantity</label>
-            <input id="itemQty" type="text" placeholder="1 or Included" />
-          </div>
+      <div class="item-modal-grid">
+        <div class="item-modal-field">
+          <label for="itemCodeInput">Item code</label>
+          <input id="itemCodeInput" type="text" placeholder="Auto if left blank" />
+        </div>
 
-          <div class="item-modal-field" id="itemPriceGroup">
-            <label for="itemPrice">Unit price (INR)</label>
-            <input id="itemPrice" type="text" placeholder="0.00" />
-          </div>
+        <div class="item-modal-field" id="itemQtyGroup">
+          <label for="itemQty">Quantity</label>
+          <input id="itemQty" type="text" placeholder="1 or Included" />
+        </div>
 
-          <div class="item-modal-field item-modal-details">
-            <label for="itemDetails">Details</label>
-            <textarea
-              id="itemDetails"
-              rows="4"
-              placeholder="First line: main item name
+        <div class="item-modal-field" id="itemPriceGroup">
+          <label for="itemPrice">Unit price (INR)</label>
+          <input id="itemPrice" type="text" placeholder="0.00" />
+        </div>
+
+        <div class="item-modal-field item-modal-details">
+          <label for="itemDetails">Details</label>
+          <textarea
+            id="itemDetails"
+            rows="4"
+            placeholder="First line: main item name
 Next lines: brief description"
-            ></textarea>
-          </div>
+          ></textarea>
         </div>
+      </div>
 
-        <div class="item-modal-footer">
-          <div id="itemModalHint" style="font-size:11px;color:#64748b;">
-            No items yet for this instrument.
-          </div>
-          <div class="item-modal-actions">
-            <button type="button" id="cancelItemModalBtn" class="btn-item-secondary">Cancel</button>
-            <button type="submit" class="btn-item-primary">Save item</button>
-          </div>
+      <div class="item-modal-footer">
+        <div id="itemModalHint" style="font-size:11px;color:#64748b;">
+          No items yet for this instrument.
         </div>
-      </form>
+        <div class="item-modal-actions">
+          <button type="button" id="cancelItemModalBtn" class="btn-item-secondary">Cancel</button>
+          <button type="submit" class="btn-item-primary">Save item</button>
+        </div>
+      </div>
+    </form>
 
-      <div id="itemModalList" class="item-modal-list"></div>
-    </div>
+    <div id="itemModalList" class="item-modal-list"></div>
   </div>
+</div>
 
-  <!-- Config/Additional pickers -->
-  <div id="configPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-    <div class="overlay-panel">
-      <div class="overlay-header">
-        <h3 class="overlay-title">Select Configuration Item</h3>
-        <button type="button" class="overlay-close" id="closeConfigPickerBtn">✕</button>
-      </div>
-      <div id="configPickerList" class="overlay-body">
-        <div style="font-size:12px; color:#64748b;">Configuration item master is not implemented yet.</div>
-      </div>
+<!-- Config picker -->
+<div id="configPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Select Configuration Item</h3>
+      <button type="button" class="overlay-close" id="closeConfigPickerBtn">✕</button>
     </div>
-  </div>
-
-  <div id="additionalPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-    <div class="overlay-panel">
-      <div class="overlay-header">
-        <h3 class="overlay-title">Select Additional Item</h3>
-        <button type="button" class="overlay-close" id="closeAdditionalPickerBtn">✕</button>
-      </div>
-      <div id="additionalPickerList" class="overlay-body">
-        <div style="font-size:12px; color:#64748b;">Additional item master is not implemented yet.</div>
+    
+    <!-- Config Search -->
+    <div class="overlay-search">
+      <div class="search-container">
+        <input type="text" id="configSearchInput" class="search-input" placeholder="Search config items...">
+        <button type="button" id="configSearchBtn" class="search-btn">🔍</button>
       </div>
     </div>
+    
+    <div id="configPickerList" class="overlay-body">
+      <div style="font-size:12px; color:#64748b;">Configuration item master is not implemented yet.</div>
+    </div>
   </div>
+</div>
+
+<!-- Additional picker -->
+<div id="additionalPickerOverlay" class="overlay" style="display:none; z-index:2100;">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <h3 class="overlay-title">Select Additional Item</h3>
+      <button type="button" class="overlay-close" id="closeAdditionalPickerBtn">✕</button>
+    </div>
+    
+    <!-- Additional Search -->
+    <div class="overlay-search">
+      <div class="search-container">
+        <input type="text" id="additionalSearchInput" class="search-input" placeholder="Search additional items...">
+        <button type="button" id="additionalSearchBtn" class="search-btn">🔍</button>
+      </div>
+    </div>
+    
+    <div id="additionalPickerList" class="overlay-body">
+      <div style="font-size:12px; color:#64748b;">Additional item master is not implemented yet.</div>
+    </div>
+  </div>
+</div>
 
   <!-- Main container -->
   <div class="container">
@@ -1552,6 +1634,35 @@ Next lines: brief description"
       });
     });
   });
+
+  // Instrument picker search
+document.getElementById('instrumentSearchBtn').addEventListener('click', function() {
+  const query = document.getElementById('instrumentSearchInput').value;
+  filterInstrumentList(query);
+});
+
+// Config picker search
+document.getElementById('configSearchBtn').addEventListener('click', function() {
+  const query = document.getElementById('configSearchInput').value;
+  filterConfigList(query);
+});
+
+// Additional picker search
+document.getElementById('additionalSearchBtn').addEventListener('click', function() {
+  const query = document.getElementById('additionalSearchInput').value;
+  filterAdditionalList(query);
+});
+
+// Optional: Add Enter key support
+['instrumentSearchInput', 'configSearchInput', 'additionalSearchInput'].forEach(id => {
+  document.getElementById(id).addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      this.parentElement.querySelector('.search-btn').click();
+    }
+  });
+});
+
 
   // Global hooks for inline handlers
   window.openConfigModal = openConfigModal;
