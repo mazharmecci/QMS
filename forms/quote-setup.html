@@ -386,31 +386,6 @@
       }
     }
 
-     .confirmation-columns {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    
-    .company-block, .invoice-block {
-      width: 48%;
-      border: 1px solid #ccc;
-      padding: 15px;
-      background: #fafafa;
-    }
-    
-    .delivery-block {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-top: 20px;
-      background: #fff;
-    }
-    
-    .signature-block {
-      margin-top: 40px;
-      text-align: left;
-    }
-
   </style>
 </head>
 <body>
@@ -427,7 +402,6 @@
     <div class="container">
       <h2>Quote Builder</h2>
 
-      <!-- Existing Quote Setup Form -->
       <form id="quoteSetupForm">
         <div class="form-row">
           <select id="hospitalSelect" required>
@@ -474,57 +448,66 @@
         <input type="text" id="contactPhone" placeholder="Handphone" required>
         <input type="text" id="officePhone" placeholder="Office Phone">
         <input type="email" id="contactEmail" placeholder="Email" required>
+
+        <div class="sales-note-block">
+          <label for="salesNote" class="sales-note-label">Personal message to customer</label>
+          <textarea
+            id="salesNote"
+            rows="4"
+            placeholder="Dear Sir,
+
+As discussed with Mr. Sarfaraz Khan, please find below the budgetary list prices for your kind perusal, upon confirmation of the ancillary equipment’s required we will submit a very special package price."></textarea>
+        </div>
+
+        <div id="termsTextBlock" contenteditable="true">
+          <div class="terms-section">
+            <p>
+              These terms and conditions govern the sale of Products (“Product or Products”) and provisions of services (“Services”) by <strong>ISTOS Medical Pvt Ltd.</strong> (IMPL). These terms and conditions (“Agreement”) take precedence over Buyer’s supplemental or conflicting terms and conditions.
+            </p>
+
+            <p><strong>Validity:</strong> This offer is valid for 60 days from the date of the offer.</p>
+
+            <p><strong>Purchase Order:</strong> Favouring <strong>ISTOS Medical Private Limited</strong>, # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area, Bikasipura Main Road, Yelachenahalli, BANGALORE, Karnataka, INDIA 560 062.</p>
+
+            <p><strong>Delivery and Title:</strong></p>
+            <div class="terms-indent">
+              <ol>
+                <li>All deliveries will be made “F.O.R Basis” to the place of shipment as mentioned in the order.</li>
+                <li>Delivery Period: 6–8 weeks from the date of receipt of a valid purchase order.</li>
+                <li>The seller will not be responsible for any delay in delivery beyond its control but will do its utmost to ensure speedy delivery. Delayed delivery of any part of an order does not entitle the buyer to cancel other deliveries.</li>
+                <li>The ownership of the goods will be transferred to the buyer after receipt of full payment.</li>
+              </ol>
+            </div>
+
+            <p><strong>Payment:</strong> 100% in advance along with a valid purchase order. Our bankers’ details will be mentioned in our invoice / proforma invoice. Payment may be made by RTGS | NEFT | IMPS | Cheque | Draft.</p>
+
+            <p><strong>Warranty:</strong> 12 months from the date of installation against any manufacturing defects. The consumables, other accessories, glass parts and other easily damageable items do not carry any warranty. Unauthorized usage and mishandling of the equipment will void the warranty.</p>
+
+            <p><strong>Government Levies:</strong> The present goods and services tax structure is taken into consideration, however if there are any changes at the time of invoicing the same will be taken for accounting, any other levies imposed by the government at the time of invoicing will be to the buyer’s account. these points must be clearly mentioned in the purchase order.</p>
+
+            <p><strong>Packing & Shipment:</strong> Packing as per international standards shall be at Seller’s option unless otherwise separately mentioned.</p>
+
+            <p><strong>Transit damages:</strong> To be claimed from insurance if applicable, or else will be in the scope of ISTOS Medical Pvt. Ltd.</p>
+
+            <p><strong>Installation & Training:</strong> Free by our Engineers / Support specialist at your laboratory.</p>
+
+            <p><strong>The prices quoted for optional accessories are applicable only when ordered together with the main equipment. If ordered separately, freight charges will be additional and billed at actuals. All optional accessories prices are exclusive of GST additional GST of 18% will be applicable on the offered prices.</strong></p>
+                         
+            
+          </div>
+
+          <div style="margin-top:40px; text-align:left;">
+            <p>------------------------------</p>
+            <p><strong>For ISTOS Medical Private Limited</strong></p>
+            <br><br>
+            <div class="quote-sender-highlight" id="quoteSender">Guest</div>
+          </div>
+        </div>
+
+        <button type="submit">Proceed to Quote</button>
       </form>
-
-      <!-- Quote Details Section -->
-      <div class="Quote-Details">
-        <h2>Quote Details</h2>
-
-        <!-- Two-column layout -->
-        <div class="confirmation-columns">
-          <!-- Left: ISTOS Medical -->
-          <div class="company-block">
-            <h3>ISTOS MEDICAL PRIVATE LIMITED</h3>
-            <p>#51/5, BSTN Heights, 2nd Cross,<br>
-               J.C. Industrial Area, Bikasipura Main Road,<br>
-               Yelachenahalli, Bangalore, Karnataka, India 560062</p>
-          </div>
-
-          <!-- Right: Invoice To -->
-          <div class="invoice-block">
-            <h3>Invoice To</h3>
-            <p id="invoiceHospitalName"></p>
-            <p id="invoiceHospitalAddress"></p>
-          </div>
-        </div>
-
-        <!-- Delivery Address -->
-        <div class="delivery-block">
-          <h3>Delivery Made To</h3>
-          <p id="deliveryHospitalName"></p>
-          <p id="deliveryHospitalAddress"></p>
-        </div>
-
-        <!-- Kind Attn -->
-        <div class="kind-attn">
-          <strong>Kind Attn:</strong> <span id="kindAttnDisplay"></span>
-        </div>
-
-        <!-- Signature -->
-        <div class="signature-block">
-          <p>------------------------------</p>
-          <p><strong>For ISTOS Medical Private Limited</strong></p>
-          <div id="quoteSender">Authorized Signatory</div>
-        </div>
-      </div>
-
-      <!-- Button placed at the very end -->
-      <div class="submit-block">
-        <button type="submit" form="quoteSetupForm">Proceed to Quote</button>
-      </div>
     </div>
   </div>
-</body>
 
 <script type="module">
   import { auth, db } from "../js/firebase.js";
@@ -542,44 +525,69 @@
       window.location.href = "index.html";
     }
   }
+
+  // wire back button
   const backBtn = document.getElementById("backBtn");
-  if (backBtn) backBtn.addEventListener("click", goBack);
-
-  // ===== Date formatting =====
-  function formatDateDDMMYYYY(date = new Date()) {
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const yyyy = date.getFullYear();
-    return `${dd}-${mm}-${yyyy}`;
+  if (backBtn) {
+    backBtn.addEventListener("click", goBack);
   }
+
+// ===== Format date as dd-mm-yyyy =====
+function formatDateDDMMYYYY(date = new Date()) {
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0'); // Jan=0
+  const yyyy = date.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
   function isoToDDMMYYYY(iso) {
-    if (!iso) return "";
-    const [yyyy, mm, dd] = iso.split("-");
-    return `${dd}-${mm}-${yyyy}`;
-  }
+  if (!iso) return "";
+  const [yyyy, mm, dd] = iso.split("-");
+  if (!yyyy || !mm || !dd) return iso; // fallback if something odd
+  return `${dd}-${mm}-${yyyy}`;
+}
 
-  // ===== Financial year string =====
-  function getFinancialYearString(date = new Date()) {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    if (month >= 4) {
-      return `${String(year).slice(-2)}-${String(year+1).slice(-2)}`;
-    } else {
-      return `${String(year-1).slice(-2)}-${String(year).slice(-2)}`;
-    }
+// ===== Determine current financial year string =====
+function getFinancialYearString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // Jan=1, Dec=12
+  if (month >= 4) {
+    const startYY = String(year).slice(-2);
+    const endYY   = String(year + 1).slice(-2);
+    return `${startYY}-${endYY}`;
+  } else {
+    const startYY = String(year - 1).slice(-2);
+    const endYY   = String(year).slice(-2);
+    return `${startYY}-${endYY}`;
   }
+}
 
-  // ===== Fetch last quoteNo =====
+// Example usage:
+const today = new Date();
+console.log("Quotation Date:", formatDateDDMMYYYY(today));
+console.log("Financial Year:", getFinancialYearString(today));
+
+
+  // ===== Fetch last quoteNo from Firestore =====
   async function fetchLastQuoteNo() {
     try {
-      const q = query(collection(db, "quoteHistory"), orderBy("quoteNo","desc"), limit(1));
+      const q = query(
+        collection(db, "quoteHistory"),
+        orderBy("quoteNo", "desc"),
+        limit(1)
+      );
       const snap = await getDocs(q);
+
       if (!snap.empty) {
         const lastDoc = snap.docs[0].data();
-        return lastDoc?.quoteNo || `EQ/SQ/${getFinancialYearString()}/000`;
+        const lastNo = lastDoc?.quoteNo;
+        console.log("[fetchLastQuoteNo] Found last quoteNo:", lastNo);
+        return lastNo || `EQ/SQ/${getFinancialYearString()}/000`;
       }
+      console.warn("[fetchLastQuoteNo] No quotes found in Firestore.");
       return `EQ/SQ/${getFinancialYearString()}/000`;
-    } catch {
+    } catch (err) {
+      console.error("[fetchLastQuoteNo] Error fetching last quote:", err);
       return `EQ/SQ/${getFinancialYearString()}/000`;
     }
   }
@@ -588,12 +596,26 @@
   async function generateQuoteNo() {
     const lastNo = await fetchLastQuoteNo();
     const currentFY = getFinancialYearString();
+
     const parts = (lastNo || "").split("/");
-    const fyPart = parts[2] || currentFY;
-    const rawNum = parts[parts.length-1];
-    const num = isNaN(parseInt(rawNum,10)) ? 0 : parseInt(rawNum,10);
-    const nextNum = (fyPart === currentFY) ? num+1 : 1;
-    return `EQ/SQ/${currentFY}/${String(nextNum).padStart(4,"0")}`;
+    const fyPart = parts.length >= 3 ? parts[2] : currentFY;
+    const rawNum = parts[parts.length - 1];
+    const num = isNaN(parseInt(rawNum, 10)) ? 0 : parseInt(rawNum, 10);
+
+    let nextNum;
+    let newFY;
+
+    if (fyPart === currentFY) {
+      nextNum = num + 1;
+      newFY = currentFY;
+    } else {
+      nextNum = 1;
+      newFY = currentFY;
+    }
+
+  const newNo = `EQ/SQ/${newFY}/${String(nextNum).padStart(4, "0")} `;
+  console.log("[generateQuoteNo] Generated next quoteNo:", newNo, "from last:", lastNo);
+  return newNo;
   }
 
   // ===== Populate hospital dropdown =====
@@ -601,39 +623,51 @@
     const hospitals = JSON.parse(localStorage.getItem("hospitals") || "[]");
     const select = document.getElementById("hospitalSelect");
     if (!select) return;
-    hospitals.sort((a,b)=> (a.clientName||"").localeCompare(b.clientName||""));
-    select.innerHTML = "<option value=''>Select Hospital</option>";
-    hospitals.forEach((h,idx)=>{
+  
+    // sort by name, then code
+    hospitals.sort((a, b) => {
+      const nameA = (a.clientName || "").toLowerCase();
+      const nameB = (b.clientName || "").toLowerCase();
+      if (nameA && nameB && nameA !== nameB) return nameA.localeCompare(nameB);
+  
+      const codeA = (a.clientCode || "").toLowerCase();
+      const codeB = (b.clientCode || "").toLowerCase();
+      return codeA.localeCompare(codeB);
+    }); // [web:137][web:144]
+  
+    // clear and add placeholder
+    select.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select Hospital";
+    select.appendChild(placeholder);
+  
+    hospitals.forEach((hosp, idx) => {
       const opt = document.createElement("option");
-      opt.value = idx;
-      opt.textContent = `${h.clientCode} - ${h.clientName}`;
+      opt.value = idx; // still index into *sorted* array
+      opt.textContent = `${hosp.clientCode} - ${hosp.clientName}`;
       select.appendChild(opt);
     });
+  
+    // store back sorted order if you want it reused elsewhere
     localStorage.setItem("hospitals", JSON.stringify(hospitals));
   }
 
-  // ===== Fill hospital details into form + confirmation blocks =====
+  // ===== Fill hospital details =====
   function fillHospitalDetails() {
     const hospitals = JSON.parse(localStorage.getItem("hospitals") || "[]");
     const idx = document.getElementById("hospitalSelect").value;
     if (idx === "") return;
     const hosp = hospitals[idx];
     if (!hosp) return;
-
-    // Form fields
+  
     document.getElementById("hospitalName").value = hosp.clientName || "";
     document.getElementById("hospitalAddress").value = hosp.address || "";
     document.getElementById("contactPhone").value = hosp.mobile || "";
     document.getElementById("contactEmail").value = hosp.email || "";
-
-    // Confirmation blocks
-    document.getElementById("invoiceHospitalName").textContent = hosp.clientName || "";
-    document.getElementById("invoiceHospitalAddress").textContent = hosp.address || "";
-    document.getElementById("deliveryHospitalName").textContent = hosp.clientName || "";
-    document.getElementById("deliveryHospitalAddress").textContent = hosp.address || "";
   }
 
-  // ===== Dynamic quote sender name =====
+  // ===== Dynamic quote sender name from auth email =====
   const quoteSenderEl = document.getElementById("quoteSender");
   onAuthStateChanged(auth, (user) => {
     if (!quoteSenderEl) return;
@@ -641,22 +675,30 @@
       quoteSenderEl.textContent = "Guest";
       return;
     }
-    const prefix = user.email.split("@")[0];
-    const prettyName = prefix.replace(/[._-]+/g," ")
-      .split(" ").map(p=>p.charAt(0).toUpperCase()+p.slice(1)).join(" ");
+    const email = user.email;
+    const prefix = email.split("@")[0] || "User";
+    const prettyName = prefix
+      .replace(/[._-]+/g, " ")
+      .split(" ")
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
     quoteSenderEl.textContent = prettyName;
   });
 
   // ===== Submit handler =====
-  document.getElementById("quoteSetupForm").addEventListener("submit", async (e)=>{
+  document.getElementById("quoteSetupForm").addEventListener("submit", async function (e) {
     e.preventDefault();
+  
+    const termsBlock = document.getElementById("termsTextBlock");
+  
     const quoteDateISO = document.getElementById("quoteDate").value || "";
     const refDateISO   = document.getElementById("refDate").value || "";
+  
     const headerData = {
       quoteNo: document.getElementById("quoteNo").value || "",
-      quoteDate: isoToDDMMYYYY(quoteDateISO),
+      quoteDate: isoToDDMMYYYY(quoteDateISO),   // << formatted
       yourReference: document.getElementById("yourReference").value || "",
-      refDate: isoToDDMMYYYY(refDateISO),
+      refDate: isoToDDMMYYYY(refDateISO),       // << formatted
       hospitalName: document.getElementById("hospitalName").value || "",
       hospitalAddress: document.getElementById("hospitalAddress").value || "",
       kindAttn: document.getElementById("kindAttn").value || "",
@@ -664,36 +706,57 @@
       contactPhone: document.getElementById("contactPhone").value || "",
       contactEmail: document.getElementById("contactEmail").value || "",
       officePhone: document.getElementById("officePhone").value || "",
+      salesNote: document.getElementById("salesNote").value || "",
+      termsHtml: termsBlock.innerHTML,
+      quoteLines: [],
       status: "DRAFT",
     };
+
     try {
       const user = auth.currentUser;
       if (!user) {
         alert("You must be signed in to save quotes.");
         return;
       }
-      const newDoc = await addDoc(collection(db,"quoteHistory"), {
+
+      const colRef = collection(db, "quoteHistory");
+      const newDoc = await addDoc(colRef, {
         ...headerData,
         createdAt: serverTimestamp(),
         createdBy: user.uid,
         createdByLabel: user.displayName || user.email || user.uid,
       });
-      localStorage.setItem("quoteHeader", JSON.stringify({...headerData, docId:newDoc.id}));
+
+      console.log("[quoteSetupForm] New quote saved to Firestore with id:", newDoc.id);
+
+      localStorage.setItem(
+        "quoteHeader",
+        JSON.stringify({
+          ...headerData,
+          docId: newDoc.id,
+        })
+      );
+
       window.location.href = `quotes.html?id=${newDoc.id}`;
-    } catch(err) {
-      console.error("Error saving quote:", err);
+    } catch (err) {
+      console.error("[quoteSetupForm] Error saving quote to Firestore:", err);
       alert("Failed to save quote. Please try again.");
     }
   });
 
   // ===== Initial values =====
-  (async ()=>{
-    document.getElementById("quoteNo").value = await generateQuoteNo();
-    const todayISO = new Date().toISOString().slice(0,10);
+  (async () => {
+    const newQuoteNo = await generateQuoteNo();
+    document.getElementById("quoteNo").value = newQuoteNo;
+
+    const todayISO = new Date().toISOString().slice(0, 10);
     document.getElementById("quoteDate").value = todayISO;
     document.getElementById("refDate").value = todayISO;
+
     populateHospitalDropdown();
-    document.getElementById("hospitalSelect").addEventListener("change", fillHospitalDetails);
+    document
+      .getElementById("hospitalSelect")
+      .addEventListener("change", fillHospitalDetails);
   })();
 </script>
 
