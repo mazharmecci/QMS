@@ -122,11 +122,21 @@ header {
 }
 
 /* INNER GRID: LEFT (company/attn) + RIGHT (logo/meta) */
+/* Header grid: give right column slightly more width */
 .quote-header-body {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.3fr 1.1fr;  /* was 1.4fr 1fr */
   align-items: flex-start;
   column-gap: 0.75rem;
+}
+
+/* Logo: never clipped */
+.quote-logo-wrap img {
+  max-height: 90px;        /* keep if needed, or raise a bit (e.g. 100px) */
+  width: auto;
+  display: block;
+  filter: none;
+  overflow: visible;       /* safety */
 }
 
 /* LEFT SIDE */
@@ -159,13 +169,12 @@ header {
 
 .company-box p {
   margin: 0;
-  font-size: 16px;       /* increased font size */
+  font-size: 11px;
   color: #111;
-  font-weight: 600;
-  line-height: 1.5;      /* slightly more line spacing */
-  white-space: normal;   /* allow wrapping naturally */
-  overflow: visible;
-  text-overflow: clip;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;     /* force single line */
+  overflow: visible;       /* show even if wider than container */
 }
 
 /* HOSPITAL + ATTENTION BOX */
