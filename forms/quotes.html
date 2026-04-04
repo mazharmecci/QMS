@@ -147,28 +147,25 @@ header {
 
 /* COMPANY BOX */
 .company-box {
-  flex: 1 1 auto;
-  background: none;
-  border: none;
+  flex: 0 0 auto;          /* shrink to fit content */
+  background: none;        /* no gray background */
+  border: none;            /* remove border */
   border-radius: 0;
   padding: 0;
-  display: block;
-  margin-top: 4.75rem;   /* retain spacing below header */
+  margin-top: 4.75rem;     /* spacing below header */
   box-shadow: none;
   animation: none;
+  text-align: left;        /* force far-left alignment */
 }
 
 .company-box p {
   margin: 0;
-  font-size: 16px;       /* increased font size */
+  font-size: 16px;
   color: #111;
   font-weight: 600;
-  line-height: 1.8;      /* more vertical gap between lines */
-  white-space: normal;   /* allow wrapping naturally */
-  overflow: visible;
-  text-overflow: clip;
+  line-height: 1.8;        /* comfortable vertical gap */
+  white-space: normal;
 }
-
 
 /* HOSPITAL + ATTENTION BOX */
 
@@ -181,16 +178,17 @@ header {
   font-size: 18px;
 }
   
+/* ATTENTION BOX */
 .attn-box {
-  margin-top: 4.75rem;  /* was 0.5rem; moves it lower */
+  display: inline-block;   /* shrink to fit text */
   background: #add8e6;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
+  padding: 0.5rem 0.75rem; /* tighter padding */
+  border-radius: 6px;
   font-weight: 700;
   color: #0f172a;
-  font-size: 18px;
+  font-size: 14px;
+  margin-top: 0.5rem;
   box-shadow: none;
-  animation: fadeInUp 1.5s ease-out both;
 }
   
 .attn-box:hover {
