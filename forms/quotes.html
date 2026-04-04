@@ -274,7 +274,7 @@ header {
   color: #0d6efd;
 }
 
-/* QUOTE BUILDER */
+/* QUOTE BUILDER PANEL */
 #quoteBuilder {
   margin-top: 1.5rem;
   padding: 1.5rem 1.75rem;
@@ -283,13 +283,14 @@ header {
   border-radius: 14px;
   box-shadow: none;
   backdrop-filter: blur(6px);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition: transform 0.3s ease;
   animation: fadeInUp 1.8s ease-out both;
 }
+
 #quoteBuilder:hover {
   transform: translateY(-2px);
-  box-shadow: none;
 }
+
 #quoteBuilder h3 {
   margin-top: 0;
   margin-bottom: 0.75rem;
@@ -342,10 +343,11 @@ table.quote-table th:nth-child(5),
 table.quote-table td:nth-child(5) {
   width: 12%;
   text-align: right;
-  white-space: normal;      /* allow wrapping */
+  white-space: normal;      /* allow wrapping (INR can go to next line) */
   word-wrap: break-word;
 }
 
+/* Description columns */
 table.quote-table td:nth-child(1),
 table.quote-table td:nth-child(2) {
   vertical-align: top;
@@ -362,16 +364,15 @@ table.quote-table tr.section-header-row td {
 }
 
 /* Remove all borders for numeric columns (Qty, Unit, Total) */
-table.quote-table td:nth-child(3),
-table.quote-table td:nth-child(4),
-table.quote-table td:nth-child(5),
 table.quote-table th:nth-child(3),
+table.quote-table td:nth-child(3),
 table.quote-table th:nth-child(4),
-table.quote-table th:nth-child(5) {
+table.quote-table td:nth-child(4),
+table.quote-table th:nth-child(5),
+table.quote-table td:nth-child(5) {
   border: none !important;
 }
 
-/* keep thin grid lines only for non-numeric cells if needed */
 /* REMOVE SALES NOTE */
 #salesNoteBlock {
   display: none !important;
