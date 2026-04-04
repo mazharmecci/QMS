@@ -144,19 +144,18 @@ header {
   align-content: start;
   row-gap: 0.5rem;
 }
-
 /* COMPANY BOX */
 .company-box {
   flex: 1 1 auto;
   background: none;
   border: none;
   border-radius: 0;
-  padding: 0 0 0.5rem 0;           /* space for the line */
+  padding: 0 0 0.15rem 0;          /* was 0.5rem — much smaller */
   display: block;
-  margin-top: 4.75rem;             /* retain spacing below header */
+  margin-top: 0.75rem;             /* instead of 4.75rem so it won't push logo down */
   box-shadow: none;
   animation: none;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.4);  /* subtle separator */
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);  /* lighter, subtle */
 }
 
 .company-box p {
