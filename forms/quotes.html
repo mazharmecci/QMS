@@ -192,41 +192,32 @@ header {
   box-shadow: none;
 }
 
-/* QUOTE META GRID */
+
+/* QUOTE META GRID - single column */
 .quote-meta-grid {
   margin-top: 0.75rem;
   background: rgba(255,255,255,0.9);
   border-radius: 8px;
   padding: 0.75rem 1rem;
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 2fr)
-                        minmax(0, auto) minmax(0, 1.5fr);
-  column-gap: 0.5rem;
-  row-gap: 0.4rem;
-  box-shadow: none;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.6s ease-out both;
+  grid-template-columns: 1fr; /* single column */
+  row-gap: 0.6rem;            /* spacing between rows */
+  box-shadow: none;           /* remove embossed effect */
 }
-.quote-meta-grid:hover {
-  transform: translateY(-2px);
-  box-shadow: none;
-}
+
 .quote-meta-grid .label {
   font-size: 12px;
   font-weight: 600;
   color: #333;
   text-align: left;
 }
+
 .quote-meta-grid .value {
   font-size: 12px;
   font-weight: 400;
   color: #111;
-  text-align: right;
-  word-break: break-word;
-}
-.quote-meta-grid .value-small {
-  font-size: 11px;
-  font-weight: 400;
+  text-align: left; /* align values under labels */
+  margin-left: 0.5rem;
 }
 
 /* DELIVERY & INVOICE BLOCKS */
@@ -913,33 +904,29 @@ table.quote-table th {
   }
 }
 
-/* COMPANY BOX */
+/* COMPANY BOX - flat single line */
 .company-box {
   flex: 1 1 auto;
-  background: #d0d4d9;
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  display: flex;
-  align-items: flex-start;
-  margin-top: 0; /* removed large margin-top */
-  min-width: 0;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-  animation: fadeInUp 1.3s ease-out both;
+  background: none;          /* remove gray background */
+  border: none;              /* remove border */
+  border-radius: 0;          /* remove rounded corners */
+  padding: 0;                /* remove padding */
+  display: block;            /* simple block element */
+  margin-top: 0;             /* remove top margin */
+  box-shadow: none;          /* remove embossed effect */
+  animation: none;           /* remove fade animation */
 }
-.company-box:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
-}
+
 .company-box p {
   margin: 0;
-  font-size: 12px; /* slightly larger for readability */
-  color: #333;
-  line-height: 1.4;
-  white-space: normal; /* allow wrapping */
+  font-size: 13px;           /* slightly larger for readability */
+  color: #111;               /* darker text */
+  white-space: normal;       /* allow wrapping if needed */
   overflow: visible;
   text-overflow: clip;
+  font-weight: 600;          /* bold company name/address */
 }
+
 
 /* REMOVE SALES BOX */
 .sales-box,
