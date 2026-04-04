@@ -116,10 +116,10 @@ header {
 
 /* QUOTE HEADER - left content + right logo */
 .quote-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr; /* left text, right logo+meta */
+  align-items: start;
+  gap: 0.75rem;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(200,200,200,0.4);
   border-radius: 8px;
@@ -128,20 +128,51 @@ header {
   box-shadow: none;
 }
 
-/* LEFT SIDE */
+/* LEFT SIDE: company + attn only */
 .quote-left {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-/* RIGHT SIDE (logo only) */
+/* RIGHT SIDE: logo on top-right, details directly under it, right-aligned */
 .quote-right {
-  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-end;   /* stick everything to the right edge */
+  gap: 0.5rem;
+}
+
+/* LOGO wrapper tight to the top-right */
+.quote-logo-wrap {
+  margin: 0;
+  align-self: flex-end;     /* make sure logo hugs the right side */
+}
+.quote-logo-wrap img {
+  max-height: 90px;
+  width: auto;
+  display: block;
+  filter: none;
+}
+
+/* Make the quote-meta block hug the right too */
+.quote-meta-grid {
+  margin-top: 0.25rem;
+  padding: 0;
+  background: none;
+  border: none;
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 0.4rem;
+  row-gap: 0.25rem;
+  text-align: right;
+}
+.quote-meta-grid .label {
+  text-align: right;
+}
+.quote-meta-grid .value {
+  text-align: right;
+  margin-left: 0;
 }
 
 /* COMPANY BOX - flat single line */
@@ -188,41 +219,6 @@ header {
   box-shadow: none;
 }
 
-/* QUOTE META GRID - single column neat list */
-.quote-meta-grid {
-  margin-top: 0.75rem;
-  background: none;
-  border: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  row-gap: 0.6rem;
-  box-shadow: none;
-}
-.quote-meta-grid .label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
-  text-align: left;
-}
-.quote-meta-grid .value {
-  font-size: 12px;
-  font-weight: 400;
-  color: #111;
-  text-align: left;
-  margin-left: 0.5rem;
-}
-
-/* LOGO */
-.quote-logo-wrap {
-  margin: 0;
-}
-.quote-logo-wrap img {
-  max-height: 90px;
-  width: auto;
-  display: block;
-  filter: none; /* remove embossed shadow */
-}
 
 /* FADE-IN ANIMATION */
 @keyframes fadeInUp {
