@@ -40,13 +40,12 @@ header {
 .header-title {
   flex: 1;
   text-align: center;
-  font-size: 1.5rem;  /* was 1.25rem, ~4px bigger */
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #f9fafb;
 }
-  
 .header-title span {
   color: var(--accent);
 }
@@ -117,14 +116,14 @@ header {
   border: none;
   border-radius: 0;
   background: #ffffff;
-  padding: 0 0 0.5rem 0;   /* small bottom padding only */
+  padding: 0 0 0.5rem 0;
   box-shadow: none;
 }
 
 /* INNER GRID: LEFT (company/attn) + RIGHT (logo/meta) */
 .quote-header-body {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;  /* slightly more space right */
+  grid-template-columns: 1.1fr 0.9fr;
   align-items: flex-start;
   column-gap: 0.75rem;
 }
@@ -139,7 +138,7 @@ header {
 /* RIGHT SIDE: logo + meta */
 .quote-right {
   display: grid;
-  justify-items: end;      /* logo + meta hug right edge */
+  justify-items: end;
   align-content: flex-start;
   row-gap: 0.5rem;
 }
@@ -151,18 +150,17 @@ header {
   border-radius: 0;
   padding: 0 0 0.15rem 0;
   display: block;
-  margin-top: 6.75rem;     /* reasonable drop, not huge */
+  margin-top: 6.75rem; /* adjust this only if you want it higher/lower */
   box-shadow: none;
   animation: none;
 }
-
 .company-box p {
   margin: 0;
   font-size: 12px;
   color: #111;
   font-weight: 300;
   line-height: 1.5;
-  white-space: nowrap;     /* keep in one line */
+  white-space: nowrap;
   overflow: visible;
 }
 
@@ -177,7 +175,7 @@ header {
 }
 
 .attn-box {
-  margin-top: 0.75rem;     /* small offset below hospital */
+  margin-top: 0.75rem;
   background: #add8e6;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -208,29 +206,26 @@ header {
 /* QUOTE META GRID (under logo, slightly left of border) */
 .quote-meta-grid {
   margin-top: 0.75rem;
-  padding: 0 8px 0 0;      /* small right padding to pull text left */
+  padding: 0 8px 0 0;
   background: none;
   border: none;
   display: grid;
-  grid-template-columns: auto auto;  /* label | value */
+  grid-template-columns: auto auto;
   column-gap: 0.4rem;
   row-gap: 0.5rem;
   justify-items: end;
 }
-
 .quote-meta-grid .label,
 .quote-meta-grid .value {
-  font-size: 16px;         /* closer to hospital size, not huge */
+  font-size: 16px;
   text-align: right;
   white-space: nowrap;
   line-height: 1.6;
 }
-
 .quote-meta-grid .label {
   font-weight: 600;
   color: #333;
 }
-
 .quote-meta-grid .value {
   font-weight: 400;
   color: #111;
@@ -274,7 +269,6 @@ header {
   color: #0d6efd;
 }
 
-
 /* QUOTE BUILDER PANEL */
 #quoteBuilder {
   margin-top: 1.5rem;
@@ -287,11 +281,9 @@ header {
   transition: transform 0.3s ease;
   animation: fadeInUp 1.8s ease-out both;
 }
-
 #quoteBuilder:hover {
   transform: translateY(-2px);
 }
-
 #quoteBuilder h3 {
   margin-top: 0;
   margin-bottom: 0.75rem;
@@ -311,7 +303,6 @@ table.quote-table {
   box-shadow: none;
   animation: fadeInUp 1.9s ease-out both;
 }
-
 table.quote-table th,
 table.quote-table td {
   padding: 0.45rem 0.9rem;
@@ -320,7 +311,6 @@ table.quote-table td {
   vertical-align: top;
   font-size: 14px;
 }
-
 table.quote-table th {
   background: linear-gradient(135deg, #e9f2ff, #d7e9ff);
   color: #0b1727;
@@ -332,7 +322,7 @@ table.quote-table th {
 /* Quantity column: narrow and centered */
 table.quote-table th:nth-child(3),
 table.quote-table td:nth-child(3) {
-  width: 8%;
+  width: 9%;
   text-align: center;
   white-space: nowrap;
 }
@@ -342,9 +332,9 @@ table.quote-table th:nth-child(4),
 table.quote-table td:nth-child(4),
 table.quote-table th:nth-child(5),
 table.quote-table td:nth-child(5) {
-  width: 13%;
+  width: 14%;
   text-align: right;
-  white-space: normal;      /* allow wrapping (INR can go to next line) */
+  white-space: normal;
   word-wrap: break-word;
 }
 
@@ -358,7 +348,6 @@ table.quote-table .cat-sub b,
 table.quote-table .cat-sub strong {
   font-weight: 500;
 }
-
 table.quote-table tr.section-header-row td {
   border-top: none;
   padding-top: 0.35rem;
@@ -373,7 +362,6 @@ table.quote-table th:nth-child(5),
 table.quote-table td:nth-child(5) {
   border: none !important;
 }
-
 
 /* REMOVE SALES NOTE */
 #salesNoteBlock {
@@ -467,7 +455,7 @@ table.quote-table td:nth-child(5) {
   margin: 0.35rem 0;
 }
 
-/* FOOTER */
+/* FOOTER (screen) */
 .footer {
   font-size: 12px;
   text-align: right;
@@ -475,7 +463,6 @@ table.quote-table td:nth-child(5) {
   padding-top: 4px;
   margin-top: 4px;
   color: #555;
-  animation: fadeInUp 2.1s ease-out both;
 }
 
 /* NO-PRINT */
@@ -702,7 +689,7 @@ table.quote-table td:nth-child(5) {
 /* PAGE SETTINGS (PRINT) */
 @page {
   size: A4;
-  margin: 8mm 8mm 22mm 8mm;
+  margin: 8mm 8mm 18mm 8mm;
   @bottom-right {
     content: "Page " counter(page) " of " counter(pages);
     font-size: 9pt;
@@ -733,13 +720,11 @@ table.quote-table td:nth-child(5) {
     width: 100% !important;
   }
 
-  /* 1) Remove gray box for company in print */
   .company-box {
     background: transparent !important;
     border: none !important;
   }
 
-  /* 2) Prevent logo color shift in print */
   .quote-logo-wrap img,
   img {
     filter: none !important;
@@ -770,7 +755,7 @@ table.quote-table td:nth-child(5) {
   input[type="number"] {
     -moz-appearance: textfield;
   }
-}
+
   .discount-row,
   .after-discount-row {
     display: table-row;
@@ -794,11 +779,6 @@ table.quote-table td:nth-child(5) {
     overflow: visible !important;
   }
 
-  @page {
-    size: A4;
-    margin: 8mm 8mm 18mm 8mm;
-  }
-
   .footer {
     font-size: 9pt;
     margin: 0 !important;
@@ -808,12 +788,7 @@ table.quote-table td:nth-child(5) {
     line-height: 1.2;
     text-align: right;
     height: 20mm;
-    margin-top: -20mm;
     page-break-inside: avoid !important;
-  }
-
-  .quote-table tfoot.print-footer {
-    display: none !important;
   }
 
   #footer-spacer {
