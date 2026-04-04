@@ -107,37 +107,26 @@ header {
   margin: 2rem auto;
   padding: 2rem 2.5rem;
   background: #ffffff;
-  border-radius: 0;      /* if you want no rounded top frame */
-  box-shadow: none;      /* no outer shadow */
+  border-radius: 0;
+  box-shadow: none;
 }
 
-/* QUOTE HEADER OUTER BOX */
+/* QUOTE HEADER OUTER BOX (no border/shadow) */
 .quote-header {
-  padding-top: 1.25rem;    /* a bit more breathing room above logo */
   margin-bottom: 1.5rem;
-  border: none;          /* no border */
-  border-radius: 0;      /* no rounded corners */
+  border: none;
+  border-radius: 0;
   background: #ffffff;
-  padding: 0;            /* optional: align with page edges */
-  box-shadow: none;      /* no shadow */
+  padding: 0 0 0.5rem 0;   /* small bottom padding only */
+  box-shadow: none;
 }
 
 /* INNER GRID: LEFT (company/attn) + RIGHT (logo/meta) */
-/* Header grid: give right column slightly more width */
 .quote-header-body {
   display: grid;
-  grid-template-columns: 1fr 1fr;  /* was 1.4fr 1fr */
+  grid-template-columns: 1.1fr 0.9fr;  /* slightly more space right */
   align-items: flex-start;
   column-gap: 0.75rem;
-}
-
-/* Logo: never clipped */
-.quote-logo-wrap img {
-  max-height: 90px;        /* keep if needed, or raise a bit (e.g. 100px) */
-  width: auto;
-  display: block;
-  filter: none;
-  overflow: visible;       /* safety */
 }
 
 /* LEFT SIDE */
@@ -147,23 +136,22 @@ header {
   gap: 0.5rem;
 }
 
-/* RIGHT SIDE: logo + meta, hard to the right edge */
+/* RIGHT SIDE: logo + meta */
 .quote-right {
   display: grid;
-  justify-items: end;    /* logo + meta hug right border */
-  align-content: start;
+  justify-items: end;      /* logo + meta hug right edge */
+  align-content: flex-start;
   row-gap: 0.5rem;
 }
 
 /* COMPANY BOX */
 .company-box {
-  flex: 1 1 auto;
   background: none;
   border: none;
   border-radius: 0;
-  padding: 0;
+  padding: 0 0 0.15rem 0;
   display: block;
-  margin-top: 6.75rem;   /* retain spacing below header */
+  margin-top: 0.75rem;     /* reasonable drop, not huge */
   box-shadow: none;
   animation: none;
 }
@@ -174,23 +162,22 @@ header {
   color: #111;
   font-weight: 300;
   line-height: 1.5;
-  white-space: nowrap;     /* force single line */
-  overflow: visible;       /* show even if wider than container */
+  white-space: nowrap;     /* keep in one line */
+  overflow: visible;
 }
 
 /* HOSPITAL + ATTENTION BOX */
-
 .hospital-box {
   margin-top: 0.5rem;
-  font-size: 18px;
+  font-size: 16px;
 }
 .hospital-box p {
   margin: 0;
   font-size: 16px;
 }
-  
+
 .attn-box {
-  margin-top: 7.75rem;  /* was 0.5rem; moves it lower */
+  margin-top: 0.75rem;     /* small offset below hospital */
   background: #add8e6;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -200,19 +187,17 @@ header {
   box-shadow: none;
   animation: fadeInUp 1.5s ease-out both;
 }
-  
 .attn-box:hover {
   transform: none;
   box-shadow: none;
 }
 
-/* LOGO: stay at far right */
+/* LOGO: stay at far right, not clipped */
 .quote-logo-wrap {
   margin: 0;
   justify-self: end;
-  padding-right: 4px;   /* small inset from the extreme right */
+  padding-right: 8px;      /* inset from extreme right */
 }
-  
 .quote-logo-wrap img {
   max-height: 90px;
   width: auto;
@@ -220,10 +205,10 @@ header {
   filter: none;
 }
 
-/* QUOTE META GRID (right column under logo, slightly left of border) */
+/* QUOTE META GRID (under logo, slightly left of border) */
 .quote-meta-grid {
-  margin-top: 4rem;
-  padding: 0 8px 0 0;      /* was 30px, much smaller so logo has room */
+  margin-top: 0.75rem;
+  padding: 0 8px 0 0;      /* small right padding to pull text left */
   background: none;
   border: none;
   display: grid;
@@ -235,10 +220,10 @@ header {
 
 .quote-meta-grid .label,
 .quote-meta-grid .value {
-  font-size: 18px;          /* your increased size */
+  font-size: 16px;         /* closer to hospital size, not huge */
   text-align: right;
   white-space: nowrap;
-  line-height: 1.6;         /* add vertical spacing between lines */
+  line-height: 1.6;
 }
 
 .quote-meta-grid .label {
