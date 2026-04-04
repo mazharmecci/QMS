@@ -89,7 +89,7 @@ header {
   color: #fecaca;
   border-color: rgba(248, 113, 113, 0.8);
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(248, 113, 113, 0.45);
+  box-shadow: none;
 }
 
 /* SUBHEADER */
@@ -114,27 +114,43 @@ header {
   animation: fadeInUp 1s ease-out both;
 }
 
-/* QUOTE HEADER - neat side by side */
+/* QUOTE HEADER - left content + right logo */
 .quote-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;   /* align top edges */
-  gap: 1rem;                 /* tighter spacing */
+  align-items: flex-start;
+  gap: 1rem;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(200,200,200,0.4);
   border-radius: 8px;
   background: #fff;
   padding: 1rem 1.25rem;
-  box-shadow: none;          /* remove embossed effect */
+  box-shadow: none;
 }
 
-/* COMPANY BOX - inline, no gap */
+/* LEFT SIDE */
+.quote-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* RIGHT SIDE (logo only) */
+.quote-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* COMPANY BOX */
 .company-box {
   flex: 1;
-  background: none;          /* remove gray background */
+  background: none;
   border: none;
   padding: 0;
-  margin-top: 0;             /* remove large gap */
+  margin-top: 0;
   box-shadow: none;
 }
 .company-box p {
@@ -143,55 +159,7 @@ header {
   color: #111;
   font-weight: 600;
   line-height: 1.4;
-  white-space: normal;       /* allow wrapping naturally */
-}
-
-/* QUOTE META GRID - right side neat list */
-.quote-meta-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr; /* single column */
-  row-gap: 0.5rem;
-  background: none;
-  border: none;
-  padding: 0;
-  box-shadow: none;
-}
-.quote-meta-grid .label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
-}
-.quote-meta-grid .value {
-  font-size: 12px;
-  font-weight: 400;
-  color: #111;
-  margin-left: 0.5rem;
-}
-
-    
-.quote-logo-wrap {
-  align-self: flex-end;
-  margin-bottom: 0.5rem;
-}
-.quote-logo-wrap img {
-  max-height: 90px;
-  width: auto;
-  display: block;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
-}
-    
-
-/* FADE-IN ANIMATION */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  white-space: normal;
 }
 
 /* HOSPITAL + ATTENTION BOX */
@@ -208,40 +176,59 @@ header {
   color: #0f172a;
   font-size: 14px;
   box-shadow: none;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.5s ease-out both;
 }
 .attn-box:hover {
-  transform: translateY(-2px);
+  transform: none;
   box-shadow: none;
 }
 
-
-/* QUOTE META GRID - single column */
+/* QUOTE META GRID - single column neat list */
 .quote-meta-grid {
   margin-top: 0.75rem;
-  background: rgba(255,255,255,0.9);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  padding: 0;
   display: grid;
-  grid-template-columns: 1fr; /* single column */
-  row-gap: 0.6rem;            /* spacing between rows */
-  box-shadow: none;           /* remove embossed effect */
+  grid-template-columns: 1fr;
+  row-gap: 0.6rem;
+  box-shadow: none;
 }
-
 .quote-meta-grid .label {
   font-size: 12px;
   font-weight: 600;
   color: #333;
   text-align: left;
 }
-
 .quote-meta-grid .value {
   font-size: 12px;
   font-weight: 400;
   color: #111;
-  text-align: left; /* align values under labels */
+  text-align: left;
   margin-left: 0.5rem;
+}
+
+/* LOGO */
+.quote-logo-wrap {
+  margin: 0;
+}
+.quote-logo-wrap img {
+  max-height: 90px;
+  width: auto;
+  display: block;
+  filter: none; /* remove embossed shadow */
+}
+
+/* FADE-IN ANIMATION */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* DELIVERY & INVOICE BLOCKS */
