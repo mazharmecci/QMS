@@ -144,27 +144,27 @@ header {
   align-content: start;
   row-gap: 0.5rem;
 }
+
 /* COMPANY BOX */
 .company-box {
   flex: 1 1 auto;
   background: none;
   border: none;
   border-radius: 0;
-  padding: 0 0 0.15rem 0;          /* was 0.5rem — much smaller */
+  padding: 0;
   display: block;
-  margin-top: 0.75rem;             /* instead of 4.75rem so it won't push logo down */
+  margin-top: 4.75rem;   /* retain spacing below header */
   box-shadow: none;
   animation: none;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);  /* lighter, subtle */
 }
 
 .company-box p {
   margin: 0;
-  font-size: 16px;
+  font-size: 16px;       /* increased font size */
   color: #111;
   font-weight: 600;
-  line-height: 1.5;
-  white-space: normal;
+  line-height: 1.5;      /* slightly more line spacing */
+  white-space: normal;   /* allow wrapping naturally */
   overflow: visible;
   text-overflow: clip;
 }
@@ -1127,14 +1127,12 @@ Next lines: brief description"
               <div class="quote-left">
                 <div class="company-box">
                   <p>
-                    <strong>ISTOS MEDICAL PRIVATE LIMITED;</strong><br>
+                    <strong>ISTOS MEDICAL PVT LTD;</strong><br>
                     51/5, 2nd Cr J.C Industrial Area,<br>
                     Bikasipura Main Road, Yelachenahalli,<br>
                     Bangalore-560062, Karnataka - India.
                   </p>
-                  </div>
-              <!-- line appears after this block -->
-                  </div>
+                </div>
 
                 <div class="hospital-box">
                   <p>
