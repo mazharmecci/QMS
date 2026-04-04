@@ -17,6 +17,92 @@ body {
   color: var(--text-main);
 }
 
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.97));
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* back left, logout right */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+}
+
+/* TITLE */
+.header-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f9fafb;
+}
+.header-title span {
+  color: var(--accent);
+}
+
+/* BACK BUTTON */
+.back-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  background: rgba(255,255,255,0.1);
+  color: #f9fafb;
+  cursor: pointer;
+  transition: background 0.16s ease-out, transform 0.12s ease-out;
+}
+.back-btn:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  background: rgba(15, 23, 42, 0.96);
+  color: #f9fafb;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  transition: background 0.16s ease-out, color 0.16s ease-out,
+              border-color 0.16s ease-out, transform 0.12s ease-out,
+              box-shadow 0.16s ease-out;
+}
+.logout-btn:hover {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(248, 113, 113, 0.45);
+}
+
+/* SUBHEADER */
+.subheader {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+}
+.subheader span {
+  color: var(--accent);
+}
+
 /* MAIN FRAME */
 .container {
   max-width: 1320px;
@@ -25,6 +111,7 @@ body {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  animation: fadeInUp 1s ease-out both;
 }
 
 /* QUOTE HEADER */
@@ -34,8 +121,18 @@ body {
   border-radius: 12px;
   background: rgba(255,255,255,0.85);
   padding: 2rem 2.25rem;
+  position: relative;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.2s ease-out both;
+}
+.quote-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(173,216,230,0.4), 0 6px 16px rgba(0,0,0,0.08);
+}
+.quote-header-body {
   display: flex;
-  justify-content: space-between;
   gap: 1.5rem;
 }
 .quote-left,
@@ -56,23 +153,25 @@ body {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
 }
 
-/* COMPANY BOX */
-.company-box {
-  background: #d0d4d9;
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #333;
+/* FADE-IN ANIMATION */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* HOSPITAL + ATTENTION BOX */
-.hospital-box {
-  margin-top: 0.5rem;
-  font-size: 13px;
+.hospital-box,
+.attn-box {
+  margin-top: 0.3rem;
 }
 .attn-box {
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
   background: #add8e6;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -80,6 +179,12 @@ body {
   color: #0f172a;
   font-size: 14px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.5s ease-out both;
+}
+.attn-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(173,216,230,0.5), 0 6px 16px rgba(0,0,0,0.08);
 }
 
 /* QUOTE META GRID */
@@ -94,42 +199,460 @@ body {
   column-gap: 0.5rem;
   row-gap: 0.4rem;
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.6s ease-out both;
+}
+.quote-meta-grid:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(127,182,255,0.4), 0 6px 16px rgba(0,0,0,0.08);
 }
 .quote-meta-grid .label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
+  font-size: 11px;
+  font-weight: 400;
+  color: #555;
   text-align: left;
 }
 .quote-meta-grid .value {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 9px;
+  font-weight: 100;
   color: #111;
   text-align: right;
+  white-space: normal;
   word-break: break-word;
 }
-
-/* DELIVERY & INVOICE BLOCKS */
-.delivery-block,
-.invoice-block {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #f9f9f9;
-  font-size: 13px;
-  line-height: 1.4;
+.quote-meta-grid .value-small {
+  font-size: 9px;
+  font-weight: 100;
 }
-.delivery-block h4,
-.invoice-block h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 14px;
-  font-weight: 700;
+
+/* QUOTE BUILDER */
+#quoteBuilder {
+  margin-top: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  background: #ffffff;
+  border: 1px solid rgba(200,200,200,0.4);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  backdrop-filter: blur(6px);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.8s ease-out both;
+}
+#quoteBuilder:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(127,182,255,0.4), 0 6px 16px rgba(0,0,0,0.08);
+}
+#quoteBuilder h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
   color: #0d6efd;
+  font-weight: 600;
 }
 
-/* REMOVE SALES NOTE */
-#salesNoteBlock { display: none !important; }
+/* QUOTE TABLE */
+table.quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin-bottom: 1rem;
+  background: rgba(255,255,255,0.95);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  animation: fadeInUp 1.9s ease-out both;
+}
+table.quote-table th,
+table.quote-table td {
+  padding: 0.45rem 0.9rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+}
+table.quote-table th {
+  background: linear-gradient(135deg, #e9f2ff, #d7e9ff);
+  color: #0b1727;
+  font-size: 14px;
+  text-transform: capitalize;
+  letter-spacing: 0.03em;
+}
+table.quote-table th:nth-child(4),
+table.quote-table th:nth-child(5),
+table.quote-table td:nth-child(4),
+table.quote-table td:nth-child(5) {
+  text-align: right;
+  white-space: nowrap;
+}
+table.quote-table td:nth-child(3),
+table.quote-table th:nth-child(3) {
+  text-align: center;
+  white-space: nowrap;
+}
+table.quote-table td:nth-child(1),
+table.quote-table td:nth-child(2) {
+  vertical-align: top;
+}
+table.quote-table .cat-sub b,
+table.quote-table .cat-sub strong {
+  font-weight: 500;
+}
+table.quote-table tr.section-header-row td {
+  border-top: none;
+  padding-top: 0.35rem;
+}
+
+/* debug grid – very thin, subtle light-blue lines */
+table.quote-table td,
+table.quote-table th {
+  border: 0.5px solid rgba(148, 196, 255, 0.6);
+}
+
+/* SALES NOTE */
+#salesNoteBlock {
+  margin: 0 0 1rem 0;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: #333;
+  animation: fadeInUp 1.7s ease-out both;
+}
+
+/* FINALIZE BUTTON */
+.btn-finalize {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, #6ea8fe, #0d6efd);
+  color: #ffffff;
+  padding: 0.7rem 1.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: all 0.25s ease;
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+.btn-finalize:hover {
+  background: linear-gradient(135deg, #82b4ff, #2a7bff);
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(13,110,253,0.6), 0 6px 18px rgba(0,0,0,0.25);
+}
+.btn-finalize:active {
+  transform: translateY(0);
+  box-shadow: 0 0 8px rgba(13,110,253,0.4);
+}
+
+/* QUOTE ACTIONS */
+.quote-actions { margin-bottom: 0.75rem; }
+
+/* QUOTE BUTTONS */
+.btn-quote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid #7fb6ff;
+  background: linear-gradient(135deg, #f0f7ff, #d7e9ff);
+  color: #0b1727;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(15,23,42,0.1);
+  transition: all 0.25s ease;
+}
+.btn-quote:hover {
+  background: linear-gradient(135deg, #ffffff, #e3f2ff);
+  border-color: #5b9bff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(127,182,255,0.6), 0 5px 14px rgba(15,23,42,0.15);
+}
+.btn-quote:active {
+  transform: translateY(0);
+  box-shadow: 0 0 6px rgba(127,182,255,0.4);
+}
+.btn-quote-secondary {
+  background: linear-gradient(135deg, #eef4ff, #dde7ff);
+}
+
+/* TERMS BLOCK */
+#termsBlock {
+  margin-top: 1.5rem;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(200,200,200,0.4);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  animation: fadeInUp 2s ease-out both;
+}
+#termsBlock h2 {
+  margin-top: 0;
+  color: #0d6efd;
+  font-size: 15px;
+  font-weight: 700;
+}
+#termsTextBlock { margin-top: 0.25rem; }
+#termsTextBlock p { margin: 0.35rem 0; }
+
+/* ANIMATIONS */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
+  50% { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
+  100% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
+}
+
+/* FOOTER */
+.footer {
+  font-size: 12px;
+  text-align: right;
+  border-top: 1px solid #ccc;
+  padding-top: 4px;
+  margin-top: 4px;
+  color: #555;
+  animation: fadeInUp 2.1s ease-out both;
+}
+
+/* NO-PRINT */
+.no-print { display: block; }
+
+/* OVERLAY BACKDROP */
+.overlay {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  background: rgba(240,245,255,0.65);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(6px);
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+/* OVERLAY PANEL */
+.overlay-panel {
+  background: rgba(255,255,255,0.9);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  max-width: 900px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.15), 0 0 12px rgba(127,182,255,0.4);
+  backdrop-filter: blur(10px);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 2.2s ease-out both;
+}
+.overlay-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(15,23,42,0.2), 0 0 16px rgba(127,182,255,0.5);
+}
+
+/* OVERLAY BODY */
+.overlay-body {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 0.25rem;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* CUSTOM SCROLLBAR for overlay */
+.overlay-body::-webkit-scrollbar {
+  width: 6px;
+}
+.overlay-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overlay-body::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 999px;
+}
+.overlay-body::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* ITEM MODAL */
+#itemModalOverlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.55);
+  z-index:2000;
+  align-items:center;
+  justify-content:center;
+}
+#itemModal {
+  width:620px;
+  max-width:95%;
+  background:#ffffff;
+  border-radius:14px;
+  padding:1.25rem 1.5rem 1rem;
+  box-shadow:0 20px 45px rgba(15,23,42,0.35);
+  border:1px solid rgba(148,163,184,0.4);
+  display:flex;
+  flex-direction:column;
+}
+.item-modal-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:0.75rem;
+}
+.item-modal-title {
+  margin:0;
+  font-size:15px;
+  font-weight:700;
+  color:#0f172a;
+}
+.item-modal-tag {
+  font-size:11px;
+  padding:0.15rem 0.5rem;
+  border-radius:999px;
+  background:#eff6ff;
+  color:#1d4ed8;
+  border:1px solid #bfdbfe;
+}
+.item-modal-close {
+  border:none;
+  background:transparent;
+  font-size:18px;
+  cursor:pointer;
+  color:#64748b;
+}
+.item-modal-grid {
+  display:grid;
+  grid-template-columns:1.1fr 0.9fr;
+  gap:0.5rem 0.75rem;
+  margin-bottom:0.75rem;
+}
+.item-modal-field label {
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:#64748b;
+  margin-bottom:0.15rem;
+}
+.item-modal-field input,
+.item-modal-field textarea {
+  width:100%;
+  font-size:12px;
+  padding:0.35rem 0.45rem;
+  border-radius:6px;
+  border:1px solid #cbd5e1;
+  outline:none;
+  transition:border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.item-modal-field input:focus,
+.item-modal-field textarea:focus {
+  border-color:#2563eb;
+  box-shadow:0 0 0 1px rgba(37,99,235,0.15);
+}
+.item-modal-details {
+  grid-column:1 / -1;
+}
+.item-modal-footer {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:0.5rem;
+}
+.item-modal-actions {
+  display:flex;
+  gap:0.5rem;
+}
+.btn-item-secondary,
+.btn-item-primary {
+  border-radius:999px;
+  border:1px solid #cbd5e1;
+  font-size:11px;
+  font-weight:600;
+  padding:0.3rem 0.8rem;
+  cursor:pointer;
+}
+.btn-item-secondary {
+  background:#f1f5f9;
+  color:#0f172a;
+}
+.btn-item-primary {
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#ffffff;
+  border-color:#1d4ed8;
+  box-shadow:0 3px 9px rgba(15,23,42,0.25);
+}
+.item-modal-list {
+  margin-top:0.5rem;
+  max-height:210px;
+  overflow-y:auto;
+  border-top:1px dashed #e2e8f0;
+  padding-top:0.4rem;
+  font-size:11px;
+}
+.item-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  padding:0.35rem 0;
+  border-bottom:1px dashed #e2e8f0;
+}
+.item-row:last-child {
+  border-bottom:none;
+}
+.item-row-main {
+  flex:1;
+  margin-right:0.5rem;
+}
+.item-row-main-title {
+  font-weight:600;
+  color:#0f172a;
+}
+.item-row-main-meta {
+  color:#64748b;
+}
+.item-row-actions {
+  display:flex;
+  flex-direction:column;
+  gap:0.25rem;
+}
+.item-row-actions button {
+  border-radius:999px;
+  border:1px solid #cbd5e1;
+  font-size:10px;
+  padding:0.15rem 0.55rem;
+  cursor:pointer;
+  background:#f8fafc;
+}
+.item-row-actions button:nth-child(1) {
+  color:#0f172a;
+}
+.item-row-actions button:nth-child(2) {
+  color:#b91c1c;
+  border-color:#fecaca;
+  background:#fef2f2;
+}
+
+/* PAGE SETTINGS (PRINT) – single @page */
+@page {
+  size: A4;
+  margin: 8mm 8mm 22mm 8mm; /* extra bottom for footer */
+
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-size: 9pt;
+    color: #555;
+  }
+}
 
 /* PRINT OVERRIDES */
 @media print {
@@ -140,6 +663,8 @@ body {
     color-adjust: exact;
     font-size: 12pt;
   }
+
+  header { display: none !important; }
 
   .container {
     margin: 0 !important;
@@ -152,43 +677,263 @@ body {
 
   .company-box {
     background: #d0d4d9 !important;
+    box-shadow: none !important;
     border: 1px solid #ccc;
   }
   .attn-box {
     background: #add8e6 !important;
+    box-shadow: none !important;
     border: 1px solid #ccc;
   }
   .quote-meta-grid {
     background: #fff !important;
+    box-shadow: none !important;
     border: 1px solid #ccc;
   }
 
-  .delivery-block,
-  .invoice-block {
-    border: 1px solid #ccc !important;
-    background: #fff !important;
-    padding: 6pt 8pt !important;
-    margin-top: 10pt !important;
-    border-radius: 6px !important;
-    font-size: 11pt !important;
-    line-height: 1.3 !important;
-    page-break-inside: avoid !important;
+  thead.print-header { display: table-header-group; }
+  tfoot.print-footer { display: table-footer-group; }
+
+  .no-print,
+  .overlay,
+  button,
+  .btn-quote,
+  .btn-finalize,
+  .quote-toast {
+    display: none !important;
   }
-  .delivery-block h4,
-  .invoice-block h4 {
-    margin: 0 0 4pt 0 !important;
-    font-size: 11pt !important;
-    font-weight: 700 !important;
-    color: #000 !important;
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
-  .delivery-block p,
-  .invoice-block p {
-    margin: 0 !important;
-    font-size: 10pt !important;
-    color: #333 !important;
+  input[type="number"] { -moz-appearance: textfield; }
+
+  .discount-row,
+  .after-discount-row { display: table-row; }
+  .discount-zero .discount-row,
+  .discount-zero .after-discount-row { display: none !important; }
+}
+
+@media print {
+  /* Make sure table rows and summary can split across pages */
+  table.quote-table,
+  table.quote-table tr,
+  table.quote-table td {
+    page-break-inside: auto !important;
+    overflow: visible !important;
+  }
+
+  /* If you have a summary/total block below the table, ensure it can print */
+  #quoteSummary,
+  .quote-summary,
+  .summary-block {
+    page-break-inside: avoid;
+    overflow: visible !important;
+  }
+
+  /* Give a tiny bit more room at bottom to prevent clipping */
+  @page {
+    size: A4;
+    margin: 8mm 8mm 18mm 8mm; /* was 22mm bottom, reduce slightly */
+  }
+
+  .footer {
+    height: 18mm;
+    margin-top: -18mm;
   }
 }
 
+
+/* Footer and spacer behaviour in print */
+@media print {
+  /* We do NOT use table-footer-group anymore for HTML footer */
+  .quote-table tfoot.print-footer {
+    display: none !important;
+  }
+
+  #footer-spacer {
+    page-break-after: avoid !important;
+  }
+
+  .footer {
+    font-size: 9pt;
+    margin: 0 !important;
+    padding: 2mm 0 !important;
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;
+    text-align: right;
+
+    height: 20mm;
+    margin-top: -20mm;
+    page-break-inside: avoid !important;
+  }
+}
+
+/* Overlay search buttons */
+
+.overlay-search {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.search-container {
+  display: flex;
+  gap: 8px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-btn {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.search-btn:active {
+  background: #e5e7eb;
+}
+
+
+/* Force Terms & Conditions to start on a new page */
+@media print {
+  #termsBlock {
+    page-break-before: always;
+  }
+}
+
+/* Contact info adjustments */
+@media print {
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 11pt !important;
+  }
+
+  .quote-meta-grid .value.handphone,
+  .quote-meta-grid .value.office {
+    white-space: nowrap !important;
+    font-size: 9pt !important;
+  }
+
+  .quote-meta-grid {
+    border: none !important;
+  }
+}
+
+/* Global print fixes: let content flow to all pages */
+@media print {
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .container {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .quote-header,
+  #quoteBuilder,
+  #termsBlock {
+    page-break-inside: auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* COMPANY BOX */
+.company-box {
+  flex: 1 1 auto;
+  background: #d0d4d9;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: left;
+  margin-top: 5.95rem;
+  min-width: 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.3s ease-out both;
+}
+.company-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(173,216,230,0.4), 0 6px 14px rgba(0,0,0,0.08);
+}
+.company-box p {
+  margin: 0;
+  font-size: 10px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* SALES BOX */
+.sales-box {
+  flex: 0 0 auto;
+  background: #d0d4d9;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  animation: fadeInUp 1.4s ease-out both;
+}
+.sales-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(127,182,255,0.4), 0 6px 14px rgba(0,0,0,0.08);
+}
+.sales-title {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  padding-top: 0.1rem;
+  letter-spacing: 0.03em;
+  color: #0d6efd;
+}
+
+@media print {
+  .sales-box,
+  .sales-box .sales-title {
+    font-size: 9pt !important;
+    line-height: 1.2;
+  }
+}
 </style>
 </head>
 
@@ -403,100 +1148,93 @@ Next lines: brief description"
   </div>
 </div>
 
-<!-- Main container -->
-<div class="container">
-  <table class="print-frame">
-    <thead class="print-header">
-      <tr>
-        <td>
-          <div class="quote-header">
-            <div class="quote-header-body">
+  <!-- Main container -->
+  <div class="container">
+    <table class="print-frame">
+      <thead class="print-header">
+        <tr>
+          <td>
+            <div class="quote-header">
+              <div class="quote-header-body">
+                <!-- Left side: company + hospital -->
+                <div class="quote-left">
+                  <div class="company-box">
+                    <p>
+                      <strong>ISTOS MEDICAL PVT LTD;</strong>
+                      51/5, 2nd Cr J.C Indl Area, Bikasipura,
+                      Yelachenahalli, Bangalore-560062
+                    </p>
+                  </div>
 
-              <!-- Left side: company + hospital -->
-              <div class="quote-left">
-                <div class="company-box">
-                  <p>
-                    <strong>ISTOS MEDICAL PVT LTD;</strong><br>
-                    #51/5, BSTN Heights, 2nd Cross,<br>
-                    J.C. Industrial Area, Bikasipura Main Road,<br>
-                    Yelachenahalli, Bangalore-560062
-                  </p>
+                  <div class="hospital-box">
+                    <p>
+                      <strong>To:</strong><br>
+                      <span id="toHospitalNameLine"></span><br>
+                      <span id="toHospitalAddressLine1"></span><br>
+                      <span id="toHospitalAddressLine2"></span>
+                    </p>
+                  </div>
+
+                  <div class="attn-box">
+                    <span><strong>Kind Attn:</strong></span>
+                    <span id="toAttn"></span>
+                  </div>
                 </div>
 
-                <div class="hospital-box">
-                  <p>
-                    <strong>To:</strong><br>
-                    <span id="toHospitalNameLine"></span><br>
-                    <span id="toHospitalAddressLine1"></span><br>
-                    <span id="toHospitalAddressLine2"></span>
-                  </p>
-                </div>
+                <!-- Right side: logo + meta -->
+                <div class="quote-right">
+                  <div class="quote-logo-wrap">
+                    <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
+                  </div>
 
-                <div class="attn-box">
-                  <span><strong>Kind Attn:</strong></span>
-                  <span id="toAttn"></span>
-                </div>
-              </div>
-
-              <!-- Right side: logo + meta -->
-              <div class="quote-right">
-                <div class="quote-logo-wrap">
-                  <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
-                </div>
-
-                <div class="quote-meta-grid">
-                  <div class="label">Quote No.</div>
-                  <div class="value" id="metaQuoteNo"></div>
-
-                  <div class="label">Quotation Date</div>
-                  <div class="value" id="metaQuoteDate"></div>
-
-                  <div class="label">Your Ref.</div>
-                  <div class="value" id="metaYourRef"></div>
-
-                  <div class="label">Ref Date</div>
-                  <div class="value" id="metaRefDate"></div>
-
-                  <div class="label">Your Contact</div>
-                  <div class="value" id="metaContactPerson"></div>
-
-                  <div class="label">Mobile</div>
-                  <div class="value" id="metaPhone"></div>
-
-                  <div class="label">Email</div>
-                  <div class="value" id="metaEmail"></div>
-
-                  <div class="label">Office</div>
-                  <div class="value" id="metaOffice"></div>
+                  <div class="sales-box">
+                    <div class="sales-title">SALES QUOTATION</div>
+                  </div>
+                  <div class="quote-meta-grid">
+                    <div class="label">Quote No.</div>
+                    <div class="value" id="metaQuoteNo"></div>
+                  
+                    <div class="label right">
+                      <span style="color:white;">&nbsp;&nbsp;</span>Quotation Date
+                    </div>
+                    <div class="value value-small right" id="metaQuoteDate"></div>
+                  
+                    <div class="label">Your Ref.</div>
+                    <div class="value value-small" id="metaYourRef"></div>
+                  
+                    <div class="label right">
+                      <span style="color:white;">&nbsp;&nbsp;</span>Ref Date
+                    </div>
+                    <div class="value value-small right" id="metaRefDate"></div>
+                  
+                    <div class="label">Your Contact</div>
+                    <div class="value value-small" id="metaContactPerson"></div>
+                  
+                    <div class="label right">
+                      <span style="color:white;">&nbsp;&nbsp;</span>Mobile
+                    </div>
+                    <div class="value value-small right" id="metaPhone"></div>
+                  
+                    <div class="label">Email</div>
+                    <div class="value value-small" id="metaEmail"></div>
+                  
+                    <div class="label right">
+                      <span style="color:white;">&nbsp;&nbsp;</span>Office
+                    </div>
+                    <div class="value value-small right" id="metaOffice"></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </td>
-      </tr>
-    </thead>
+          </td>
+        </tr>
+      </thead>
 
-    <tbody class="print-body">
-      <tr>
-        <td>
-          <!-- Delivery & Invoice sections -->
-          <div class="delivery-block">
-            <h4>Delivery will be made to the address:</h4>
-            <p id="deliveryHospitalName"></p>
-            <p id="deliveryHospitalAddress"></p>
-          </div>
-
-          <div class="invoice-block">
-            <h4>Invoiced to:</h4>
-            <p id="invoiceHospitalName"></p>
-            <p id="invoiceHospitalAddress"></p>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
+      <tbody class="print-body">
+        <tr>
+          <td>
+            <!-- Sales note (free text) -->
+            <div id="salesNoteBlock"></div>
 
             <!-- Quote builder controls (edit-only) -->
             <div id="quoteBuilder" class="no-print">
@@ -557,9 +1295,44 @@ Next lines: brief description"
   </div>
 
 <script type="module">
-  import { db, doc, getDoc } from "../js/firebase.js";
-  import { getInstrumentsMaster, saveQuoteHeader } from "../js/quoteService.js";
-  import { populateHeader, renderQuoteBuilder } from "../js/quoteUI.js";
+  import {
+    moneyINR,
+    parseDetailsText,
+    formatInstrumentCell,
+    formatItemCell
+  } from "../js/quoteUtils.js";
+
+  import {
+    getQuoteHeaderRaw,
+    saveQuoteHeader,
+    getInstrumentsMaster,
+    getQuoteContext,
+    validateHeader,
+    finalizeQuote,
+    buildQuoteObject
+  } from "../js/quoteService.js";
+
+  import {
+    populateHeader,
+    renderQuoteBuilder,
+    openInstrumentModal,
+    closeInstrumentModal,
+    openInstrumentPicker,
+    closeInstrumentPicker,
+    addInstrumentToQuote,
+    openConfigModal,
+    openAdditionalModal,
+    openItemModal,
+    closeItemModal,
+    renderItemModalList,
+    editItemFromModal,
+    removeItemFromModal,
+    saveItemFromModal,
+    addMasterItemToLine,
+    renderInstrumentModalList
+  } from "../js/quoteUI.js";
+
+  import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
 
   let currentQuoteDocId = null;
   let quoteHydrated = false;
@@ -569,83 +1342,91 @@ Next lines: brief description"
     return params.get(name);
   }
 
-  function toDateDisplay(d) {
+  function toDateInputValue(d) {
     if (!d) return "";
     const date = d instanceof Date ? d : new Date(d.seconds ? d.seconds * 1000 : d);
     if (Number.isNaN(date.getTime())) return "";
     const dd = String(date.getDate()).padStart(2, "0");
     const mm = String(date.getMonth() + 1).padStart(2, "0");
     const yyyy = date.getFullYear();
+    // show as dd-mm-yyyy everywhere we *display* the date
     return `${dd}-${mm}-${yyyy}`;
   }
 
-  function hydrateHeader(docData, docId = null) {
+  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
     if (!docData || typeof docData !== "object") return null;
     if (docId) currentQuoteDocId = docId;
-
+  
+    const hosp = docData.hospital || {};
+  
     const header = {
       quoteNo: docData.quoteNo || "",
-      quoteDate: toDateDisplay(docData.quoteDate),
-      hospitalName: docData.hospitalName || "",
-      hospitalAddress: docData.hospitalAddress || "",
-      contactPerson: docData.contactPerson || "",
-      contactEmail: docData.contactEmail || "",
-      contactPhone: docData.contactPhone || "",
-      officePhone: docData.officePhone || "",
+      quoteDate: toDateInputValue(docData.quoteDate),
+      hospitalName: hosp.name || docData.hospitalName || "",
+      hospitalAddress: hosp.address || docData.hospitalAddress || "",
+      contactPerson: hosp.contactPerson || docData.contactPerson || "",
+      contactEmail: hosp.email || docData.contactEmail || "",
+      contactPhone: hosp.phone || docData.contactPhone || "",
+      officePhone: hosp.officePhone || docData.officePhone || "",
       yourReference: docData.yourReference || "",
-      refDate: toDateDisplay(docData.refDate),
-      kindAttn: docData.kindAttn || "",
+      refDate: toDateInputValue(docData.refDate),
+      kindAttn: hosp.kindAttn || docData.kindAttn || "",
+      salesNote: docData.salesNote || "",
+      termsHtml: docData.termsHtml || "",
+      termsText: docData.termsText || "",
+      discount: Number(docData.discount || 0),
       status: docData.status || "Submitted",
-      quoteLines: Array.isArray(docData.quoteLines) ? docData.quoteLines : []
+      gstPercent: Number(docData.gstPercent || 0),
+      gstValueINR: Number(docData.gstValueINR || 0),
+      totalValueINR: Number(docData.totalValueINR || 0),
+      quoteLines: []
     };
-
+  
+    // 1) Prefer stored quoteLines (new model)
+    if (Array.isArray(docData.quoteLines) && docData.quoteLines.length) {
+      header.quoteLines = docData.quoteLines.map((line) => ({
+        lineType: line.lineType || "instrument",
+        instrumentIndex: line.instrumentIndex ?? 0,
+        quantity: Number(line.quantity || 1),
+        unitPriceOverride: line.unitPriceOverride ?? null,
+        configItems: Array.isArray(line.configItems) ? line.configItems : [],
+        additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
+      }));
+      console.log("[hydrate] Using quoteLines from Firestore:", header.quoteLines.length);
+    } else {
+      // 2) Legacy fallback: map items[] to quoteLines using master
+      const instruments = getInstrumentsMaster();
+      const items = Array.isArray(docData.items) ? docData.items : [];
+      console.log("[hydrate] Legacy items length:", items.length);
+  
+      header.quoteLines = items.map((item) => {
+        const code = item.instrumentCode || item.code || "";
+        const name = item.instrumentName || item.name || "";
+        let idx = instruments.findIndex(
+          (inst) =>
+            inst.instrumentCode === code ||
+            inst.catalog === code ||
+            inst.instrumentName === name ||
+            inst.name === name
+        );
+        if (idx < 0) {
+          console.warn("[hydrate] Instrument not found in master:", item);
+          idx = 0;
+        }
+        return {
+          lineType: "instrument",
+          instrumentIndex: idx,
+          quantity: item.quantity || 1,
+          unitPriceOverride: item.unitPriceOverride || null,
+          configItems: item.configItems || [],
+          additionalItems: item.additionalItems || []
+        };
+      });
+    }
+  
     saveQuoteHeader(header);
-
-    // Populate DOM
-    document.getElementById("toHospitalNameLine").textContent = header.hospitalName;
-    const addrParts = (header.hospitalAddress || "").split(",");
-    document.getElementById("toHospitalAddressLine1").textContent = addrParts[0] || "";
-    document.getElementById("toHospitalAddressLine2").textContent = addrParts.slice(1).join(", ") || "";
-    document.getElementById("toAttn").textContent = header.kindAttn;
-
-    document.getElementById("metaQuoteNo").textContent = header.quoteNo;
-    document.getElementById("metaQuoteDate").textContent = header.quoteDate;
-    document.getElementById("metaYourRef").textContent = header.yourReference;
-    document.getElementById("metaRefDate").textContent = header.refDate;
-    document.getElementById("metaContactPerson").textContent = header.contactPerson;
-    document.getElementById("metaPhone").textContent = header.contactPhone;
-    document.getElementById("metaEmail").textContent = header.contactEmail;
-    document.getElementById("metaOffice").textContent = header.officePhone;
-
-    // Delivery & Invoice sections
-    document.getElementById("deliveryHospitalName").textContent = header.hospitalName;
-    document.getElementById("deliveryHospitalAddress").textContent = header.hospitalAddress;
-    document.getElementById("invoiceHospitalName").textContent = header.hospitalName;
-    document.getElementById("invoiceHospitalAddress").textContent = header.hospitalAddress;
-
     return header;
   }
-
-  async function loadQuote() {
-    const quoteId = getQueryParam("id");
-    if (!quoteId) return;
-    try {
-      const ref = doc(db, "quoteHistory", quoteId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        hydrateHeader(snap.data(), snap.id);
-        quoteHydrated = true;
-      }
-    } catch (err) {
-      console.error("Error loading quote:", err);
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    await loadQuote();
-    populateHeader();
-    renderQuoteBuilder();
-  });
 
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
