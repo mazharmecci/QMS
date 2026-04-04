@@ -901,218 +901,7 @@ table.quote-table,
   filter: none !important;
 }
 </style>
-</head>
 
-<body>
-  <header>
-    <div class="header-inner">
-      <!-- Back button far left -->
-      <button id="backBtn" class="back-btn">← Back</button>
-
-      <!-- Centered title -->
-      <div class="header-title">
-        ISTOS Medical Private Limited <span>- QMS</span>
-      </div>
-
-      <!-- Logout button far right -->
-      <button id="logoutBtn" class="logout-btn">Logout</button>
-    </div>
-  </header>
-
-  <!-- ========= Instruments modals ========= -->
-  <!-- Instruments for this quote (list) -->
-  <div id="instrumentModalOverlay" class="overlay" style="display:none;">
-    <div class="overlay-panel">
-      <div class="overlay-header">
-        <h3 class="overlay-title">Instruments for this Quote</h3>
-        <button type="button" class="overlay-close" id="closeInstrumentModalBtn">✕</button>
-      </div>
-      <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
-        <div style="font-size:12px; color:#64748b;">Manage all instruments included in this quotation.</div>
-        <button type="button" class="btn-quote" id="openInstrumentPickerBtn">+ Add Instrument</button>
-      </div>
-      <div class="overlay-body">
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-          <thead>
-            <tr style="background:#e5f0ff;">
-              <th>Item#</th>
-              <th>Cat / Material No.</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>Unit Price (INR)</th>
-              <th>Total Price (INR)</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="instrumentModalList"></tbody>
-        </table>
-      </div>
-      <div style="margin-top:0.75rem; text-align:right;">
-        <button type="button" class="btn-quote btn-quote-secondary" id="closeInstrumentModalFooterBtn">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit instrument (qty + price) -->
-  <div id="editInstrumentOverlay" class="overlay" style="display:none; z-index:2200;">
-    <div class="overlay-panel" style="max-width:400px;">
-      <div class="overlay-header">
-        <h3 class="overlay-title">Edit Instrument</h3>
-        <button type="button" class="overlay-close" id="closeEditInstrumentBtn">✕</button>
-      </div>
-      <div class="overlay-body" style="padding:1.5rem;">
-        <input type="hidden" id="editInstrumentIndex" value="-1" />
-
-        <div class="item-modal-field" style="margin-bottom:0.75rem;">
-          <label for="editQuantity">Quantity</label>
-          <input
-            id="editQuantity"
-            type="number"
-            min="1"
-            value="1"
-            style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.375rem;"
-          />
-        </div>
-
-        <div class="item-modal-field">
-          <label for="editUnitPrice">Unit Price (INR)</label>
-          <input
-            id="editUnitPrice"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:0.375rem;"
-          />
-        </div>
-      </div>
-      <div style="padding:0 1.5rem 1.5rem; text-align:right; border-top:1px solid #e5e7eb;">
-        <button type="button" class="btn-quote btn-quote-secondary" id="cancelEditInstrumentBtn">Cancel</button>
-        <button type="button" class="btn-quote" id="saveEditInstrumentBtn">Save Changes</button>
-      </div>
-    </div>
-  </div>
-
-<!-- Instrument picker -->
-<div id="instrumentPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Select Instrument from Master</h3>
-      <button type="button" class="overlay-close" id="closeInstrumentPickerBtn">✕</button>
-    </div>
-    
-    <!-- Instrument Search -->
-    <div class="overlay-search">
-      <div class="search-container">
-        <input type="text" id="instrumentSearchInput" class="search-input" placeholder="Search instruments...">
-        <button type="button" id="instrumentSearchBtn" class="search-btn">🔍</button>
-      </div>
-    </div>
-    
-    <div id="instrumentPickerList" class="overlay-body"></div>
-  </div>
-</div>
-
-<!-- Shared item modal -->
-<div id="itemModalOverlay">
-  <div id="itemModal">
-    <div class="item-modal-header">
-      <div>
-        <h3 id="itemModalTitle" class="item-modal-title">Additional Items for this Instrument</h3>
-        <span id="itemModalTag" class="item-modal-tag">Additional</span>
-      </div>
-      <button type="button" id="closeItemModalBtn" class="item-modal-close">×</button>
-    </div>
-
-    <form id="itemModalForm">
-      <input type="hidden" id="itemModalType" value="config" />
-      <input type="hidden" id="itemLineIndex" value="" />
-
-      <div class="item-modal-grid">
-        <div class="item-modal-field">
-          <label for="itemCodeInput">Item code</label>
-          <input id="itemCodeInput" type="text" placeholder="Auto if left blank" />
-        </div>
-
-        <div class="item-modal-field" id="itemQtyGroup">
-          <label for="itemQty">Quantity</label>
-          <input id="itemQty" type="text" placeholder="1 or Included" />
-        </div>
-
-        <div class="item-modal-field" id="itemPriceGroup">
-          <label for="itemPrice">Unit price (INR)</label>
-          <input id="itemPrice" type="text" placeholder="0.00" />
-        </div>
-
-        <div class="item-modal-field item-modal-details">
-          <label for="itemDetails">Details</label>
-          <textarea
-            id="itemDetails"
-            rows="4"
-            placeholder="First line: main item name
-Next lines: brief description"
-          ></textarea>
-        </div>
-      </div>
-
-      <div class="item-modal-footer">
-        <div id="itemModalHint" style="font-size:11px;color:#64748b;">
-          No items yet for this instrument.
-        </div>
-        <div class="item-modal-actions">
-          <button type="button" id="cancelItemModalBtn" class="btn-item-secondary">Cancel</button>
-          <button type="submit" class="btn-item-primary">Save item</button>
-        </div>
-      </div>
-    </form>
-
-    <div id="itemModalList" class="item-modal-list"></div>
-  </div>
-</div>
-
-<!-- Config picker -->
-<div id="configPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Select Configuration Item</h3>
-      <button type="button" class="overlay-close" id="closeConfigPickerBtn">✕</button>
-    </div>
-    
-    <!-- Config Search -->
-    <div class="overlay-search">
-      <div class="search-container">
-        <input type="text" id="configSearchInput" class="search-input" placeholder="Search config items...">
-        <button type="button" id="configSearchBtn" class="search-btn">🔍</button>
-      </div>
-    </div>
-    
-    <div id="configPickerList" class="overlay-body">
-      <div style="font-size:12px; color:#64748b;">Configuration item master is not implemented yet.</div>
-    </div>
-  </div>
-</div>
-
-<!-- Additional picker -->
-<div id="additionalPickerOverlay" class="overlay" style="display:none; z-index:2100;">
-  <div class="overlay-panel">
-    <div class="overlay-header">
-      <h3 class="overlay-title">Select Additional Item</h3>
-      <button type="button" class="overlay-close" id="closeAdditionalPickerBtn">✕</button>
-    </div>
-    
-    <!-- Additional Search -->
-    <div class="overlay-search">
-      <div class="search-container">
-        <input type="text" id="additionalSearchInput" class="search-input" placeholder="Search additional items...">
-        <button type="button" id="additionalSearchBtn" class="search-btn">🔍</button>
-      </div>
-    </div>
-    
-    <div id="additionalPickerList" class="overlay-body">
-      <div style="font-size:12px; color:#64748b;">Additional item master is not implemented yet.</div>
-    </div>
-  </div>
-</div>
 
 <style>
 /* GLOBAL */
@@ -1224,7 +1013,7 @@ header {
   margin-bottom: 1.5rem;
   border: 1px solid rgba(200,200,200,0.4);
   border-radius: 8px;
-  background: #fff;
+  background: #ffffff;
   padding: 1rem 1.25rem;
   box-shadow: none;
 }
@@ -1232,7 +1021,7 @@ header {
 /* INNER GRID: LEFT (company/attn) + RIGHT (logo/meta) */
 .quote-header-body {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.4fr 1fr;  /* left column, right column */
   align-items: flex-start;
   column-gap: 0.75rem;
 }
@@ -1244,14 +1033,14 @@ header {
   gap: 0.5rem;
 }
 
-/* RIGHT SIDE: logo + meta, aligned to right edge */
+/* RIGHT SIDE: logo + meta, hard to the right edge */
 .quote-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
+  display: grid;
+  justify-items: end;      /* push logo and meta to the far right (border) */
+  align-content: start;
+  row-gap: 0.5rem;
 }
-
+  
 /* COMPANY BOX */
 .company-box {
   flex: 1 1 auto;
