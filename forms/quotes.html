@@ -777,6 +777,15 @@ table.quote-table td:nth-child(5) {
     display: none !important;
   }
 
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
   .discount-row,
   .after-discount-row {
     display: table-row;
@@ -896,23 +905,6 @@ table.quote-table,
 .quote-logo-wrap img {
   box-shadow: none !important;
   filter: none !important;
-}
-
-/* Screen: show default spinners (no special rule needed) */
-
-/* Print: hide number input spinners */
-@media print {
-  /* Chrome, Safari, Edge, Opera */
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  /* Firefox */
-  input[type="number"] {
-    -moz-appearance: textfield;
-  }
 }
 </style>
 </head>
