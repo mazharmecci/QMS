@@ -125,7 +125,7 @@ header {
 /* INNER GRID: LEFT (company/attn) + RIGHT (logo/meta) */
 .quote-header-body {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;  /* left vs right */
+  grid-template-columns: 1.4fr 1fr;
   align-items: flex-start;
   column-gap: 0.75rem;
 }
@@ -137,22 +137,25 @@ header {
   gap: 0.5rem;
 }
 
-/* RIGHT SIDE: logo + meta pinned far right */
+/* RIGHT SIDE: logo + meta, hard to the right edge */
 .quote-right {
   display: grid;
-  justify-items: end;      /* everything inside hugs right edge */
-  align-content: flex-start;
+  justify-items: end;    /* logo + meta hug right border */
+  align-content: start;
   row-gap: 0.5rem;
 }
 
-/* COMPANY BOX - left, slightly lower */
+/* COMPANY BOX */
 .company-box {
-  background: none;
-  border: none;
+  flex: 0 0 auto;          /* shrink to fit content */
+  background: none;        /* no gray background */
+  border: none;            /* remove border */
+  border-radius: 0;
   padding: 0;
-  margin-top: 0.75rem;     /* small drop instead of 4.75rem */
+  margin-top: 4.75rem;     /* spacing below header */
   box-shadow: none;
-  text-align: left;
+  animation: none;
+  text-align: left;        /* force far-left alignment */
 }
 
 .company-box p {
@@ -160,15 +163,44 @@ header {
   font-size: 16px;
   color: #111;
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.8;        /* comfortable vertical gap */
+  white-space: normal;
 }
 
-/* LOGO WRAP - far right top corner */
+/* HOSPITAL + ATTENTION BOX */
+
+.hospital-box {
+  margin-top: 0.5rem;
+  font-size: 18px;
+}
+.hospital-box p {
+  margin: 0;
+  font-size: 18px;
+}
+  
+/* ATTENTION BOX */
+.attn-box {
+  display: inline-block;   /* shrink to fit text */
+  background: #add8e6;
+  padding: 0.5rem 0.75rem; /* tighter padding */
+  border-radius: 6px;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 14px;
+  margin-top: 0.5rem;
+  box-shadow: none;
+}
+  
+.attn-box:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* LOGO: stay at far right */
 .quote-logo-wrap {
   margin: 0;
-  justify-self: end;       /* keep logo at far right */
+  justify-self: end;
 }
-
 .quote-logo-wrap img {
   max-height: 90px;
   width: auto;
@@ -176,25 +208,25 @@ header {
   filter: none;
 }
 
-/* QUOTE META GRID - under logo, slightly left */
+/* QUOTE META GRID (right column under logo, slightly left of border) */
 .quote-meta-grid {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0 30px 0 0;      /* right padding nudges text left */
   background: none;
   border: none;
   display: grid;
   grid-template-columns: auto auto;  /* label | value */
   column-gap: 0.4rem;
-  row-gap: 0.5rem;
-  justify-items: end;                /* right-align text */
-  padding: 0 16px 0 0;              /* increase to move text left */
+  row-gap: 0.5rem;                   /* increase vertical gap between rows */
+  justify-items: end;                /* keep text right-aligned */
 }
 
 .quote-meta-grid .label,
 .quote-meta-grid .value {
-  font-size: 16px;                  /* closer to hospital font */
+  font-size: 18px;          /* your increased size */
   text-align: right;
   white-space: nowrap;
-  line-height: 1.6;
+  line-height: 1.6;         /* add vertical spacing between lines */
 }
 
 .quote-meta-grid .label {
@@ -205,6 +237,7 @@ header {
 .quote-meta-grid .value {
   font-weight: 400;
   color: #111;
+  margin-left: 0;
 }
 
 /* ANIMATION */
