@@ -24,7 +24,7 @@ header {
   z-index: 10;
   background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.97));
   border-bottom: 1px solid rgba(148, 163, 184, 0.28);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: none;
   backdrop-filter: blur(16px);
 }
 
@@ -110,7 +110,7 @@ header {
   padding: 2rem 2.5rem;
   background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-shadow: none;
   animation: fadeInUp 1s ease-out both;
 }
 
@@ -125,12 +125,12 @@ header {
   justify-content: space-between;
   gap: 1.5rem;
   backdrop-filter: blur(8px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: none;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 .quote-header:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 12px rgba(173,216,230,0.4), 0 6px 16px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 .quote-header-body {
   display: flex;
@@ -183,13 +183,13 @@ header {
   font-weight: 700;
   color: #0f172a;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: none;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.5s ease-out both;
 }
 .attn-box:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 12px rgba(173,216,230,0.5), 0 6px 16px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 /* QUOTE META GRID */
@@ -203,13 +203,13 @@ header {
                         minmax(0, auto) minmax(0, 1.5fr);
   column-gap: 0.5rem;
   row-gap: 0.4rem;
-  box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: none;
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.6s ease-out both;
 }
 .quote-meta-grid:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 12px rgba(127,182,255,0.4), 0 6px 16px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 .quote-meta-grid .label {
   font-size: 12px;
@@ -255,14 +255,14 @@ header {
   background: #ffffff;
   border: 1px solid rgba(200,200,200,0.4);
   border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: none;
   backdrop-filter: blur(6px);
   transition: box-shadow 0.3s ease, transform 0.3s ease;
   animation: fadeInUp 1.8s ease-out both;
 }
 #quoteBuilder:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 12px rgba(127,182,255,0.4), 0 6px 16px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 #quoteBuilder h3 {
   margin-top: 0;
@@ -280,7 +280,7 @@ table.quote-table {
   background: rgba(255,255,255,0.95);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: none;
   animation: fadeInUp 1.9s ease-out both;
 }
 table.quote-table th,
@@ -347,18 +347,18 @@ table.quote-table th {
   cursor: pointer;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
   transition: all 0.25s ease;
   animation: pulseGlow 2.5s infinite ease-in-out;
 }
 .btn-finalize:hover {
   background: linear-gradient(135deg, #82b4ff, #2a7bff);
   transform: translateY(-2px);
-  box-shadow: 0 0 12px rgba(13,110,253,0.6), 0 6px 18px rgba(0,0,0,0.25);
+  box-shadow: none;
 }
 .btn-finalize:active {
   transform: translateY(0);
-  box-shadow: 0 0 8px rgba(13,110,253,0.4);
+  box-shadow: none;
 }
 
 /* QUOTE ACTIONS */
@@ -945,6 +945,20 @@ table.quote-table th {
 .sales-box,
 .sales-title {
   display: none !important;
+}
+
+.quote-header,
+.company-box,
+.attn-box,
+.quote-meta-grid,
+#quoteBuilder,
+table.quote-table,
+.footer,
+.delivery-block,
+.invoice-block,
+.quote-logo-wrap img {
+  box-shadow: none !important;
+  filter: none !important;
 }
 
 </style>
