@@ -716,17 +716,17 @@ table.quote-table th {
     width: 100% !important;
   }
 
+  /* 1) Remove gray box for company in print */
   .company-box {
-    background: #d0d4d9 !important;
-    border: 1px solid #ccc;
+    background: transparent !important;
+    border: none !important;
   }
-  .attn-box {
-    background: #add8e6 !important;
-    border: 1px solid #ccc;
-  }
-  .quote-meta-grid {
-    background: #fff !important;
-    border: 1px solid #ccc;
+
+  /* 2) Prevent logo color shift in print */
+  .quote-logo-wrap img,
+  img {
+    filter: none !important;
+    print-color-adjust: exact;
   }
 
   thead.print-header {
@@ -753,7 +753,7 @@ table.quote-table th {
   input[type="number"] {
     -moz-appearance: textfield;
   }
-
+}
   .discount-row,
   .after-discount-row {
     display: table-row;
