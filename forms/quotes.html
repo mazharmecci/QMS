@@ -432,14 +432,15 @@ table.quote-table td:nth-child(5) {
 /* TERMS BLOCK */
 #termsBlock {
   margin-top: 1.5rem;
-  background: rgba(255,255,255,0.9);
-  border: 1px solid rgba(200,200,200,0.4);
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  font-size: 14px;  
-  box-shadow: none;  
+  background: transparent;      /* or #ffffff if you want solid white */
+  border: none;                 /* remove frame */
+  border-radius: 0;             /* no rounded corners */
+  padding: 1rem 0;              /* vertical spacing only */
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: none;
+  animation: fadeInUp 2s ease-out both;
 }
-  
 #termsBlock h2 {
   margin-top: 0;
   color: #0d6efd;
