@@ -153,10 +153,11 @@ header {
   border-radius: 0;
   padding: 0;
   display: block;
-  margin-top: 0;
+  margin-top: 0.75rem;   /* was 0; pushes company line down a bit */
   box-shadow: none;
   animation: none;
 }
+  
 .company-box p {
   margin: 0;
   font-size: 13px;
@@ -169,8 +170,13 @@ header {
 }
 
 /* HOSPITAL + ATTENTION BOX */
+/* Hospital block */
 .hospital-box {
   margin-top: 0.5rem;
+  font-size: 18px;
+}
+.hospital-box p {
+  margin: 0;
   font-size: 18px;
 }
   
@@ -181,7 +187,7 @@ header {
   border-radius: 10px;
   font-weight: 700;
   color: #0f172a;
-  font-size: 14px;
+  font-size: 18px;
   box-shadow: none;
   animation: fadeInUp 1.5s ease-out both;
 }
