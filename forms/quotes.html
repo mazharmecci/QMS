@@ -1302,44 +1302,9 @@ Next lines: brief description"
   </div>
 
 <script type="module">
-  import {
-    moneyINR,
-    parseDetailsText,
-    formatInstrumentCell,
-    formatItemCell
-  } from "../js/quoteUtils.js";
-
-  import {
-    getQuoteHeaderRaw,
-    saveQuoteHeader,
-    getInstrumentsMaster,
-    getQuoteContext,
-    validateHeader,
-    finalizeQuote,
-    buildQuoteObject
-  } from "../js/quoteService.js";
-
-  import {
-    populateHeader,
-    renderQuoteBuilder,
-    openInstrumentModal,
-    closeInstrumentModal,
-    openInstrumentPicker,
-    closeInstrumentPicker,
-    addInstrumentToQuote,
-    openConfigModal,
-    openAdditionalModal,
-    openItemModal,
-    closeItemModal,
-    renderItemModalList,
-    editItemFromModal,
-    removeItemFromModal,
-    saveItemFromModal,
-    addMasterItemToLine,
-    renderInstrumentModalList
-  } from "../js/quoteUI.js";
-
-  import { db, doc, getDoc, auth, signOut } from "../js/firebase.js";
+  import { db, doc, getDoc } from "../js/firebase.js";
+  import { getInstrumentsMaster, saveQuoteHeader } from "../js/quoteService.js";
+  import { populateHeader, renderQuoteBuilder } from "../js/quoteUI.js";
 
   let currentQuoteDocId = null;
   let quoteHydrated = false;
@@ -1349,91 +1314,83 @@ Next lines: brief description"
     return params.get(name);
   }
 
-  function toDateInputValue(d) {
+  function toDateDisplay(d) {
     if (!d) return "";
     const date = d instanceof Date ? d : new Date(d.seconds ? d.seconds * 1000 : d);
     if (Number.isNaN(date.getTime())) return "";
     const dd = String(date.getDate()).padStart(2, "0");
     const mm = String(date.getMonth() + 1).padStart(2, "0");
     const yyyy = date.getFullYear();
-    // show as dd-mm-yyyy everywhere we *display* the date
     return `${dd}-${mm}-${yyyy}`;
   }
 
-  function hydrateLocalFromFirestoreDoc(docData, docId = null) {
+  function hydrateHeader(docData, docId = null) {
     if (!docData || typeof docData !== "object") return null;
     if (docId) currentQuoteDocId = docId;
-  
-    const hosp = docData.hospital || {};
-  
+
     const header = {
       quoteNo: docData.quoteNo || "",
-      quoteDate: toDateInputValue(docData.quoteDate),
-      hospitalName: hosp.name || docData.hospitalName || "",
-      hospitalAddress: hosp.address || docData.hospitalAddress || "",
-      contactPerson: hosp.contactPerson || docData.contactPerson || "",
-      contactEmail: hosp.email || docData.contactEmail || "",
-      contactPhone: hosp.phone || docData.contactPhone || "",
-      officePhone: hosp.officePhone || docData.officePhone || "",
+      quoteDate: toDateDisplay(docData.quoteDate),
+      hospitalName: docData.hospitalName || "",
+      hospitalAddress: docData.hospitalAddress || "",
+      contactPerson: docData.contactPerson || "",
+      contactEmail: docData.contactEmail || "",
+      contactPhone: docData.contactPhone || "",
+      officePhone: docData.officePhone || "",
       yourReference: docData.yourReference || "",
-      refDate: toDateInputValue(docData.refDate),
-      kindAttn: hosp.kindAttn || docData.kindAttn || "",
-      salesNote: docData.salesNote || "",
-      termsHtml: docData.termsHtml || "",
-      termsText: docData.termsText || "",
-      discount: Number(docData.discount || 0),
+      refDate: toDateDisplay(docData.refDate),
+      kindAttn: docData.kindAttn || "",
       status: docData.status || "Submitted",
-      gstPercent: Number(docData.gstPercent || 0),
-      gstValueINR: Number(docData.gstValueINR || 0),
-      totalValueINR: Number(docData.totalValueINR || 0),
-      quoteLines: []
+      quoteLines: Array.isArray(docData.quoteLines) ? docData.quoteLines : []
     };
-  
-    // 1) Prefer stored quoteLines (new model)
-    if (Array.isArray(docData.quoteLines) && docData.quoteLines.length) {
-      header.quoteLines = docData.quoteLines.map((line) => ({
-        lineType: line.lineType || "instrument",
-        instrumentIndex: line.instrumentIndex ?? 0,
-        quantity: Number(line.quantity || 1),
-        unitPriceOverride: line.unitPriceOverride ?? null,
-        configItems: Array.isArray(line.configItems) ? line.configItems : [],
-        additionalItems: Array.isArray(line.additionalItems) ? line.additionalItems : []
-      }));
-      console.log("[hydrate] Using quoteLines from Firestore:", header.quoteLines.length);
-    } else {
-      // 2) Legacy fallback: map items[] to quoteLines using master
-      const instruments = getInstrumentsMaster();
-      const items = Array.isArray(docData.items) ? docData.items : [];
-      console.log("[hydrate] Legacy items length:", items.length);
-  
-      header.quoteLines = items.map((item) => {
-        const code = item.instrumentCode || item.code || "";
-        const name = item.instrumentName || item.name || "";
-        let idx = instruments.findIndex(
-          (inst) =>
-            inst.instrumentCode === code ||
-            inst.catalog === code ||
-            inst.instrumentName === name ||
-            inst.name === name
-        );
-        if (idx < 0) {
-          console.warn("[hydrate] Instrument not found in master:", item);
-          idx = 0;
-        }
-        return {
-          lineType: "instrument",
-          instrumentIndex: idx,
-          quantity: item.quantity || 1,
-          unitPriceOverride: item.unitPriceOverride || null,
-          configItems: item.configItems || [],
-          additionalItems: item.additionalItems || []
-        };
-      });
-    }
-  
+
     saveQuoteHeader(header);
+
+    // Populate DOM
+    document.getElementById("toHospitalNameLine").textContent = header.hospitalName;
+    const addrParts = (header.hospitalAddress || "").split(",");
+    document.getElementById("toHospitalAddressLine1").textContent = addrParts[0] || "";
+    document.getElementById("toHospitalAddressLine2").textContent = addrParts.slice(1).join(", ") || "";
+    document.getElementById("toAttn").textContent = header.kindAttn;
+
+    document.getElementById("metaQuoteNo").textContent = header.quoteNo;
+    document.getElementById("metaQuoteDate").textContent = header.quoteDate;
+    document.getElementById("metaYourRef").textContent = header.yourReference;
+    document.getElementById("metaRefDate").textContent = header.refDate;
+    document.getElementById("metaContactPerson").textContent = header.contactPerson;
+    document.getElementById("metaPhone").textContent = header.contactPhone;
+    document.getElementById("metaEmail").textContent = header.contactEmail;
+    document.getElementById("metaOffice").textContent = header.officePhone;
+
+    // Delivery & Invoice sections
+    document.getElementById("deliveryHospitalName").textContent = header.hospitalName;
+    document.getElementById("deliveryHospitalAddress").textContent = header.hospitalAddress;
+    document.getElementById("invoiceHospitalName").textContent = header.hospitalName;
+    document.getElementById("invoiceHospitalAddress").textContent = header.hospitalAddress;
+
     return header;
   }
+
+  async function loadQuote() {
+    const quoteId = getQueryParam("id");
+    if (!quoteId) return;
+    try {
+      const ref = doc(db, "quoteHistory", quoteId);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        hydrateHeader(snap.data(), snap.id);
+        quoteHydrated = true;
+      }
+    } catch (err) {
+      console.error("Error loading quote:", err);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadQuote();
+    populateHeader();
+    renderQuoteBuilder();
+  });
 
   async function loadQuoteFromFirestoreIfNeeded() {
     const quoteId = getQueryParam("id");
