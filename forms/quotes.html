@@ -171,7 +171,7 @@ header {
 /* HOSPITAL + ATTENTION BOX */
 .hospital-box {
   margin-top: 0.5rem;
-  font-size: 13px;
+  font-size: 18px;
 }
   
 .attn-box {
@@ -191,7 +191,7 @@ header {
   box-shadow: none;
 }
 
-/* LOGO */
+/* LOGO: stay at far right */
 .quote-logo-wrap {
   margin: 0;
   justify-self: end;
@@ -203,24 +203,26 @@ header {
   filter: none;
 }
 
-/* QUOTE META GRID (right column under logo) */
+/* QUOTE META GRID (right column under logo, slightly left of border) */
 .quote-meta-grid {
   margin-top: 0.25rem;
-  padding: 0;
+  padding: 0 10px 0 0;      /* right padding nudges text left */
   background: none;
   border: none;
   display: grid;
   grid-template-columns: auto auto;  /* label | value */
   column-gap: 0.4rem;
   row-gap: 0.25rem;
-  justify-items: end;                /* each cell’s content to the right */
+  justify-items: end;                /* keep text right-aligned */
 }
+
 .quote-meta-grid .label,
 .quote-meta-grid .value {
-  font-size: 12px;
+  font-size: 18px;          /* your increased size */
   text-align: right;
   white-space: nowrap;
 }
+
 .quote-meta-grid .label {
   font-weight: 600;
   color: #333;
