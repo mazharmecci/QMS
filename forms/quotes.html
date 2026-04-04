@@ -455,7 +455,7 @@ table.quote-table td:nth-child(5) {
   margin: 0.35rem 0;
 }
 
-/* FOOTER (screen) */
+/* Screen footer */
 .footer {
   font-size: 12px;
   text-align: right;
@@ -465,9 +465,40 @@ table.quote-table td:nth-child(5) {
   color: #555;
 }
 
-/* NO-PRINT */
-.no-print {
-  display: block;
+@page {
+  size: A4;
+  margin: 8mm 8mm 18mm 8mm;
+}
+
+/* PRINT OVERRIDES */
+@media print {
+  /* Fixed footer at physical bottom on every page */
+  .footer-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 9pt;
+    padding: 2mm 8mm 2mm 8mm;
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;
+    text-align: right;
+    background: #ffffff;
+  }
+
+  /* Optional: keep tfoot semantic, but visual handled by .footer-fixed */
+  tfoot.print-footer {
+    display: table-footer-group;
+  }
+
+  #footer-spacer {
+    page-break-after: avoid !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
 }
 
 /* OVERLAY BACKDROP */
@@ -777,22 +808,6 @@ table.quote-table td:nth-child(5) {
   .summary-block {
     page-break-inside: avoid;
     overflow: visible !important;
-  }
-
-  .footer {
-    font-size: 9pt;
-    margin: 0 !important;
-    padding: 2mm 0 !important;
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;
-    text-align: right;
-    height: 20mm;
-    page-break-inside: avoid !important;
-  }
-
-  #footer-spacer {
-    page-break-after: avoid !important;
   }
 
   #termsBlock {
@@ -1226,13 +1241,13 @@ Next lines: brief description"
     <tfoot class="print-footer">
       <tr>
         <td>
-          <div class="footer">
-            ISTOS Medical Private Limited <span style="color:white;">---</span><br>
-            # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area <span style="color:white;">---</span><br>
-            Bikasipura Main Road, Yelachenahalli Bangalore, Karnataka, INDIA 560 062 <span style="color:white;">---</span><br>             
-            P: +91 80 2686 0607 | F: +91 80 2686 0668 <span style="color:white;">---</span><br>
-            E: talktous@istos.in | www.istosmedical.com <span style="color:white;">---</span><br>
-            CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV <span style="color:white;">---</span><br>
+          <div class="footer footer-fixed">
+            ISTOS Medical Private Limited<br>
+            # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area<br>
+            Bikasipura Main Road, Yelachenahalli Bangalore, Karnataka, INDIA 560 062<br>
+            P: +91 80 2686 0607 | F: +91 80 2686 0668<br>
+            E: talktous@istos.in | www.istosmedical.com<br>
+            CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV<br>
           </div>
         </td>
       </tr>
