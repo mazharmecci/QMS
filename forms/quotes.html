@@ -126,7 +126,7 @@ header {
 .quote-header-body {
   display: grid;
   grid-template-columns: 1.4fr 1fr; /* left vs right */
-  align-items: flex-start;
+  align-items: start;               /* align both at top */
   column-gap: 0.75rem;
 }
 
@@ -135,14 +135,15 @@ header {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  justify-content: flex-start;
 }
 
-/* RIGHT SIDE: logo + meta, pinned to far right */
+/* RIGHT SIDE: logo + meta pinned far right */
 .quote-right {
-  display: grid;
-  justify-items: end;    /* logo + meta hug right border */
-  align-content: start;
-  row-gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;  /* hug right edge */
+  gap: 0.5rem;
 }
 
 /* COMPANY BOX - far left */
@@ -176,7 +177,7 @@ header {
   filter: none;
 }
 
-/* QUOTE META GRID - sits under logo neatly */
+/* QUOTE META GRID - sits neatly under logo */
 .quote-meta-grid {
   margin-top: 0.5rem;
   background: none;
@@ -206,8 +207,6 @@ header {
   font-weight: 400;
   color: #111;
 }
-
-
 
 /* ANIMATION */
 @keyframes fadeInUp {
