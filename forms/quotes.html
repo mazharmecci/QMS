@@ -6,7 +6,7 @@
   <title>QMS - Quotes</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
-  <style>
+<style>
 /* GLOBAL */
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -144,14 +144,17 @@ header {
   align-items: flex-end;
 }
 
-/* COMPANY BOX */
+/* COMPANY BOX - flat single line */
 .company-box {
-  flex: 1;
+  flex: 1 1 auto;
   background: none;
   border: none;
+  border-radius: 0;
   padding: 0;
+  display: block;
   margin-top: 0;
   box-shadow: none;
+  animation: none;
 }
 .company-box p {
   margin: 0;
@@ -160,6 +163,8 @@ header {
   font-weight: 600;
   line-height: 1.4;
   white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* HOSPITAL + ATTENTION BOX */
@@ -229,6 +234,12 @@ header {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* REMOVE SALES BOX */
+.sales-box,
+.sales-title {
+  display: none !important;
 }
 
 /* DELIVERY & INVOICE BLOCKS */
@@ -333,6 +344,7 @@ table.quote-table th {
 
 /* REMOVE SALES NOTE */
 #salesNoteBlock { display: none !important; }
+
 /* FINALIZE BUTTON */
 .btn-finalize {
   display: inline-flex;
@@ -418,13 +430,6 @@ table.quote-table th {
 }
 #termsTextBlock { margin-top: 0.25rem; }
 #termsTextBlock p { margin: 0.35rem 0; }
-
-/* ANIMATIONS */
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
-  50% { box-shadow: 0 0 16px rgba(13,110,253,0.6); }
-  100% { box-shadow: 0 0 8px rgba(13,110,253,0.3); }
-}
 
 /* FOOTER */
 .footer {
@@ -670,48 +675,6 @@ table.quote-table th {
 
 /* PRINT OVERRIDES */
 @media print {
-  .footer {
-    font-size: 9pt;
-    margin: 0 !important;
-    padding: 2mm 0 !important;
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;
-    text-align: right;
-    height: 20mm;
-    margin-top: -20mm;
-    page-break-inside: avoid !important;
-  }
-
-  .delivery-block,
-  .invoice-block {
-    border: 1px solid #ccc !important;
-    background: #fff !important;
-    padding: 6pt 8pt !important;
-    margin-top: 10pt !important;
-    border-radius: 6px !important;
-    font-size: 11pt !important;
-    line-height: 1.3 !important;
-    page-break-inside: avoid !important;
-  }
-  .delivery-block h4,
-  .invoice-block h4 {
-    margin: 0 0 4pt 0 !important;
-    font-size: 11pt !important;
-    font-weight: 700 !important;
-    color: #000 !important;
-  }
-  .delivery-block p,
-  .invoice-block p {
-    margin: 0 !important;
-    font-size: 10pt !important;
-    color: #333 !important;
-  }
-}
-
-
-/* PRINT OVERRIDES */
-@media print {
   body {
     margin: 0;
     background: #ffffff !important;
@@ -770,9 +733,7 @@ table.quote-table th {
   .after-discount-row { display: table-row; }
   .discount-zero .discount-row,
   .discount-zero .after-discount-row { display: none !important; }
-}
 
-@media print {
   /* Allow table rows and summary to split across pages */
   table.quote-table,
   table.quote-table tr,
@@ -798,17 +759,60 @@ table.quote-table th {
   .footer {
     height: 18mm;
     margin-top: -18mm;
+    font-size: 9pt;
+    margin: 0 !important;
+    padding: 2mm 0 !important;
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;
+    text-align: right;
+    page-break-inside: avoid !important;
   }
-}
 
-/* Footer and spacer behaviour in print */
-@media print {
   .quote-table tfoot.print-footer {
     display: none !important;
   }
 
   #footer-spacer {
     page-break-after: avoid !important;
+  }
+
+  /* Force Terms & Conditions to start on a new page */
+  #termsBlock {
+    page-break-before: always;
+  }
+
+  /* Contact info adjustments */
+  .quote-meta-grid .value {
+    white-space: nowrap !important;
+    font-size: 11pt !important;
+  }
+  .quote-meta-grid .value.handphone,
+  .quote-meta-grid .value.office {
+    white-space: nowrap !important;
+    font-size: 9pt !important;
+  }
+  .quote-meta-grid {
+    border: none !important;
+  }
+
+  /* Global print fixes */
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  .container {
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .quote-header,
+  #quoteBuilder,
+  #termsBlock {
+    page-break-inside: auto !important;
+    overflow: visible !important;
   }
 
   .footer {
@@ -871,80 +875,7 @@ table.quote-table th {
   background: #e5e7eb;
 }
 
-/* Force Terms & Conditions to start on a new page */
-@media print {
-  #termsBlock {
-    page-break-before: always;
-  }
-}
-
-/* Contact info adjustments */
-@media print {
-  .quote-meta-grid .value {
-    white-space: nowrap !important;
-    font-size: 11pt !important;
-  }
-  .quote-meta-grid .value.handphone,
-  .quote-meta-grid .value.office {
-    white-space: nowrap !important;
-    font-size: 9pt !important;
-  }
-  .quote-meta-grid {
-    border: none !important;
-  }
-}
-
-/* Global print fixes */
-@media print {
-  html, body {
-    height: auto !important;
-    min-height: auto !important;
-    overflow: visible !important;
-  }
-  .container {
-    position: static !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-  .quote-header,
-  #quoteBuilder,
-  #termsBlock {
-    page-break-inside: auto !important;
-    overflow: visible !important;
-  }
-}
-
-/* COMPANY BOX - flat single line */
-.company-box {
-  flex: 1 1 auto;
-  background: none;          /* remove gray background */
-  border: none;              /* remove border */
-  border-radius: 0;          /* remove rounded corners */
-  padding: 0;                /* remove padding */
-  display: block;            /* simple block element */
-  margin-top: 0;             /* remove top margin */
-  box-shadow: none;          /* remove embossed effect */
-  animation: none;           /* remove fade animation */
-}
-
-.company-box p {
-  margin: 0;
-  font-size: 13px;           /* slightly larger for readability */
-  color: #111;               /* darker text */
-  white-space: normal;       /* allow wrapping if needed */
-  overflow: visible;
-  text-overflow: clip;
-  font-weight: 600;          /* bold company name/address */
-}
-
-
-/* REMOVE SALES BOX */
-.sales-box,
-.sales-title {
-  display: none !important;
-}
-
+/* Global print-independent visual fixes */
 .quote-header,
 .company-box,
 .attn-box,
@@ -958,7 +889,6 @@ table.quote-table,
   box-shadow: none !important;
   filter: none !important;
 }
-
 </style>
 </head>
 
