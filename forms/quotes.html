@@ -114,36 +114,62 @@ header {
   animation: fadeInUp 1s ease-out both;
 }
 
-/* QUOTE HEADER */
+/* QUOTE HEADER - neat side by side */
 .quote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;   /* align top edges */
+  gap: 1rem;                 /* tighter spacing */
   margin-bottom: 1.5rem;
   border: 1px solid rgba(200,200,200,0.4);
-  border-radius: 12px;
-  background: rgba(255,255,255,0.85);
-  padding: 2rem 2.25rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
-  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  background: #fff;
+  padding: 1rem 1.25rem;
+  box-shadow: none;          /* remove embossed effect */
+}
+
+/* COMPANY BOX - inline, no gap */
+.company-box {
+  flex: 1;
+  background: none;          /* remove gray background */
+  border: none;
+  padding: 0;
+  margin-top: 0;             /* remove large gap */
   box-shadow: none;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
-.quote-header:hover {
-  transform: translateY(-2px);
+.company-box p {
+  margin: 0;
+  font-size: 13px;
+  color: #111;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: normal;       /* allow wrapping naturally */
+}
+
+/* QUOTE META GRID - right side neat list */
+.quote-meta-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr; /* single column */
+  row-gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
   box-shadow: none;
 }
-.quote-header-body {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
+.quote-meta-grid .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
 }
-.quote-left,
-.quote-right {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+.quote-meta-grid .value {
+  font-size: 12px;
+  font-weight: 400;
+  color: #111;
+  margin-left: 0.5rem;
 }
+
+    
 .quote-logo-wrap {
   align-self: flex-end;
   margin-bottom: 0.5rem;
@@ -154,8 +180,6 @@ header {
   display: block;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
 }
-
-
     
 
 /* FADE-IN ANIMATION */
