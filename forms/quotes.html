@@ -309,6 +309,7 @@ table.quote-table {
   box-shadow: none;
   animation: fadeInUp 1.9s ease-out both;
 }
+
 table.quote-table th,
 table.quote-table td {
   padding: 0.45rem 0.9rem;
@@ -317,6 +318,7 @@ table.quote-table td {
   vertical-align: top;
   font-size: 14px;
 }
+
 table.quote-table th {
   background: linear-gradient(135deg, #e9f2ff, #d7e9ff);
   color: #0b1727;
@@ -324,36 +326,50 @@ table.quote-table th {
   text-transform: capitalize;
   letter-spacing: 0.03em;
 }
-table.quote-table th:nth-child(4),
-table.quote-table th:nth-child(5),
-table.quote-table td:nth-child(4),
-table.quote-table td:nth-child(5) {
-  text-align: right;
-  white-space: nowrap;
-}
-table.quote-table td:nth-child(3),
-table.quote-table th:nth-child(3) {
+
+/* Quantity column: narrow and centered */
+table.quote-table th:nth-child(3),
+table.quote-table td:nth-child(3) {
+  width: 7%;
   text-align: center;
   white-space: nowrap;
 }
+
+/* Unit Price & Total Price: narrow, allow INR wrap */
+table.quote-table th:nth-child(4),
+table.quote-table td:nth-child(4),
+table.quote-table th:nth-child(5),
+table.quote-table td:nth-child(5) {
+  width: 12%;
+  text-align: right;
+  white-space: normal;      /* allow wrapping */
+  word-wrap: break-word;
+}
+
 table.quote-table td:nth-child(1),
 table.quote-table td:nth-child(2) {
   vertical-align: top;
 }
+
 table.quote-table .cat-sub b,
 table.quote-table .cat-sub strong {
   font-weight: 500;
 }
+
 table.quote-table tr.section-header-row td {
   border-top: none;
   padding-top: 0.35rem;
 }
-/* thin grid lines (optional) */
-table.quote-table td,
-table.quote-table th {
-  border: 0.5px solid rgba(148, 196, 255, 0.6);
+
+/* remove thin grid lines on numeric columns */
+table.quote-table td:nth-child(3),
+table.quote-table td:nth-child(4),
+table.quote-table td:nth-child(5) {
+  border-left: none;
+  border-right: none;
 }
 
+/* keep thin grid lines only for non-numeric cells if needed */
 /* REMOVE SALES NOTE */
 #salesNoteBlock {
   display: none !important;
