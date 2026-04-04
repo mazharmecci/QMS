@@ -361,12 +361,14 @@ table.quote-table tr.section-header-row td {
   padding-top: 0.35rem;
 }
 
-/* remove thin grid lines on numeric columns */
+/* Remove all borders for numeric columns (Qty, Unit, Total) */
 table.quote-table td:nth-child(3),
 table.quote-table td:nth-child(4),
-table.quote-table td:nth-child(5) {
-  border-left: none;
-  border-right: none;
+table.quote-table td:nth-child(5),
+table.quote-table th:nth-child(3),
+table.quote-table th:nth-child(4),
+table.quote-table th:nth-child(5) {
+  border: none !important;
 }
 
 /* keep thin grid lines only for non-numeric cells if needed */
@@ -1222,13 +1224,13 @@ Next lines: brief description"
             <!-- Line items + summary -->
             <table id="quoteSummaryTable" class="quote-table">
               <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Cat / Material No.<br>Description</th>
-                  <th>Quantity</th>
-                  <th>Unit Price (INR)</th>
-                  <th>Total Price (INR)</th>
-                </tr>
+              <tr>
+                <th>Item</th>
+                <th>Cat / Material No.<br>Description</th>
+                <th>Qty</th>
+                <th>Unit Price<br>(INR)</th>
+                <th>Total Price<br>(INR)</th>
+              </tr>
               </thead>
               <tbody id="quoteBuilderBody"></tbody>
               <tbody id="quoteSummaryBody"></tbody>
