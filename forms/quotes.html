@@ -454,56 +454,77 @@ table.quote-table tr.section-header-row td {
   margin: 0.35rem 0;
 }
 
-/* Screen footer */
+/* Screen + print footer layout: 3 columns */
 .footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
   font-size: 12px;
-  text-align: right;
   border-top: 1px solid #ccc;
   padding-top: 4px;
   margin-top: 4px;
   color: #555;
 }
 
-@media print {
-  .footer {
-    display: block !important;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    font-size: 9pt;
-    padding: 2mm 8mm 2mm 8mm;
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;
-    text-align: right;
-    background: #ffffff;
-  }
+/* Marker class for fixed footer in print */
+.footer-fixed {
+  /* screen: no special behavior */
 }
-  
+
+/* Three parts */
+.footer-left,
+.footer-center,
+.footer-right {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.footer-left {
+  text-align: left;
+}
+
+.footer-center {
+  text-align: center;
+}
+
+.footer-right {
+  text-align: right;
+}
+
 @page {
   size: A4;
   margin: 8mm 8mm 18mm 8mm;
 }
 
-/* PRINT OVERRIDES */
 @media print {
+  .footer {
+    font-size: 9pt;
+    padding: 2mm 8mm 2mm 8mm;
+    border-top: 1px solid #ccc;
+    background: #ffffff;
+  }
+
   /* Fixed footer at physical bottom on every page */
   .footer-fixed {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+
     font-size: 9pt;
     padding: 2mm 8mm 2mm 8mm;
     border-top: 1px solid #ccc;
     color: #555;
     line-height: 1.2;
-    text-align: right;
     background: #ffffff;
   }
 
-  /* Optional: keep tfoot semantic, but visual handled by .footer-fixed */
   tfoot.print-footer {
     display: table-footer-group;
   }
@@ -1264,21 +1285,29 @@ Next lines: brief description"
         </tr>
       </tbody>
 
-    <tfoot class="print-footer">
-      <tr>
-        <td>
-          <div class="footer footer-fixed">
-            ISTOS Medical Private Limited<br>
-            # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area<br>
-            Bikasipura Main Road, Yelachenahalli Bangalore, Karnataka, INDIA 560 062<br>
-            P: +91 80 2686 0607 | F: +91 80 2686 0668<br>
-            E: talktous@istos.in | www.istosmedical.com<br>
-            CIN: U74999KA2016PTC096385 &nbsp; GST: 29AAECI2502G1ZV<br>
-          </div>
-        </td>
-      </tr>
-    </tfoot>
-    </table>
+      <tfoot class="print-footer">
+        <tr>
+          <td>
+            <div class="footer footer-fixed">
+              <div class="footer-left">
+                P: +91 80 2686 0607 | F: +91 80 2686 0668<br>
+                E: talktous@istos.in | www.istosmedical.com
+              </div>
+      
+              <div class="footer-center">
+                CIN: U74999KA2016PTC096385<br>
+                GST: 29AAECI2502G1ZV
+              </div>
+      
+              <div class="footer-right">
+                ISTOS Medical Private Limited<br>
+                # 51/5, Ground Floor, BSTN Heights, 2nd Cross, J.C. Industrial Area<br>
+                Bikasipura Main Road, Yelachenahalli Bangalore, Karnataka, INDIA 560 062
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tfoot>
 
     <!-- Finalize actions (edit-only) -->
     <div class="no-print" style="margin-top:1.5rem; text-align:right;">
