@@ -462,14 +462,11 @@ table.quote-table tr.section-header-row td {
   gap: 1rem;
   font-size: 12px;
   border-top: 1px solid #ccc;
-  padding-top: 4px;
-  margin-top: 4px;
+  padding: 4px 8px;
+  margin-top: 6px;
   color: #555;
-}
-
-/* Marker class for fixed footer in print */
-.footer-fixed {
-  /* screen: no special behavior */
+  line-height: 1.3;
+  background: #fff;
 }
 
 /* Three parts */
@@ -477,7 +474,6 @@ table.quote-table tr.section-header-row td {
 .footer-center,
 .footer-right {
   flex: 1;
-  line-height: 1.3;
 }
 
 .footer-left {
@@ -492,10 +488,42 @@ table.quote-table tr.section-header-row td {
   text-align: right;
 }
 
-@page {
-  size: A4;
-  margin: 8mm 8mm 18mm 8mm;
+/* Print-specific overrides */
+@media print {
+  tfoot.print-footer {
+    display: table-footer-group; /* ensures footer repeats on each page */
+  }
+
+  .footer {
+    font-size: 9pt;              /* slightly smaller for print */
+    line-height: 1.2;
+    padding: 2mm 8mm;
+    border-top: 1px solid #ccc;
+    page-break-inside: avoid;    /* prevent splitting */
+    background: #fff;
+  }
+
+  .footer-fixed {
+    position: absolute;          /* pin to bottom of page */
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  @page {
+    size: A4;
+    margin: 8mm 8mm 20mm 8mm;    /* reserve bottom margin for footer */
+  }
+
+  /* Ensure page content leaves space for footer */
+  .page {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: 40mm;        /* adjust to footer height */
+    box-sizing: border-box;
+  }
 }
+
 
 /* OVERLAY BACKDROP */
 .overlay {
