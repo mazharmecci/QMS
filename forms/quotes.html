@@ -471,10 +471,9 @@ table.quote-table tr.section-header-row td {
   font-size: 12px;
   border-top: 1px solid #ccc;
   padding: 4px 8px;
-  margin-top: 6px;
-  color: #555;
-  line-height: 1.3;
-  background: #fff;
+  margin: 0;              /* remove top margin that can push it in */
+  width: 100%;            /* ensure full width */
+  box-sizing: border-box; /* padding included */
 }
 
 /* Three parts */
@@ -524,7 +523,7 @@ table.quote-table tr.section-header-row td {
   /* Reserve space at bottom so content doesn't go under fixed footer */
   .container {
     margin: 0 !important;
-    padding: 5mm 5mm 35mm 5mm !important; /* bottom padding ≈ footer height */
+    padding: 5mm 5mm 45mm 5mm !important; /* bottom padding ≈ footer height */
     box-shadow: none !important;
     border-radius: 0 !important;
     max-width: none !important;
@@ -620,17 +619,19 @@ table.quote-table tr.section-header-row td {
     overflow: visible !important;
   }
 
-  /* Footer styling in print */
+@media print {
   .footer {
     font-size: 9pt;
     line-height: 1.2;
     padding: 2mm 8mm;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
     border-top: 1px solid #ccc;
     background: #fff;
     page-break-inside: avoid;
   }
 
-  /* Single strategy: fixed footer pinned at bottom */
   .footer-fixed {
     position: fixed;
     bottom: 0;
@@ -648,6 +649,7 @@ table.quote-table tr.section-header-row td {
     color: #555;
     line-height: 1.2;
     background: #ffffff;
+    box-sizing: border-box;
   }
 }
 
