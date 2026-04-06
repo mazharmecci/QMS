@@ -491,7 +491,9 @@ table.quote-table tr.section-header-row td {
 }
 
 .footer-center {
-  text-align: center;
+  text-align: left;   /* force left alignment */
+  white-space: nowrap; /* optional: keep CIN and GST on one line each */
+  line-height: 1.2;   /* consistent spacing */
 }
 
 .footer-right {
