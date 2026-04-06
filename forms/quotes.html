@@ -464,9 +464,8 @@ table.quote-table tr.section-header-row td {
 
 /* Screen + print footer layout: 3 columns */
 .footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr; /* left, center, right */
   gap: 1rem;
   font-size: 12px;
   border-top: 1px solid #ccc;
@@ -479,26 +478,22 @@ table.quote-table tr.section-header-row td {
   background: #fff;
 }
 
-/* Three parts */
-.footer-left,
-.footer-center,
-.footer-right {
-  flex: 1;
-}
-
+/* Left block */
 .footer-left {
   text-align: left;
 }
 
+/* Center block (CIN/GST) */
 .footer-center {
-  text-align: left;      /* force left alignment */
-  line-height: 1.2;      /* consistent spacing */
+  text-align: left;   /* force left alignment */
+  line-height: 1.2;
 }
 
 .footer-center p {
-  margin: 0;             /* remove default gaps */
+  margin: 0;          /* remove default gaps */
 }
 
+/* Right block (address) */
 .footer-right {
   text-align: right;
 }
@@ -506,6 +501,35 @@ table.quote-table tr.section-header-row td {
 .footer-right p {
   margin: 0;
   line-height: 1.2;
+}
+
+/* PAGE SETTINGS (PRINT) */
+@page {
+  size: A4;
+  margin: 8mm 8mm 28mm 8mm; /* reserve bottom margin for footer */
+}
+
+/* PRINT OVERRIDES */
+@media print {
+  tfoot.print-footer {
+    display: table-footer-group; /* ensures footer repeats on each page */
+  }
+
+  .footer {
+    font-size: 9pt;
+    line-height: 1.2;
+    padding: 2mm 8mm;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid #ccc;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+
+  .footer-fixed {
+    position: static; /* no fixed positioning in print */
+  }
 }
 
 /* PAGE SETTINGS (PRINT) */
