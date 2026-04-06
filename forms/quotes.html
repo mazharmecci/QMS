@@ -220,7 +220,7 @@ header {
   vertical-align: middle;
   margin-right: 4px;
 }
-  
+
 /* HOSPITAL + ATTENTION BOX */
 .hospital-box {
   margin-top: 0.5rem;
@@ -347,9 +347,9 @@ table.quote-table th:nth-child(4),
 table.quote-table td:nth-child(4),
 table.quote-table th:nth-child(5),
 table.quote-table td:nth-child(5) {
-  width: 9%;              /* was 14% – slightly wider */
+  width: 9%;
   text-align: right;
-  white-space: nowrap;     /* keep “INR 1,234.00” on one line */
+  white-space: nowrap;
 }
 
 /* Description columns */
@@ -432,10 +432,10 @@ table.quote-table tr.section-header-row td {
 /* TERMS BLOCK */
 #termsBlock {
   margin-top: 1.5rem;
-  background: transparent;      /* or #ffffff if you want solid white */
-  border: none;                 /* remove frame */
-  border-radius: 0;             /* no rounded corners */
-  padding: 1rem 0;              /* vertical spacing only */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 1rem 0;
   font-size: 14px;
   line-height: 1.4;
   box-shadow: none;
@@ -495,47 +495,6 @@ table.quote-table tr.section-header-row td {
 @page {
   size: A4;
   margin: 8mm 8mm 18mm 8mm;
-}
-
-@media print {
-  .footer {
-    font-size: 9pt;
-    padding: 2mm 8mm 2mm 8mm;
-    border-top: 1px solid #ccc;
-    background: #ffffff;
-  }
-
-  /* Fixed footer at physical bottom on every page */
-  .footer-fixed {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-
-    font-size: 9pt;
-    padding: 2mm 8mm 2mm 8mm;
-    border-top: 1px solid #ccc;
-    color: #555;
-    line-height: 1.2;
-    background: #ffffff;
-  }
-
-  tfoot.print-footer {
-    display: table-footer-group;
-  }
-
-  #footer-spacer {
-    page-break-after: avoid !important;
-  }
-
-  .no-print {
-    display: none !important;
-  }
 }
 
 /* OVERLAY BACKDROP */
@@ -781,11 +740,15 @@ table.quote-table tr.section-header-row td {
 
   .container {
     margin: 0 !important;
-    padding: 5mm 5mm 28mm 5mm !important;
+    padding: 5mm 5mm 28mm 5mm !important; /* bottom padding to clear footer */
     box-shadow: none !important;
     border-radius: 0 !important;
     max-width: none !important;
     width: 100% !important;
+    position: static !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .company-box {
@@ -801,9 +764,6 @@ table.quote-table tr.section-header-row td {
 
   thead.print-header {
     display: table-header-group;
-  }
-  tfoot.print-footer {
-    display: table-footer-group;
   }
 
   .no-print,
@@ -870,17 +830,32 @@ table.quote-table tr.section-header-row td {
     min-height: auto !important;
     overflow: visible !important;
   }
-  .container {
-    position: static !important;
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
+
+  /* footer: fixed at physical bottom */
+  .footer {
+    font-size: 9pt;
+    padding: 2mm 8mm 2mm 8mm;
+    border-top: 1px solid #ccc;
+    background: #ffffff;
   }
-  .quote-header,
-  #quoteBuilder,
-  #termsBlock {
-    page-break-inside: auto !important;
-    overflow: visible !important;
+
+  .footer-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+
+    font-size: 9pt;
+    padding: 2mm 8mm 2mm 8mm;
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;
+    background: #ffffff;
   }
 }
 
@@ -959,7 +934,6 @@ table.quote-table,
   border-radius: 0 !important;
   box-shadow: none !important;
 }
-  
 </style>
 </head>
 
