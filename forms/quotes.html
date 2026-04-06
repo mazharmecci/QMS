@@ -499,39 +499,34 @@ table.quote-table tr.section-header-row td {
 /* Print-specific overrides */
 @media print {
   tfoot.print-footer {
-    display: table-footer-group; /* ensures footer repeats on each page */
+    display: table-footer-group; /* repeat footer on each page */
   }
 
   .footer {
-    font-size: 9pt;              /* slightly smaller for print */
+    font-size: 9pt;
     line-height: 1.2;
     padding: 2mm 8mm;
     border-top: 1px solid #ccc;
-    page-break-inside: avoid;    /* prevent splitting */
     background: #fff;
+    page-break-inside: avoid;
   }
 
   .footer-fixed {
-    position: absolute;          /* pin to bottom of page */
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: static; /* avoid clipping */
   }
 
   @page {
     size: A4;
-    margin: 8mm 8mm 28mm 8mm;    /* reserve bottom margin for footer */
+    margin: 8mm 8mm 35mm 8mm; /* increase bottom margin */
   }
 
-  /* Ensure page content leaves space for footer */
   .page {
     position: relative;
     min-height: 100vh;
-    padding-bottom: 40mm;        /* adjust to footer height */
+    padding-bottom: 45mm; /* match footer height */
     box-sizing: border-box;
   }
 }
-
 
 /* OVERLAY BACKDROP */
 .overlay {
