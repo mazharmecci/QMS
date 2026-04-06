@@ -496,6 +496,11 @@ table.quote-table tr.section-header-row td {
   text-align: right;
 }
 
+.footer-right p {
+  margin: 0;          /* no extra gaps */
+  line-height: 1.2;   /* consistent spacing */
+}
+
 /* Print-specific overrides */
 @media print {
   tfoot.print-footer {
@@ -517,13 +522,13 @@ table.quote-table tr.section-header-row td {
 
   @page {
     size: A4;
-    margin: 8mm 8mm 35mm 8mm; /* increase bottom margin */
+    margin: 8mm 8mm 32mm 8mm; /* increase bottom margin */
   }
 
   .page {
     position: relative;
     min-height: 100vh;
-    padding-bottom: 45mm; /* match footer height */
+    padding-bottom: 32mm; /* match footer height */
     box-sizing: border-box;
   }
 }
