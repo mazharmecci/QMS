@@ -576,16 +576,20 @@ table.quote-table tr.section-header-row td {
     display: table-header-group;
   }
 
+@media print {
   .no-print,
   .overlay,
   #itemModalOverlay,
   #itemModal,
-  button,
   .btn-quote,
   .btn-finalize,
   .quote-toast {
     display: none !important;
   }
+
+  /* Allow generic buttons if you need some to print */
+  /* button { display: inline-block !important; } */
+}
 
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
