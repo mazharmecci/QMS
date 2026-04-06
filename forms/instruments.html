@@ -380,19 +380,61 @@
     </div>
   </div>
 
-  <form id="instrumentForm">
-    <input type="text" id="instrumentCode" placeholder="Instrument Code (for quotes)">
-    <input type="text" id="mainItemName" placeholder="Main item name (e.g. pfm Rotary 3005E (Semi-Electronic Microtome))" rows="2" style="width:100%;">
-    <textarea id="description" placeholder="Instrument description (complete description of the instrument)" required></textarea>
-    <textarea id="suppliedWithInput" rows="8" placeholder="Supplied Complete with (list items). Then a blank line, then Dimensions / Weight / Power."></textarea>
-    <input type="text" id="origin" placeholder="Country Of Origin">
-    <input type="text" id="catalog" placeholder="Catalog Reference">
-    <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
-    <input type="text" id="unitPrice" placeholder="Basic / Unit Price (₹)">
-    <input type="text" id="gstType" placeholder="GST Type">
-    <input type="number" id="gstPercent" placeholder="GST %">
-    <button type="submit">Save Instrument</button>
-  </form>
+<form id="instrumentForm">
+  <input
+    type="text"
+    id="instrumentCode"
+    placeholder="Instrument Code (for quotes)"
+  >
+
+  <input
+    type="text"
+    id="mainItemName"
+    placeholder="Main item name (e.g. pfm Rotary 3005E (Semi-Electronic Microtome))"
+    style="width:100%;"
+  >
+
+  <textarea
+    id="description"
+    placeholder="Instrument description (complete description of the instrument)"
+    required
+  ></textarea>
+
+  <!-- Only the “Supplied Complete with” list -->
+  <textarea
+    id="suppliedWithInput"
+    rows="6"
+    placeholder="Supplied Complete with (list items)."
+  ></textarea>
+
+  <!-- Separate fields for D / W / P -->
+  <textarea
+    id="dimensionsInput"
+    rows="2"
+    placeholder="Dimensions (e.g. 600 x 400 x 300 mm)"
+  ></textarea>
+
+  <textarea
+    id="weightInput"
+    rows="2"
+    placeholder="Weight (e.g. 35 kg)"
+  ></textarea>
+
+  <textarea
+    id="powerInput"
+    rows="2"
+    placeholder="Power (e.g. 230V AC, 50Hz, 500W)"
+  ></textarea>
+
+  <input type="text" id="origin" placeholder="Country Of Origin">
+  <input type="text" id="catalog" placeholder="Catalog Reference">
+  <input type="text" id="hsn" placeholder="HSN Code (1234 5678)" maxlength="9">
+  <input type="text" id="unitPrice" placeholder="Basic / Unit Price (₹)">
+  <input type="text" id="gstType" placeholder="GST Type">
+  <input type="number" id="gstPercent" placeholder="GST %">
+
+  <button type="submit">Save Instrument</button>
+</form>
 
   <table id="instrumentTable">
     <thead>
