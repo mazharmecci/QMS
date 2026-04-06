@@ -141,6 +141,52 @@ header {
   justify-items: end;
   align-content: flex-start;
   row-gap: 0.5rem;
+
+  border: 1px solid rgba(148,163,184,0.7); /* border only on right grid */
+  border-radius: 8px;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+}
+
+/* LOGO: stay at far right, not clipped */
+.quote-logo-wrap {
+  margin: 0;
+  justify-self: end;
+  padding-right: 8px;      /* inset from extreme right */
+}
+.quote-logo-wrap img {
+  max-height: 90px;
+  width: auto;
+  display: block;
+  filter: none;
+}
+
+/* QUOTE META GRID (under logo, slightly left of border) */
+.quote-meta-grid {
+  margin-top: 0.75rem;
+  padding: 0 8px 0 0;
+  background: none;
+  border: none;
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 0.4rem;
+  row-gap: 0.5rem;
+  justify-items: end;
+}
+.quote-meta-grid .label,
+.quote-meta-grid .value {
+  font-size: 16px;
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.quote-meta-grid .label {
+  font-weight: 600;
+  color: #333;
+}
+.quote-meta-grid .value {
+  font-weight: 400;
+  color: #111;
+  margin-left: 0;
 }
 
 /* COMPANY BOX */
@@ -188,48 +234,6 @@ header {
 .attn-box:hover {
   transform: none;
   box-shadow: none;
-}
-
-/* LOGO: stay at far right, not clipped */
-.quote-logo-wrap {
-  margin: 0;
-  justify-self: end;
-  padding-right: 8px;      /* inset from extreme right */
-}
-.quote-logo-wrap img {
-  max-height: 90px;
-  width: auto;
-  display: block;
-  filter: none;
-}
-
-/* QUOTE META GRID (under logo, slightly left of border) */
-.quote-meta-grid {
-  margin-top: 0.75rem;
-  padding: 0 8px 0 0;
-  background: none;
-  border: none;
-  display: grid;
-  grid-template-columns: auto auto;
-  column-gap: 0.4rem;
-  row-gap: 0.5rem;
-  justify-items: end;
-}
-.quote-meta-grid .label,
-.quote-meta-grid .value {
-  font-size: 16px;
-  text-align: right;
-  white-space: nowrap;
-  line-height: 1.6;
-}
-.quote-meta-grid .label {
-  font-weight: 600;
-  color: #333;
-}
-.quote-meta-grid .value {
-  font-weight: 400;
-  color: #111;
-  margin-left: 0;
 }
 
 /* ANIMATION */
