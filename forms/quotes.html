@@ -193,9 +193,11 @@ header {
 }
 
 .quote-meta-title {
-  text-align: right;
+  align-self: stretch;        /* span the same width as the box */
+  text-align: left;
   font-size: 16px;
-  margin-bottom: 0.4rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0.25rem 0;
 }
 
 /* COMPANY BOX */
@@ -1224,9 +1226,9 @@ Next lines: brief description"
                   <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
                 </div>
               
-                <div class="quote-meta-box">
-                  <div class="quote-meta-title"><strong>SALES QUOTATION</strong></div>
+                <div class="quote-meta-title">SALES QUOTATION</div>
               
+                <div class="quote-meta-box">
                   <div class="quote-meta-grid">
                     <div class="label">Quote No.</div>
                     <div class="value" id="metaQuoteNo"></div>
