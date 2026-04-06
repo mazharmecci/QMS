@@ -322,7 +322,7 @@ table.quote-table th {
 /* Quantity column: narrow and centered */
 table.quote-table th:nth-child(3),
 table.quote-table td:nth-child(3) {
-  width: 11%;
+  width: 8%;
   text-align: center;
   white-space: nowrap;
 }
@@ -332,7 +332,7 @@ table.quote-table th:nth-child(4),
 table.quote-table td:nth-child(4),
 table.quote-table th:nth-child(5),
 table.quote-table td:nth-child(5) {
-  width: 16%;              /* was 14% – slightly wider */
+  width: 9%;              /* was 14% – slightly wider */
   text-align: right;
   white-space: nowrap;     /* keep “INR 1,234.00” on one line */
 }
@@ -350,16 +350,6 @@ table.quote-table .cat-sub strong {
 table.quote-table tr.section-header-row td {
   border-top: none;
   padding-top: 0.35rem;
-}
-
-/* Remove all borders for numeric columns (Qty, Unit, Total) */
-table.quote-table th:nth-child(3),
-table.quote-table td:nth-child(3),
-table.quote-table th:nth-child(4),
-table.quote-table td:nth-child(4),
-table.quote-table th:nth-child(5),
-table.quote-table td:nth-child(5) {
-  border: none !important;
 }
 
 /* REMOVE SALES NOTE */
