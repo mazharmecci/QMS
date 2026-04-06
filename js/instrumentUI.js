@@ -6,16 +6,29 @@ import {
   deleteInstrument
 } from "./instrumentService.js";
 
+/* ========= DOM refs ========= */
 const form = document.getElementById("instrumentForm");
 const tableBody = document.querySelector("#instrumentTable tbody");
 const pageInfo = document.getElementById("pageInfo");
-const hsnInput = document.getElementById("hsn");
-const unitPriceInput = document.getElementById("unitPrice");
+
+const instrumentCodeInput = document.getElementById("instrumentCode");
 const mainItemNameInput = document.getElementById("mainItemName");
 const descriptionTextarea = document.getElementById("description");
 const suppliedWithInput = document.getElementById("suppliedWithInput");
+const dimensionsInput = document.getElementById("dimensionsInput");
+const weightInput = document.getElementById("weightInput");
+const powerInput = document.getElementById("powerInput");
+
+const originInput = document.getElementById("origin");
+const catalogInput = document.getElementById("catalog");
+const hsnInput = document.getElementById("hsn");
+const unitPriceInput = document.getElementById("unitPrice");
+const gstTypeInput = document.getElementById("gstType");
+const gstPercentInput = document.getElementById("gstPercent");
+
 const searchInput = document.getElementById("searchInput");
 
+/* ========= State ========= */
 let instruments = [];
 let currentPage = 1;
 const pageSize = 10;
@@ -26,11 +39,14 @@ let searchQuery = "";
 export function showToast(message, type = "success", duration = 1800) {
   const container = document.getElementById("toastContainer");
   if (!container) return;
+
   const el = document.createElement("div");
   el.className = "toast" + (type === "error" ? " error" : "");
   el.textContent = message;
   container.appendChild(el);
+
   requestAnimationFrame(() => el.classList.add("show"));
+
   setTimeout(() => {
     el.classList.remove("show");
     setTimeout(() => {
@@ -74,25 +90,38 @@ if (searchInput) {
   });
 }
 
-/* ========= Form submit ========= */
-form.addEventListener("submit", async e => {
-  e.preventDefault();
-
-  const instrument = {
+/* ========= Build instrument object from form ========= */
+function buildInstrumentFromForm() {
+  return {
     instrumentName: mainItemNameInput.value.trim(),
     longDescription: descriptionTextarea.value.trim(),
+
+    // Supplied with as array of lines
     suppliedWith: (suppliedWithInput.value || "")
       .split("\n")
       .map(l => l.trim())
       .filter(Boolean),
-    origin: document.getElementById("origin").value.trim(),
-    catalog: document.getElementById("catalog").value.trim(),
+
+    // Dimensions / Weight / Power as separate strings
+    dimensions: dimensionsInput.value.trim(),
+    weight: weightInput.value.trim(),
+    power: powerInput.value.trim(),
+
+    origin: originInput.value.trim(),
+    catalog: catalogInput.value.trim(),
     hsn: hsnInput.value.trim(),
-    instrumentCode: document.getElementById("instrumentCode").value.trim(),
+    instrumentCode: instrumentCodeInput.value.trim(),
     unitPrice: parsePriceValue(unitPriceInput.value),
-    gstType: document.getElementById("gstType").value.trim(),
-    gstPercent: document.getElementById("gstPercent").value.trim()
+    gstType: gstTypeInput.value.trim(),
+    gstPercent: gstPercentInput.value.trim()
   };
+}
+
+/* ========= Form submit ========= */
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const instrument = buildInstrumentFromForm();
 
   try {
     if (editIndex !== null) {
@@ -120,7 +149,7 @@ form.addEventListener("submit", async e => {
   await renderTable();
 });
 
-/* ========= Render table with search (no # column) ========= */
+/* ========= Render table ========= */
 export async function renderTable() {
   try {
     instruments = await fetchInstruments();
@@ -133,7 +162,7 @@ export async function renderTable() {
   localStorage.setItem("instruments", JSON.stringify(instruments));
   tableBody.innerHTML = "";
 
-  // 1) Filter by equipment name / description
+  // Filter by name / longDescription
   let filtered = instruments;
   if (searchQuery) {
     filtered = instruments.filter(inst => {
@@ -143,7 +172,6 @@ export async function renderTable() {
     });
   }
 
-  // 2) Pagination based on filtered list
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
 
@@ -151,7 +179,6 @@ export async function renderTable() {
   const end = start + pageSize;
 
   filtered.slice(start, end).forEach(inst => {
-    // index in full array so edit/delete still work on original instruments[]
     const idx = instruments.indexOf(inst);
 
     const row = document.createElement("tr");
@@ -195,27 +222,32 @@ export async function renderTable() {
   pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
-/* ========= Handlers ========= */
-window.editInstrument = function(i) {
+/* ========= Handlers (global) ========= */
+window.editInstrument = function (i) {
   const inst = instruments[i];
   if (!inst) return;
 
   mainItemNameInput.value = inst.instrumentName || "";
   descriptionTextarea.value = inst.longDescription || "";
-  document.getElementById("origin").value = inst.origin || "";
-  document.getElementById("catalog").value = inst.catalog || "";
-  hsnInput.value = inst.hsn || "";
-  document.getElementById("instrumentCode").value = inst.instrumentCode || "";
-  unitPriceInput.value = formatPriceDisplay(inst.unitPrice);
-  document.getElementById("gstType").value = inst.gstType || "";
-  document.getElementById("gstPercent").value = inst.gstPercent || "";
+
   suppliedWithInput.value = (inst.suppliedWith || []).join("\n");
+  dimensionsInput.value = inst.dimensions || "";
+  weightInput.value = inst.weight || "";
+  powerInput.value = inst.power || "";
+
+  originInput.value = inst.origin || "";
+  catalogInput.value = inst.catalog || "";
+  hsnInput.value = inst.hsn || "";
+  instrumentCodeInput.value = inst.instrumentCode || "";
+  unitPriceInput.value = formatPriceDisplay(inst.unitPrice);
+  gstTypeInput.value = inst.gstType || "";
+  gstPercentInput.value = inst.gstPercent || "";
 
   editIndex = i;
   form.classList.add("active");
 };
 
-window.deleteInstrumentRow = async function(i) {
+window.deleteInstrumentRow = async function (i) {
   const inst = instruments[i];
   if (!inst || !inst.id) {
     showToast("Missing instrument ID", "error");
@@ -232,14 +264,14 @@ window.deleteInstrumentRow = async function(i) {
   }
 };
 
-window.nextPage = function() {
+window.nextPage = function () {
   if (currentPage * pageSize < instruments.length) {
     currentPage++;
     renderTable();
   }
 };
 
-window.prevPage = function() {
+window.prevPage = function () {
   if (currentPage > 1) {
     currentPage--;
     renderTable();
