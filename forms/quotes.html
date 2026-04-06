@@ -454,6 +454,23 @@ table.quote-table tr.section-header-row td {
   color: #555;
 }
 
+@media print {
+  .footer {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 9pt;
+    padding: 2mm 8mm 2mm 8mm;
+    border-top: 1px solid #ccc;
+    color: #555;
+    line-height: 1.2;
+    text-align: right;
+    background: #ffffff;
+  }
+}
+  
 @page {
   size: A4;
   margin: 8mm 8mm 18mm 8mm;
