@@ -141,17 +141,13 @@ header {
   justify-items: end;
   align-content: flex-start;
   row-gap: 0.5rem;
-
-  border: 1px solid rgba(148,163,184,0.7); /* border only on right grid */
-  border-radius: 8px;
-  padding: 0.75rem 0.75rem 0.75rem 1rem;
 }
 
 /* LOGO: stay at far right, not clipped */
 .quote-logo-wrap {
   margin: 0;
   justify-self: end;
-  padding-right: 8px;      /* inset from extreme right */
+  padding-right: 8px; /* inset from extreme right */
 }
 .quote-logo-wrap img {
   max-height: 90px;
@@ -160,10 +156,17 @@ header {
   filter: none;
 }
 
-/* QUOTE META GRID (under logo, slightly left of border) */
+/* BOX ONLY AROUND META (not logo) */
+.quote-meta-box {
+  border: 1px solid rgba(148,163,184,0.7);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+}
+
+/* QUOTE META GRID (inside bordered box) */
 .quote-meta-grid {
-  margin-top: 0.75rem;
-  padding: 0 8px 0 0;
+  margin-top: 0;
+  padding: 0;
   background: none;
   border: none;
   display: grid;
@@ -1161,7 +1164,7 @@ Next lines: brief description"
               <div class="quote-left">
                 <div class="company-box">
                   <p>
-                    <strong>ISTOS MEDICAL PVT LTD; 51/5, 2nd Cr J.C Industrial Area, Bikasipura Main Road, Yelachenahalli, Bangalore-560062.</strong><br>                                                          
+                    <strong>ISTOS MEDICAL PVT LTD, 51/5, 2nd Cross J.C Indl Area, Bikasipura Main Road, Yelachenahalli, Bangalore-560062.</strong><br>                                                          
                   </p>
                 </div>
 
@@ -1185,45 +1188,35 @@ Next lines: brief description"
                 <div class="quote-logo-wrap">
                   <img src="../images/istos-logo.jpg" alt="ISTOS Medical Logo">
                 </div>
-
-                <div class="sales-box">
-                  <div class="sales-title">SALES QUOTATION</div>
-                </div>
-
-                <div class="quote-meta-grid">
-                  <div class="label">Quote No.</div>
-                  <div class="value" id="metaQuoteNo"></div>
-
-                  <div class="label">Quotation Date</div>
-                  <div class="value value-small" id="metaQuoteDate"></div>
-
-                  <div class="label">Your Ref.</div>
-                  <div class="value value-small" id="metaYourRef"></div>
-
-                  <div class="label">Ref Date</div>
-                  <div class="value value-small" id="metaRefDate"></div>
-
-                  <div class="label">Your Contact</div>
-                  <div class="value value-small" id="metaContactPerson"></div>
-
-                  <div class="label">Mobile</div>
-                  <div class="value value-small" id="metaPhone"></div>
-
-                  <div class="label">Email</div>
-                  <div class="value value-small" id="metaEmail"></div>
-
-                  <div class="label">Office</div>
-                  <div class="value value-small" id="metaOffice"></div>
+              
+                <div class="quote-meta-box">
+                  <div class="quote-meta-grid">
+                    <div class="label">Quote No.</div>
+                    <div class="value" id="metaQuoteNo"></div>
+              
+                    <div class="label">Quotation Date</div>
+                    <div class="value value-small" id="metaQuoteDate"></div>
+              
+                    <div class="label">Your Ref.</div>
+                    <div class="value value-small" id="metaYourRef"></div>
+              
+                    <div class="label">Ref Date</div>
+                    <div class="value value-small" id="metaRefDate"></div>
+              
+                    <div class="label">Your Contact</div>
+                    <div class="value value-small" id="metaContactPerson"></div>
+              
+                    <div class="label">Mobile</div>
+                    <div class="value value-small" id="metaPhone"></div>
+              
+                    <div class="label">Email</div>
+                    <div class="value value-small" id="metaEmail"></div>
+              
+                    <div class="label">Office</div>
+                    <div class="value value-small" id="metaOffice"></div>
+                  </div>
                 </div>
               </div>
-
-            </div> <!-- /.quote-header-body -->
-          </div>   <!-- /.quote-header -->
-        </td>
-      </tr>
-    </thead>
-  </table>
-</div>
 
       <tbody class="print-body">
         <tr>
