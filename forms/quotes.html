@@ -117,8 +117,8 @@ header {
 /* MAIN FRAME */
 .container {
   max-width: 1320px;
-  margin: 2rem auto;
-  padding: 2rem 2.5rem;
+  margin: 1rem auto;
+  padding: 2rem 1.5rem;
   background: #ffffff;
   border-radius: 0;
   box-shadow: none;
@@ -254,7 +254,7 @@ header {
 }
 
 .attn-box {
-  margin-top: 5.75rem;
+  margin-top: 7.75rem;
   background: #add8e6;
   padding: 0.75rem 1rem;
   border-radius: 10px;
@@ -491,23 +491,28 @@ table.quote-table tr.section-header-row td {
   line-height: 1.3;
   background: #fff;
 }
-
-/* Left block */
+  
+/* Left block (now company name + address) */
 .footer-left {
   text-align: left;
 }
 
-/* Center block (CIN/GST) */
+.footer-left p {
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Center block (unchanged general content) */
 .footer-center {
-  text-align: left;   /* force left alignment */
+  text-align: center;
   line-height: 1.2;
 }
 
 .footer-center p {
-  margin: 0;          /* remove default gaps */
+  margin: 0;
 }
 
-/* Right block (address) */
+/* Right block (now CIN/GST) */
 .footer-right {
   text-align: right;
 }
